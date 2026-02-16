@@ -5,7 +5,7 @@ const ownerCommand = {
     run: async (m, { conn }) => {
         const myNumber = '50432955554'
         const myJid = myNumber + '@s.whatsapp.net'
-        const name = await conn.getName(myJid) || 'Deylin'
+        const name = 'Deylin Tech'
 
         const vcard = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
