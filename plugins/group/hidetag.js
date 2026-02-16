@@ -20,29 +20,12 @@ const hidetagCommand = {
                 await conn.sendMessage(m.chat, {
                     [isSticker ? 'sticker' : type]: media,
                     caption: isSticker ? undefined : tagText,
-                    mentions: users,
-                    contextInfo: { 
-                        mentionedJid: users,
-                        isForwarded: true,
-                        forwardingScore: 999,
-                        businessOwnerJid: '50433191934@s.whatsapp.net'
-                    }
+                    mentions: users
                 }, { quoted: m })
             } else {
                 await conn.sendMessage(m.chat, { 
                     text: tagText, 
-                    mentions: users,
-                    contextInfo: { 
-                        mentionedJid: users,
-                        externalAdReply: {
-                            title: 'SISTEMA DE NOTIFICACIONES',
-                            body: 'Deylin Dev Official',
-                            thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771123381140_9u4BT8HVp.jpeg',
-                            mediaType: 1,
-                            showAdAttribution: true,
-                            renderLargerThumbnail: false
-                        }
-                    }
+                    mentions: users 
                 }, { quoted: m })
             }
             await m.react('✅')
