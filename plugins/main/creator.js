@@ -21,22 +21,14 @@ const ownerCommand = {
                 contacts: [{ vcard }]
             },
             contextInfo: {
-                isForwarded: true,
-                forwardingScore: 999,
                 externalAdReply: {
-                    title: `🛡️ ${pushName.toUpperCase()} OFFICIAL SYSTEM`,
-                    body: 'VERIFIED BUSINESS ACCOUNT',
+                    title: `${pushName} ✅`,
+                    body: 'Official Business Account',
                     thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771123381140_9u4BT8HVp.jpeg',
                     sourceUrl: `https://wa.me/${myNumber}`,
                     mediaType: 1,
                     showAdAttribution: true,
-                    renderLargerThumbnail: true,
-                    sourceId: 'Verified Business Account'
-                },
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363160031023229@newsletter',
-                    serverMessageId: 100,
-                    newsletterName: `${pushName} Tech ✅`
+                    renderLargerThumbnail: true
                 },
                 businessOwnerJid: myJid
             }
@@ -50,11 +42,7 @@ const ownerCommand = {
                 message: {
                     contactMessage: {
                         displayName: pushName,
-                        vcard: vcard,
-                        contextInfo: { 
-                            isForwarded: true,
-                            businessOwnerJid: myJid
-                        }
+                        vcard: vcard
                     }
                 }
             } 
