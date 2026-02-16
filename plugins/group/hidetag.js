@@ -8,16 +8,18 @@ const hidetagCommand = {
         const users = participants.map(u => u.id)
         const q = m.quoted ? m.quoted : m
         const mime = (q.msg || q).mimetype || ''
-        const tagText = text || q.text || ''
+        
+        const tagText = text || (m.quoted && m.quoted.text) || "Notificación General"
 
         try {
             if (mime) {
                 const media = await q.download()
                 const type = mime.split('/')[0]
-                
+                const isSticker = type === 'sticker'
+
                 await conn.sendMessage(m.chat, {
-                    [type === 'sticker' ? 'sticker' : type]: media,
-                    caption: type === 'sticker' ? undefined : tagText,
+                    [isSticker ? 'sticker' : type]: media,
+                    caption: isSticker ? undefined : tagText,
                     mentions: users,
                     contextInfo: { 
                         mentionedJid: users,
@@ -28,7 +30,7 @@ const hidetagCommand = {
                 }, { quoted: m })
             } else {
                 await conn.sendMessage(m.chat, { 
-                    text: tagText || 'Notificación General', 
+                    text: tagText, 
                     mentions: users,
                     contextInfo: { 
                         mentionedJid: users,
@@ -45,7 +47,7 @@ const hidetagCommand = {
             }
             await m.react('✅')
         } catch (e) {
-            await conn.sendMessage(m.chat, { text: tagText || 'Error en Notificación', mentions: users })
+            await conn.sendMessage(m.chat, { text: tagText, mentions: users })
         }
     }
 }
