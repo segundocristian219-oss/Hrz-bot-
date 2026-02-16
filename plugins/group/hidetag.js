@@ -14,23 +14,38 @@ const hidetagCommand = {
             if (mime) {
                 const media = await q.download()
                 const type = mime.split('/')[0]
-                const isSticker = type === 'sticker'
                 
                 await conn.sendMessage(m.chat, {
-                    [isSticker ? 'sticker' : type]: media,
-                    caption: isSticker ? undefined : tagText,
-                    mentions: users
+                    [type === 'sticker' ? 'sticker' : type]: media,
+                    caption: type === 'sticker' ? undefined : tagText,
+                    mentions: users,
+                    contextInfo: { 
+                        mentionedJid: users,
+                        isForwarded: true,
+                        forwardingScore: 999,
+                        businessOwnerJid: '50433191934@s.whatsapp.net'
+                    }
                 }, { quoted: m })
             } else {
                 await conn.sendMessage(m.chat, { 
                     text: tagText || 'Notificación General', 
-                    mentions: users 
+                    mentions: users,
+                    contextInfo: { 
+                        mentionedJid: users,
+                        externalAdReply: {
+                            title: 'SISTEMA DE NOTIFICACIONES',
+                            body: 'Deylin Dev Official',
+                            thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771123381140_9u4BT8HVp.jpeg',
+                            mediaType: 1,
+                            showAdAttribution: true,
+                            renderLargerThumbnail: false
+                        }
+                    }
                 }, { quoted: m })
             }
             await m.react('✅')
         } catch (e) {
-            console.error(e)
-            await conn.sendMessage(m.chat, { text: tagText || 'Notificación General', mentions: users })
+            await conn.sendMessage(m.chat, { text: tagText || 'Error en Notificación', mentions: users })
         }
     }
 }
