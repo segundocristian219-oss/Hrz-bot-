@@ -8,38 +8,29 @@ const hidetagCommand = {
         const users = participants.map(u => u.id)
         const q = m.quoted ? m.quoted : m
         const mime = (q.msg || q).mimetype || ''
-        const tagText = text || q.text || "Notificación General"
+        const tagText = text || q.text || ''
 
         try {
-            if (/image|video|sticker|audio/.test(mime)) {
+            if (mime) {
                 const media = await q.download()
                 const type = mime.split('/')[0]
-                const messageContent = {
-                    [type === 'sticker' ? 'sticker' : type]: media,
-                    caption: tagText,
-                    mentions: users,
-                    contextInfo: { mentionedJid: users }
-                }
-                await conn.sendMessage(m.chat, messageContent, { quoted: m })
+                const isSticker = type === 'sticker'
+                
+                await conn.sendMessage(m.chat, {
+                    [isSticker ? 'sticker' : type]: media,
+                    caption: isSticker ? undefined : tagText,
+                    mentions: users
+                }, { quoted: m })
             } else {
                 await conn.sendMessage(m.chat, { 
-                    text: tagText, 
-                    mentions: users,
-                    contextInfo: { 
-                        mentionedJid: users,
-                        externalAdReply: {
-                            title: 'NOTIFICACIÓN',
-                            mediaType: 1,
-                            showAdAttribution: true,
-                            thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771123381140_9u4BT8HVp.jpeg'
-                        }
-                    }
+                    text: tagText || 'Notificación General', 
+                    mentions: users 
                 }, { quoted: m })
-
             }
             await m.react('✅')
         } catch (e) {
-            await conn.sendMessage(m.chat, { text: tagText, mentions: users })
+            console.error(e)
+            await conn.sendMessage(m.chat, { text: tagText || 'Notificación General', mentions: users })
         }
     }
 }
