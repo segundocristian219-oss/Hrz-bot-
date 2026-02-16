@@ -8,20 +8,24 @@ const hidetagCommand = {
         const users = participants.map(u => u.id)
         const q = m.quoted ? m.quoted : m
         const mime = (q.msg || q).mimetype || ''
-        
         const tagText = text || (m.quoted && m.quoted.text) || "Notificación General"
 
         try {
             if (mime) {
                 const media = await q.download()
-                const type = mime.split('/')[0]
-                const isSticker = type === 'sticker'
-
-                await conn.sendMessage(m.chat, {
-                    [isSticker ? 'sticker' : type]: media,
-                    caption: isSticker ? undefined : tagText,
-                    mentions: users
-                }, { quoted: m })
+                if (/webp/g.test(mime)) {
+                    await conn.sendMessage(m.chat, { 
+                        sticker: media, 
+                        mentions: users 
+                    }, { quoted: m })
+                } else {
+                    const type = mime.split('/')[0]
+                    await conn.sendMessage(m.chat, {
+                        [type]: media,
+                        caption: tagText,
+                        mentions: users
+                    }, { quoted: m })
+                }
             } else {
                 await conn.sendMessage(m.chat, { 
                     text: tagText, 
