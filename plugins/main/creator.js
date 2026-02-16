@@ -1,6 +1,6 @@
 const ownerCommand = {
     name: 'owner',
-    alias: ['creador', 'contacto', 'admin'],
+    alias: ['creador', 'contacto'],
     category: 'main',
     run: async (m, { conn }) => {
         const myNumber = '50433191934'
@@ -29,7 +29,7 @@ const ownerCommand = {
                 externalAdReply: {
                   //  title: `${name} ✅`,
                    // body: 'Official Business Account',
-                    thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771123381140_9u4BT8HVp.jpeg',
+                    thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771264506865_a7j8pxEJj.jpeg',
                     sourceUrl: `https://wa.me/${myNumber}`,
                     mediaType: 1,
                     showAdAttribution: true,
