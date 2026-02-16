@@ -25,14 +25,14 @@ const ownerCommand = {
                 isForwarded: true,
                 forwardingScore: 999,
                 externalAdReply: {
-                    title: 'OFFICIAL BUSINESS ACCOUNT',
-                    body: 'System Administrator - Verified',
+                   // title: 'OFFICIAL BUSINESS ACCOUNT',
+                   // body: 'System Administrator - Verified',
                     thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771123381140_9u4BT8HVp.jpeg',
                     sourceUrl: `https://wa.me/${myNumber}`,
                     mediaType: 1,
                     showAdAttribution: true,
                     renderLargerThumbnail: true,
-                    sourceId: 'Verified Business Account',
+                   // sourceId: 'Verified Business Account',
                     mediaUrl: `https://wa.me/${myNumber}`
                 },
                 businessOwnerJid: myJid,
