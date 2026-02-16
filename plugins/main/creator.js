@@ -5,16 +5,13 @@ const ownerCommand = {
     run: async (m, { conn }) => {
         const myNumber = '50432955554'
         const myJid = `${myNumber}@s.whatsapp.net`
-        const pushName = (await conn.onWhatsApp(myJid))[0]?.notify || conn.user.name || 'Deylin'
+        const pushName = m.pushName || conn.user.name || 'Deylin'
 
         const vcard = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
                       `FN:${pushName}\n` +
-                      `N:;${pushName};;;\n` +
-                      'ORG:SYSTEM ADMINISTRATOR\n' +
-                      'TITLE:Lead Developer\n' +
                       `TEL;type=CELL;type=VOICE;waid=${myNumber}:${myNumber}\n` +
-                      'X-WA-BIZ-DESCRIPTION:Desarrollador oficial de sistemas de automatización y extracción de datos.\n' +
+                      'X-WA-BIZ-DESCRIPTION:Desarrollador oficial de sistemas de automatización.\n' +
                       `X-WA-BIZ-NAME:${pushName}\n` +
                       'END:VCARD'
 
@@ -34,17 +31,14 @@ const ownerCommand = {
                     mediaType: 1,
                     showAdAttribution: true,
                     renderLargerThumbnail: true,
-                    sourceId: 'Verified Business Account',
-                    mediaUrl: `https://wa.me/${myNumber}`,
-                    containsAutoReply: true
+                    sourceId: 'Verified Business Account'
                 },
-                businessOwnerJid: myJid,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363160031023229@newsletter',
-                    serverMessageId: '',
-                    newsletterName: 'Deylin'
+                    serverMessageId: 100,
+                    newsletterName: `${pushName} Tech ✅`
                 },
-                mentionedJid: [m.sender]
+                businessOwnerJid: myJid
             }
         }, { 
             quoted: {
@@ -66,7 +60,7 @@ const ownerCommand = {
             } 
         })
         
-        await m.react('🛡️')
+        await m.react('✅')
     }
 }
 
