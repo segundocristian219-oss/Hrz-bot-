@@ -130,9 +130,17 @@ const menuCommand = {
 `;
 
          await conn.sendMessage(m.chat, { 
-             image: { url: global.img() }, 
-             caption: menuText 
-         }, { quoted: m });
+                text: menuText,
+                contextInfo: {
+                    mentionedJid: [userId],
+                    externalAdReply: {
+                        title: `\t\t\t\t\t\t\t\t${name()}`,
+                        thumbnailUrl: global.img() || '', 
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            }, { quoted: m });
 
 
             await m.react('🍃');
