@@ -79,7 +79,7 @@ const bratCommand = {
             const buffer = Buffer.from(response.data, 'binary');
 
             let stikerBuffer = await sticker6(buffer);
-            let exifSticker = await addExif(stikerBuffer, "Brat Sticker", `Bot: ${m.pushName}`);
+            let exifSticker = await addExif(stikerBuffer, "Brat Sticker", `Bot: ${name()}`);
 
             await conn.sendMessage(m.chat, { sticker: exifSticker }, { quoted: m });
             await m.react('✅');
