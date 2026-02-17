@@ -5,7 +5,7 @@ const shortCommand = {
     alias: ['acortar', 'short', 'corta'],
     category: 'tools',
     run: async (m, { text }) => {
-        const apiVercel = 'https://deylin.xyz/api/short';
+        const apiVercel = 'https://dix.lat/v1/short.php';
 
         if (!text) return m.reply('> ✎ ɪɴғᴏ: ɪɴɢʀᴇsᴀ ᴇʟ ᴇɴʟᴀᴄᴇ.');
 
