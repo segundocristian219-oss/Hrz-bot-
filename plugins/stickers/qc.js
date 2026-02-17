@@ -1,0 +1,127 @@
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import * as fs from "fs";
+import * as path from "path";
+import * as crypto from "crypto";
+import axios from 'axios';
+import fluent_ffmpeg from "fluent-ffmpeg";
+import webp from "node-webpmux";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+async function addExif(webpSticker, packname, author, categories = ["🤩"], extra = {}) {
+    const img = new webp.Image();
+    const json = {
+        "sticker-pack-id": crypto.randomBytes(32).toString("hex"),
+        "sticker-pack-name": packname,
+        "sticker-pack-publisher": author,
+        emojis: categories,
+        ...extra,
+    };
+    const exifAttr = Buffer.from([
+        0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57,
+        0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00,
+    ]);
+    const jsonBuffer = Buffer.from(JSON.stringify(json), "utf8");
+    const exif = Buffer.concat([exifAttr, jsonBuffer]);
+    exif.writeUIntLE(jsonBuffer.length, 14, 4);
+    await img.load(webpSticker);
+    img.exif = exif;
+    return await img.save(null);
+}
+
+function sticker6(img) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const tmpDir = path.join(__dirname, '../../tmp');
+            if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+
+            const tmp = path.join(tmpDir, `${+new Date()}.png`);
+            const out = path.join(tmp + ".webp");
+
+            await fs.promises.writeFile(tmp, img);
+
+            fluent_ffmpeg(tmp)
+                .on("error", function (err) {
+                    if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+                    reject(err);
+                })
+                .on("end", async function () {
+                    if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+                    if (fs.existsSync(out)) {
+                        const result = await fs.promises.readFile(out);
+                        fs.unlinkSync(out);
+                        resolve(result);
+                    }
+                })
+                .addOutputOptions([
+                    `-vcodec`, `libwebp`, `-vf`,
+                    `scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`,
+                ])
+                .toFormat("webp")
+                .save(out);
+        } catch (e) {
+            reject(e);
+        }
+    });
+}
+
+const qcCommand = {
+    name: 'qc',
+    alias: ['quote'],
+    category: 'tools',
+    run: async (m, { conn, args, text }) => {
+        try {
+            let txt = text ? text : (m.quoted && m.quoted.text ? m.quoted.text : null);
+            
+            if (!txt) return m.reply(`> *✎ Ingresa un texto.*`);
+            if (txt.length > 30) return m.reply(`> *⚠ Máximo 30 caracteres.*`);
+
+            await m.react('🕓');
+
+            const mentionedUser = m.quoted ? m.quoted.sender : m.sender;
+            const pp = await conn.profilePictureUrl(mentionedUser).catch(() => 'https://telegra.ph/file/24fa902ead26340f3df2c.png');
+            const nombre = await conn.getName(mentionedUser);
+
+            const obj = {
+                "type": "quote",
+                "format": "png",
+                "backgroundColor": "#000000",
+                "width": 512,
+                "height": 768,
+                "scale": 2,
+                "messages": [{
+                    "entities": [],
+                    "avatar": true,
+                    "from": {
+                        "id": 1,
+                        "name": nombre,
+                        "photo": { "url": pp }
+                    },
+                    "text": txt,
+                    "replyMessage": {}
+                }]
+            };
+
+            const json = await axios.post('https://bot.lyo.su/quote/generate', obj, { 
+                headers: { 'Content-Type': 'application/json' } 
+            });
+            
+            const buffer = Buffer.from(json.data.result.image, 'base64');
+            let stikerBuffer = await sticker6(buffer);
+            
+            let pack = "DeylinBot"; 
+            let auth = nombre;
+            let exifSticker = await addExif(stikerBuffer, pack, auth);
+
+            await conn.sendMessage(m.chat, { sticker: exifSticker }, { quoted: m });
+            await m.react('✅');
+
+        } catch (e) {
+            console.error(e);
+            await m.react('✖️');
+        }
+    }
+}
+
+export default qcCommand;
