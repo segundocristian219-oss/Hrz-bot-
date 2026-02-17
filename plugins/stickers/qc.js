@@ -35,12 +35,9 @@ function sticker6(img) {
         try {
             const tmpDir = path.join(__dirname, '../../tmp');
             if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-
             const tmp = path.join(tmpDir, `${+new Date()}.png`);
             const out = path.join(tmp + ".webp");
-
             await fs.promises.writeFile(tmp, img);
-
             fluent_ffmpeg(tmp)
                 .on("error", function (err) {
                     if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
@@ -70,18 +67,19 @@ const qcCommand = {
     name: 'qc',
     alias: ['quote'],
     category: 'tools',
-    run: async (m, { conn, args, text }) => {
+    run: async (m, { conn, text }) => {
         try {
-            let txt = text ? text : (m.quoted && m.quoted.text ? m.quoted.text : null);
-            
-            if (!txt) return m.reply(`> *✎ Ingresa un texto.*`);
-            if (txt.length > 30) return m.reply(`> *⚠ Máximo 30 caracteres.*`);
+            let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : m.sender);
+            let mentionRegex = new RegExp(`@${who.split('@')[0]}`, 'gi');
+            let realText = text ? text.replace(mentionRegex, '').trim() : (m.quoted ? m.quoted.text : null);
+
+            if (!realText) return m.reply(`> *✎ Ingresa un texto.*`);
+            if (realText.length > 40) return m.reply(`> *⚠ Máximo 40 caracteres.*`);
 
             await m.react('🕓');
 
-            const mentionedUser = m.quoted ? m.quoted.sender : m.sender;
-            const pp = await conn.profilePictureUrl(mentionedUser).catch(() => 'https://telegra.ph/file/24fa902ead26340f3df2c.png');
-            const nombre = await conn.getName(mentionedUser);
+            const pp = await conn.profilePictureUrl(who, 'image').catch(() => 'https://telegra.ph/file/24fa902ead26340f3df2c.png');
+            const nombre = await conn.getName(who);
 
             const obj = {
                 "type": "quote",
@@ -98,7 +96,7 @@ const qcCommand = {
                         "name": nombre,
                         "photo": { "url": pp }
                     },
-                    "text": txt,
+                    "text": realText,
                     "replyMessage": {}
                 }]
             };
