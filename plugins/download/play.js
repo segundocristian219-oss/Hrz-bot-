@@ -28,7 +28,7 @@ async function getDB() {
 async function saveDB(newData, sha) {
     const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.file}`;
     const body = {
-        message: `Database Update: ${Date.now()}`,
+        message: `DB Update: ${Date.now()}`,
         content: Buffer.from(JSON.stringify(newData, null, 2)).toString('base64')
     };
     if (sha) body.sha = sha;
@@ -66,18 +66,24 @@ const youtubeCommand = {
 
             const { data, sha } = await getDB();
             
-            if (data[videoId] && data[videoId][mediaType]) {
+            
+            if (data[videoId] && data[videoId][mediaType] && data[videoId][mediaType].wa_id) {
                 await m.react("⚡");
                 const cache = data[videoId][mediaType];
                 const infoMsg = data[videoId].infoText || `*── 「 RECUPERADO 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}`;
                 
                 await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoMsg }, { quoted: m });
                 
-                if (isAudio) {
-                    return await conn.sendMessage(m.chat, { audio: { url: cache.url }, mimetype: "audio/mp4", fileName: `${videoInfo.title}.mp3` }, { quoted: m });
-                } else {
-                    return await conn.sendMessage(m.chat, { video: { url: cache.url }, caption: `❑ *${videoInfo.title}*`, mimetype: "video/mp4" }, { quoted: m });
-                }
+                const messageOptions = {
+                    [isAudio ? 'audio' : 'video']: { url: videoInfo.url }, 
+                    fileSha256: Buffer.from(cache.wa_id, 'base64'),
+                    mimetype: isAudio ? "audio/mp4" : "video/mp4",
+                    fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
+                };
+
+                if (!isAudio) messageOptions.caption = `❑ *${videoInfo.title}*`;
+
+                return await conn.sendMessage(m.chat, messageOptions, { quoted: m });
             }
 
             const url = 'https://youtube.com/watch?v=' + videoId;
@@ -109,7 +115,6 @@ const youtubeCommand = {
                 if (!data[videoId]) data[videoId] = {};
                 data[videoId].infoText = infoText;
                 data[videoId][mediaType] = { 
-                    url: dlUrl, 
                     wa_id: waFileId, 
                     saved_at: new Date().toLocaleString() 
                 };
@@ -120,7 +125,7 @@ const youtubeCommand = {
         } catch (error) {
             await m.react("❌");
             console.error(error);
-            conn.reply(m.chat, `*── 「 ERROR 」 ──*\n\nNo se pudo procesar la solicitud.`, m);
+            conn.reply(m.chat, `*── 「 ERROR 」 ──*\n\nNo se pudo procesar.`, m);
         }
     }
 };
