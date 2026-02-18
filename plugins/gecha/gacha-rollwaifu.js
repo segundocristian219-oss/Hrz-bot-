@@ -114,9 +114,14 @@ const rollCommand = {
       if (!images.length) return m.reply(`❖ No se hallaron imágenes para *${character.name}*.`)
 
       const imageUrl = images[Math.floor(Math.random() * images.length)]
+      
+      // DESCARGA PREVIA DE LA IMAGEN
+      const imgRes = await fetch(imageUrl, { headers: { "User-Agent": "Mozilla/5.0" } })
+      if (!imgRes.ok) throw new Error("Error al descargar la imagen del servidor")
+      const buffer = await imgRes.buffer()
+
       let estado = "Libre"
       const charData = group.characters[charId]
-
       if (charData && charData.user) {
         const name = global.db.data.users?.[charData.user]?.name || charData.user.split("@")[0]
         estado = `Reclamado por ${name}`
@@ -147,7 +152,7 @@ const rollCommand = {
         `❖ Fuente » *${serie}*`
 
       await conn.sendMessage(m.chat, { 
-        image: { url: imageUrl }, 
+        image: buffer, 
         caption: text,
         mimetype: 'image/jpeg'
       }, { quoted: m })
