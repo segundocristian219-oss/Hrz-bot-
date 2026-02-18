@@ -75,8 +75,6 @@ async function buscarImagenDelirius(query) {
     try {
       const res = await fetch(src.url, { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } })
       if (!res.ok) continue
-      const type = res.headers.get("content-type") || ""
-      if (!type.includes("json")) continue
       const json = await res.json()
       const posts = src.parse(json)
       const images = posts.map(p => p?.file_url || p?.large_file_url || p?.image || p?.image_url || p?.media_asset?.variants?.[0]?.url || p?.preview_file_url).filter(u => typeof u === "string" && /\.(jpe?g|png)$/i.test(u))
@@ -100,16 +98,16 @@ const rollCommand = {
       group.users ||= {}; group.characters ||= {}; group.activeRolls ||= []
       const groupUser = group.users[m.sender] || (group.users[m.sender] = {})
       const now = Date.now()
-      const cooldown = 0 * 60 * 1000
+      const cooldown = 15 * 60 * 1000
 
       if (groupUser.lastRoll && now < groupUser.lastRoll) {
         const remaining = Math.ceil((groupUser.lastRoll - now) / 1000)
         const min = Math.floor(remaining / 60)
         const sec = remaining % 60
         let msg = ""
-        if (min > 0) msg += `${min} minuto${min !== 1 ? "s" : ""} `
+       /* if (min > 0) msg += `${min} minuto${min !== 1 ? "s" : ""} `
         if (sec > 0 || msg === "") msg += `${sec} segundo${sec !== 1 ? "s" : ""}`
-        return m.reply(`❖ Debes esperar *${msg.trim()}* para usar *${usedPrefix + command}* de nuevo.`)
+        return m.reply(`❖ Debes esperar *${msg.trim()}* para usar *${usedPrefix + command}* de nuevo.`)*/
       }
 
       const allData = await loadCharacters()
@@ -131,7 +129,12 @@ const rollCommand = {
       const validImages = images.filter(x => typeof x === "string" && /^https?:\/\//i.test(x))
       if (!validImages.length) return m.reply(`❖ No se encontraron imágenes para *${character.name}*.`)
 
-      const image = validImages[Math.floor(Math.random() * validImages.length)]
+      const imageUrl = validImages[Math.floor(Math.random() * validImages.length)]
+      
+      const response = await fetch(imageUrl)
+      if (!response.ok) throw new Error('No se pudo descargar la imagen')
+      const buffer = await response.buffer()
+
       let estado = "Libre"
       const charData = group.characters[charId]
       if (charData && charData.user) {
@@ -148,7 +151,6 @@ const rollCommand = {
         estado = `Reclamado por ${name}`
       }
 
-      const protectionTime = 30 * 1000
       const rollData = {
         id: charId,
         name: character.name || "Sin nombre",
@@ -156,10 +158,10 @@ const rollCommand = {
         gender: character.gender || "Desconocido",
         serie,
         reservedBy: m.sender,
-        reservedUntil: now + protectionTime,
+        reservedUntil: now + 30000,
         createdAt: now,
         expiresAt: now + 60000,
-        image
+        image: imageUrl
       }
 
       group.activeRolls.push(rollData)
@@ -174,7 +176,7 @@ const rollCommand = {
         `♡ Estado » *${estado}*\n` +
         `❖ Fuente » *${serie}*`
 
-      await conn.sendMessage(m.chat, { image: { url: image }, caption: text }, { quoted: m })
+      await conn.sendMessage(m.chat, { image: buffer, caption: text }, { quoted: m })
     } catch (e) {
       console.error("[roll] excepción:", e)
       await m.reply(`❖ Error en el sistema.\n\n${e.message}`)
