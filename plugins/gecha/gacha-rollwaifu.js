@@ -72,9 +72,8 @@ const rollCommand = {
   category: 'gacha',
   run: async (m, { conn, usedPrefix, command, chat }) => {
     try {
-      if (!chat.gacha && m.isGroup) {
-        return m.reply(`ꕥ Los comandos de *Gacha* están desactivados.\n\nActívalos con: *${usedPrefix}gacha on*`)
-      }
+      if (!chat.gacha && m.isGroup)
+        return m.reply(`ꕥ Los comandos de *Gacha* están desactivados en este grupo.\n\nUn *administrador* puede activarlos con:\n» *${usedPrefix}gacha on*`)
 
       global.db.data.groupGacha ||= {}
       const group = global.db.data.groupGacha[m.chat] ||= {
@@ -91,12 +90,12 @@ const rollCommand = {
         const remaining = Math.ceil((groupUser.lastRoll - now) / 1000)
         const min = Math.floor(remaining / 60)
         const sec = remaining % 60
-       // return m.reply(`❖ Espera *${min}m ${sec}s* para usar *${usedPrefix + command}*.`)
+        return m.reply(`❖ Debes esperar *${min}m ${sec}s* para usar *${usedPrefix + command}* de nuevo.`)
       }
 
       const allData = await loadCharacters()
       const characters = flattenCharacters(allData)
-      if (!characters.length) return m.reply("⚠︎ Sin personajes disponibles.")
+      if (!characters.length) return m.reply("⚠︎ No hay personajes disponibles.")
 
       const character = characters[Math.floor(Math.random() * characters.length)]
       const charId = String(character.id)
@@ -111,13 +110,12 @@ const rollCommand = {
       }
       if (!images.length) images = await buscarImagenGelbooru(character.name)
 
-      if (!images.length) return m.reply(`❖ No se hallaron imágenes para *${character.name}*.`)
+      if (!images.length) return m.reply(`❖ No se encontraron imágenes para *${character.name}*.`)
 
       const imageUrl = images[Math.floor(Math.random() * images.length)]
       
-      // DESCARGA PREVIA DE LA IMAGEN
       const imgRes = await fetch(imageUrl, { headers: { "User-Agent": "Mozilla/5.0" } })
-      if (!imgRes.ok) throw new Error("Error al descargar la imagen del servidor")
+      if (!imgRes.ok) throw new Error("Error al descargar imagen")
       const buffer = await imgRes.buffer()
 
       let estado = "Libre"
@@ -159,7 +157,7 @@ const rollCommand = {
 
     } catch (e) {
       console.error(e)
-      await m.reply(`❖ Error: ${e.message}`)
+      await m.reply(`❖ Error en el sistema.\n\n${e.message}`)
     }
   }
 }
