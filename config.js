@@ -21,7 +21,7 @@ global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1769830797
 
 global.api_endpoints = {
     a: "aHR0cHM6Ly9zbWFzYWNoaWthLmFseWFib3QueHl6L2Rvd25sb2FkX2F1ZGlv",
-    v: "aHR0cHM6Ly9zbWFzYWNoaWthLmFseWFib3QueHl6L2Rvd25sb2FkX3ZpZGVv"
+    v: "aHR0cHM6Ly9zYWx5YS5hbHlhYm90Lnh5ei9kb3dubG9hZF92aWRlbw=="
 };
 
 
