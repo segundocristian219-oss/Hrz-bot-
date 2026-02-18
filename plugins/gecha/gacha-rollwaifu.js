@@ -100,7 +100,7 @@ const rollCommand = {
       group.users ||= {}; group.characters ||= {}; group.activeRolls ||= []
       const groupUser = group.users[m.sender] || (group.users[m.sender] = {})
       const now = Date.now()
-      const cooldown = 15 * 60 * 1000
+      const cooldown = 0 * 60 * 1000
 
       if (groupUser.lastRoll && now < groupUser.lastRoll) {
         const remaining = Math.ceil((groupUser.lastRoll - now) / 1000)
