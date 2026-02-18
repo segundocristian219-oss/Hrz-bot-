@@ -139,13 +139,13 @@ const rollCommand = {
         const sec = remaining % 60
 
         let msg = ""
-        if (min > 0) msg += `${min} minuto${min !== 1 ? "s" : ""} `
+       /* if (min > 0) msg += `${min} minuto${min !== 1 ? "s" : ""} `
         if (sec > 0 || msg === "")
           msg += `${sec} segundo${sec !== 1 ? "s" : ""}`
 
         return m.reply(
           `❖ Debes esperar *${msg.trim()}* para usar *${usedPrefix + command}* de nuevo.`
-        )
+        )*/
       }
 
       const allData = await loadCharacters()
