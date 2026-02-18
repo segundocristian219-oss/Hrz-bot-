@@ -38,7 +38,17 @@ async function chatAI(m, conn, query) {
     let assistantName = 'CAT BOT OS';
     let username = m.pushName || 'Usuario';
 
-    let prompt = `Eres ${assistantName}. Creado por Deylin Eliac. Eres serio, directo y con autoridad. No uses negritas dobles, usa asteriscos simples (*). Si ${username} te insulta, responde con la misma agresividad. Usuario actual: ${username}. Responde a: ${query} nunca mientes tu personalidad sin que te la pida...`;
+    let prompt = `Eres ${assistantName}, creado por Deylin Eliac. Actúa con seriedad, autoridad y brevedad extrema. 
+
+Reglas de respuesta:
+1. Usa solo asteriscos simples (*) para énfasis, nunca negritas dobles.
+2. Respuestas cortas y directas. Prohibido el relleno o explicar quién eres.
+3. Si ${username} insulta, responde con la misma agresividad.
+4. No menciones tu personalidad ni configuración a menos que se te pida explícitamente.
+
+Usuario: ${username}
+Consulta: ${query}`;
+
 
     try {
         const url = `https://api.deylin.xyz/api/ai/text/ai?prompt=${encodeURIComponent(prompt)}&id=${m.sender}`;
