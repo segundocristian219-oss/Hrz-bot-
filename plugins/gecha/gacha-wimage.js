@@ -74,76 +74,74 @@ async function buscarImagenDelirius(tag) {
   return []
 }
 
-let handler = async (m, { conn, args, usedPrefix, command }) => {
-  try {
-    const chat = global.db.data.chats[m.chat]
-
-    if (m.isGroup && (!chat || !chat.gacha)) {
-      return m.reply(
-        `ꕥ Los comandos de *Gacha* están desactivados en este grupo.\n\n` +
-        `Un *administrador* puede activarlos con:\n» *${usedPrefix}gacha on*`
-      )
-    }
-
-    if (!args.length) {
-      return m.reply(
-        `❀ Por favor, indica un personaje.\n` +
-        `> Ejemplo » *${usedPrefix + command} Marin Kitagawa*`
-      )
-    }
-
-    const db = await loadCharacters()
-    const characters = flattenCharacters(db)
-
-    const query = args.join(' ').toLowerCase().trim()
-
-    const character =
-      characters.find(c => c.name?.toLowerCase() === query) ||
-      characters.find(c =>
-        c.name?.toLowerCase().includes(query) ||
-        c.tags?.some(t => t.toLowerCase().includes(query))
-      ) ||
-      characters.find(c =>
-        query.split(' ').some(w =>
-          c.name?.toLowerCase().includes(w) ||
-          c.tags?.some(t => t.toLowerCase().includes(w))
+const wimageCommand = {
+  name: 'wimage',
+  alias: ['cimage', 'charimage', 'waifuimage'],
+  category: 'gacha',
+  run: async (m, { conn, args, usedPrefix, command, chat }) => {
+    try {
+      if (m.isGroup && (!chat || !chat.gacha)) {
+        return m.reply(
+          `ꕥ Los comandos de *Gacha* están desactivados en este grupo.\n\n` +
+          `Un *administrador* puede activarlos con:\n» *${usedPrefix}gacha on*`
         )
-      )
+      }
 
-    if (!character) {
-      return m.reply(`ꕥ No se encontró el personaje *${query}*.`)
-    }
+      if (!args.length) {
+        return m.reply(
+          `❀ Por favor, indica un personaje.\n` +
+          `> Ejemplo » *${usedPrefix + command} Marin Kitagawa*`
+        )
+      }
 
-    const tag = Array.isArray(character.tags) ? character.tags[0] : character.name
-    const images = await buscarImagenDelirius(tag)
+      const db = await loadCharacters()
+      const characters = flattenCharacters(db)
 
-    if (!images.length) {
-      return m.reply(`ꕥ No se encontraron imágenes para *${character.name}*.`)
-    }
+      const query = args.join(' ').toLowerCase().trim()
 
-    const image = images[Math.floor(Math.random() * images.length)]
-    const serie = getSeriesNameByCharacter(db, character.id)
+      const character =
+        characters.find(c => c.name?.toLowerCase() === query) ||
+        characters.find(c =>
+          c.name?.toLowerCase().includes(query) ||
+          c.tags?.some(t => t.toLowerCase().includes(query))
+        ) ||
+        characters.find(c =>
+          query.split(' ').some(w =>
+            c.name?.toLowerCase().includes(w) ||
+            c.tags?.some(t => t.toLowerCase().includes(w))
+          )
+        )
 
-    const caption =
+      if (!character) {
+        return m.reply(`ꕥ No se encontró el personaje *${query}*.`)
+      }
+
+      const tag = Array.isArray(character.tags) ? character.tags[0] : character.name
+      const images = await buscarImagenDelirius(tag)
+
+      if (!images.length) {
+        return m.reply(`ꕥ No se encontraron imágenes para *${character.name}*.`)
+      }
+
+      const image = images[Math.floor(Math.random() * images.length)]
+      const serie = getSeriesNameByCharacter(db, character.id)
+
+      const caption =
 `❀ Nombre » *${character.name}*
 ⚥ Género » *${character.gender || 'Desconocido'}*
 ❖ Fuente » *${serie}*`
 
-    await conn.sendMessage(
-      m.chat,
-      { image: { url: image }, caption },
-      { quoted: m }
-    )
+      await conn.sendMessage(
+        m.chat,
+        { image: { url: image }, caption },
+        { quoted: m }
+      )
 
-  } catch (e) {
-    console.error(e)
-    await m.reply(`⚠ Error inesperado:\n${e.message}`)
+    } catch (e) {
+      console.error(e)
+      await m.reply(`⚠ Error inesperado:\n${e.message}`)
+    }
   }
 }
 
-handler.command = ['wimage', 'cimage', 'charimage', 'waifuimage']
-handler.tags = ['gacha']
-handler.help = ['wimage <personaje>']
-handler.group = true
-
-export default handler
+export default wimageCommand
