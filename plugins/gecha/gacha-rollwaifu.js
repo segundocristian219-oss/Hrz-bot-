@@ -53,6 +53,7 @@ function formatTag(tag) {
 
 async function buscarImagenDelirius(query) {
   const tag = formatTag(query)
+
   const sources = [
     {
       name: "Safebooru",
@@ -70,17 +71,42 @@ async function buscarImagenDelirius(query) {
       parse: json => json?.post || json?.data || []
     }
   ]
+
   const sourcesaleatory = [...sources].sort(() => Math.random() - 0.5)
   for (const src of sourcesaleatory) {
     try {
-      const res = await fetch(src.url, { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } })
+      const res = await fetch(src.url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "application/json"
+        }
+      })
+
       if (!res.ok) continue
+
+      const type = res.headers.get("content-type") || ""
+      if (!type.includes("json")) continue
+
       const json = await res.json()
       const posts = src.parse(json)
-      const images = posts.map(p => p?.file_url || p?.large_file_url || p?.image || p?.image_url || p?.media_asset?.variants?.[0]?.url || p?.preview_file_url).filter(u => typeof u === "string" && /\.(jpe?g|png)$/i.test(u))
-      if (images.length) return Array.from(new Set(images))
+
+      const images = posts
+        .map(p =>
+          p?.file_url ||
+          p?.large_file_url ||
+          p?.image ||
+          p?.image_url ||
+          p?.media_asset?.variants?.[0]?.url ||
+          p?.preview_file_url
+        )
+        .filter(u => typeof u === "string" && /\.(jpe?g|png)$/i.test(u))
+
+      if (images.length) {
+        return Array.from(new Set(images))
+      }
     } catch (err) {}
   }
+
   return []
 }
 
@@ -91,12 +117,19 @@ const rollCommand = {
   run: async (m, { conn, usedPrefix, command, chat }) => {
     try {
       if (!chat.gacha && m.isGroup)
-        return m.reply(`ꕥ Los comandos de *Gacha* están desactivados en este grupo.\n\nUn *administrador* puede activarlos con:\n» *${usedPrefix}gacha on*`)
+        return m.reply(
+          `ꕥ Los comandos de *Gacha* están desactivados en este grupo.\n\nUn *administrador* puede activarlos con:\n» *${usedPrefix}gacha on*`
+        )
 
       global.db.data.groupGacha = global.db.data.groupGacha || {}
       const group = global.db.data.groupGacha[m.chat] = global.db.data.groupGacha[m.chat] || {}
-      group.users ||= {}; group.characters ||= {}; group.activeRolls ||= []
+
+      group.users ||= {}
+      group.characters ||= {}
+      group.activeRolls ||= []
+
       const groupUser = group.users[m.sender] || (group.users[m.sender] = {})
+
       const now = Date.now()
       const cooldown = 15 * 60 * 1000
 
@@ -104,15 +137,22 @@ const rollCommand = {
         const remaining = Math.ceil((groupUser.lastRoll - now) / 1000)
         const min = Math.floor(remaining / 60)
         const sec = remaining % 60
+
         let msg = ""
-       /* if (min > 0) msg += `${min} minuto${min !== 1 ? "s" : ""} `
-        if (sec > 0 || msg === "") msg += `${sec} segundo${sec !== 1 ? "s" : ""}`
-        return m.reply(`❖ Debes esperar *${msg.trim()}* para usar *${usedPrefix + command}* de nuevo.`)*/
+        if (min > 0) msg += `${min} minuto${min !== 1 ? "s" : ""} `
+        if (sec > 0 || msg === "")
+          msg += `${sec} segundo${sec !== 1 ? "s" : ""}`
+
+        return m.reply(
+          `❖ Debes esperar *${msg.trim()}* para usar *${usedPrefix + command}* de nuevo.`
+        )
       }
 
       const allData = await loadCharacters()
       const characters = flattenCharacters(allData)
-      if (!characters.length) return m.reply("⚠︎ No hay personajes disponibles.")
+
+      if (!characters.length)
+        return m.reply("⚠︎ No hay personajes disponibles.")
 
       const character = characters[Math.floor(Math.random() * characters.length)]
       const charId = String(character?.id || Date.now())
@@ -125,18 +165,22 @@ const rollCommand = {
           if (images.length) break
         }
       }
-      if (!images.length) images = await buscarImagenDelirius(character.name || "")
-      const validImages = images.filter(x => typeof x === "string" && /^https?:\/\//i.test(x))
-      if (!validImages.length) return m.reply(`❖ No se encontraron imágenes para *${character.name}*.`)
 
-      const imageUrl = validImages[Math.floor(Math.random() * validImages.length)]
-      
-      const response = await fetch(imageUrl)
-      if (!response.ok) throw new Error('No se pudo descargar la imagen')
-      const buffer = await response.buffer()
+      if (!images.length)
+        images = await buscarImagenDelirius(character.name || "")
+
+      const validImages = images.filter(
+        x => typeof x === "string" && /^https?:\/\//i.test(x)
+      )
+
+      if (!validImages.length)
+        return m.reply(`❖ No se encontraron imágenes para *${character.name}*.`)
+
+      const image = validImages[Math.floor(Math.random() * validImages.length)]
 
       let estado = "Libre"
       const charData = group.characters[charId]
+
       if (charData && charData.user) {
         const who = charData.user
         let name = global.db.data.users?.[who]?.name
@@ -151,6 +195,7 @@ const rollCommand = {
         estado = `Reclamado por ${name}`
       }
 
+      const protectionTime = 30 * 1000
       const rollData = {
         id: charId,
         name: character.name || "Sin nombre",
@@ -158,10 +203,10 @@ const rollCommand = {
         gender: character.gender || "Desconocido",
         serie,
         reservedBy: m.sender,
-        reservedUntil: now + 30000,
+        reservedUntil: now + protectionTime,
         createdAt: now,
         expiresAt: now + 60000,
-        image: imageUrl
+        image
       }
 
       group.activeRolls.push(rollData)
@@ -176,7 +221,10 @@ const rollCommand = {
         `♡ Estado » *${estado}*\n` +
         `❖ Fuente » *${serie}*`
 
-      await conn.sendMessage(m.chat, { image: buffer, caption: text }, { quoted: m })
+      let ext = path.extname(new URL(image).pathname).toLowerCase()
+      if (!ext) ext = ".jpg"
+
+      await conn.sendFile(m.chat, image, `${character.name}${ext}`, text, m)
     } catch (e) {
       console.error("[roll] excepción:", e)
       await m.reply(`❖ Error en el sistema.\n\n${e.message}`)
