@@ -2,7 +2,7 @@ import yts from 'yt-search';
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient('https://hoqepnhitygxsejlukux.supabase.co', 'sb_publishable_DR_4Ogc2PpnujNpeeJbBGg_Mb5EdZUu');
+const supabase = createClient('https://hoqepnhitygxsejlukux.supabase.co', 'sb_publishable_06Cs4IemHbf35JVVFKcBPQ_BlwJWa3M');
 
 const youtubeCommand = {
     name: 'youtube_play',
