@@ -35,20 +35,16 @@ function formatTime(ms) {
   return `${d ? d + "d " : ""}${h ? h + "h " : ""}${m ? m + "m " : ""}${s ? s + "s" : ""}`.trim()
 }
 
-// Estructura optimizada para el command map de index.js
-const cmd = {
-  name: "winfo",
-  alias: ["waifuinfo", "charinfo"],
-  category: "gacha",
-  desc: "Muestra información detallada de un personaje.",
-  use: "<personaje>",
-  group: true,
-  run: async (m, { conn, args, prefix }) => {
+const winfoCommand = {
+  name: 'winfo',
+  alias: ['waifuinfo', 'charinfo'],
+  category: 'gacha',
+  run: async (m, { conn, args, usedPrefix }) => {
     try {
       if (!global.db.data.chats?.[m.chat]?.gacha && m.isGroup) {
         return m.reply(
           `ꕥ Los comandos de *Gacha* están desactivados en este grupo.\n` +
-          `Un *administrador* puede activarlos con:\n» *${prefix}gacha on*`
+          `Un *administrador* puede activarlos con:\n» *${usedPrefix}gacha on*`
         )
       }
 
@@ -61,7 +57,7 @@ const cmd = {
       if (!args.length) {
         return m.reply(
           `❀ Debes especificar un personaje.\n` +
-          `> Ejemplo » *${prefix}winfo Kaede*`
+          `> Ejemplo » *${usedPrefix}winfo Kaede*`
         )
       }
 
@@ -144,11 +140,11 @@ const cmd = {
       await conn.reply(
         m.chat,
         `⚠︎ Se ha producido un problema.\n` +
-        `> Usa *${prefix}report* para informarlo.\n\n${err.message}`,
+        `> Usa *${usedPrefix}report* para informarlo.\n\n${err.message}`,
         m
       )
     }
   }
 }
 
-export default cmd
+export default winfoCommand
