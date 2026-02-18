@@ -113,7 +113,7 @@ const rollCommand = {
 
       if (!images.length) return m.reply(`❖ No se hallaron imágenes para *${character.name}*.`)
 
-      const image = images[Math.floor(Math.random() * images.length)]
+      const imageUrl = images[Math.floor(Math.random() * images.length)]
       let estado = "Libre"
       const charData = group.characters[charId]
 
@@ -132,7 +132,7 @@ const rollCommand = {
         reservedUntil: now + 30000,
         createdAt: now,
         expiresAt: now + 60000,
-        image
+        image: imageUrl
       }
 
       group.activeRolls.push(rollData)
@@ -146,7 +146,12 @@ const rollCommand = {
         `♡ Estado » *${estado}*\n` +
         `❖ Fuente » *${serie}*`
 
-      await conn.sendFile(m.chat, image, `${character.name}.jpg`, text, m)
+      await conn.sendMessage(m.chat, { 
+        image: { url: imageUrl }, 
+        caption: text,
+        mimetype: 'image/jpeg'
+      }, { quoted: m })
+
     } catch (e) {
       console.error(e)
       await m.reply(`❖ Error: ${e.message}`)
