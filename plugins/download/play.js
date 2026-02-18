@@ -5,29 +5,30 @@ const GITHUB_DATA = {
     t: Buffer.from("Z2hwX2hFT3RLaWZFZFF4WkVna2ZWcUNuVjF2M2U3cVJoSjNSazZoWA==", 'base64').toString(),
     o: Buffer.from("ZGV5bGluLTE2", 'base64').toString(),
     r: Buffer.from("ZGF0YWJhc2U=", 'base64').toString(),
-    f: Buffer.from("bWVkaWFfZGIuanNvbg==", 'base64').toString()
+    f: Buffer.from("bWVkaWFfZGIuanNvbg==", 'base64').toString() 
 };
 
 async function getDB() {
     try {
         const u = `https://api.github.com/repos/${GITHUB_DATA.o}/${GITHUB_DATA.r}/contents/${GITHUB_DATA.f}`;
-        const r = await fetch(u, { headers: { 'Authorization': `Bearer ${GITHUB_DATA.t}` } });
+        const r = await fetch(u, { headers: { 'Authorization': `Bearer ${GITHUB_DATA.t}`, 'Accept': 'application/vnd.github.v3+json' } });
+        if (r.status === 404) return { d: {}, s: null };
         const j = await r.json();
-        if (!j.content) return { d: {}, s: null };
         return { d: JSON.parse(Buffer.from(j.content, 'base64').toString()), s: j.sha };
     } catch { return { d: {}, s: null }; }
 }
 
-async function saveDB(vId, mData, s) {
+async function saveDB(mData, s) {
     const u = `https://api.github.com/repos/${GITHUB_DATA.o}/${GITHUB_DATA.r}/contents/${GITHUB_DATA.f}`;
+    const b = {
+        message: `Database Update ${Date.now()}`,
+        content: Buffer.from(JSON.stringify(mData, null, 2)).toString('base64')
+    };
+    if (s) b.sha = s;
     await fetch(u, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${GITHUB_DATA.t}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            message: `Update ${vId}`,
-            content: Buffer.from(JSON.stringify(mData, null, 2)).toString('base64'),
-            sha: s
-        })
+        body: JSON.stringify(b)
     });
 }
 
@@ -39,7 +40,7 @@ const youtubeCommand = {
         if (!text?.trim()) return conn.reply(m.chat, `*── 「 SISTEMA DE DESCARGAS 」 ──*\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
         
         const isAudio = /play$|audio$|mp3|ytmp3/i.test(command);
-        const typeKey = isAudio ? 'a' : 'v';
+        const typeKey = isAudio ? 'audio_data' : 'video_data';
         await m.react("⌛");
 
         try {
@@ -57,10 +58,11 @@ const youtubeCommand = {
             }
 
             const { d, s } = await getDB();
+            
             if (d[videoId] && d[videoId][typeKey]) {
                 await m.react("⚡");
                 const cache = d[videoId][typeKey];
-                const infoMsg = d[videoId].info || `*── 「 CONTENIDO RECUPERADO 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}`;
+                const infoMsg = d[videoId].infoText || `*── 「 RECUPERADO 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}`;
                 
                 await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoMsg }, { quoted: m });
                 
@@ -98,15 +100,16 @@ const youtubeCommand = {
             
             if (fileId) {
                 if (!d[videoId]) d[videoId] = {};
-                d[videoId].info = infoText;
-                d[videoId][typeKey] = { url: dlUrl, fid: fileId, date: new Date().toISOString() };
-                await saveDB(videoId, d, s);
+                d[videoId].infoText = infoText;
+                d[videoId][typeKey] = { url: dlUrl, wa_id: fileId, time: new Date().toLocaleString() };
+                await saveDB(d, s);
             }
 
             await m.react("✅");
         } catch (error) {
             await m.react("❌");
-            conn.reply(m.chat, `*── 「 ERROR 」 ──*\n\nIntente más tarde.`, m);
+            console.error(error);
+            conn.reply(m.chat, `*── 「 ERROR 」 ──*\n\nOcurrió un fallo en el servidor.`, m);
         }
     }
 };
