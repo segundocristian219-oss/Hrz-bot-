@@ -70,8 +70,7 @@ const qcCommand = {
     run: async (m, { conn, text }) => {
         try {
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : m.sender);
-            let mentionRegex = new RegExp(`@${who.split('@')[0]}`, 'gi');
-            let realText = text ? text.replace(mentionRegex, '').trim() : (m.quoted ? m.quoted.text : null);
+            let realText = text ? text.replace(/@\d+/g, '').trim() : (m.quoted ? m.quoted.text : null);
 
             if (!realText) return m.reply(`> *✎ Ingresa un texto.*`);
             if (realText.length > 40) return m.reply(`> *⚠ Máximo 40 caracteres.*`);
@@ -104,10 +103,10 @@ const qcCommand = {
             const json = await axios.post('https://bot.lyo.su/quote/generate', obj, { 
                 headers: { 'Content-Type': 'application/json' } 
             });
-            
+
             const buffer = Buffer.from(json.data.result.image, 'base64');
             let stikerBuffer = await sticker6(buffer);
-            
+
             let pack = "DeylinBot"; 
             let auth = nombre;
             let exifSticker = await addExif(stikerBuffer, pack, auth);
