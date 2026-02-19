@@ -91,7 +91,7 @@ const claimCommand = {
             const customMsg = userData.claimMessage
             const defaultClaimMsg = "€character ha sido reclamado por €user"
             const finalMessage = (customMsg || defaultClaimMsg)
-                .replace(/€user/g, `*${userName}*`)
+                .replace(/€user/g, `*${m.pushName}*`)
                 .replace(/€character/g, `*${roll.name}*`)
 
             await conn.reply(m.chat, `❀ ${finalMessage} (${claimTime}s)`, m)
