@@ -64,6 +64,19 @@ const menuCommand = {
 *┃ ▣* .laugh/reir 
 *┗━━━━━━━━━━━━━*
 
+*┏━━『 𝐆𝐀𝐂𝐇𝐀 』*
+*┃ ▣* .roll / .rw
+*┃ ▣* .claim / .c (reclamar)
+*┃ ▣* .harem / .waifus
+*┃ ▣* .vote / .votar
+*┃ ▣* .charinfo / .winfo
+*┃ ▣* .ginfo / .infogacha
+*┃ ▣* .waifustop / .wtop
+*┃ ▣* .charimag / .cimage
+*┃ ▣* .setclaimmsg
+*┃ ▣* .delclaimmsg
+*┗━━━━━━━━━━━━━*
+
 *┏━━『 𝐈𝐀 』*
 *┃ ▣* .imgg
 *┃ ▣* .ia
