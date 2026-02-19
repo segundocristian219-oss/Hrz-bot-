@@ -73,8 +73,6 @@ const menuCommand = {
 *┃ ▣* .ginfo / .infogacha
 *┃ ▣* .waifustop / .wtop
 *┃ ▣* .charimag / .cimage
-*┃ ▣* .setclaimmsg
-*┃ ▣* .delclaimmsg
 *┗━━━━━━━━━━━━━*
 
 *┏━━『 𝐈𝐀 』*
