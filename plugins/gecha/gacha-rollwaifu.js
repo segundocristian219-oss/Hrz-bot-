@@ -1,4 +1,4 @@
-import { gachaService } from '../lib/gachaService.js'
+import { gachaService } from '../../lib/gachaService.js'
 
 const rollCommand = {
     name: 'roll',
