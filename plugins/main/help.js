@@ -106,6 +106,8 @@ const menuCommand = {
 *┏━━『 𝐒𝐓𝐈𝐂𝐊𝐄𝐑𝐒 』*
 *┃ ▣* .s
 *┃ ▣* .wm
+*┃ ▣* .brat
+*┃ ▣* .qc
 *┃ ▣* .emo (emoji)
 *┃ ▣* .emojimix (emoji+emoji)
 *┃ ▣* .sticker
