@@ -1,4 +1,4 @@
-import { gachaService } from '../lib/gachaService.js'
+import { gachaService } from '../../lib/gachaService.js'
 import fetch from 'node-fetch'
 
 const wimageCommand = {
