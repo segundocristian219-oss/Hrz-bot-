@@ -86,7 +86,7 @@ cfonts.say('CORE SYSTEM • PREMIUM EDITION BY DEYLIN', {
     colors: ['white'],
     space: false
 });
-console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
+console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -189,7 +189,7 @@ global.reload = async function(restatConn) {
     if (connection === 'open') {
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
-        console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
+        console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
         if (!global.subBotsStarted) {
