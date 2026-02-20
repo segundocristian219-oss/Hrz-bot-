@@ -29,27 +29,46 @@ console.log = function () {
   if (
     msg.includes('Closing session') || 
     msg.includes('SessionEntry') || 
-    msg.includes('Verifying identity') || 
     msg.includes('registrationId') || 
     msg.includes('currentRatchet') || 
     msg.includes('rate-overlimit') || 
     msg.includes('429') ||
-    msg.includes('Rate Limit') || 
-    msg.includes('Ignorando') ||
     msg.includes('Connection Terminated') ||
     msg.includes('punycode') ||
     msg.includes('Ouch')
-  ) return;
+  ) return; 
   originalLog.apply(console, [chalk.cyan('┃'), ...args]);
+};
+
+const originalDir = console.dir;
+console.dir = function () {
+  const args = Array.from(arguments);
+  if (!args[0]) return;
+  const isSessionData = 
+    args[0].constructor?.name === 'SessionEntry' || 
+    args[0].sessionConfig || 
+    args[0].registrationId || 
+    args[0].currentRatchet || 
+    args[0]._chains ||
+    (typeof args[0] === 'string' && args[0].includes('SessionEntry'));
+  if (isSessionData) return;
+  originalDir.apply(console, args);
 };
 
 const originalError = console.error;
 console.error = function () {
   const args = Array.from(arguments);
   const msg = args.join(' ');
-  if (msg.includes('rate-overlimit') || msg.includes('429') || msg.includes('Connection Terminated') || msg.includes('punycode')) return;
+  if (
+    msg.includes('rate-overlimit') || 
+    msg.includes('429') || 
+    msg.includes('Connection Terminated') || 
+    msg.includes('punycode') ||
+    msg.includes('Ouch')
+  ) return;
   originalError.apply(console, [chalk.red('┗'), ...args]);
 };
+
 
 EventEmitter.defaultMaxListeners = 0;
 
