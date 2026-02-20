@@ -1,4 +1,5 @@
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -35,43 +36,26 @@ console.log = function () {
     msg.includes('429') ||
     msg.includes('Rate Limit') || 
     msg.includes('Ignorando') ||
-    msg.includes('Connection Terminated')
-  ) {
-    return; 
-  }
-  originalLog.apply(console, [chalk.cyan('『 LOG 』'), ...args]);
-};
-
-const originalDir = console.dir;
-console.dir = function () {
-  const args = Array.from(arguments);
-  if (!args[0]) return originalDir.apply(console, args);
-  const isSessionData = args[0].constructor?.name === 'SessionEntry' || args[0].sessionConfig || args[0].registrationId || args[0].currentRatchet || args[0]._chains;
-  if (isSessionData) return;
-  originalDir.apply(console, args);
+    msg.includes('Connection Terminated') ||
+    msg.includes('punycode')
+  ) return;
+  originalLog.apply(console, [chalk.blueBright('◈'), ...args]);
 };
 
 const originalError = console.error;
 console.error = function () {
   const args = Array.from(arguments);
   const msg = args.join(' ');
-  if (msg.includes('rate-overlimit') || msg.includes('429') || msg.includes('Connection Terminated')) return;
-  originalError.apply(console, [chalk.red.bold('『 ERROR 』'), ...args]);
+  if (msg.includes('rate-overlimit') || msg.includes('429') || msg.includes('Connection Terminated') || msg.includes('punycode')) return;
+  originalError.apply(console, [chalk.redBright('✕'), ...args]);
 };
 
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', async (err) => {
     if (err.message?.includes('Connection Terminated')) return;
-    console.error(chalk.red.bold('\n⚠️ FALLO CRÍTICO:'));
-    console.error(chalk.red(err.stack));
+    console.error(chalk.red.bold('FALLO CRÍTICO:'), err.message);
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
-});
-
-process.on('unhandledRejection', async (reason) => {
-    if (reason?.message?.includes('Connection Terminated')) return;
-    console.error(chalk.red.bold('\n⚠️ PROMESA RECHAZADA:'));
-    console.error(chalk.red(reason));
 });
 
 const { 
@@ -89,8 +73,23 @@ const { chain } = lodash;
 if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
-cfonts.say('CAT-BOT', { font: 'block', align: 'center', colors: ['magenta', 'bright_cyan'] });
-cfonts.say('Premium Edition by Deylin', { font: 'console', align: 'center', colors: ['white'] });
+cfonts.say('CAT-BOT', {
+    font: 'block',
+    align: 'center',
+    colors: ['magenta', 'cyan'],
+    background: 'transparent',
+    letterSpacing: 1,
+    lineHeight: 1,
+    space: true,
+    maxLength: '0',
+});
+
+cfonts.say('PREMIUM SYSTEM BY DEYLIN', {
+    font: 'console',
+    align: 'center',
+    colors: ['bright_white'],
+    space: false,
+});
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -104,23 +103,14 @@ global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse()
 global.prefix = new RegExp('^[#!./]');
 
 const adapter = new JSONFile('database.json');
-global.db = new Low(adapter, {
-    users: {},
-    chats: {},
-    stats: {},
-    msgs: {},
-    sticker: {},
-    settings: {}
-});
+global.db = new Low(adapter, { users: {}, chats: {}, stats: {}, msgs: {}, sticker: {}, settings: {} });
 
 global.loadDatabase = async function loadDatabase() {
   if (global.db.READ) return;
   global.db.READ = true;
   await global.db.read().catch(() => {});
   global.db.READ = null;
-  global.db.data = global.db.data || {
-    users: {}, chats: {}, stats: {}, msgs: {}, sticker: {}, settings: {}
-  };
+  global.db.data = global.db.data || { users: {}, chats: {}, stats: {}, msgs: {}, sticker: {}, settings: {} };
 };
 await loadDatabase();
 
@@ -158,17 +148,17 @@ global.conn = makeWASocket(connectionOptions);
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
-    console.log(chalk.bold.cyan('\n『 VINCULACIÓN DE CUENTA 』'));
-    let phoneNumber = await question(chalk.white(`\n➤ Ingresa el número de WhatsApp:\n> `));
+    console.log(chalk.bold.magenta('\n» VINCULACIÓN REQUERIDA'));
+    let phoneNumber = await question(chalk.white(`➤ Ingresa el número:\n> `));
     let addNumber = phoneNumber.replace(/\D/g, '');
 
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
             codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.black.bgCyan(`\n CÓDIGO DE VINCULACIÓN: ${codeBot} \n`));
+            console.log(chalk.bgMagenta.white.bold(`\n CÓDIGO: ${codeBot} \n`));
         } catch {
-            console.log(chalk.red('\n[!] Error al generar código.'));
+            console.log(chalk.red('\n✕ Error en red.'));
         }
     }, 3000);
 }
@@ -198,9 +188,9 @@ global.reload = async function(restatConn) {
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
-    if (connection === 'connecting') console.log(chalk.cyan(`『 SISTEMA 』Estableciendo conexión...`));
+    if (connection === 'connecting') console.log(chalk.cyan(`» Sincronizando sistema...`));
     if (connection === 'open') {
-        console.log(chalk.green.bold(`『 ÉXITO 』CAT-BOT conectado como: ${conn.user.name}`));
+        console.log(chalk.greenBright.bold(`» CAT-BOT ONLINE: ${conn.user.name}`));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
         if (!global.subBotsStarted) {
@@ -212,10 +202,10 @@ global.reload = async function(restatConn) {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
       if (reason !== DisconnectReason.loggedOut) {
-          console.log(chalk.yellow(`『 RECONEXIÓN 』Motivo: ${reason}. Reiniciando en 5s...`));
+          console.log(chalk.yellow(`» Reconexión automática activa (Motivo: ${reason})`));
           await global.reload(true);
       } else {
-          console.log(chalk.red.bold("『 ERROR 』Sesión finalizada."));
+          console.log(chalk.red.bold("» Sesión cerrada. Limpiando datos..."));
           rmSync(sessionPath, { recursive: true, force: true });
           process.exit(1);
       }
@@ -233,7 +223,7 @@ const monitorRemoteOrders = async () => {
         const response = await axios.get('https://script.google.com/macros/s/AKfycbxnJ_BRuW2DdNDCtnspyL1qHvedn4Ue5k3OFfzZK4aFH50aVz1hgO094d02DEqKFB8gCg/exec');
         const { config } = response.data;
         if (config.restart && config.timestamp > global.lastRestartTime) {
-            console.log(chalk.bgMagenta.white(' 『 REMOTO 』ORDEN DE REINICIO RECIBIDA '));
+            console.log(chalk.bgCyan.black(' » ORDEN DE REINICIO REMOTA DETECTADA « '));
             global.lastRestartTime = config.timestamp;
             setTimeout(() => { process.exit(0); }, 1000);
         }
@@ -283,7 +273,7 @@ watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
             const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
             aliases.forEach(a => global.aliases.set(a, pluginName));
         }
-        console.log(chalk.magenta(`『 PLUGIN 』Módulo actualizado: ${pluginName}`));
+        console.log(chalk.cyanBright(`» Módulo actualizado: ${pluginName}`));
       } catch (e) {}
     }
   }
