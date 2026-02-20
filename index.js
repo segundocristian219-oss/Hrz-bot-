@@ -37,9 +37,10 @@ console.log = function () {
     msg.includes('Rate Limit') || 
     msg.includes('Ignorando') ||
     msg.includes('Connection Terminated') ||
-    msg.includes('punycode')
+    msg.includes('punycode') ||
+    msg.includes('Ouch')
   ) return;
-  originalLog.apply(console, [chalk.blueBright('◈'), ...args]);
+  originalLog.apply(console, [chalk.cyan('┃'), ...args]);
 };
 
 const originalError = console.error;
@@ -47,14 +48,14 @@ console.error = function () {
   const args = Array.from(arguments);
   const msg = args.join(' ');
   if (msg.includes('rate-overlimit') || msg.includes('429') || msg.includes('Connection Terminated') || msg.includes('punycode')) return;
-  originalError.apply(console, [chalk.redBright('✕'), ...args]);
+  originalError.apply(console, [chalk.red('┗'), ...args]);
 };
 
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', async (err) => {
     if (err.message?.includes('Connection Terminated')) return;
-    console.error(chalk.red.bold('FALLO CRÍTICO:'), err.message);
+    console.error(chalk.red.bold('CRITICAL:'), err.message);
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
 
@@ -68,28 +69,24 @@ const {
     Browsers
 } = await import('@whiskeysockets/baileys');
 
-const { chain } = lodash;
-
 if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
+
 cfonts.say('CAT-BOT', {
-    font: 'block',
+    font: 'slick', 
     align: 'center',
-    colors: ['magenta', 'cyan'],
-    background: 'transparent',
-    letterSpacing: 1,
-    lineHeight: 1,
-    space: true,
-    maxLength: '0',
+    colors: ['cyan', 'white'],
+    letterSpacing: 2
 });
 
-cfonts.say('PREMIUM SYSTEM BY DEYLIN', {
+cfonts.say('CORE SYSTEM • PREMIUM EDITION BY DEYLIN', {
     font: 'console',
     align: 'center',
-    colors: ['bright_white'],
-    space: false,
+    colors: ['white'],
+    space: false
 });
+console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -148,17 +145,17 @@ global.conn = makeWASocket(connectionOptions);
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
-    console.log(chalk.bold.magenta('\n» VINCULACIÓN REQUERIDA'));
-    let phoneNumber = await question(chalk.white(`➤ Ingresa el número:\n> `));
+    console.log(chalk.cyan('┃ ') + chalk.bold('AUTENTICACIÓN REQUERIDA'));
+    let phoneNumber = await question(chalk.cyan('┃ ') + `Ingresa el número:\n` + chalk.cyan('┗ ') + `> `);
     let addNumber = phoneNumber.replace(/\D/g, '');
 
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
             codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.bgMagenta.white.bold(`\n CÓDIGO: ${codeBot} \n`));
+            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
         } catch {
-            console.log(chalk.red('\n✕ Error en red.'));
+            console.log(chalk.red('┗ Error en la generación del código.'));
         }
     }, 3000);
 }
@@ -188,9 +185,11 @@ global.reload = async function(restatConn) {
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
-    if (connection === 'connecting') console.log(chalk.cyan(`» Sincronizando sistema...`));
+    if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando con servidores...`);
     if (connection === 'open') {
-        console.log(chalk.greenBright.bold(`» CAT-BOT ONLINE: ${conn.user.name}`));
+        console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
+        console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
+        console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
         if (!global.subBotsStarted) {
@@ -202,10 +201,10 @@ global.reload = async function(restatConn) {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
       if (reason !== DisconnectReason.loggedOut) {
-          console.log(chalk.yellow(`» Reconexión automática activa (Motivo: ${reason})`));
+          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática (Motivo: ${reason})`));
           await global.reload(true);
       } else {
-          console.log(chalk.red.bold("» Sesión cerrada. Limpiando datos..."));
+          console.log(chalk.red('┗ Sesión finalizada permanentemente.'));
           rmSync(sessionPath, { recursive: true, force: true });
           process.exit(1);
       }
@@ -223,7 +222,7 @@ const monitorRemoteOrders = async () => {
         const response = await axios.get('https://script.google.com/macros/s/AKfycbxnJ_BRuW2DdNDCtnspyL1qHvedn4Ue5k3OFfzZK4aFH50aVz1hgO094d02DEqKFB8gCg/exec');
         const { config } = response.data;
         if (config.restart && config.timestamp > global.lastRestartTime) {
-            console.log(chalk.bgCyan.black(' » ORDEN DE REINICIO REMOTA DETECTADA « '));
+            console.log(chalk.cyan('┃ ') + chalk.bgCyan.black(' RESET ') + ` Orden remota recibida.`);
             global.lastRestartTime = config.timestamp;
             setTimeout(() => { process.exit(0); }, 1000);
         }
@@ -273,7 +272,7 @@ watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
             const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
             aliases.forEach(a => global.aliases.set(a, pluginName));
         }
-        console.log(chalk.cyanBright(`» Módulo actualizado: ${pluginName}`));
+        console.log(chalk.cyan('┃ ') + chalk.white(`Update: ${pluginName}`));
       } catch (e) {}
     }
   }
