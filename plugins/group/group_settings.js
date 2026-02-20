@@ -2,22 +2,12 @@ import fetch from 'node-fetch'
 
 const groupConfig = {
     name: 'config_group',
-    alias: ['welcome', 'detect', 'setwelcome', 'delwelcome', 'renombrar', 'setnombre', 'setname', 'desc', 'setdesc', 'setfoto', 'setpp', 'elimina', 'kick', 'ban', 'echar', 'sacar', 'tagall', 'todos', 'anuncio'],
+    alias: ['setwelcome', 'delwelcome', 'renombrar', 'setnombre', 'setname', 'desc', 'setdesc', 'setfoto', 'setpp', 'elimina', 'kick', 'ban', 'echar', 'sacar', 'tagall', 'todos', 'anuncio'],
     category: 'group',
     admin: true,
     group: true,
     botAdmin: true,
     run: async function (m, { conn, text, command, participants, chat }) {
-
-        if (command === 'welcome') {
-            chat.welcome = !chat.welcome
-            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴇsᴛᴀᴅᴏ: ʙɪᴇɴᴠᴇɴɪᴅᴀ\n> ┃ ✎ sᴛᴀᴛᴜs: ${chat.welcome ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ'}\n> ┗━━━━━━━━━━━━━━━━━━┛`)
-        }
-
-        if (command === 'detect') {
-            chat.detect = !chat.detect
-            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴇsᴛᴀᴅᴏ: ᴅᴇᴛᴇᴄᴛᴏʀ\n> ┃ ✎ sᴛᴀᴛᴜs: ${chat.detect ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ'}\n> ┗━━━━━━━━━━━━━━━━━━┛`)
-        }
 
         if (command === 'setwelcome') {
             if (!text) return m.reply('> ┃ ✎ ᴇʀʀᴏʀ: ɪɴɢʀᴇsᴀ ᴇʟ ᴛᴇxᴛᴏ.')
