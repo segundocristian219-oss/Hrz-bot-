@@ -35,7 +35,8 @@ console.log = function () {
     msg.includes('429') ||
     msg.includes('Connection Terminated') ||
     msg.includes('punycode') ||
-    msg.includes('Ouch')
+    msg.includes('Ouch') ||
+    msg.includes('Decrypted message')
   ) return; 
   originalLog.apply(console, [chalk.cyan('┃'), ...args]);
 };
@@ -68,7 +69,6 @@ console.error = function () {
   ) return;
   originalError.apply(console, [chalk.red('┗'), ...args]);
 };
-
 
 EventEmitter.defaultMaxListeners = 0;
 
@@ -179,6 +179,28 @@ if (!state.creds.registered) {
     }, 3000);
 }
 
+const cleanSessions = async () => {
+    const sessionDir = './sessions';
+    if (!existsSync(sessionDir)) return;
+    const files = readdirSync(sessionDir);
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    let deletedCount = 0;
+    for (const file of files) {
+        if (file === 'creds.json' || statSync(join(sessionDir, file)).isDirectory()) continue;
+        const filePath = join(sessionDir, file);
+        const { mtime } = statSync(filePath);
+        if (now - mtime.getTime() > oneDay) {
+            try {
+                unlinkSync(filePath);
+                deletedCount++;
+            } catch (e) {}
+        }
+    }
+};
+
+setInterval(cleanSessions, 3600000);
+
 if (global.db) setInterval(async () => { if (global.db.data) await global.db.write(); }, 30000);
 
 global.reload = async function(restatConn) {
@@ -211,6 +233,7 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
+        await cleanSessions();
         if (!global.subBotsStarted) {
             global.subBotsStarted = true;
             await initSubBots();
@@ -303,11 +326,10 @@ async function initSubBots() {
     const folders = readdirSync(jadibtsDir).filter(f => 
         statSync(join(jadibtsDir, f)).isDirectory() && existsSync(join(jadibtsDir, f, 'creds.json'))
     );
-    for (const folder of folders) {
+    await Promise.allSettled(folders.map(async (folder) => {
         try {
             const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
             await assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
-            await new Promise(r => setTimeout(r, 1500)); 
         } catch (e) {}
-    }
+    }));
 }
