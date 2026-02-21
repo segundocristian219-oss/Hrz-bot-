@@ -29,3 +29,6 @@ const datosCommand = {
         }
     }
 };
+
+
+export default datosCommand
