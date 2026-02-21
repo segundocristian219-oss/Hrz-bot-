@@ -78,7 +78,16 @@ const qcCommand = {
             await m.react('🕓');
 
             const pp = await conn.profilePictureUrl(who, 'image').catch(() => 'https://telegra.ph/file/24fa902ead26340f3df2c.png');
-            const nombre = await conn.getName(who);
+            
+            const nameFromConn = await conn.getName(who);
+            const nameFromDb = global.db.data?.users[who]?.name;
+            const pushName = m.quoted?.pushName; 
+            
+            
+            let nombre = nameFromConn;
+            if (/^\d+$/.test(nombre) || nombre.includes('@')) {
+                nombre = (nameFromDb && !/^\d+$/.test(nameFromDb)) ? nameFromDb : (pushName || who.split('@')[0]);
+            }
 
             const obj = {
                 "type": "quote",
@@ -107,7 +116,7 @@ const qcCommand = {
             const buffer = Buffer.from(json.data.result.image, 'base64');
             let stikerBuffer = await sticker6(buffer);
 
-            let pack = "DeylinBot"; 
+            let pack = "CAT-BOT"; 
             let auth = nombre;
             let exifSticker = await addExif(stikerBuffer, pack, auth);
 
