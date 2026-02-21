@@ -160,6 +160,8 @@ const connectionOptions = {
 };
 
 global.conn = makeWASocket(connectionOptions);
+global.conn.contacts = global.conn.contacts || {}; 
+
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -205,9 +207,11 @@ if (global.db) setInterval(async () => { if (global.db.data) await global.db.wri
 
 global.reload = async function(restatConn) {
   if (restatConn) {
+    const oldContacts = global.conn?.contacts || {}; 
     try { global.conn.ws.close(); } catch {}
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
+    global.conn.contacts = global.conn.contacts || {}; 
   }
 
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
@@ -223,6 +227,26 @@ global.reload = async function(restatConn) {
         if (!e.message?.includes('Connection Terminated')) await uploadCriticalError(e, 'Message Upsert');
     }
   });
+
+    global.conn.ev.on('contacts.upsert', (contacts) => {
+    for (let contact of contacts) {
+      let id = global.conn.decodeJid(contact.id);
+      if (id) {
+        if (!global.conn.contacts) global.conn.contacts = {};
+        let data = { 
+          id, 
+          name: contact.verifiedName || contact.name || contact.notify 
+        };
+        global.conn.contacts[id] = data;
+       
+        if (global.db.data) {
+           global.db.data.users[id] = { ...global.db.data.users[id], name: data.name };
+        }
+      }
+    }
+  });
+
+
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
