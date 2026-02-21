@@ -4,13 +4,12 @@ const novaCommand = {
     name: 'nova',
     alias: ['ia', 'catia'],
     category: 'ia',
-    run: async (m, { conn, text }) => {
-        if (!text) return m.reply(`> *✎ Hola, soy CAT-BOT IA. ¿En qué puedo ayudarte hoy?*`);
+        run: async (m, { conn, text }) => {
+        if (!text) return m.reply(`> *✎ Hola, ¿en qué puedo ayudarte hoy?*`);
 
         await m.react('💬');
 
         try {
-            
             const name = m.pushName || global.db.data?.users[m.sender]?.name || 'Usuario';
 
             const payload = {
@@ -18,33 +17,35 @@ const novaCommand = {
                 messages: [
                     { 
                         role: "system", 
-                        content: `Eres CAT-BOT, un asistente avanzado creado por Deylin. Estás hablando con ${name}.` 
+                        content: `Eres CAT-BOT, un asistente útil. Responde de forma clara. Evita usar tablas de Markdown complicadas, usa mejor listas con guiones. Estás hablando con ${name}.` 
                     },
                     { role: "user", content: text }
                 ]
             };
 
-            const { data } = await axios.post('https://api.nova.amazon.com/v1/chat/completions', payload, {
+            const { data } = await axios.post('[https://api.nova.amazon.com/v1/chat/completions](https://api.nova.amazon.com/v1/chat/completions)', payload, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer 3f7f5a1f-36df-44b0-ac47-eb5554fe022c`
                 }
             });
 
-            if (data && data.choices && data.choices[0].message) {
-                const response = data.choices[0].message.content;
-                await m.reply(response);
-                await m.react('✅');
-            } else {
-                throw new Error('Estructura de respuesta inválida');
-            }
+            let response = data.choices[0].message.content;
+
+            
+            response = response
+                .replace(/###\s+/g, '*■ ') 
+                .replace(/##\s+/g, '*▼ ')  
+                .replace(/#\s+/g, '*► ')   
+                .replace(/\*\*/g, '*')     
+                .replace(/```/g, '```');   
+
+            await m.reply(response.trim());
+            await m.react('✅');
 
         } catch (e) {
-            console.error('Error en Nova IA:', e.response ? e.response.data : e.message);
+            console.error('Error en Nova IA:', e.message);
             await m.react('✖️');
-            m.reply(`> *⚠ Error en el servidor de Amazon Nova. Intenta más tarde.*`);
+            m.reply(`> *⚠ Error al procesar la respuesta.*`);
         }
     }
-};
-
-export default novaCommand;
