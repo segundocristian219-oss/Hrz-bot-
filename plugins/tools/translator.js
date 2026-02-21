@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const translateConfig = {
     name: 'translate',
-    alias: ['traducir', 'trt'],
+    alias: ['traducir', 'trt', 'traduce'],
     category: 'tools',
     run: async function (m, { text, args, command }) {
         const MyApiUrl = 'https://script.google.com/macros/s/AKfycbwSWtr-v945xDM6hr49pwob6-ZYxJll85WL-q-GdbpQuVPW62X33NnXMwBl8AKodzfa/exec';
