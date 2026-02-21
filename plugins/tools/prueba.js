@@ -1,38 +1,31 @@
 const datosCommand = {
     name: 'datos',
-    alias: ['info', 'userinfo'],
+    alias: ['info'],
     category: 'tools',
     run: async (m, { conn }) => {
-        // 1. Datos de quien envía el comando (ya procesados por tu smsg)
-        let emisorNombre = m.pushName || 'Usuario';
-        let emisorJid = m.sender;
-
-        // 2. Datos del etiquetado o mencionado (usando tus nuevas propiedades)
+        let emisorNombre = m.pushName || global.db.data?.users[m.sender]?.name || 'Usuario';
+        
         if (m.mentionedJid && m.mentionedJid.length > 0) {
-            let mencionadoNombre = m.mentionedNames[0] || (global.db.data.users[mencionadoJid]?.name) || mencionadoJid.split('@')[0];
-
             let mencionadoJid = m.mentionedJid[0];
+            // Buscamos el nombre en menciones, luego en DB, luego número
+            let mencionadoNombre = m.mentionedNames[0] || global.db.data?.users[mencionadoJid]?.name || mencionadoJid.split('@')[0];
             
             let respuesta = `*📊 REPORTE DE USUARIOS*\n\n`;
             respuesta += `*👤 QUIÉN ETIQUETÓ:* ${emisorNombre}\n`;
-            respuesta += `*🆔 ID Emisor:* ${emisorJid}\n\n`;
             respuesta += `*🎯 USUARIO ETIQUETADO:* ${mencionadoNombre}\n`;
-            respuesta += `*🆔 ID Etiquetado:* ${mencionadoJid}\n\n`;
-            respuesta += `*💬 Mensaje:* ${m.text}`;
-
+            respuesta += `*🆔 ID Etiquetado:* ${mencionadoJid}`;
             await m.reply(respuesta);
+
         } else if (m.quoted) {
-            // Extra: También funciona si respondes a un mensaje sin etiquetar
+            let citadoNombre = m.quoted.pushName || global.db.data?.users[m.quoted.sender]?.name || m.quoted.sender.split('@')[0];
+            
             let respuesta = `*📊 REPORTE DE USUARIO (RESPONDIDO)*\n\n`;
             respuesta += `*👤 QUIÉN RESPONDIÓ:* ${emisorNombre}\n`;
-            respuesta += `*🎯 USUARIO CITADO:* ${m.quoted.pushName}\n`;
+            respuesta += `*🎯 USUARIO CITADO:* ${citadoNombre}\n`;
             respuesta += `*🆔 ID Citado:* ${m.quoted.sender}`;
-            
             await m.reply(respuesta);
         } else {
-            await m.reply(`Hola ${emisorNombre}, para que esto funcione debes etiquetar a alguien con @ o responder a su mensaje.`);
+            await m.reply(`Etiqueta a alguien o responde a un mensaje.`);
         }
     }
 };
-
-export default datosCommand;
