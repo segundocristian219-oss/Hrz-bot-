@@ -1,16 +1,11 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-    baseURL: 'https://api.nova.amazon.com/v1',
-    apiKey: '273303eb-65c5-40c4-b708-df34d3af61e4'
-});
+import axios from 'axios';
 
 const novaCommand = {
     name: 'nova',
-    alias: ['novaai'],
+    alias: ['ia', 'catia'],
     category: 'ia',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply(`> *✎ Hola, ¿en qué puedo ayudarte hoy?*`);
+        if (!text) return m.reply(`> *✎ Hola, soy CAT-BOT IA. ¿En qué puedo ayudarte hoy?*`);
 
         await m.react('💬');
 
@@ -18,24 +13,36 @@ const novaCommand = {
             
             const name = m.pushName || global.db.data?.users[m.sender]?.name || 'Usuario';
 
-            const completion = await openai.chat.completions.create({
-                model: "amazon.nova-lite-v1.0", 
+            const payload = {
+                model: "nova-2-lite-v1",
                 messages: [
-                    { role: "system", content: `Eres un asistente útil. Estás hablando con ${name}.` },
+                    { 
+                        role: "system", 
+                        content: `Eres CAT-BOT, un asistente avanzado creado por Deylin. Estás hablando con ${name}.` 
+                    },
                     { role: "user", content: text }
-                ],
+                ]
+            };
+
+            const { data } = await axios.post('https://api.nova.amazon.com/v1/chat/completions', payload, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer 3f7f5a1f-36df-44b0-ac47-eb5554fe022c`
+                }
             });
 
-            const response = completion.choices[0].message.content;
-            
-            await m.reply(response);
-            await m.react('✅');
+            if (data && data.choices && data.choices[0].message) {
+                const response = data.choices[0].message.content;
+                await m.reply(response);
+                await m.react('✅');
+            } else {
+                throw new Error('Estructura de respuesta inválida');
+            }
 
         } catch (e) {
-            console.error('Error en Nova IA:', e);
+            console.error('Error en Nova IA:', e.response ? e.response.data : e.message);
             await m.react('✖️');
-            
-            m.reply(`> *⚠ Hubo un error al conectar con la IA.*`);
+            m.reply(`> *⚠ Error en el servidor de Amazon Nova. Intenta más tarde.*`);
         }
     }
 };
