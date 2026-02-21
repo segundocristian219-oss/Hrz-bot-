@@ -63,6 +63,7 @@
     "redis": "^4.7.0",
     "ruhend-scraper": "^7.0.4",
     "syntax-error": "^1.4.0",
+    "openai": "^4.72.0",
     "terminal-image": "^3.0.0",
     "tough-cookie": "^5.1.0",
     "url-regex-safe": "^4.0.0",
