@@ -9,7 +9,8 @@ const datosCommand = {
 
         // 2. Datos del etiquetado o mencionado (usando tus nuevas propiedades)
         if (m.mentionedJid && m.mentionedJid.length > 0) {
-            let mencionadoNombre = m.mentionedNames[0]; // El nombre original de la cuenta
+            let mencionadoNombre = m.mentionedNames[0] || (global.db.data.users[mencionadoJid]?.name) || mencionadoJid.split('@')[0];
+
             let mencionadoJid = m.mentionedJid[0];
             
             let respuesta = `*📊 REPORTE DE USUARIOS*\n\n`;
