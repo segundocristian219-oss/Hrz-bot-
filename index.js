@@ -228,19 +228,23 @@ global.reload = async function(restatConn) {
             await initSubBots();
         }
     }
-    if (connection === 'close') {
+        if (connection === 'close') {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
+      
       console.error(chalk.red(`Conexión cerrada. Razón: ${reason}`));
+
       if (reason !== DisconnectReason.loggedOut) {
           console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática...`));
           await global.reload(true);
       } else {
-          console.log(chalk.red('┗ Sesión finalizada permanentemente.'));
-          rmSync(sessionPath, { recursive: true, force: true });
-          process.exit(1);
+          console.log(chalk.red('┗ Advertencia: WhatsApp reportó sesión finalizada (401).'));
+          console.log(chalk.red('┃ No se borrará la carpeta. Intenta reiniciar el servidor una vez más.'));
+          console.log(chalk.red('┃ Si el error persiste, borra la carpeta sessions manualmente y vincula de nuevo.'));
+          process.exit(1); 
       }
     }
+
   });
 
   global.conn.ev.on('creds.update', async () => {
