@@ -1,78 +1,36 @@
 let linkRegex = /chat.whatsapp.com\/([0-9A-Za-z]{20,24})/i
 let linkRegex1 = /whatsapp.com\/channel\/([0-9A-Za-z]{20,24})/i
 
-const message = m => m
+const message = {
+    before: async function (m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, chat }) {
+        if (!m.isGroup) return false
+        if (!chat?.antiLink) return false
+        if (isAdmin || isOwner || m.fromMe || isROwner) return false
 
-message.before = async function (m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, participants }) {
-  if (!m.isGroup) return !1
+        const isGroupLink = linkRegex.exec(m.text) || linkRegex1.exec(m.text)
+        const isChannelForward = m?.msg?.contextInfo?.forwardedNewsletterMessageInfo
 
-  let chat = global.db.data.chats[m.chat]
-  if (!chat?.antiLink) return !1
-  if (isAdmin || isOwner || m.fromMe || isROwner) return !1
+        if (isGroupLink || isChannelForward) {
+            if (isGroupLink && isBotAdmin) {
+                const linkThisGroup = `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`
+                if (m.text.includes(linkThisGroup)) return false
+            }
 
-  const delet = m.key.participant
-  const bang = m.key.id
-  const user = `@${m.sender.split`@`[0]}`
-  const groupAdmins = participants.filter(p => p.admin)
-  const isGroupLink = linkRegex.exec(m.text) || linkRegex1.exec(m.text)
-  const isChannelForward = m?.msg?.contextInfo?.forwardedNewsletterMessageInfo
+            await conn.sendMessage(m.chat, { 
+                text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬\n┃ *「 ENLACE DETECTADO 」*\n┃\n┃ @${m.sender.split('@')[0]} Rompiste las reglas.\n┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`, 
+                mentions: [m.sender] 
+            }, { quoted: m })
 
-  if (isChannelForward && !isAdmin) {
-    try {
-      await conn.sendMessage(m.chat, { 
-        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬\n┃ *「 ENLACE DETECTADO 」*\n┃\n┃ ${user} Rompiste las reglas del \n┃ Grupo serás eliminado...\n┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`, 
-        mentions: [m.sender] 
-      }, { quoted: m })
+            if (!isBotAdmin) return false
 
-      if (!isBotAdmin) {
-        await conn.sendMessage(m.chat, { 
-          text: `⍰ El bot no tiene permisos de administrador para eliminar al usuario.`,
-          mentions: groupAdmins.map(v => v.id) 
-        }, { quoted: m })
-        return !1
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: bang, participant: delet } })
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
-    } catch (e) {
-      console.error(e)
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            await conn.sendMessage(m.chat, { delete: m.key })
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+            return true
+        }
+        return false
     }
-    return !0
-  }
-
-  if (isGroupLink && !isAdmin) {
-    try {
-      if (isBotAdmin) {
-        const linkThisGroup = `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`
-        if (m.text.includes(linkThisGroup)) return !1
-      }
-
-      await conn.sendMessage(m.chat, { 
-        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬\n┃ *「 ENLACE DETECTADO 」*\n┃\n┃ ${user} Rompiste las reglas del \n┃ Grupo serás eliminado...\n┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`,
-        mentions: [m.sender] 
-      }, { quoted: m })
-
-      if (!isBotAdmin) {
-        await conn.sendMessage(m.chat, { 
-          text: `⍰ El antilink está activo pero no puedo eliminarte porque no soy admin.`,
-          mentions: groupAdmins.map(v => v.id) 
-        }, { quoted: m })
-        return !1
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: bang, participant: delet } })
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
-    } catch (e) {
-      console.error(e)
-    }
-    return !0
-  }
-
-  return !1
 }
 
 export default message
