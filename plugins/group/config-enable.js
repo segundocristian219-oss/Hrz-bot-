@@ -1,4 +1,4 @@
-const enableHandler = {
+const enable = {
     name: 'enable_disable',
     alias: ['welcome', 'bv', 'bienvenida', 'detect', 'configuraciones', 'avisodegp', 'gacha', 'antisub'],
     category: 'config',
@@ -44,4 +44,4 @@ const enableHandler = {
     }
 }
 
-export default enableHandler
+export default enable
