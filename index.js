@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+Process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -25,56 +25,25 @@ import { EventEmitter } from 'events';
 const originalLog = console.log;
 console.log = function () {
   const args = Array.from(arguments);
-  const msg = args.join(' ');
-  if (
-    msg.includes('Closing session') || 
-    msg.includes('SessionEntry') || 
-    msg.includes('registrationId') || 
-    msg.includes('currentRatchet') || 
-    msg.includes('rate-overlimit') || 
-    msg.includes('429') ||
-    msg.includes('Connection Terminated') ||
-    msg.includes('punycode') ||
-    msg.includes('Ouch') ||
-    msg.includes('Decrypted message')
-  ) return; 
   originalLog.apply(console, [chalk.cyan('┃'), ...args]);
 };
 
 const originalDir = console.dir;
 console.dir = function () {
   const args = Array.from(arguments);
-  if (!args[0]) return;
-  const isSessionData = 
-    args[0].constructor?.name === 'SessionEntry' || 
-    args[0].sessionConfig || 
-    args[0].registrationId || 
-    args[0].currentRatchet || 
-    args[0]._chains ||
-    (typeof args[0] === 'string' && args[0].includes('SessionEntry'));
-  if (isSessionData) return;
   originalDir.apply(console, args);
 };
 
 const originalError = console.error;
 console.error = function () {
   const args = Array.from(arguments);
-  const msg = args.join(' ');
-  if (
-    msg.includes('rate-overlimit') || 
-    msg.includes('429') || 
-    msg.includes('Connection Terminated') || 
-    msg.includes('punycode') ||
-    msg.includes('Ouch')
-  ) return;
   originalError.apply(console, [chalk.red('┗'), ...args]);
 };
 
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', async (err) => {
-    if (err.message?.includes('Connection Terminated')) return;
-    console.error(chalk.red.bold('CRITICAL:'), err.message);
+    console.error(chalk.red.bold('CRITICAL:'), err);
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
 
@@ -124,7 +93,7 @@ global.db = new Low(adapter, { users: {}, chats: {}, stats: {}, msgs: {}, sticke
 global.loadDatabase = async function loadDatabase() {
   if (global.db.READ) return;
   global.db.READ = true;
-  await global.db.read().catch(() => {});
+  await global.db.read().catch((e) => console.error(e));
   global.db.READ = null;
   global.db.data = global.db.data || { users: {}, chats: {}, stats: {}, msgs: {}, sticker: {}, settings: {} };
 };
@@ -140,7 +109,7 @@ const connectionOptions = {
   version,
   logger: pino({ level: 'silent' }), 
   printQRInTerminal: false,
-  browser: Browsers.ubuntu("Chrome"),
+  browser: Browsers.macOS("Safari"),
   auth: {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
@@ -160,7 +129,6 @@ const connectionOptions = {
 };
 
 global.conn = makeWASocket(connectionOptions);
-
 global.conn.contacts = global.conn.contacts || {}; 
 
 if (!state.creds.registered) {
@@ -174,9 +142,9 @@ if (!state.creds.registered) {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
             codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.cyan('┃ ') + chalk.white.bgCyan.bold(` CÓDIGO DE VINCULACIÓN: `) + chalk.black.bgWhite.bold(` ${codeBot} `));
-        } catch {
-            console.log(chalk.red('┗ Error en la generación del código.'));
+            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
+        } catch (e) {
+            console.error(e);
         }
     }, 3000);
 }
@@ -194,7 +162,7 @@ const cleanSessions = async () => {
         if (now - mtime.getTime() > oneDay) {
             try {
                 unlinkSync(filePath);
-            } catch (e) {}
+            } catch (e) { console.error(e); }
         }
     }
 };
@@ -205,7 +173,7 @@ if (global.db) setInterval(async () => { if (global.db.data) await global.db.wri
 
 global.reload = async function(restatConn) {
   if (restatConn) {
-    try { global.conn.ws.close(); } catch {}
+    try { global.conn.ws.close(); } catch (e) { console.error(e); }
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
     global.conn.contacts = global.conn.contacts || {}; 
@@ -221,7 +189,8 @@ global.reload = async function(restatConn) {
         const Func = module.message || module.default?.message || module.default;
         if (typeof Func === 'function') await Func.call(conn, m, chatUpdate);
     } catch (e) {
-        if (!e.message?.includes('Connection Terminated')) await uploadCriticalError(e, 'Message Upsert');
+        console.error(e);
+        await uploadCriticalError(e, 'Message Upsert');
     }
   });
 
@@ -242,16 +211,14 @@ global.reload = async function(restatConn) {
     }
   });
 
-    global.conn.ev.on('connection.update', async (update) => {
+  global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando con servidores...`);
-
     if (connection === 'open') {
-        if (conn.user?.id) conn.user.id = jidNormalizedUser(conn.user.id);
-        global.botNumber = conn.user.id; 
-
+        global.conn.user.id = jidNormalizedUser(global.conn.user.id);
+        global.botNumber = global.conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
-        console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name} (${global.botNumber})`));
+        console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
@@ -261,45 +228,42 @@ global.reload = async function(restatConn) {
             await initSubBots();
         }
     }
-
     if (connection === 'close') {
       await monitorBot(conn, 'offline');
-      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-      
-      if (reason === DisconnectReason.loggedOut) {
-          console.log(chalk.red('┗ Sesión finalizada: El dispositivo fue desvinculado.'));
-          if (existsSync(sessionPath)) rmSync(sessionPath, { recursive: true, force: true });
-          process.exit(1);
-      } else {
-          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática... (Motivo: ${reason || 'Fallo de Red'})`));
+      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
+      console.error(chalk.red(`Conexión cerrada. Razón: ${reason}`));
+      if (reason !== DisconnectReason.loggedOut) {
+          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática...`));
           await global.reload(true);
+      } else {
+          console.log(chalk.red('┗ Sesión finalizada permanentemente.'));
+          rmSync(sessionPath, { recursive: true, force: true });
+          process.exit(1);
       }
     }
   });
 
-    global.conn.ev.on('creds.update', async () => {
-        if (global.conn.user?.id) global.conn.user.id = jidNormalizedUser(global.conn.user.id);
-        if (global.conn.user?.lid) global.conn.user.lid = jidNormalizedUser(global.conn.user.lid);
-        await saveCreds();
-    });
+  global.conn.ev.on('creds.update', async () => {
+      if (global.conn.user?.id) {
+          global.conn.user.id = jidNormalizedUser(global.conn.user.id);
+      }
+      await saveCreds();
+  });
 
   const eventFolder = join(process.cwd(), 'lib/event');
   if (existsSync(eventFolder)) {
-      const eventFiles = readdirSync(eventFolder).filter(file => file.endsWith('.js'));
-      for (const file of eventFiles) {
+      readdirSync(eventFolder).forEach(async (file) => {
+          if (!file.endsWith('.js')) return;
           try {
               const module = await import(`file://${join(eventFolder, file)}?update=${Date.now()}`);
               const eventFunc = module.default || module;
-              if (typeof eventFunc === 'function') {
-                  eventFunc(global.conn);
-              }
+              if (typeof eventFunc === 'function') eventFunc(global.conn);
           } catch (e) {
-              console.error(`[Error cargando evento: ${file}]`, e);
+              console.error(e);
           }
-      }
+      });
   }
-}; 
-
+};
 
 await global.reload();
 
@@ -322,7 +286,7 @@ async function readRecursive(folder) {
             const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
             aliases.forEach(a => global.aliases.set(a, pluginName));
         }
-      } catch (e) {}
+      } catch (e) { console.error(e); }
     }
   }
 }
@@ -344,7 +308,7 @@ watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
             aliases.forEach(a => global.aliases.set(a, pluginName));
         }
         console.log(chalk.cyan('┃ ') + chalk.white(`Update: ${pluginName}`));
-      } catch (e) {}
+      } catch (e) { console.error(e); }
     }
   }
 });
@@ -359,6 +323,6 @@ async function initSubBots() {
         try {
             const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
             await assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
-        } catch (e) {}
+        } catch (e) { console.error(e); }
     }));
 }
