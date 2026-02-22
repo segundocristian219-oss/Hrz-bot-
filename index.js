@@ -242,10 +242,13 @@ global.reload = async function(restatConn) {
     }
   });
 
-  global.conn.ev.on('connection.update', async (update) => {
+    global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando con servidores...`);
+    
     if (connection === 'open') {
+        global.botNumber = jidNormalizedUser(conn.user.id); 
+
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
@@ -257,6 +260,7 @@ global.reload = async function(restatConn) {
             await initSubBots();
         }
     }
+
     if (connection === 'close') {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
