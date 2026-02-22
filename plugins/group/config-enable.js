@@ -1,6 +1,6 @@
 const enable = {
     name: 'enable',
-    alias: ['welcome', 'bv', 'bienvenida', 'detect', 'configuraciones', 'avisodegp', 'gacha', 'antisub', 'antilink'],
+    alias: ['welcome', 'bv', 'bienvenida', 'detect', 'configuraciones', 'avisodegp', 'gacha', 'antisub', 'antilink', 'antistatus'],
     category: 'config',
     admin: true,
     group: true,
@@ -37,6 +37,9 @@ const enable = {
                 break
             case 'antilink':
                 chat.antiLink = isEnable
+                break
+            case 'antistatus':
+                chat.antiStatus = isEnable
                 break
             case 'enable':
             case 'enable_disable':
