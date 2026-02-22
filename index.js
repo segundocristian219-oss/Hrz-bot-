@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+Process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -140,7 +140,7 @@ const connectionOptions = {
   version,
   logger: pino({ level: 'silent' }), 
   printQRInTerminal: false,
-  browser: Browsers.macOS("Safari"),
+  browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
@@ -160,18 +160,8 @@ const connectionOptions = {
 };
 
 global.conn = makeWASocket(connectionOptions);
- 
-global.conn.ev.on('creds.update', () => {
-    if (global.conn.user?.id) {
-        global.conn.user.id = jidNormalizedUser(global.conn.user.id);
-    }
-    if (global.conn.user?.lid) {
-        global.conn.user.lid = jidNormalizedUser(global.conn.user.lid);
-    }
-});
 
 global.conn.contacts = global.conn.contacts || {}; 
-
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -184,7 +174,7 @@ if (!state.creds.registered) {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
             codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
+            console.log(chalk.cyan('┃ ') + chalk.white.bgCyan.bold(` CÓDIGO DE VINCULACIÓN: `) + chalk.black.bgWhite.bold(` ${codeBot} `));
         } catch {
             console.log(chalk.red('┗ Error en la generación del código.'));
         }
@@ -252,14 +242,16 @@ global.reload = async function(restatConn) {
     }
   });
 
-        global.conn.ev.on('connection.update', async (update) => {
+    global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando con servidores...`);
 
     if (connection === 'open') {
-        global.botNumber = jidNormalizedUser(conn.user.id); 
+        if (conn.user?.id) conn.user.id = jidNormalizedUser(conn.user.id);
+        global.botNumber = conn.user.id; 
+
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
-        console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
+        console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name} (${global.botNumber})`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
@@ -285,7 +277,15 @@ global.reload = async function(restatConn) {
     }
   });
 
-    global.conn.ev.on('creds.update', saveCreds);
+    global.conn.ev.on('creds.update', async () => {
+        if (global.conn.user?.id) {
+            global.conn.user.id = jidNormalizedUser(global.conn.user.id);
+        }
+        if (global.conn.user?.lid) {
+            global.conn.user.lid = jidNormalizedUser(global.conn.user.lid);
+        }
+        await saveCreds();
+    });
 
   const eventFolder = join(process.cwd(), 'lib/event');
   if (existsSync(eventFolder)) {
