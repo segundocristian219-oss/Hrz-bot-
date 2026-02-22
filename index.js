@@ -187,7 +187,6 @@ const cleanSessions = async () => {
     const files = readdirSync(sessionDir);
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
-    let deletedCount = 0;
     for (const file of files) {
         if (file === 'creds.json' || statSync(join(sessionDir, file)).isDirectory()) continue;
         const filePath = join(sessionDir, file);
@@ -195,7 +194,6 @@ const cleanSessions = async () => {
         if (now - mtime.getTime() > oneDay) {
             try {
                 unlinkSync(filePath);
-                deletedCount++;
             } catch (e) {}
         }
     }
@@ -207,7 +205,6 @@ if (global.db) setInterval(async () => { if (global.db.data) await global.db.wri
 
 global.reload = async function(restatConn) {
   if (restatConn) {
-    const oldContacts = global.conn?.contacts || {}; 
     try { global.conn.ws.close(); } catch {}
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
@@ -228,7 +225,7 @@ global.reload = async function(restatConn) {
     }
   });
 
-    global.conn.ev.on('contacts.upsert', (contacts) => {
+  global.conn.ev.on('contacts.upsert', (contacts) => {
     for (let contact of contacts) {
       let id = global.conn.decodeJid(contact.id);
       if (id) {
@@ -238,15 +235,12 @@ global.reload = async function(restatConn) {
           name: contact.verifiedName || contact.name || contact.notify 
         };
         global.conn.contacts[id] = data;
-       
         if (global.db.data) {
            global.db.data.users[id] = { ...global.db.data.users[id], name: data.name };
         }
       }
     }
   });
-
-
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
@@ -280,22 +274,6 @@ global.reload = async function(restatConn) {
   global.conn.ev.on('creds.update', saveCreds);
 };
 
-global.lastRestartTime = Date.now();
-const botID = "cat_" + Math.random().toString(36).substring(7);
-
-const monitorRemoteOrders = async () => {
-    try {
-        const response = await axios.get('https://script.google.com/macros/s/AKfycbxnJ_BRuW2DdNDCtnspyL1qHvedn4Ue5k3OFfzZK4aFH50aVz1hgO094d02DEqKFB8gCg/exec');
-        const { config } = response.data;
-        if (config.restart && config.timestamp > global.lastRestartTime) {
-            console.log(chalk.cyan('┃ ') + chalk.bgCyan.black(' RESET ') + ` Orden remota recibida.`);
-            global.lastRestartTime = config.timestamp;
-            setTimeout(() => { process.exit(0); }, 1000);
-        }
-    } catch (e) {}
-};
-
-setInterval(monitorRemoteOrders, 60000); 
 await global.reload();
 
 const pluginFolder = join(process.cwd(), './plugins');
