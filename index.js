@@ -252,13 +252,12 @@ global.reload = async function(restatConn) {
     }
   });
 
-    global.conn.ev.on('connection.update', async (update) => {
+        global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando con servidores...`);
-    
+
     if (connection === 'open') {
         global.botNumber = jidNormalizedUser(conn.user.id); 
-
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
@@ -273,14 +272,15 @@ global.reload = async function(restatConn) {
 
     if (connection === 'close') {
       await monitorBot(conn, 'offline');
-      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-      if (reason !== DisconnectReason.loggedOut) {
-          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática (Motivo: ${reason})`));
-          await global.reload(true);
-      } else {
-          console.log(chalk.red('┗ Sesión finalizada permanentemente.'));
-          rmSync(sessionPath, { recursive: true, force: true });
+      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+      
+      if (reason === DisconnectReason.loggedOut) {
+          console.log(chalk.red('┗ Sesión finalizada: El dispositivo fue desvinculado.'));
+          if (existsSync(sessionPath)) rmSync(sessionPath, { recursive: true, force: true });
           process.exit(1);
+      } else {
+          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática... (Motivo: ${reason})`));
+          await global.reload(true);
       }
     }
   });
