@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+Process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -215,8 +215,7 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando con servidores...`);
     if (connection === 'open') {
-        global.conn.user.id = jidNormalizedUser(global.conn.user.id);
-        global.botNumber = global.conn.user.id;
+        global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
@@ -228,44 +227,39 @@ global.reload = async function(restatConn) {
             await initSubBots();
         }
     }
-        if (connection === 'close') {
+    
+    if (connection === 'close') {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-      
-      console.error(chalk.red(`Conexión cerrada. Razón: ${reason}`));
+      console.error(chalk.red(`Conexión cerrada con código: ${reason}`));
 
       if (reason !== DisconnectReason.loggedOut) {
-          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática...`));
+          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconectando automáticamente...`));
           await global.reload(true);
       } else {
-          console.log(chalk.red('┗ Advertencia: WhatsApp reportó sesión finalizada (401).'));
-          console.log(chalk.red('┃ No se borrará la carpeta. Intenta reiniciar el servidor una vez más.'));
-          console.log(chalk.red('┃ Si el error persiste, borra la carpeta sessions manualmente y vincula de nuevo.'));
+          console.log(chalk.red('┗ Sesión finalizada por WhatsApp (401/Logout).'));
+          console.log(chalk.red('┃ No se borrará la carpeta sessions automáticamente.'));
           process.exit(1); 
       }
     }
-
   });
 
   global.conn.ev.on('creds.update', async () => {
-      if (global.conn.user?.id) {
-          global.conn.user.id = jidNormalizedUser(global.conn.user.id);
-      }
       await saveCreds();
   });
 
   const eventFolder = join(process.cwd(), 'lib/event');
   if (existsSync(eventFolder)) {
-      readdirSync(eventFolder).forEach(async (file) => {
-          if (!file.endsWith('.js')) return;
+      const eventFiles = readdirSync(eventFolder).filter(file => file.endsWith('.js'));
+      for (const file of eventFiles) {
           try {
               const module = await import(`file://${join(eventFolder, file)}?update=${Date.now()}`);
               const eventFunc = module.default || module;
               if (typeof eventFunc === 'function') eventFunc(global.conn);
           } catch (e) {
-              console.error(e);
+              console.error(`Error en evento ${file}:`, e);
           }
-      });
+      }
   }
 };
 
