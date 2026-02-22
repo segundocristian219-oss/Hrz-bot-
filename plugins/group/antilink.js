@@ -1,29 +1,26 @@
-
 let linkRegex = /chat.whatsapp.com\/([0-9A-Za-z]{20,24})/i
 let linkRegex1 = /whatsapp.com\/channel\/([0-9A-Za-z]{20,24})/i
 
-export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, participants }) {
-  if (!m.isGroup) return 
+const message = m => m
+
+message.before = async function (m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, participants }) {
+  if (!m.isGroup) return !1
 
   let chat = global.db.data.chats[m.chat]
-  if (!chat.antiLink) return
-  if (isAdmin || isOwner || m.fromMe || isROwner) return
+  if (!chat?.antiLink) return !1
+  if (isAdmin || isOwner || m.fromMe || isROwner) return !1
 
   const delet = m.key.participant
   const bang = m.key.id
   const user = `@${m.sender.split`@`[0]}`
   const groupAdmins = participants.filter(p => p.admin)
   const isGroupLink = linkRegex.exec(m.text) || linkRegex1.exec(m.text)
+  const isChannelForward = m?.msg?.contextInfo?.forwardedNewsletterMessageInfo
 
-  if (m?.msg?.contextInfo?.forwardedNewsletterMessageInfo && !isAdmin) {
+  if (isChannelForward && !isAdmin) {
     try {
       await conn.sendMessage(m.chat, { 
-        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬
-┃ *「 ENLACE DETECTADO 」*
-┃
-┃ ${user} Rompiste las reglas del 
-┃ Grupo serás eliminado...
-┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`, 
+        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬\n┃ *「 ENLACE DETECTADO 」*\n┃\n┃ ${user} Rompiste las reglas del \n┃ Grupo serás eliminado...\n┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`, 
         mentions: [m.sender] 
       }, { quoted: m })
 
@@ -32,20 +29,15 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
           text: `⍰ El bot no tiene permisos de administrador para eliminar al usuario.`,
           mentions: groupAdmins.map(v => v.id) 
         }, { quoted: m })
-        return
+        return !1
       }
 
-      await delay(1500)
+      await new Promise(resolve => setTimeout(resolve, 1500))
       await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: bang, participant: delet } })
-      await delay(2000)
+      await new Promise(resolve => setTimeout(resolve, 2000))
       await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
     } catch (e) {
-      if (e?.data === 429) {
-        console.log('⚠️ Rate limit detectado, esperando 10s...')
-        await delay(10000)
-      } else {
-        console.error('❌ Error en antilink canal:', e.message)
-      }
+      console.error(e)
     }
     return !0
   }
@@ -54,16 +46,11 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
     try {
       if (isBotAdmin) {
         const linkThisGroup = `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`
-        if (m.text.includes(linkThisGroup)) return !0
+        if (m.text.includes(linkThisGroup)) return !1
       }
 
       await conn.sendMessage(m.chat, { 
-        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬
-┃ *「 ENLACE DETECTADO 」*
-┃
-┃ ${user} Rompiste las reglas del 
-┃ Grupo serás eliminado...
-┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`,
+        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬\n┃ *「 ENLACE DETECTADO 」*\n┃\n┃ ${user} Rompiste las reglas del \n┃ Grupo serás eliminado...\n┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`,
         mentions: [m.sender] 
       }, { quoted: m })
 
@@ -72,24 +59,20 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
           text: `⍰ El antilink está activo pero no puedo eliminarte porque no soy admin.`,
           mentions: groupAdmins.map(v => v.id) 
         }, { quoted: m })
-        return
+        return !1
       }
 
-      await delay(1500)
+      await new Promise(resolve => setTimeout(resolve, 1500))
       await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: bang, participant: delet } })
-      await delay(2000)
+      await new Promise(resolve => setTimeout(resolve, 2000))
       await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
     } catch (e) {
-      if (e?.data === 429) {
-        console.log('⚠️ Rate limit detectado, esperando 10s...')
-        await delay(10000)
-      } else {
-        console.error('❌ Error en antilink grupo:', e.message)
-      }
+      console.error(e)
     }
+    return !0
   }
 
-  return !0
+  return !1
 }
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+export default message
