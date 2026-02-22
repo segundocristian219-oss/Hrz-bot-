@@ -1,71 +1,94 @@
-/* eslint-disable */
+
 let linkRegex = /chat.whatsapp.com\/([0-9A-Za-z]{20,24})/i
 let linkRegex1 = /whatsapp.com\/channel\/([0-9A-Za-z]{20,24})/i
 
-export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
-  if (!m.isGroup || !m.chat.endsWith('@g.us')) return 
+export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, participants }) {
+  if (!m.isGroup) return 
 
   let chat = global.db.data.chats[m.chat]
-  let user = global.db.data.users[m.sender]
-
-  if (!chat?.antiLink) return
+  if (!chat.antiLink) return
   if (isAdmin || isOwner || m.fromMe || isROwner) return
 
+  const delet = m.key.participant
+  const bang = m.key.id
+  const user = `@${m.sender.split`@`[0]}`
+  const groupAdmins = participants.filter(p => p.admin)
   const isGroupLink = linkRegex.exec(m.text) || linkRegex1.exec(m.text)
-  const isChannelLink = m?.msg?.contextInfo?.forwardedNewsletterMessageInfo
 
-  if (isChannelLink || isGroupLink) {
-    if (isGroupLink && isBotAdmin) {
-      const linkThisGroup = `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat).catch(_ => '')}`
-      if (m.text.includes(linkThisGroup)) return !0
-    }
-
-    user.warnAntiLink = (user.warnAntiLink || 0) + 1
-    const maxWarnings = 3
-    const mentionUser = `@${m.sender.split`@`[0]}`
-
+  if (m?.msg?.contextInfo?.forwardedNewsletterMessageInfo && !isAdmin) {
     try {
-      if (isBotAdmin) {
-        await conn.sendMessage(m.chat, { delete: m.key })
+      await conn.sendMessage(m.chat, { 
+        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬
+┃ *「 ENLACE DETECTADO 」*
+┃
+┃ ${user} Rompiste las reglas del 
+┃ Grupo serás eliminado...
+┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`, 
+        mentions: [m.sender] 
+      }, { quoted: m })
 
-        if (user.warnAntiLink < maxWarnings) {
-          await conn.sendMessage(m.chat, { 
-            text: `┏━━━〔 ᴀɴᴛɪʟɪɴᴋ ᴅᴇᴛᴇᴄᴛ 〕━━━┓
-┃ ✎ ᴜsᴇʀ: ${mentionUser}
-┃ ✎ sᴛᴀᴛᴜs: ᴡᴀʀɴɪɴɢ [${user.warnAntiLink}/${maxWarnings}]
-┃ ✎ ɪɴғᴏ: ᴇʟ ᴇɴᴠɪᴏ ᴅᴇ ᴇɴʟᴀᴄᴇs ᴇsᴛᴀ ʀᴇsᴛʀɪɴɢɪᴅᴏ.
-┗━━━━━━━━━━━━━━━━━━┛`, 
-            mentions: [m.sender] 
-          }, { quoted: null })
-        } else {
-          await conn.sendMessage(m.chat, { 
-            text: `┏━━━〔 ᴇxᴛᴇʀᴍɪɴᴀᴛᴇ 〕━━━┓
-┃ ✎ ᴜsᴇʀ: ${mentionUser}
-┃ ✎ ʀᴇᴀsᴏɴ: ʟɪᴍɪᴛ ᴏғ ᴡᴀʀɴɪɴɢs ʀᴇᴀᴄʜᴇᴅ.
-┃ ✎ ᴀᴄᴛɪᴏɴ: ʀᴇᴍᴏᴠɪɴɢ...
-┗━━━━━━━━━━━━━━━━━━┛`, 
-            mentions: [m.sender] 
-          }, { quoted: null })
-
-          user.warnAntiLink = 0
-          await delay(1500)
-          await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
-        }
-      } else {
+      if (!isBotAdmin) {
         await conn.sendMessage(m.chat, { 
-          text: `┏━━━〔 sʏsᴛᴇᴍ ᴀʟᴇʀᴛ 〕━━━┓
-┃ ✎ ᴜsᴇʀ: ${mentionUser}
-┃ ✎ ɪɴғᴏ: ᴇɴʟᴀᴄᴇ ᴅᴇᴛᴇᴄᴛᴀᴅᴏ.
-┃ ✎ sᴛᴀᴛᴜs: ɴᴏ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴs.
-┗━━━━━━━━━━━━━━━━━━┛`,
-          mentions: [m.sender] 
-        })
+          text: `⍰ El bot no tiene permisos de administrador para eliminar al usuario.`,
+          mentions: groupAdmins.map(v => v.id) 
+        }, { quoted: m })
+        return
       }
+
+      await delay(1500)
+      await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: bang, participant: delet } })
+      await delay(2000)
+      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
     } catch (e) {
-      console.error(e)
+      if (e?.data === 429) {
+        console.log('⚠️ Rate limit detectado, esperando 10s...')
+        await delay(10000)
+      } else {
+        console.error('❌ Error en antilink canal:', e.message)
+      }
     }
     return !0
   }
+
+  if (isGroupLink && !isAdmin) {
+    try {
+      if (isBotAdmin) {
+        const linkThisGroup = `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`
+        if (m.text.includes(linkThisGroup)) return !0
+      }
+
+      await conn.sendMessage(m.chat, { 
+        text: `┏╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬
+┃ *「 ENLACE DETECTADO 」*
+┃
+┃ ${user} Rompiste las reglas del 
+┃ Grupo serás eliminado...
+┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍⌬`,
+        mentions: [m.sender] 
+      }, { quoted: m })
+
+      if (!isBotAdmin) {
+        await conn.sendMessage(m.chat, { 
+          text: `⍰ El antilink está activo pero no puedo eliminarte porque no soy admin.`,
+          mentions: groupAdmins.map(v => v.id) 
+        }, { quoted: m })
+        return
+      }
+
+      await delay(1500)
+      await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: bang, participant: delet } })
+      await delay(2000)
+      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+    } catch (e) {
+      if (e?.data === 429) {
+        console.log('⚠️ Rate limit detectado, esperando 10s...')
+        await delay(10000)
+      } else {
+        console.error('❌ Error en antilink grupo:', e.message)
+      }
+    }
+  }
+
   return !0
 }
 
