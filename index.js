@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+Process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -271,26 +271,22 @@ global.reload = async function(restatConn) {
           if (existsSync(sessionPath)) rmSync(sessionPath, { recursive: true, force: true });
           process.exit(1);
       } else {
-          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática... (Motivo: ${reason})`));
+          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconexión automática... (Motivo: ${reason || 'Fallo de Red'})`));
           await global.reload(true);
       }
     }
   });
 
     global.conn.ev.on('creds.update', async () => {
-        if (global.conn.user?.id) {
-            global.conn.user.id = jidNormalizedUser(global.conn.user.id);
-        }
-        if (global.conn.user?.lid) {
-            global.conn.user.lid = jidNormalizedUser(global.conn.user.lid);
-        }
+        if (global.conn.user?.id) global.conn.user.id = jidNormalizedUser(global.conn.user.id);
+        if (global.conn.user?.lid) global.conn.user.lid = jidNormalizedUser(global.conn.user.lid);
         await saveCreds();
     });
 
   const eventFolder = join(process.cwd(), 'lib/event');
   if (existsSync(eventFolder)) {
-      readdirSync(eventFolder).forEach(async (file) => {
-          if (!file.endsWith('.js')) return;
+      const eventFiles = readdirSync(eventFolder).filter(file => file.endsWith('.js'));
+      for (const file of eventFiles) {
           try {
               const module = await import(`file://${join(eventFolder, file)}?update=${Date.now()}`);
               const eventFunc = module.default || module;
@@ -300,7 +296,7 @@ global.reload = async function(restatConn) {
           } catch (e) {
               console.error(`[Error cargando evento: ${file}]`, e);
           }
-      });
+      }
   }
 }; 
 
