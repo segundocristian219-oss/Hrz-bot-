@@ -160,6 +160,16 @@ const connectionOptions = {
 };
 
 global.conn = makeWASocket(connectionOptions);
+ 
+global.conn.ev.on('creds.update', () => {
+    if (global.conn.user?.id) {
+        global.conn.user.id = jidNormalizedUser(global.conn.user.id);
+    }
+    if (global.conn.user?.lid) {
+        global.conn.user.lid = jidNormalizedUser(global.conn.user.lid);
+    }
+});
+
 global.conn.contacts = global.conn.contacts || {}; 
 
 
