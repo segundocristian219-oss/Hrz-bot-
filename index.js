@@ -271,8 +271,25 @@ global.reload = async function(restatConn) {
     }
   });
 
-  global.conn.ev.on('creds.update', saveCreds);
-};
+    global.conn.ev.on('creds.update', saveCreds);
+
+  const eventFolder = join(process.cwd(), 'lib/event');
+  if (existsSync(eventFolder)) {
+      readdirSync(eventFolder).forEach(async (file) => {
+          if (!file.endsWith('.js')) return;
+          try {
+              const module = await import(`file://${join(eventFolder, file)}?update=${Date.now()}`);
+              const eventFunc = module.default || module;
+              if (typeof eventFunc === 'function') {
+                  eventFunc(global.conn);
+              }
+          } catch (e) {
+              console.error(`[Error cargando evento: ${file}]`, e);
+          }
+      });
+  }
+}; 
+
 
 await global.reload();
 
