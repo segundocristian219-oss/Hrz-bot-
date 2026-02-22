@@ -1,11 +1,11 @@
 const enable = {
     name: 'enable_disable',
-    alias: ['welcome', 'bv', 'bienvenida', 'detect', 'configuraciones', 'avisodegp', 'gacha', 'antisub'],
+    alias: ['welcome', 'bv', 'bienvenida', 'detect', 'configuraciones', 'avisodegp', 'gacha', 'antisub', 'antilink'],
     category: 'config',
     admin: true,
     group: true,
     run: async function (m, { conn, text, command, chat, usedPrefix }) {
-        
+
         if (!text || !['on', 'off'].includes(text.toLowerCase())) {
             return m.reply(`✧ ¿Qué deseas hacer?\n\n> Uso: *${usedPrefix}${command} on* u *off*`)
         }
@@ -13,7 +13,7 @@ const enable = {
         let isEnable = text.toLowerCase() === 'on'
         let type = command.toLowerCase()
         let statusText = isEnable ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ'
-        let icon = isEnable ? '✅' : '❌'
+        let icon = isEnable ? '✰' : '卍'
 
         switch (type) {
             case 'welcome':
@@ -34,6 +34,10 @@ const enable = {
 
             case 'antisub':
                 chat.antisub = isEnable
+                break
+
+            case 'antilink':
+                chat.antiLink = isEnable
                 break
 
             default:
