@@ -21,7 +21,7 @@ const shortCommand = {
             const json = await res.json();
 
             if (json.status) {
-                const shortUrl = `https://deylin.xyz/${json.id}`;
+                const shortUrl = `${json.url}`;
 
                 let txt = `> 🔗 *ᴇɴʟᴀᴄᴇ ᴀᴄᴏʀᴛᴀᴅᴏ*\n\n`;
                 txt += `> ✧ *ᴏʀɪɢɪɴᴀʟ:* ${text}\n`;
