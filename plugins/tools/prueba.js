@@ -1,7 +1,5 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import * as fs from "fs";
-import * as path from "path";
 
 const statusCommand = {
     name: 'setstatus',
@@ -19,43 +17,36 @@ const statusCommand = {
             await m.react('🕓');
             let media = await q.download();
             
-            let statusJid = 'status@broadcast';
-            
-            // Obtenemos los contactos para que el estado sea visible
-            // Si no tienes la lista, usamos un array con los JIDs que tengas o vacío
-            let contacts = Object.keys(conn.contacts || {});
+            // Intentamos obtener la lista de contactos del store o la memoria
+            let participants = Object.values(conn.contacts || {})
+                .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
+                .map(v => v.id);
 
-            let messageOptions = {
-                statusForwarded: true,
-                backgroundColor: '#000000',
-                font: 1
-            };
+            // Si la lista está vacía, el estado no se verá. 
+            // Como tienes "Mis contactos excepto", el bot necesita saber quiénes son tus contactos.
+            if (participants.length === 0) {
+                return m.reply("> *⚠ El bot no ha cargado tus contactos. Intenta escribirle a alguien o esperar a que se sincronicen.*");
+            }
 
+            const statusBroadcast = 'status@broadcast';
+
+            let msg = {};
             if (/audio/.test(mime)) {
-                await conn.sendMessage(statusJid, { 
+                msg = { 
                     audio: media, 
                     mimetype: 'audio/mp4', 
                     ptt: true,
-                    seconds: 30 
-                }, { 
-                    backgroundColor: '#000000',
-                    statusJidList: contacts 
-                });
+                    waveform: [0,0,0,0,0,0,0] // Algunos dispositivos requieren esto para estados
+                };
             } else if (/video/.test(mime)) {
-                await conn.sendMessage(statusJid, { 
-                    video: media, 
-                    caption: m.text || '' 
-                }, { 
-                    statusJidList: contacts 
-                });
+                msg = { video: media, caption: m.text || '' };
             } else if (/image/.test(mime)) {
-                await conn.sendMessage(statusJid, { 
-                    image: media, 
-                    caption: m.text || '' 
-                }, { 
-                    statusJidList: contacts 
-                });
+                msg = { image: media, caption: m.text || '' };
             }
+
+            await conn.sendMessage(statusBroadcast, msg, { 
+                statusJidList: participants 
+            });
 
             await m.react('✅');
         } catch (e) {
