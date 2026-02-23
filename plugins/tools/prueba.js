@@ -1,34 +1,62 @@
-const datosCommand = {
-    name: 'datos',
-    alias: ['info'],
-    category: 'tools',
-    run: async (m, { conn }) => {
-        let emisorNombre = m.pushName || global.db.data?.users[m.sender]?.name || 'Usuario';
-        
-        if (m.mentionedJid && m.mentionedJid.length > 0) {
-            let mencionadoJid = m.mentionedJid[0];
-            // Buscamos el nombre en menciones, luego en DB, luego número
-            let mencionadoNombre = m.mentionedNames[0] || global.db.data?.users[mencionadoJid]?.name || mencionadoJid.split('@')[0];
-            
-            let respuesta = `*📊 REPORTE DE USUARIOS*\n\n`;
-            respuesta += `*👤 QUIÉN ETIQUETÓ:* ${emisorNombre}\n`;
-            respuesta += `*🎯 USUARIO ETIQUETADO:* ${mencionadoNombre}\n`;
-            respuesta += `*🆔 ID Etiquetado:* ${mencionadoJid}`;
-            await m.reply(respuesta);
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import * as fs from "fs";
+import * as path from "path";
+import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 
-        } else if (m.quoted) {
-            let citadoNombre = m.quoted.pushName || global.db.data?.users[m.quoted.sender]?.name || m.quoted.sender.split('@')[0];
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const statusCommand = {
+    name: 'setstatus',
+    alias: ['estado', 'ups'],
+    category: 'owner',
+    run: async (m, { conn, isOwner }) => {
+        if (!isOwner) return m.reply(`> *⚠ Este comando es solo para mi desarrollador.*`);
+
+        let q = m.quoted ? m.quoted : m;
+        let mime = (q.msg || q).mimetype || '';
+        
+        if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta un audio, video o imagen para subir al estado.*`);
+
+        try {
+            await m.react('🕓');
             
-            let respuesta = `*📊 REPORTE DE USUARIO (RESPONDIDO)*\n\n`;
-            respuesta += `*👤 QUIÉN RESPONDIÓ:* ${emisorNombre}\n`;
-            respuesta += `*🎯 USUARIO CITADO:* ${citadoNombre}\n`;
-            respuesta += `*🆔 ID Citado:* ${m.quoted.sender}`;
-            await m.reply(respuesta);
-        } else {
-            await m.reply(`Etiqueta a alguien o responde a un mensaje.`);
+            let media = await q.download();
+            let statusJid = 'status@broadcast';
+            let options = {
+                backgroundColor: '#000000',
+                font: 3
+            };
+
+            if (/audio/.test(mime)) {
+                await conn.sendMessage(statusJid, { 
+                    audio: media, 
+                    mimetype: 'audio/mp4', 
+                    ptt: true 
+                }, { 
+                    backgroundColor: options.backgroundColor 
+                });
+            } else if (/video/.test(mime)) {
+                await conn.sendMessage(statusJid, { 
+                    video: media, 
+                    caption: m.text || '' 
+                });
+            } else if (/image/.test(mime)) {
+                await conn.sendMessage(statusJid, { 
+                    image: media, 
+                    caption: m.text || '' 
+                });
+            }
+
+            await m.react('✅');
+            await m.reply(`> *✅ Contenido subido al estado correctamente.*`);
+
+        } catch (e) {
+            console.error(e);
+            await m.react('✖️');
+            await m.reply(`> *⚠ Error al intentar subir al estado.*`);
         }
     }
-};
+}
 
-
-export default datosCommand
+export default statusCommand;
