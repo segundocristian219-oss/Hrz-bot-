@@ -8,10 +8,10 @@
     "lib": "lib",
     "plugins": "plugins"
   },
-  "scripts": {
-    "start": "tsx index.ts",
-    "dev": "tsx watch index.ts"
+    "scripts": {
+    "start": "npx tsx index.ts"
   },
+
   "dependencies": {
     "tsx": "^4.7.1",
     "@types/node": "^20.0.0",
