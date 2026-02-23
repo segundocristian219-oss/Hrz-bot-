@@ -2,99 +2,62 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import * as fs from "fs";
 import * as path from "path";
-import fluent_ffmpeg from "fluent-ffmpeg";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const groupStatusCommand = {
-    name: 'setstatus',
-    alias: ['estado', 'gpstatus'],
+const statusAudioCommand = {
+    name: 'subiraudio',
+    alias: ['setaudio', 'estaudio'],
     category: 'owner',
-    run: async (m, { conn, isOwner, text }) => {
+    run: async (m, { conn, isOwner }) => {
+        // Validación de seguridad y tipo de mensaje
         if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
-        if (!m.isGroup) return m.reply("> *⚠ Úsalo en un grupo.*");
-
+        
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
-        let isMedia = /audio|video|image/.test(mime);
+
+        // Solo procesamos si es audio
+        if (!/audio/.test(mime)) {
+            return m.reply("> *⚠ Etiqueta o envía un audio para subirlo como nota de voz.*");
+        }
 
         try {
             await m.react('🕓');
-            let media = isMedia ? await q.download() : null;
-            let thumbnail = null;
-            let mediaUrl = '';
-            let mediaType = 1;
 
-            if (isMedia) {
-                const ext = mime.split('/')[1].split(';')[0];
-                const tempMedia = path.join(__dirname, `temp_${Date.now()}.${ext}`);
-                await fs.promises.writeFile(tempMedia, media);
+            // 1. Descargamos el buffer del audio (Calidad Digital Original)
+            const audioBuffer = await q.download();
+            
+            // 2. Definimos una onda de sonido (waveform) para que parezca grabado
+            // Esto genera una visualización de barras en el estado
+            const fakeWaveform = Array.from({ length: 30 }, () => Math.floor(Math.random() * 100));
 
-                const upload = await conn.waUploadToServer(media);
-                mediaUrl = upload.url;
-
-                const tempThumb = path.join(__dirname, `temp_${Date.now()}.jpg`);
-                
-                if (/image/.test(mime)) {
-                    thumbnail = media;
-                    mediaType = 1;
-                } else if (/video/.test(mime)) {
-                    await new Promise((resolve, reject) => {
-                        fluent_ffmpeg(tempMedia)
-                            .screenshots({
-                                timestamps: ['50%'],
-                                filename: path.basename(tempThumb),
-                                folder: path.dirname(tempThumb),
-                                size: '320x?'
-                            })
-                            .on('end', resolve)
-                            .on('error', reject);
-                    });
-                    thumbnail = await fs.promises.readFile(tempThumb);
-                    mediaType = 2;
-                } else if (/audio/.test(mime)) {
-                    await new Promise((resolve, reject) => {
-                        fluent_ffmpeg(tempMedia)
-                            .complexFilter('showwavespic=s=320x240:colors=#9cf')
-                            .outputOptions('-frames:v 1')
-                            .output(tempThumb)
-                            .on('end', resolve)
-                            .on('error', reject);
-                    });
-                    thumbnail = await fs.promises.readFile(tempThumb);
-                    mediaType = 1;
+            // 3. Enviamos al JID de estados (status@broadcast)
+            await conn.sendMessage(
+                'status@broadcast',
+                {
+                    audio: audioBuffer,
+                    mimetype: 'audio/mp4', // Compatible con estados de voz
+                    ptt: true,             // CLAVE: Activa el modo nota de voz
+                    waveform: fakeWaveform 
+                },
+                {
+                    // Obtener la lista de JIDs de tus contactos si quieres privacidad específica, 
+                    // de lo contrario WhatsApp usa tu configuración por defecto.
+                    statusJidList: [m.sender], 
+                    backgroundColor: '#1c1c1e', // Color de fondo del estado
+                    font: 3 
                 }
-
-                if (fs.existsSync(tempMedia)) await fs.promises.unlink(tempMedia);
-                if (fs.existsSync(tempThumb)) {
-                    if (!thumbnail) thumbnail = await fs.promises.readFile(tempThumb);
-                    await fs.promises.unlink(tempThumb);
-                }
-            }
-
-            await conn.sendMessage(m.chat, {
-                text: text || '',
-                contextInfo: {
-                    externalAdReply: {
-                        title: 'ESTADO GRUPAL',
-                        body: text ? text.slice(0, 100) : 'Toca para ver',
-                        thumbnail: thumbnail,
-                        mediaType: mediaType,
-                        mediaUrl: mediaUrl,
-                        sourceUrl: mediaUrl,
-                        renderLargerThumbnail: true,
-                        showAdAttribution: true
-                    }
-                }
-            });
+            );
 
             await m.react('✅');
+            await m.reply(`> *🔥 Audio subido con éxito como Nota de Voz.*`);
+
         } catch (e) {
             console.error(e);
             await m.react('✖️');
-            m.reply(`> *❌ Error al establecer el estado.*`);
+            m.reply(`> *❌ Error al procesar el audio:* ${e.message}`);
         }
     }
 }
 
-export default groupStatusCommand;
+export default statusAudioCommand;
