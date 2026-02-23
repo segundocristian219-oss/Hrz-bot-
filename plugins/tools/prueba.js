@@ -11,7 +11,7 @@ const statusCommand = {
     alias: ['estado', 'ups'],
     category: 'owner',
     run: async (m, { conn, isOwner, text }) => {
-        if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
+     //   if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
