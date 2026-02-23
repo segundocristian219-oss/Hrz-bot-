@@ -15,13 +15,15 @@ const statusCommand = {
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
+        let isMedia = /audio|video|image/.test(mime);
 
-        if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta un archivo.*`);
+        // Si no hay media y tampoco hay texto, pedimos contenido
+        if (!isMedia && !text) return m.reply(`> *✎ Proporciona texto o etiqueta un archivo (audio/foto/video).*`);
 
         try {
             await m.react('🕓');
-            let media = await q.download();
-
+            
+            // 1. Recopilar participantes para visibilidad
             let participants = Object.values(conn.contacts || {})
                 .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
                 .map(v => v.id);
@@ -31,52 +33,79 @@ const statusCommand = {
             if (!participants.includes(m.sender)) participants.push(m.sender);
 
             const statusBroadcast = 'status@broadcast';
-            let msg = {};
             
+            // 2. Configurar Mención del Chat actual (Grupo o Persona)
+            let groupMentions = [];
+            groupMentions.push({
+                groupJid: m.chat,
+                groupSubject: m.isGroup ? (await conn.groupMetadata(m.chat)).subject : 'Chat'
+            });
+
             let contextInfo = {
                 forwardingScore: 1,
                 isForwarded: false,
-                canForward: true, // Esto habilita el botón de compartir/reenviar
-                statusV2: true
+                canForward: true,
+                statusV2: true,
+                groupMentions: groupMentions
             };
 
-            if (/audio/.test(mime)) {
-                const tmpDir = path.join(__dirname, '../../tmp');
-                if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-                const inputPath = path.join(tmpDir, `in_${Date.now()}.audio`);
-                const outputPath = path.join(tmpDir, `out_${Date.now()}.opus`);
-                await fs.promises.writeFile(inputPath, media);
+            let msg = {};
 
-                await new Promise((resolve, reject) => {
-                    fluent_ffmpeg(inputPath)
-                        .toFormat('opus')
-                        .on('error', reject)
-                        .on('end', resolve)
-                        .save(outputPath);
-                });
+            // LÓGICA SEGÚN EL TIPO DE CONTENIDO
+            if (isMedia) {
+                let media = await q.download();
+                
+                if (/audio/.test(mime)) {
+                    const tmpDir = path.join(__dirname, '../../tmp');
+                    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+                    const inputPath = path.join(tmpDir, `in_${Date.now()}.audio`);
+                    const outputPath = path.join(tmpDir, `out_${Date.now()}.opus`);
+                    await fs.promises.writeFile(inputPath, media);
 
-                const audioBuffer = await fs.promises.readFile(outputPath);
-                msg = { 
-                    audio: audioBuffer, 
-                    mimetype: 'audio/ogg; codecs=opus', 
-                    ptt: true,
-                    seconds: 30,
+                    await new Promise((resolve, reject) => {
+                        fluent_ffmpeg(inputPath)
+                            .toFormat('opus')
+                            .on('error', reject)
+                            .on('end', resolve)
+                            .save(outputPath);
+                    });
+
+                    const audioBuffer = await fs.promises.readFile(outputPath);
+                    msg = { 
+                        audio: audioBuffer, 
+                        mimetype: 'audio/ogg; codecs=opus', 
+                        ptt: true,
+                        seconds: 30,
+                        caption: text || '', // Texto que acompaña al audio
+                        contextInfo
+                    };
+
+                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+                } else if (/video/.test(mime)) {
+                    msg = { video: media, caption: text || '', contextInfo };
+                } else if (/image/.test(mime)) {
+                    msg = { image: media, caption: text || '', contextInfo };
+                }
+            } else {
+                // ESTADO DE SOLO TEXTO
+                msg = {
+                    text: text,
+                    extendedTextMessage: {
+                        text: text,
+                        backgroundArgb: 0xff000000, // Negro
+                        textArgb: 0xffffffff,       // Blanco
+                        font: 1
+                    },
                     contextInfo
                 };
-
-                if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-                if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-            } else if (/video/.test(mime)) {
-                msg = { video: media, caption: text || '', contextInfo };
-            } else if (/image/.test(mime)) {
-                msg = { image: media, caption: text || '', contextInfo };
             }
 
+            // ENVÍO AL ESTADO
             await conn.sendMessage(statusBroadcast, msg, { 
                 statusJidList: participants,
                 backgroundColor: '#000000',
-                broadcast: true,
-                font: 1
+                broadcast: true
             });
 
             await m.react('✅');
