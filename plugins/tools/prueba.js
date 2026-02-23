@@ -33,46 +33,40 @@ const statusCommand = {
             if (/audio/.test(mime)) {
                 const tmpDir = path.join(__dirname, '../../tmp');
                 if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-                const input = path.join(tmpDir, `${Date.now()}.mp3`);
-                const output = path.join(tmpDir, `${Date.now()}.mp4`);
                 
-                await fs.promises.writeFile(input, media);
+                const inputPath = path.join(tmpDir, `in_${Date.now()}.audio`);
+                const outputPath = path.join(tmpDir, `out_${Date.now()}.opus`);
+                
+                await fs.promises.writeFile(inputPath, media);
 
                 await new Promise((resolve, reject) => {
-                    fluent_ffmpeg(input)
-                        .outputOptions([
-                            '-c:a aac',
-                            '-b:a 128k',
-                            '-vn'
-                        ])
-                        .toFormat('mp4')
+                    fluent_ffmpeg(inputPath)
+                        .toFormat('opus')
                         .on('error', reject)
                         .on('end', resolve)
-                        .save(output);
+                        .save(outputPath);
                 });
 
-                const audioBuffer = await fs.promises.readFile(output);
+                const audioBuffer = await fs.promises.readFile(outputPath);
                 
                 await conn.sendMessage(statusBroadcast, { 
                     audio: audioBuffer, 
-                    mimetype: 'audio/mp4', 
+                    mimetype: 'audio/ogg; codecs=opus', 
                     ptt: true,
-                    seconds: 30
+                    seconds: 20 // Forzamos una duración para que WA lo reconozca
                 }, { 
                     statusJidList: participants 
                 });
 
-                if (fs.existsSync(input)) fs.unlinkSync(input);
-                if (fs.existsSync(output)) fs.unlinkSync(output);
+                if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+                if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
 
             } else {
                 let msg = {};
-                let contentText = text || ""; 
-
                 if (/video/.test(mime)) {
-                    msg = { video: media, caption: contentText };
+                    msg = { video: media, caption: text || '' };
                 } else if (/image/.test(mime)) {
-                    msg = { image: media, caption: contentText };
+                    msg = { image: media, caption: text || '' };
                 }
 
                 await conn.sendMessage(statusBroadcast, msg, { 
