@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const statusCommand = {
     name: 'setstatus',
-    alias: ['estado', 'ups', 'gpstatus'],
+    alias: ['estado', 'gpstatus'],
     category: 'owner',
     run: async (m, { conn, isOwner, text }) => {
         if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
@@ -17,41 +17,32 @@ const statusCommand = {
         let mime = (q.msg || q).mimetype || '';
         let isMedia = /audio|video|image/.test(mime);
 
+        if (!m.isGroup) return m.reply("> *⚠ Este comando debe usarse dentro de un grupo para subir el estado grupal.*");
+
         try {
             await m.react('🕓');
-            
             let media = isMedia ? await q.download() : null;
-            let participants = Object.values(conn.contacts || {}).map(v => v.id).filter(v => v && v.endsWith('@s.whatsapp.net'));
-            
-            if (!participants.includes(m.sender)) participants.push(m.sender);
 
-            // ESTRUCTURA DE INVESTIGACIÓN: Status Update Protocol
-            let statusOptions = {
-                statusJidList: participants,
-                broadcast: true,
-                backgroundColor: '#000000',
-                font: 1
-            };
-
-            // Construcción del ContextInfo específico para Estados de Grupo
+            // La clave de la investigación: 
+            // El estado de grupo requiere un contextInfo que apunte al grupo como propietario del estado
             let contextInfo = {
                 forwardingScore: 1,
                 isForwarded: false,
                 canForward: true,
                 statusV2: true,
-                // Aquí está el secreto: el 'remoteJid' dentro de contextInfo define el origen del estado
-                remoteJid: m.isGroup ? m.chat : 'status@broadcast', 
-                groupMentions: m.isGroup ? [{
-                    groupJid: m.chat,
-                    groupSubject: (await conn.groupMetadata(m.chat)).subject
-                }] : []
+                externalAdReply: {
+                    showAdAttribution: true,
+                    title: 'Estado Grupal',
+                    body: text || '',
+                    mediaType: 1,
+                    sourceUrl: ''
+                }
             };
 
-            let messageStructure = {};
+            let messageContent = {};
 
             if (isMedia) {
                 if (/audio/.test(mime)) {
-                    // Conversión a OPUS (Indispensable para que no falle)
                     const tmpDir = path.join(__dirname, '../../tmp');
                     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
                     const input = path.join(tmpDir, `in${Date.now()}.at`);
@@ -61,41 +52,35 @@ const statusCommand = {
                         fluent_ffmpeg(input).toFormat('opus').on('error', rej).on('end', res).save(output);
                     });
                     const buffer = await fs.promises.readFile(output);
-                    messageStructure = { audio: buffer, mimetype: 'audio/ogg; codecs=opus', ptt: true, seconds: 30, caption: text || '', contextInfo };
+                    messageContent = { audioMessage: { url: "", mimetype: "audio/ogg; codecs=opus", ptt: true, seconds: 30, fileLength: buffer.length, contextInfo } };
+                    messageContent.audioMessage.fileSha256 = buffer; // Simplificado para relay
                     fs.unlinkSync(input); fs.unlinkSync(output);
                 } else if (/video/.test(mime)) {
-                    messageStructure = { video: media, caption: text || '', mimetype: 'video/mp4', contextInfo };
+                    messageContent = { videoMessage: { caption: text || '', mimetype: 'video/mp4', contextInfo } };
                 } else if (/image/.test(mime)) {
-                    messageStructure = { image: media, caption: text || '', mimetype: 'image/jpeg', contextInfo };
+                    messageContent = { imageMessage: { caption: text || '', mimetype: 'image/jpeg', contextInfo } };
                 }
             } else {
-                // Estado de Texto Puro
-                messageStructure = { text: text, contextInfo };
+                messageContent = { extendedTextMessage: { text: text, contextInfo } };
             }
 
-            // ENVÍO AL BROADCAST (Novedades personales)
-            await conn.sendMessage('status@broadcast', messageStructure, statusOptions);
-
-            // INTENTO DE INYECCIÓN EN EL ANILLO DEL GRUPO
-            if (m.isGroup) {
-                // Para el anillo del grupo, el mensaje NO debe enviarse como un mensaje normal,
-                // sino como un "Group Status Update". 
-                // Usamos el JID del grupo pero con la estructura de estado.
-                await conn.relayMessage(m.chat, {
-                    [isMedia ? (mime.split('/')[0] + 'Message') : 'extendedTextMessage']: messageStructure
-                }, { 
-                    messageId: conn.generateMessageTag(),
-                    additionalAttributes: {
-                        type: 'status', // Forzamos el tipo status en el XML de WhatsApp
-                        category: 'peer'
-                    }
-                });
-            }
+            // --- PROTOCOLO DE INVESTIGACIÓN PROFUNDA ---
+            // No usamos sendMessage, usamos relayMessage para inyectar el nodo directamente al grupo
+            await conn.relayMessage(m.chat, messageContent, {
+                messageId: conn.generateMessageTag(),
+                additionalAttributes: {
+                    // Estos atributos le dicen a WA que NO es un mensaje de chat, sino un estado de "par" (peer)
+                    type: 'status',
+                    category: 'peer',
+                },
+                // Forzamos que el servidor lo trate como una actualización de estado de grupo
+                statusJidList: [] 
+            });
 
             await m.react('✅');
 
         } catch (e) {
-            console.error("Error en Estructura:", e);
+            console.error("Error en Estructura Profunda:", e);
             await m.react('✖️');
         }
     }
