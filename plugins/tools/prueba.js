@@ -11,18 +11,17 @@ const statusCommand = {
     alias: ['estado', 'ups'],
     category: 'owner',
     run: async (m, { conn, isOwner, text }) => {
-     //   if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
+        if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
-        
+
         if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta un archivo.*`);
 
         try {
             await m.react('🕓');
             let media = await q.download();
-            
-            // 1. Obtener JIDs y asegurar que el BOT esté incluido para el "Eco"
+
             let participants = Object.values(conn.contacts || {})
                 .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
                 .map(v => v.id);
@@ -33,6 +32,13 @@ const statusCommand = {
 
             const statusBroadcast = 'status@broadcast';
             let msg = {};
+            
+            let contextInfo = {
+                forwardingScore: 1,
+                isForwarded: false,
+                canForward: true, // Esto habilita el botón de compartir/reenviar
+                statusV2: true
+            };
 
             if (/audio/.test(mime)) {
                 const tmpDir = path.join(__dirname, '../../tmp');
@@ -54,23 +60,23 @@ const statusCommand = {
                     audio: audioBuffer, 
                     mimetype: 'audio/ogg; codecs=opus', 
                     ptt: true,
-                    seconds: 30
+                    seconds: 30,
+                    contextInfo
                 };
 
                 if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
                 if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
             } else if (/video/.test(mime)) {
-                msg = { video: media, caption: text || '' };
+                msg = { video: media, caption: text || '', contextInfo };
             } else if (/image/.test(mime)) {
-                msg = { image: media, caption: text || '' };
+                msg = { image: media, caption: text || '', contextInfo };
             }
 
-            // 2. ENVÍO CON FLAG DE PUBLICACIÓN
-            // Añadimos 'broadcast: true' y 'messageId' para que el tlf lo reconozca como propio
             await conn.sendMessage(statusBroadcast, msg, { 
                 statusJidList: participants,
                 backgroundColor: '#000000',
-                broadcast: true 
+                broadcast: true,
+                font: 1
             });
 
             await m.react('✅');
