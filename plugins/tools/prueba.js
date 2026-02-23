@@ -22,19 +22,20 @@ const statusCommand = {
         try {
             await m.react('🕓');
             
-            // 1. Participantes para el estado personal (eco)
             let participants = Object.values(conn.contacts || {})
                 .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
                 .map(v => v.id);
             if (!participants.includes(m.sender)) participants.push(m.sender);
 
-            // 2. Configuración de Mención y Estado Grupal
+            const statusBroadcast = 'status@broadcast';
+            
+            // Contexto mejorado para habilitar funciones de estado
             let contextInfo = {
                 forwardingScore: 1,
                 isForwarded: false,
                 canForward: true,
                 statusV2: true,
-                // Si estamos en un grupo, activamos la mención especial
+                mentionedJid: participants, // Mencionamos a los contactos para mejorar alcance
                 groupMentions: m.isGroup ? [{
                     groupJid: m.chat,
                     groupSubject: (await conn.groupMetadata(m.chat)).subject
@@ -42,12 +43,6 @@ const statusCommand = {
             };
 
             let msg = {};
-            let options = { 
-                statusJidList: participants,
-                broadcast: true,
-                backgroundColor: '#000000'
-            };
-
             if (isMedia) {
                 let media = await q.download();
                 
@@ -70,31 +65,40 @@ const statusCommand = {
                         seconds: 30,
                         contextInfo
                     };
-                    // Eliminamos archivos temporales
                     fs.unlinkSync(inputPath);
                     fs.unlinkSync(outputPath);
                 } else if (/video/.test(mime)) {
-                    msg = { video: media, caption: text || '', contextInfo };
+                    // SE AGREGA CAPTION DIRECTO AQUÍ PARA QUE NO FALLE
+                    msg = { 
+                        video: media, 
+                        caption: text || '', 
+                        mimetype: 'video/mp4',
+                        contextInfo 
+                    };
                 } else if (/image/.test(mime)) {
-                    msg = { image: media, caption: text || '', contextInfo };
+                    msg = { 
+                        image: media, 
+                        caption: text || '', 
+                        mimetype: 'image/jpeg',
+                        contextInfo 
+                    };
                 }
             } else {
                 msg = { text: text, contextInfo };
             }
 
-            // --- ENVÍO TRIPLE PARA ASEGURAR ---
-            
-            // A. Envío al Estado Personal (Novedades)
-            await conn.sendMessage('status@broadcast', msg, options);
+            // 1. Enviar al estado general (Novedades) - Esto siempre funciona
+            await conn.sendMessage(statusBroadcast, msg, { 
+                statusJidList: participants,
+                broadcast: true 
+            });
 
-            // B. Envío al "Estado del Grupo" (Si es un grupo)
-            // Esto intenta activar el anillo en la foto del grupo
+            // 2. Intentar el "Estado de Grupo"
+            // Para que no se vea como un reenvío simple, intentamos mandarlo con broadcast
             if (m.isGroup) {
                 await conn.sendMessage(m.chat, msg, { 
                     backgroundColor: '#000000',
-                    font: 1,
-                    // Este flag es experimental en algunas versiones de Baileys para estados de grupo
-                    asGroupStatus: true 
+                    broadcast: true
                 });
             }
 
