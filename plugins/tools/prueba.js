@@ -17,95 +17,85 @@ const statusCommand = {
         let mime = (q.msg || q).mimetype || '';
         let isMedia = /audio|video|image/.test(mime);
 
-        if (!isMedia && !text) return m.reply(`> *✎ Proporciona texto o etiqueta un archivo.*`);
-
         try {
             await m.react('🕓');
             
-            let participants = Object.values(conn.contacts || {})
-                .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
-                .map(v => v.id);
+            let media = isMedia ? await q.download() : null;
+            let participants = Object.values(conn.contacts || {}).map(v => v.id).filter(v => v && v.endsWith('@s.whatsapp.net'));
+            
             if (!participants.includes(m.sender)) participants.push(m.sender);
 
-            const statusBroadcast = 'status@broadcast';
-            
-            // Contexto mejorado para habilitar funciones de estado
+            // ESTRUCTURA DE INVESTIGACIÓN: Status Update Protocol
+            let statusOptions = {
+                statusJidList: participants,
+                broadcast: true,
+                backgroundColor: '#000000',
+                font: 1
+            };
+
+            // Construcción del ContextInfo específico para Estados de Grupo
             let contextInfo = {
                 forwardingScore: 1,
                 isForwarded: false,
                 canForward: true,
                 statusV2: true,
-                mentionedJid: participants, // Mencionamos a los contactos para mejorar alcance
+                // Aquí está el secreto: el 'remoteJid' dentro de contextInfo define el origen del estado
+                remoteJid: m.isGroup ? m.chat : 'status@broadcast', 
                 groupMentions: m.isGroup ? [{
                     groupJid: m.chat,
                     groupSubject: (await conn.groupMetadata(m.chat)).subject
                 }] : []
             };
 
-            let msg = {};
+            let messageStructure = {};
+
             if (isMedia) {
-                let media = await q.download();
-                
                 if (/audio/.test(mime)) {
+                    // Conversión a OPUS (Indispensable para que no falle)
                     const tmpDir = path.join(__dirname, '../../tmp');
                     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-                    const inputPath = path.join(tmpDir, `in_${Date.now()}.audio`);
-                    const outputPath = path.join(tmpDir, `out_${Date.now()}.opus`);
-                    await fs.promises.writeFile(inputPath, media);
-
-                    await new Promise((resolve, reject) => {
-                        fluent_ffmpeg(inputPath).toFormat('opus').on('error', reject).on('end', resolve).save(outputPath);
+                    const input = path.join(tmpDir, `in${Date.now()}.at`);
+                    const output = path.join(tmpDir, `out${Date.now()}.opus`);
+                    await fs.promises.writeFile(input, media);
+                    await new Promise((res, rej) => {
+                        fluent_ffmpeg(input).toFormat('opus').on('error', rej).on('end', res).save(output);
                     });
-
-                    const audioBuffer = await fs.promises.readFile(outputPath);
-                    msg = { 
-                        audio: audioBuffer, 
-                        mimetype: 'audio/ogg; codecs=opus', 
-                        ptt: true,
-                        seconds: 30,
-                        contextInfo
-                    };
-                    fs.unlinkSync(inputPath);
-                    fs.unlinkSync(outputPath);
+                    const buffer = await fs.promises.readFile(output);
+                    messageStructure = { audio: buffer, mimetype: 'audio/ogg; codecs=opus', ptt: true, seconds: 30, caption: text || '', contextInfo };
+                    fs.unlinkSync(input); fs.unlinkSync(output);
                 } else if (/video/.test(mime)) {
-                    // SE AGREGA CAPTION DIRECTO AQUÍ PARA QUE NO FALLE
-                    msg = { 
-                        video: media, 
-                        caption: text || '', 
-                        mimetype: 'video/mp4',
-                        contextInfo 
-                    };
+                    messageStructure = { video: media, caption: text || '', mimetype: 'video/mp4', contextInfo };
                 } else if (/image/.test(mime)) {
-                    msg = { 
-                        image: media, 
-                        caption: text || '', 
-                        mimetype: 'image/jpeg',
-                        contextInfo 
-                    };
+                    messageStructure = { image: media, caption: text || '', mimetype: 'image/jpeg', contextInfo };
                 }
             } else {
-                msg = { text: text, contextInfo };
+                // Estado de Texto Puro
+                messageStructure = { text: text, contextInfo };
             }
 
-            // 1. Enviar al estado general (Novedades) - Esto siempre funciona
-            await conn.sendMessage(statusBroadcast, msg, { 
-                statusJidList: participants,
-                broadcast: true 
-            });
+            // ENVÍO AL BROADCAST (Novedades personales)
+            await conn.sendMessage('status@broadcast', messageStructure, statusOptions);
 
-            // 2. Intentar el "Estado de Grupo"
-            // Para que no se vea como un reenvío simple, intentamos mandarlo con broadcast
+            // INTENTO DE INYECCIÓN EN EL ANILLO DEL GRUPO
             if (m.isGroup) {
-                await conn.sendMessage(m.chat, msg, { 
-                    backgroundColor: '#000000',
-                    broadcast: true
+                // Para el anillo del grupo, el mensaje NO debe enviarse como un mensaje normal,
+                // sino como un "Group Status Update". 
+                // Usamos el JID del grupo pero con la estructura de estado.
+                await conn.relayMessage(m.chat, {
+                    [isMedia ? (mime.split('/')[0] + 'Message') : 'extendedTextMessage']: messageStructure
+                }, { 
+                    messageId: conn.generateMessageTag(),
+                    additionalAttributes: {
+                        type: 'status', // Forzamos el tipo status en el XML de WhatsApp
+                        category: 'peer'
+                    }
                 });
             }
 
             await m.react('✅');
 
         } catch (e) {
-            console.error(e);
+            console.error("Error en Estructura:", e);
             await m.react('✖️');
         }
     }
