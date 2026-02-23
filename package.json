@@ -2,14 +2,14 @@
   "name": "cat-bot",
   "version": "5.0.0",
   "description": "High-performance WhatsApp Bot (Multi-Device) with Command-Map architecture and minimalist serialization.",
-  "main": "index.js",
+  "main": "index.ts",
   "type": "module",
   "directories": {
     "lib": "lib",
     "plugins": "plugins"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.ts"
   },
   "repository": {
     "type": "git",
