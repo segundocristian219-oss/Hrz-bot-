@@ -12,7 +12,7 @@ const groupStatusCommand = {
     category: 'owner',
     run: async (m, { conn, isOwner, text }) => {
         if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
-        if (!m.isGroup) return m.reply("> *⚠ Este comando solo funciona dentro de grupos.*");
+        if (!m.isGroup) return m.reply("> *⚠ Úsalo en un grupo.*");
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
@@ -21,70 +21,61 @@ const groupStatusCommand = {
         try {
             await m.react('🕓');
             let media = isMedia ? await q.download() : null;
-            const groupJid = m.chat;
 
-            let statusPayload = {};
-
+            // Construimos el mensaje interno
+            let innerMessage = {};
+            
             if (isMedia) {
                 if (/image/.test(mime)) {
-                    statusPayload = {
-                        image: media,
-                        caption: text || '',
-                        backgroundColor: '#000000'
-                    };
+                    innerMessage.imageMessage = { url: "", caption: text || '', mimetype: 'image/jpeg' };
+                    // Aquí Baileys normalmente sube la imagen y llena la URL, 
+                    // pero al hacerlo manual necesitamos que el 'conn' procese el media.
                 } else if (/video/.test(mime)) {
-                    statusPayload = {
-                        video: media,
-                        caption: text || '',
-                        mimetype: 'video/mp4'
-                    };
-                } else if (/audio/.test(mime)) {
-                    // Procesamiento de audio para asegurar compatibilidad
-                    const tmpDir = path.join(__dirname, '../../tmp');
-                    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-                    const input = path.join(tmpDir, `in${Date.now()}.at`);
-                    const output = path.join(tmpDir, `out${Date.now()}.opus`);
-                    
-                    await fs.promises.writeFile(input, media);
-                    await new Promise((res, rej) => {
-                        fluent_ffmpeg(input)
-                            .toFormat('opus')
-                            .on('error', rej)
-                            .on('end', res)
-                            .save(output);
-                    });
-
-                    const audioBuffer = await fs.promises.readFile(output);
-                    statusPayload = {
-                        audio: audioBuffer,
-                        mimetype: 'audio/ogg; codecs=opus',
-                        ppt: true,
-                        seconds: 30
-                    };
-                    
-                    fs.unlinkSync(input);
-                    fs.unlinkSync(output);
+                    innerMessage.videoMessage = { caption: text || '', mimetype: 'video/mp4' };
                 }
             } else {
-                // ESTADO DE SOLO TEXTO
-                statusPayload = {
-                    text: text,
-                    backgroundColor: '#000000',
-                    font: 1
-                };
+                innerMessage.extendedTextMessage = { text: text, backgroundArgb: 0xff000000 };
             }
 
-            // LA ESTRUCTURA CLAVE: Usamos groupStatusMessage
-            await conn.sendMessage(groupJid, {
-                groupStatusMessage: statusPayload
-            });
+            // --- INYECCIÓN MANUAL DE NODO ---
+            // En lugar de sendMessage directo, enviamos un relay con el nodo groupStatusMessage
+            await conn.relayMessage(m.chat, {
+                groupStatusMessage: {
+                    // Re-empaquetamos el contenido
+                    ...(isMedia ? { 
+                        [mime.split('/')[0] + 'Message']: (await conn.prepareWAMessageMedia({ [mime.split('/')[0]]: media }, { upload: conn.waUploadToServer })).imageMessage || 
+                                                           (await conn.prepareWAMessageMedia({ [mime.split('/')[0]]: media }, { upload: conn.waUploadToServer })).videoMessage
+                    } : { 
+                        extendedTextMessage: innerMessage.extendedTextMessage 
+                    })
+                }
+            }, { messageId: conn.generateMessageTag() });
 
             await m.react('✅');
 
         } catch (e) {
-            console.error("Error subiendo estado grupal:", e);
-            await m.react('✖️');
-            m.reply(`> *❌ Error:* Asegúrate de que tu versión de Baileys soporte \`groupStatusMessage\`.`);
+            console.error(e);
+            // Si el relay falla, intentamos el método de respaldo "invisible"
+            try {
+                await conn.sendMessage(m.chat, {
+                    text: text || '',
+                    contextInfo: {
+                        externalAdReply: {
+                            title: 'ESTADO GRUPAL',
+                            body: 'Toca para ver',
+                            mediaType: 1,
+                            sourceUrl: '',
+                            thumbnail: isMedia ? media : null
+                        },
+                        // Flag para intentar forzar el anillo
+                        statusV2: true
+                    }
+                });
+                await m.react('✅');
+            } catch (err) {
+                await m.react('✖️');
+                m.reply(`> *❌ El protocolo de tu Baileys oficial aún no reconoce 'groupStatusMessage'.*`);
+            }
         }
     }
 }
