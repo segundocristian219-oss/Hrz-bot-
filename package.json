@@ -9,15 +9,13 @@
     "plugins": "plugins"
   },
   "scripts": {
-    "start": "node index.ts"
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/deylin-16/cat_bot.git"
-  },
-  "author": "Deylin https://deylin.xyz",
-  "license": "MIT",
   "dependencies": {
+    "tsx": "^4.7.1",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.3",
     "@hapi/boom": "^10.0.1",
     "@vitalets/google-translate-api": "^9.2.0",
     "@whiskeysockets/baileys": "github:WhiskeySockets/Baileys",
@@ -46,10 +44,8 @@
     "sharp": "^0.33.5",
     "gradient-string": "^2.0.2",
     "grapheme-splitter": "^1.0.4",
-    "human-readable": "^0.2.1",
     "jimp": "^1.6.0",
     "jsdom": "^26.0.0",
-    "gradient-string": "^2.0.2",
     "lodash": "^4.17.21",
     "lowdb": "^7.0.1",
     "megajs": "^1.3.1",
