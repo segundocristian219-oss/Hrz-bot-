@@ -1,61 +1,86 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import * as fs from "fs";
+import * as path from "path";
+import fluent_ffmpeg from "fluent-ffmpeg";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const statusCommand = {
     name: 'setstatus',
-    alias: ['estado'],
+    alias: ['estado', 'ups'],
     category: 'owner',
-    run: async (m, { conn, isOwner }) => {
-        if (!isOwner) return m.reply(`> *⚠ Solo desarrollador.*`);
+    run: async (m, { conn, isOwner, text }) => {
+        if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
         
-        if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta algo.*`);
+        if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta un archivo.*`);
 
         try {
             await m.react('🕓');
             let media = await q.download();
             
-            // DIAGNÓSTICO: Ver cuántos contactos reconoce el bot
-            let totalContacts = Object.keys(conn.contacts || {}).length;
-            
-            // Creamos la lista de personas que verán el estado
-            // 1. Agregamos a todos los contactos que el bot tiene en memoria
             let participants = Object.values(conn.contacts || {})
                 .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
                 .map(v => v.id);
 
-            // 2. FORZADO: Si la lista es pequeña o vacía, te agregamos a ti y al bot
-            // Esto sirve para verificar si al menos TÚ puedes ver el estado
             if (!participants.includes(m.sender)) participants.push(m.sender);
-            let botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
-            if (!participants.includes(botJid)) participants.push(botJid);
 
             const statusBroadcast = 'status@broadcast';
-
-            let msg = {};
+            
             if (/audio/.test(mime)) {
-                msg = { 
-                    audio: media, 
+                const tmpDir = path.join(__dirname, '../../tmp');
+                if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+                const input = path.join(tmpDir, `${Date.now()}.mp3`);
+                const output = path.join(tmpDir, `${Date.now()}.mp4`);
+                
+                await fs.promises.writeFile(input, media);
+
+                await new Promise((resolve, reject) => {
+                    fluent_ffmpeg(input)
+                        .outputOptions([
+                            '-c:a aac',
+                            '-b:a 128k',
+                            '-vn'
+                        ])
+                        .toFormat('mp4')
+                        .on('error', reject)
+                        .on('end', resolve)
+                        .save(output);
+                });
+
+                const audioBuffer = await fs.promises.readFile(output);
+                
+                await conn.sendMessage(statusBroadcast, { 
+                    audio: audioBuffer, 
                     mimetype: 'audio/mp4', 
                     ptt: true,
                     seconds: 30
-                };
-            } else if (/video/.test(mime)) {
-                msg = { video: media, caption: m.text || '' };
-            } else if (/image/.test(mime)) {
-                msg = { image: media, caption: m.text || '' };
+                }, { 
+                    statusJidList: participants 
+                });
+
+                if (fs.existsSync(input)) fs.unlinkSync(input);
+                if (fs.existsSync(output)) fs.unlinkSync(output);
+
+            } else {
+                let msg = {};
+                let contentText = text || ""; 
+
+                if (/video/.test(mime)) {
+                    msg = { video: media, caption: contentText };
+                } else if (/image/.test(mime)) {
+                    msg = { image: media, caption: contentText };
+                }
+
+                await conn.sendMessage(statusBroadcast, msg, { 
+                    statusJidList: participants 
+                });
             }
 
-            // ENVIAR
-            await conn.sendMessage(statusBroadcast, msg, { 
-                statusJidList: participants 
-            });
-
             await m.react('✅');
-            await m.reply(`> *INFO:* Estado enviado a ${participants.length} personas (Contactos en memoria: ${totalContacts}).`);
-
         } catch (e) {
             console.error(e);
             await m.react('✖️');
