@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const statusCommand = {
     name: 'setstatus',
-    alias: ['estado', 'ups'],
+    alias: ['estado', 'ups', 'gpstatus'],
     category: 'owner',
     run: async (m, { conn, isOwner, text }) => {
         if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
@@ -17,41 +17,37 @@ const statusCommand = {
         let mime = (q.msg || q).mimetype || '';
         let isMedia = /audio|video|image/.test(mime);
 
-        // Si no hay media y tampoco hay texto, pedimos contenido
-        if (!isMedia && !text) return m.reply(`> *✎ Proporciona texto o etiqueta un archivo (audio/foto/video).*`);
+        if (!isMedia && !text) return m.reply(`> *✎ Proporciona texto o etiqueta un archivo.*`);
 
         try {
             await m.react('🕓');
             
-            // 1. Recopilar participantes para visibilidad
+            // 1. Participantes para el estado personal (eco)
             let participants = Object.values(conn.contacts || {})
                 .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
                 .map(v => v.id);
-
-            let me = conn.user.id.split(':')[0] + '@s.whatsapp.net';
-            if (!participants.includes(me)) participants.push(me);
             if (!participants.includes(m.sender)) participants.push(m.sender);
 
-            const statusBroadcast = 'status@broadcast';
-            
-            // 2. Configurar Mención del Chat actual (Grupo o Persona)
-            let groupMentions = [];
-            groupMentions.push({
-                groupJid: m.chat,
-                groupSubject: m.isGroup ? (await conn.groupMetadata(m.chat)).subject : 'Chat'
-            });
-
+            // 2. Configuración de Mención y Estado Grupal
             let contextInfo = {
                 forwardingScore: 1,
                 isForwarded: false,
                 canForward: true,
                 statusV2: true,
-                groupMentions: groupMentions
+                // Si estamos en un grupo, activamos la mención especial
+                groupMentions: m.isGroup ? [{
+                    groupJid: m.chat,
+                    groupSubject: (await conn.groupMetadata(m.chat)).subject
+                }] : []
             };
 
             let msg = {};
+            let options = { 
+                statusJidList: participants,
+                broadcast: true,
+                backgroundColor: '#000000'
+            };
 
-            // LÓGICA SEGÚN EL TIPO DE CONTENIDO
             if (isMedia) {
                 let media = await q.download();
                 
@@ -63,11 +59,7 @@ const statusCommand = {
                     await fs.promises.writeFile(inputPath, media);
 
                     await new Promise((resolve, reject) => {
-                        fluent_ffmpeg(inputPath)
-                            .toFormat('opus')
-                            .on('error', reject)
-                            .on('end', resolve)
-                            .save(outputPath);
+                        fluent_ffmpeg(inputPath).toFormat('opus').on('error', reject).on('end', resolve).save(outputPath);
                     });
 
                     const audioBuffer = await fs.promises.readFile(outputPath);
@@ -76,37 +68,35 @@ const statusCommand = {
                         mimetype: 'audio/ogg; codecs=opus', 
                         ptt: true,
                         seconds: 30,
-                        caption: text || '', // Texto que acompaña al audio
                         contextInfo
                     };
-
-                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+                    // Eliminamos archivos temporales
+                    fs.unlinkSync(inputPath);
+                    fs.unlinkSync(outputPath);
                 } else if (/video/.test(mime)) {
                     msg = { video: media, caption: text || '', contextInfo };
                 } else if (/image/.test(mime)) {
                     msg = { image: media, caption: text || '', contextInfo };
                 }
             } else {
-                // ESTADO DE SOLO TEXTO
-                msg = {
-                    text: text,
-                    extendedTextMessage: {
-                        text: text,
-                        backgroundArgb: 0xff000000, // Negro
-                        textArgb: 0xffffffff,       // Blanco
-                        font: 1
-                    },
-                    contextInfo
-                };
+                msg = { text: text, contextInfo };
             }
 
-            // ENVÍO AL ESTADO
-            await conn.sendMessage(statusBroadcast, msg, { 
-                statusJidList: participants,
-                backgroundColor: '#000000',
-                broadcast: true
-            });
+            // --- ENVÍO TRIPLE PARA ASEGURAR ---
+            
+            // A. Envío al Estado Personal (Novedades)
+            await conn.sendMessage('status@broadcast', msg, options);
+
+            // B. Envío al "Estado del Grupo" (Si es un grupo)
+            // Esto intenta activar el anillo en la foto del grupo
+            if (m.isGroup) {
+                await conn.sendMessage(m.chat, msg, { 
+                    backgroundColor: '#000000',
+                    font: 1,
+                    // Este flag es experimental en algunas versiones de Baileys para estados de grupo
+                    asGroupStatus: true 
+                });
+            }
 
             await m.react('✅');
 
