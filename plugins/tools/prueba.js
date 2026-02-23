@@ -22,60 +22,63 @@ const groupStatusCommand = {
             await m.react('🕓');
             let media = isMedia ? await q.download() : null;
 
-            // Construimos el mensaje interno
-            let innerMessage = {};
-            
+            let messageContent = {};
+
             if (isMedia) {
                 if (/image/.test(mime)) {
-                    innerMessage.imageMessage = { url: "", caption: text || '', mimetype: 'image/jpeg' };
-                    // Aquí Baileys normalmente sube la imagen y llena la URL, 
-                    // pero al hacerlo manual necesitamos que el 'conn' procese el media.
+                    const upload = await conn.prepareWAMessageMedia({ image: media }, { upload: conn.waUploadToServer });
+                    messageContent = { 
+                        imageMessage: upload.imageMessage,
+                        caption: text || ''
+                    };
                 } else if (/video/.test(mime)) {
-                    innerMessage.videoMessage = { caption: text || '', mimetype: 'video/mp4' };
+                    const upload = await conn.prepareWAMessageMedia({ video: media }, { upload: conn.waUploadToServer });
+                    messageContent = { 
+                        videoMessage: upload.videoMessage,
+                        caption: text || ''
+                    };
+                } else if (/audio/.test(mime)) {
+                    const tmpDir = path.join(__dirname, '../../tmp');
+                    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+                    const input = path.join(tmpDir, `in${Date.now()}.at`);
+                    const output = path.join(tmpDir, `out${Date.now()}.opus`);
+                    await fs.promises.writeFile(input, media);
+                    await new Promise((res, rej) => {
+                        fluent_ffmpeg(input).toFormat('opus').on('error', rej).on('end', res).save(output);
+                    });
+                    const buffer = await fs.promises.readFile(output);
+                    const upload = await conn.prepareWAMessageMedia({ audio: buffer, mimetype: 'audio/ogg; codecs=opus' }, { upload: conn.waUploadToServer });
+                    messageContent = { 
+                        audioMessage: upload.audioMessage
+                    };
+                    fs.unlinkSync(input); 
+                    fs.unlinkSync(output);
                 }
             } else {
-                innerMessage.extendedTextMessage = { text: text, backgroundArgb: 0xff000000 };
+                messageContent = { 
+                    extendedTextMessage: { 
+                        text: text, 
+                        backgroundArgb: 0xff000000,
+                        font: 1 
+                    } 
+                };
             }
 
-            // --- INYECCIÓN MANUAL DE NODO ---
-            // En lugar de sendMessage directo, enviamos un relay con el nodo groupStatusMessage
             await conn.relayMessage(m.chat, {
-                groupStatusMessage: {
-                    // Re-empaquetamos el contenido
-                    ...(isMedia ? { 
-                        [mime.split('/')[0] + 'Message']: (await conn.prepareWAMessageMedia({ [mime.split('/')[0]]: media }, { upload: conn.waUploadToServer })).imageMessage || 
-                                                           (await conn.prepareWAMessageMedia({ [mime.split('/')[0]]: media }, { upload: conn.waUploadToServer })).videoMessage
-                    } : { 
-                        extendedTextMessage: innerMessage.extendedTextMessage 
-                    })
+                groupStatusMessage: messageContent
+            }, { 
+                messageId: conn.generateMessageTag(),
+                additionalAttributes: {
+                    category: 'peer',
+                    type: 'status'
                 }
-            }, { messageId: conn.generateMessageTag() });
+            });
 
             await m.react('✅');
 
         } catch (e) {
             console.error(e);
-            // Si el relay falla, intentamos el método de respaldo "invisible"
-            try {
-                await conn.sendMessage(m.chat, {
-                    text: text || '',
-                    contextInfo: {
-                        externalAdReply: {
-                            title: 'ESTADO GRUPAL',
-                            body: 'Toca para ver',
-                            mediaType: 1,
-                            sourceUrl: '',
-                            thumbnail: isMedia ? media : null
-                        },
-                        // Flag para intentar forzar el anillo
-                        statusV2: true
-                    }
-                });
-                await m.react('✅');
-            } catch (err) {
-                await m.react('✖️');
-                m.reply(`> *❌ El protocolo de tu Baileys oficial aún no reconoce 'groupStatusMessage'.*`);
-            }
+            await m.react('✖️');
         }
     }
 }
