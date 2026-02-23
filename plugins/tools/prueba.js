@@ -3,30 +3,34 @@ import { fileURLToPath } from "url";
 
 const statusCommand = {
     name: 'setstatus',
-    alias: ['estado', 'ups'],
+    alias: ['estado'],
     category: 'owner',
     run: async (m, { conn, isOwner }) => {
-        if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
+        if (!isOwner) return m.reply(`> *⚠ Solo desarrollador.*`);
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
         
-        if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta un archivo.*`);
+        if (!/audio|video|image/.test(mime)) return m.reply(`> *✎ Etiqueta algo.*`);
 
         try {
             await m.react('🕓');
             let media = await q.download();
             
-            // Intentamos obtener la lista de contactos del store o la memoria
+            // DIAGNÓSTICO: Ver cuántos contactos reconoce el bot
+            let totalContacts = Object.keys(conn.contacts || {}).length;
+            
+            // Creamos la lista de personas que verán el estado
+            // 1. Agregamos a todos los contactos que el bot tiene en memoria
             let participants = Object.values(conn.contacts || {})
                 .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
                 .map(v => v.id);
 
-            // Si la lista está vacía, el estado no se verá. 
-            // Como tienes "Mis contactos excepto", el bot necesita saber quiénes son tus contactos.
-            if (participants.length === 0) {
-                return m.reply("> *⚠ El bot no ha cargado tus contactos. Intenta escribirle a alguien o esperar a que se sincronicen.*");
-            }
+            // 2. FORZADO: Si la lista es pequeña o vacía, te agregamos a ti y al bot
+            // Esto sirve para verificar si al menos TÚ puedes ver el estado
+            if (!participants.includes(m.sender)) participants.push(m.sender);
+            let botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+            if (!participants.includes(botJid)) participants.push(botJid);
 
             const statusBroadcast = 'status@broadcast';
 
@@ -36,7 +40,7 @@ const statusCommand = {
                     audio: media, 
                     mimetype: 'audio/mp4', 
                     ptt: true,
-                    waveform: [0,0,0,0,0,0,0] // Algunos dispositivos requieren esto para estados
+                    seconds: 30
                 };
             } else if (/video/.test(mime)) {
                 msg = { video: media, caption: m.text || '' };
@@ -44,11 +48,14 @@ const statusCommand = {
                 msg = { image: media, caption: m.text || '' };
             }
 
+            // ENVIAR
             await conn.sendMessage(statusBroadcast, msg, { 
                 statusJidList: participants 
             });
 
             await m.react('✅');
+            await m.reply(`> *INFO:* Estado enviado a ${participants.length} personas (Contactos en memoria: ${totalContacts}).`);
+
         } catch (e) {
             console.error(e);
             await m.react('✖️');
