@@ -86,7 +86,7 @@ const menuCommand = {
 *┏━━『 𝐆𝐑𝐎𝐔𝐏 』*
 *┃ ▣* .antisub
 *┃ ▣* .antilink 
-*┃ ▣* . antiestados 
+*┃ ▣* .antiestados 
 *┃ ▣* .config_group
 *┃ ▣* .hidetag
 *┃ ▣* .setwelcome
@@ -98,6 +98,7 @@ const menuCommand = {
 *┃ ▣* .welcome on/off 
 *┃ ▣* .detect on/off
 *┃ ▣* .kick 
+*┃ ▣* .link 
 *┃ ▣* .cerrargrupo/cerrargrupo
 *┃ ▣* .open/close 
 *┃ ▣* .abrir/cerrar
