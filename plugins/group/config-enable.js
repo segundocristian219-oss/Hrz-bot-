@@ -39,6 +39,7 @@ const enable = {
                 chat.antiLink = isEnable
                 break
             case 'antistatus':
+            case 'antiestados':
                 chat.antiStatus = isEnable
                 break
             case 'enable':
@@ -53,3 +54,4 @@ const enable = {
 }
 
 export default enable
+
