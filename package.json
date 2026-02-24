@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/deylin-16/cat_bot.git"
   },
-  "author": "Deylin https://deylin.xyz",
+  "author": "Powered by VOKER Platform",
   "license": "MIT",
   "dependencies": {
     "@hapi/boom": "^10.0.1",
