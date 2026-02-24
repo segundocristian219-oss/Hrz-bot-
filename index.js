@@ -68,7 +68,7 @@ cfonts.say('CAT-BOT', {
     letterSpacing: 2
 });
 
-cfonts.say('CORE SYSTEM • PREMIUM EDITION BY DEYLIN', {
+cfonts.say('Powered by VOKER', {
     font: 'console',
     align: 'center',
     colors: ['white'],
