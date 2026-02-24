@@ -1,206 +1,120 @@
-import axios from "axios";
-import * as cheerio from "cheerio";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import * as fs from "fs";
+import * as path from "path";
+import fluent_ffmpeg from "fluent-ffmpeg";
 
-const PAISES = {
-    es: "www", mx: "mx", ar: "ar", cl: "cl", co: "co",
-    us: "us", ve: "ve", pe: "pe", ec: "ec", bo: "bo",
-    cu: "cu", cr: "cr", pa: "pa", py: "py", uy: "uy",
-    do: "do", pr: "pr", sv: "sv", gt: "gt", hn: "hn",
-    ni: "ni", br: "br", it: "it", fr: "fr", ca: "ca",
-};
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function scrapeGrupos(termino, pais = "es", maxPaginas = 3) {
-    const subdomain = PAISES[pais.toLowerCase()] || "www";
-    const baseUrl = `https://${subdomain}.gruposwats.com`;
-    const headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept-Language": "es-ES,es;q=0.9",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    };
+const statusCommand = {
+    name: 'setstatus',
+    alias: ['estado', 'ups'],
+    category: 'owner',
+    run: async (m, { conn, isOwner, text }) => {
+        if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
 
-    const grupos = [];
-    const slug = encodeURIComponent(termino.toLowerCase().replace(/ /g, "-"));
+        let q = m.quoted ? m.quoted : m;
+        let mime = (q.msg || q).mimetype || '';
+        let isMedia = /audio|video|image/.test(mime);
 
-    for (let pagina = 1; pagina <= maxPaginas; pagina++) {
-        const url = pagina === 1
-            ? `${baseUrl}/${slug}.html`
-            : `${baseUrl}/${slug}_${pagina}.html`;
+        // Si no hay media y tampoco hay texto, pedimos contenido
+        if (!isMedia && !text) return m.reply(`> *✎ Proporciona texto o etiqueta un archivo (audio/foto/video).*`);
 
         try {
-            const { data } = await axios.get(url, { headers, timeout: 12000 });
-            const $ = cheerio.load(data);
+            await m.react('🕓');
+            
+            // 1. Recopilar participantes para visibilidad
+            let participants = Object.values(conn.contacts || {})
+                .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
+                .map(v => v.id);
 
-            // Buscar todos los enlaces de WhatsApp en la página
-            const encontrados = [];
+            let me = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+            if (!participants.includes(me)) participants.push(me);
+            if (!participants.includes(m.sender)) participants.push(m.sender);
 
-            $("a[href*='chat.whatsapp.com']").each((_, el) => {
-                const enlace = $(el).attr("href")?.trim();
-                if (!enlace) return;
-
-                const contenedor = $(el).closest("div, article, li, section");
-
-                // Nombre del grupo
-                let nombre =
-                    contenedor.find("h2, h3, h4, strong, b, .titulo, .nombre").first().text().trim() ||
-                    $(el).attr("title")?.trim() ||
-                    $(el).text().trim() ||
-                    "Sin nombre";
-
-                // Descripción
-                let descripcion =
-                    contenedor.find("p, .descripcion, .desc, span").first().text().trim() ||
-                    $(el).attr("title")?.trim() ||
-                    "";
-
-                // Categoría desde la URL
-                const catMatch = url.match(/\/([^/_]+?)(?:_\d+)?\.html/);
-                const categoria = catMatch
-                    ? catMatch[1].replace(/-/g, " ").replace(/_/g, " ")
-                    : termino;
-
-                // Evitar duplicados
-                if (!grupos.find(g => g.enlace === enlace) && !encontrados.find(g => g.enlace === enlace)) {
-                    encontrados.push({ nombre, descripcion, enlace, categoria });
-                }
+            const statusBroadcast = 'status@broadcast';
+            
+            // 2. Configurar Mención del Chat actual (Grupo o Persona)
+            let groupMentions = [];
+            groupMentions.push({
+                groupJid: m.chat,
+                groupSubject: m.isGroup ? (await conn.groupMetadata(m.chat)).subject : 'Chat'
             });
 
-            if (encontrados.length === 0) break;
-            grupos.push(...encontrados);
+            let contextInfo = {
+                forwardingScore: 1,
+                isForwarded: false,
+                canForward: true,
+                statusV2: true,
+                groupMentions: groupMentions
+            };
 
-            // Pequeña pausa para no saturar el servidor
-            await new Promise(r => setTimeout(r, 800));
+            let msg = {};
 
-        } catch (err) {
-            // Si la página no existe (404 u otro error), dejamos de paginar
-            if (err?.response?.status === 404 || err?.code === "ERR_BAD_REQUEST") break;
-            console.error(`[buscargrupos] Error en ${url}:`, err.message);
-            break;
-        }
-    }
+            // LÓGICA SEGÚN EL TIPO DE CONTENIDO
+            if (isMedia) {
+                let media = await q.download();
+                
+                if (/audio/.test(mime)) {
+                    const tmpDir = path.join(__dirname, '../../tmp');
+                    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+                    const inputPath = path.join(tmpDir, `in_${Date.now()}.audio`);
+                    const outputPath = path.join(tmpDir, `out_${Date.now()}.opus`);
+                    await fs.promises.writeFile(inputPath, media);
 
-    return grupos;
-}
+                    await new Promise((resolve, reject) => {
+                        fluent_ffmpeg(inputPath)
+                            .toFormat('opus')
+                            .on('error', reject)
+                            .on('end', resolve)
+                            .save(outputPath);
+                    });
 
-function formatearResultados(grupos, termino, pagina = 1, porPagina = 5) {
-    const total = grupos.length;
-    const inicio = (pagina - 1) * porPagina;
-    const fin = Math.min(inicio + porPagina, total);
-    const slice = grupos.slice(inicio, fin);
-    const totalPaginas = Math.ceil(total / porPagina);
+                    const audioBuffer = await fs.promises.readFile(outputPath);
+                    msg = { 
+                        audio: audioBuffer, 
+                        mimetype: 'audio/ogg; codecs=opus', 
+                        ptt: true,
+                        seconds: 30,
+                        caption: text || '', // Texto que acompaña al audio
+                        contextInfo
+                    };
 
-    if (slice.length === 0) return null;
-
-    let texto = `╔══════════════════════╗\n`;
-    texto += `║  🔍 *GRUPOS DE WHATSAPP*  ║\n`;
-    texto += `╚══════════════════════╝\n\n`;
-    texto += `📌 *Búsqueda:* ${termino}\n`;
-    texto += `📊 *Total:* ${total} grupo(s) | Página ${pagina}/${totalPaginas}\n`;
-    texto += `${"─".repeat(28)}\n\n`;
-
-    slice.forEach((g, i) => {
-        texto += `*${inicio + i + 1}.* 👥 *${g.nombre}*\n`;
-        if (g.descripcion) texto += `📝 ${g.descripcion.slice(0, 80)}${g.descripcion.length > 80 ? "…" : ""}\n`;
-        texto += `🏷️ _${g.categoria}_\n`;
-        texto += `🔗 ${g.enlace}\n\n`;
-    });
-
-    if (totalPaginas > 1) {
-        texto += `${"─".repeat(28)}\n`;
-        texto += `💡 Usa *!buscargrupos ${termino} -p${pagina + 1}* para ver más`;
-    }
-
-    return texto;
-}
-
-// ─────────────────────────────────────────────
-//  COMANDO
-// ─────────────────────────────────────────────
-
-const buscarGruposCommand = {
-    name: "buscargrupos",
-    alias: ["searchgroup", "findgroup", "bgrupos", "gruposwats"],
-    category: "util",
-    desc: "Busca grupos de WhatsApp en gruposwats.com",
-    usage: "!buscargrupos <término> [-p<página>] [-pais <código>]",
-
-    run: async (m, { conn, text }) => {
-        if (!text) {
-            return m.reply(
-                `> ❓ *Uso:* !buscargrupos <término>\n\n` +
-                `*Ejemplos:*\n` +
-                `• !buscargrupos música\n` +
-                `• !buscargrupos gaming -p2\n` +
-                `• !buscargrupos deportes -pais mx\n\n` +
-                `*Países disponibles:* es, mx, ar, cl, co, us, ve, pe, ec, bo, cu, cr, br, it, fr, ca`
-            );
-        }
-
-        // Parsear argumentos
-        // -p2 → página 2 | -pais mx → país México
-        let termino = text;
-        let pagina = 1;
-        let pais = "es";
-
-        const paginaMatch = text.match(/-p(\d+)/i);
-        if (paginaMatch) {
-            pagina = parseInt(paginaMatch[1]);
-            termino = termino.replace(paginaMatch[0], "").trim();
-        }
-
-        const paisMatch = text.match(/-pais\s+([a-z]{2})/i);
-        if (paisMatch) {
-            pais = paisMatch[1].toLowerCase();
-            termino = termino.replace(paisMatch[0], "").trim();
-        }
-
-        termino = termino.trim();
-        if (!termino) return m.reply("> ⚠️ Escribe un término de búsqueda.");
-
-        try {
-            await m.react("🔍");
-
-            const grupos = await scrapeGrupos(termino, pais, 3);
-
-            if (!grupos.length) {
-                await m.react("❌");
-                return m.reply(
-                    `> ❌ *No se encontraron grupos* para *"${termino}"*.\n\n` +
-                    `Prueba con otro término o país (ej: -pais mx)`
-                );
-            }
-
-            const mensaje = formatearResultados(grupos, termino, pagina, 5);
-
-            if (!mensaje) {
-                await m.react("❌");
-                return m.reply(`> ⚠️ No hay resultados en la página ${pagina}.`);
-            }
-
-            await conn.sendMessage(
-                m.chat,
-                {
-                    text: mensaje,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `🔍 Grupos: ${termino}`,
-                            body: `${grupos.length} grupos encontrados en gruposwats.com`,
-                            mediaType: 1,
-                            renderLargerThumbnail: false,
-                            showAdAttribution: false,
-                            sourceUrl: `https://www.gruposwats.com/${encodeURIComponent(termino)}.html`,
-                        },
+                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+                } else if (/video/.test(mime)) {
+                    msg = { video: media, caption: text || '', contextInfo };
+                } else if (/image/.test(mime)) {
+                    msg = { image: media, caption: text || '', contextInfo };
+                }
+            } else {
+                // ESTADO DE SOLO TEXTO
+                msg = {
+                    text: text,
+                    extendedTextMessage: {
+                        text: text,
+                        backgroundArgb: 0xff000000, // Negro
+                        textArgb: 0xffffffff,       // Blanco
+                        font: 1
                     },
-                },
-                { quoted: m }
-            );
+                    contextInfo
+                };
+            }
 
-            await m.react("✅");
+            // ENVÍO AL ESTADO
+            await conn.sendMessage(statusBroadcast, msg, { 
+                statusJidList: participants,
+                backgroundColor: '#000000',
+                broadcast: true
+            });
+
+            await m.react('✅');
+
         } catch (e) {
-            console.error("[buscargrupos]", e);
-            await m.react("✖️");
-            m.reply("> ❌ *Error al buscar grupos.* Intenta de nuevo.");
+            console.error(e);
+            await m.react('✖️');
         }
-    },
-};
+    }
+}
 
-export default buscarGruposCommand;
+export default statusCommand;
