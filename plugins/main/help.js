@@ -85,6 +85,8 @@ const menuCommand = {
 
 *┏━━『 𝐆𝐑𝐎𝐔𝐏 』*
 *┃ ▣* .antisub
+*┃ ▣* .antilink 
+*┃ ▣* . antiestados 
 *┃ ▣* .config_group
 *┃ ▣* .hidetag
 *┃ ▣* .setwelcome
