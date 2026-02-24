@@ -144,6 +144,8 @@ const menuCommand = {
 *┃ ▣* .reducir 
 *┃ ▣* .ss/ssweb
 *┗━━━━━━━━━━━━━*
+
+> © Powered by VOKER Platform.
 `;
 
          await conn.sendMessage(m.chat, { 
