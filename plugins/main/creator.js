@@ -1,59 +1,46 @@
 const ownerCommand = {
     name: 'owner',
-    alias: ['creador', 'contacto'],
+    alias: ['creador', 'contacto', 'soporte'],
     category: 'main',
     run: async (m, { conn }) => {
         const myNumber = '50432955554'
         const myJid = myNumber + '@s.whatsapp.net'
-        const name = 'Deylin Tech'
+        const brandName = 'VOKER | Platform' 
 
         const vcard = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
-                      `FN:${name}\n` +
-                      `N:;${name};;;\n` +
-                      'ORG:Deylin - System Admin;\n' +
-                      'TITLE:CEO & Fundador;\n' +
+                      `FN:${brandName}\n` + 
+                      `N:;VOKER;Platform;;\n` +
+                      'ORG:VOKER Systems Inc.;\n' + 
+                      'TITLE:Chief Technical Officer;\n' + 
                       `TEL;type=CELL;type=VOICE;waid=${myNumber}:${myNumber}\n` +
-                      'X-WA-BIZ-DESCRIPTION:Desarrollador oficial de sistemas de automatización.\n' +
-                      `X-WA-BIZ-NAME:${name}\n` +
+                      'X-WA-BIZ-DESCRIPTION:Infraestructura digital y sistemas de automatización de alto rendimiento.\n' +
+                      `X-WA-BIZ-NAME:${brandName}\n` +
                       'END:VCARD'
 
         await conn.sendMessage(m.chat, {
             contacts: {
-                displayName: name,
+                displayName: brandName,
                 contacts: [{ vcard }]
             },
             contextInfo: {
-                isForwarded: true,
-                forwardingScore: 999,
+                
                 externalAdReply: {
-                  //  title: `${name} ✅`,
-                   // body: 'Official Business Account',
+                    title: 'VOKER™ OFFICIAL CONTACT',
+                    body: 'Advanced Automation Infrastructure',
                     thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771264506865_a7j8pxEJj.jpeg',
                     sourceUrl: `https://wa.me/${myNumber}`,
                     mediaType: 1,
-                    showAdAttribution: true,
+                    showAdAttribution: false, 
                     renderLargerThumbnail: true
                 },
                 businessOwnerJid: myJid
             }
         }, { 
-            quoted: {
-                key: { 
-                    fromMe: false, 
-                    participant: '0@s.whatsapp.net', 
-                    remoteJid: 'status@broadcast' 
-                },
-                message: {
-                    contactMessage: {
-                        displayName: name,
-                        vcard: vcard
-                    }
-                }
-            } 
+            quoted: m 
         })
-        
-        await m.react('🛡️')
+
+        await m.react('🔘') 
     }
 }
 
