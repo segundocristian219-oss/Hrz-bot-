@@ -47,7 +47,7 @@ const qrCommand = {
 
             await conn.sendMessage(m.chat, { 
                 image: { url: qrFinalUrl }, 
-                caption: `> ✅ *QR GENERADO*\n> 👤 *By:* Deylin Tech\n> 🔗 *Link:* ${qrData}` 
+                caption: `> ♛ *QR GENERADO*\n> ✎ *By:* VOKER Platform.\n> ❏ *Link:* ${qrData}` 
             }, { quoted: m });
 
             await m.react('✅');
