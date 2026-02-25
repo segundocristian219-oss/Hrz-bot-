@@ -8,7 +8,6 @@ const memesCommand = {
         try {
             await m.react('🕒');
 
-            
             const { data: res } = await axios.get(`https://Api.deylin.xyz/api/search/memes?apikey=by_deylin`);
 
             if (!res.success || !res.memes || res.memes.length === 0) {
@@ -16,7 +15,6 @@ const memesCommand = {
                 return conn.reply(m.chat, `> ⍰ No se encontraron memes en este momento.`, m);
             }
 
-            
             const maxMemes = Math.min(res.memes.length, 10);
             const medias = res.memes.slice(0, maxMemes).map(url => ({
                 type: 'image',
@@ -64,17 +62,26 @@ async function sendAlbum(conn, jid, medias, options = {}) {
     await conn.relayMessage(jid, album.message, { messageId: album.key.id });
 
     for (let i = 0; i < medias.length; i++) {
-        const { type, data } = medias[i];
-        const msg = await conn.generateWAMessage(jid, {
-            [type]: data,
-            ...(i === 0 ? { caption: options.caption || "" } : {})
-        }, { upload: conn.waUploadToServer });
+        try {
+            const { type, data } = medias[i];
+            
+            const msg = await conn.generateWAMessage(jid, {
+                [type]: data,
+                ...(i === 0 ? { caption: options.caption || "" } : {})
+            }, { upload: conn.waUploadToServer });
 
-        msg.message.messageContextInfo = {
-            messageAssociation: { associationType: 1, parentMessageKey: album.key }
-        };
-        await conn.relayMessage(jid, msg.message, { messageId: msg.key.id });
-        await new Promise(resolve => setTimeout(resolve, options.delay || 500));
+            msg.message.messageContextInfo = {
+                messageAssociation: { associationType: 1, parentMessageKey: album.key }
+            };
+
+            await conn.relayMessage(jid, msg.message, { messageId: msg.key.id });
+            await new Promise(resolve => setTimeout(resolve, options.delay || 500));
+            
+        } catch (err) {
+            
+            console.error(`> [ERROR ALBUM ITEM ${i}]: Falla al enviar media. Saltando...`);
+            continue; 
+        }
     }
 }
 
