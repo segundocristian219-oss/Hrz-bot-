@@ -68,7 +68,7 @@ const emojiCommand = {
             }
 
             const stickerBuffer = await processEmoji(buffer);
-            const finalSticker = await addExif(stickerBuffer, "Emoji Mix", "Deylin");
+            const finalSticker = await addExif(stickerBuffer, name(), m.pushName);
 
             await conn.sendMessage(m.chat, { sticker: finalSticker }, { quoted: m });
             await m.react('✅');
