@@ -103,7 +103,7 @@ const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 const { version } = await fetchLatestBaileysVersion();
 const msgRetryCounterCache = new NodeCache();
-const groupMetadataCache = new NodeCache({ stdTTL: 180, checkperiod: 120 });
+global.groupCache = new Map();
 
 const connectionOptions = {
   version,
@@ -118,7 +118,7 @@ const connectionOptions = {
   generateHighQualityLinkPreview: true,
   syncFullHistory: false,
   msgRetryCounterCache,
-  cachedGroupMetadata: async (jid) => groupMetadataCache.get(jid),
+  cachedGroupMetadata: async (jid) => global.groupCache.get(jid),
   connectTimeoutMs: 60000,
   defaultQueryTimeoutMs: 0,
   keepAliveIntervalMs: 10000,
@@ -192,6 +192,21 @@ global.reload = async function(restatConn) {
         console.error(e);
         await uploadCriticalError(e, 'Message Upsert');
     }
+  });
+
+  global.conn.ev.on('groups.update', async ([update]) => {
+      const id = update.id;
+      if (global.groupCache.has(id)) {
+          let current = global.groupCache.get(id);
+          global.groupCache.set(id, { ...current, ...update });
+      }
+  });
+
+  global.conn.ev.on('group-participants.update', async ({ id, participants, action }) => {
+      try {
+          const fresh = await conn.groupMetadata(id);
+          global.groupCache.set(id, fresh);
+      } catch (e) {}
   });
 
   global.conn.ev.on('contacts.upsert', (contacts) => {
