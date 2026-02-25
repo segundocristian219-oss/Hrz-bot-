@@ -35,10 +35,10 @@ const geminiCommand = {
 };
 
 async function chatAI(m, conn, query) {
-    let assistantName = 'CAT BOT OS';
+    let assistantName = name();
     let username = m.pushName || 'Usuario';
 
-    let prompt = `Eres ${assistantName}, creado por Deylin Eliac. Actúa con seriedad, autoridad y brevedad extrema. 
+    let prompt = `Eres ${assistantName}, creado por VOKER Platform. Actúa con seriedad, autoridad y brevedad extrema. 
 
 Reglas de respuesta:
 1. Usa solo asteriscos simples (*) para énfasis, nunca negritas dobles.
