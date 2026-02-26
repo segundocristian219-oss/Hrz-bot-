@@ -1,97 +1,58 @@
 import axios from 'axios';
 
-const albumCommand = {
-    name: 'tiktokalbum',
-    alias: ['tiktoksearch', 'ttss', 'tiktoks'],
+const tiktokCommand = {
+    name: 'tiktok',
+    alias: ['tt', 'tk', 'tiktokdl'],
     category: 'search',
     run: async (m, { conn, text, usedPrefix, command }) => {
-        if (!text) return conn.reply(m.chat, `*── 「 SISTEMA DE ÁLBUM 」 ──*\n\n*Uso:* ${usedPrefix + command} <términos>`, m);
+        if (!text) return conn.reply(m.chat, `*── 「 TIKTOK SEARCH 」 ──*\n\n*Uso:* ${usedPrefix + command} <términos>`, m);
 
         await m.react("🕒");
 
         try {
+            
             const { data: response } = await axios.get(`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(text)}`);
 
             if (!response.data || !response.data.videos || response.data.videos.length === 0) {
                 await m.react("❌");
-                return conn.reply(m.chat, `*── 「 SIN RESULTADOS 」 ──*\n\nNo se localizó contenido.`, m);
+                return conn.reply(m.chat, `*── 「 SIN RESULTADOS 」 ──*\n\nNo se localizó contenido para su búsqueda.`, m);
             }
 
-            const rawVideos = response.data.videos.slice(0, 5);
-            const medias = [];
-            let linksMetadata = "";
+            const video = response.data.videos[0];
+            const videoUrl = `https://www.tiktok.com/@${video.author.unique_id}/video/${video.video_id}`;
+            
+            const res = await axios.get(video.play, { responseType: 'arraybuffer' });
+            const videoBuffer = Buffer.from(res.data);
 
-            await Promise.all(rawVideos.map(async (v, index) => {
-                try {
-                    const res = await axios.get(v.play, { responseType: 'arraybuffer' });
-                    medias.push({
-                        type: 'video',
-                        data: Buffer.from(res.data)
-                    });
+            const caption = `*── 「 TIKTOK RESULT 」 ──*\n\n` +
+                            `▢ *TÍTULO:* ${video.title || 'Sin descripción'}\n` +
+                            `▢ *AUTOR:* ${video.author.nickname}\n` +
+                            `▢ *LINK:* ${videoUrl}\n\n` +
+                            `*❯❯ VOKER PLATFORM - AUTOMATION*`;
 
-                    const videoUrl = `https://www.tiktok.com/@${v.author.unique_id}/video/${v.video_id}`;
-                    linksMetadata += `▢ *Link #${index + 1}:* ${videoUrl}\n`;
-                } catch (e) {
-                    console.error(e.message);
+            await conn.sendMessage(m.chat, { 
+                video: videoBuffer, 
+                caption: caption,
+                mimetype: 'video/mp4',
+                contextInfo: {
+                    externalAdReply: {
+                        title: "TIKTOK DOWNLOADER",
+                        body: video.author.nickname,
+                        mediaType: 2,
+                        thumbnailUrl: video.origin_cover, 
+                        sourceUrl: videoUrl
+                    }
                 }
-            }));
-
-            if (medias.length < 2) throw new Error("Recursos_Insuficientes_Album");
-
-            const albumCaption = `*── 「 TIKTOK ALBUM 」 ──*\n\n` +
-                                 `▢ *BÚSQUEDA:* ${text}\n` +
-                                 `▢ *VIDEOS:* ${medias.length}\n` +
-                                 `${linksMetadata}` +
-                                 `*──────────────────*`;
-
-            await sendAlbum(conn, m.chat, medias, {
-                caption: albumCaption,
-                quoted: m,
-                delay: 500
-            });
+            }, { quoted: m });
 
             await m.react("✅");
 
         } catch (error) {
+            console.error(error);
             await m.react("❌");
-            conn.reply(m.chat, `*── 「 FAILURE 」 ──*\n\n*LOG:* ${error.message}`, m);
+            conn.reply(m.chat, `*── 「 FAILURE 」 ──*\n\n*LOG:* Error al procesar el video.`, m);
         }
     }
 };
 
-async function sendAlbum(conn, jid, medias, options = {}) {
-    const album = await conn.generateWAMessageFromContent(jid, {
-        messageContextInfo: {},
-        albumMessage: {
-            expectedImageCount: medias.filter(m => m.type === "image").length,
-            expectedVideoCount: medias.filter(m => m.type === "video").length,
-            ...(options.quoted ? {
-                contextInfo: {
-                    remoteJid: options.quoted.key.remoteJid,
-                    fromMe: options.quoted.key.fromMe,
-                    stanzaId: options.quoted.key.id,
-                    participant: options.quoted.key.participant || options.quoted.key.remoteJid,
-                    quotedMessage: options.quoted.message,
-                }
-            } : {}),
-        }
-    }, { userJid: conn.user.id });
-
-    await conn.relayMessage(jid, album.message, { messageId: album.key.id });
-
-    for (let i = 0; i < medias.length; i++) {
-        const { type, data } = medias[i];
-        const msg = await conn.generateWAMessage(jid, {
-            [type]: data,
-            ...(i === 0 ? { caption: options.caption || "" } : {})
-        }, { upload: conn.waUploadToServer });
-
-        msg.message.messageContextInfo = {
-            messageAssociation: { associationType: 1, parentMessageKey: album.key }
-        };
-        await conn.relayMessage(jid, msg.message, { messageId: msg.key.id });
-        if (conn.delay) await conn.delay(options.delay || 300);
-    }
-}
-
-export default albumCommand;
+export default tiktokCommand;
