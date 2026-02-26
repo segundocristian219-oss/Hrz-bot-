@@ -27,7 +27,7 @@ const ytSearchCommand = {
                 mensaje += `❖ 𝗗𝗨𝗥𝗔𝗖𝗜𝗢𝗡: ${vid.duracion}\n`;
                 mensaje += `❖ 𝗩𝗜𝗦𝗧𝗔𝗦: ${vid.vistas.toLocaleString()}\n`;
                 mensaje += `❖ 𝗘𝗡𝗟𝗔𝗖𝗘: ${vid.url}\n\n`;
-            } search 
+            } 
 
             await conn.sendMessage(m.chat, { 
                 text: mensaje.trim(),
