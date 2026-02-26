@@ -8,7 +8,6 @@ const memesCommand = {
         try {
             await m.react('🕒');
 
-            
             const { data: res } = await axios.get(`https://Api.deylin.xyz/api/search/memes?apikey=by_deylin`);
 
             if (!res.success || !res.memes || res.memes.length === 0) {
@@ -16,34 +15,46 @@ const memesCommand = {
                 return conn.reply(m.chat, `> ⍰ No hay memes disponibles.`, m);
             }
 
-            
             const randomMeme = res.memes[Math.floor(Math.random() * res.memes.length)];
 
-            const caption = `*── 「 VOKER MEME 」 ──*\n\n` +
-                             `> 😂 ¡Aquí tienes tu dosis de humor!\n\n` +
-                             `*❯❯ VOKER PLATFORM*`;
-
-            
-            await conn.sendMessage(m.chat, { 
-                image: { url: randomMeme }, 
-                caption: caption 
-            }, { quoted: m });
-
-            
-            await conn.sendMessage(m.chat, {
-                poll: {
-                    name: "¿Quieres ver otro meme?",
-                    values: [`🔄 Enviar otro .${command}`, '✅ Ya fue suficiente'],
-                    selectableCount: 1
+            // CONSTRUCCIÓN DEL MENSAJE INTERACTIVO (EL CAMINO DIFÍCIL)
+            const interactiveMessage = {
+                body: { text: `*── 「 VOKER MEME 」 ──*\n\n> 😂 ¡Humor automatizado!\n\n*❯❯ VOKER PLATFORM*` },
+                footer: { text: "Presiona el botón para más contenido" },
+                header: {
+                    hasVideoMessage: false,
+                    imageMessage: (await conn.prepareWAMessageMedia({ image: { url: randomMeme } }, { upload: conn.waUploadToServer })).imageMessage,
+                    title: "MEME SYSTEM",
+                    itemType: 0
+                },
+                nativeFlowMessage: {
+                    buttons: [
+                        {
+                            name: "quick_reply",
+                            buttonParamsJson: JSON.stringify({
+                                display_text: "🔄 OTRO MEME",
+                                id: `${usedPrefix}${command}` // Envía el comando de nuevo al presionar
+                            })
+                        }
+                    ],
+                    messageParamsVersion: 1
                 }
-            });
+            };
 
+            const msg = await conn.generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: {
+                    message: {
+                        interactiveMessage: interactiveMessage
+                    }
+                }
+            }, { userJid: conn.user.id, quoted: m });
+
+            await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             await m.react('✅');
 
         } catch (error) {
             await m.react('❌');
-            console.error(`> [ERROR MEMES]: ${error.message}`);
-            conn.reply(m.chat, '😿 No pude conseguir un meme, intenta de nuevo.', m);
+            console.error(`> [ERROR MEMES BUTTON]: ${error.message}`);
         }
     }
 };
