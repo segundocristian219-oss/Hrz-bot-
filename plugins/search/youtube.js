@@ -17,8 +17,8 @@ const ytSearchCommand = {
                 return m.reply(`❯❯ 𝗘𝗥𝗥𝗢𝗥: No se detectaron resultados para "${text}".`);
             }
 
-            const resultados = data.resultado.slice(0, 8); 
-            let mensaje = `❯❯ 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗨𝗧𝗢𝗠𝗔𝗧𝗜𝗢𝗡\n\n❖ 𝗕𝗨𝗦𝗤𝗨𝗘𝗗𝗔: ${text.toUpperCase()}\n❖ 𝗥𝗘𝗦𝗨𝗟𝗧𝗔𝗗𝗢𝗦: ${resultados.length}\n\n`;
+            const resultados = data.resultado.slice(0, 3); 
+            let mensaje = `❯❯ 𝗬𝗢𝗨𝗧𝗨𝗕𝗘 𝗦𝗘𝗔𝗥𝗖𝗛\n\n❖ 𝗕𝗨𝗦𝗤𝗨𝗘𝗗𝗔: ${text.toUpperCase()}\n❖ 𝗥𝗘𝗦𝗨𝗟𝗧𝗔𝗗𝗢𝗦: ${resultados.length}\n\n`;
 
             for (let vid of resultados) {
                 mensaje += `❒─── 「 𝗬𝗢𝗨𝗧𝗨𝗕𝗘 」 ───\n`;
@@ -27,16 +27,14 @@ const ytSearchCommand = {
                 mensaje += `❖ 𝗗𝗨𝗥𝗔𝗖𝗜𝗢𝗡: ${vid.duracion}\n`;
                 mensaje += `❖ 𝗩𝗜𝗦𝗧𝗔𝗦: ${vid.vistas.toLocaleString()}\n`;
                 mensaje += `❖ 𝗘𝗡𝗟𝗔𝗖𝗘: ${vid.url}\n\n`;
-            }
-
-            mensaje += `❯❯ 𝗗𝗘𝗬𝗟𝗜𝗡 𝗦𝗬𝗦𝗧𝗘𝗠 - 𝗔𝗨𝗧𝗢𝗠𝗔𝗧𝗜𝗢𝗡`;
+            } search 
 
             await conn.sendMessage(m.chat, { 
                 text: mensaje.trim(),
                 contextInfo: {
                     externalAdReply: {
-                        title: "𝗬𝗢𝗨𝗧𝗨𝗕𝗘 𝗦𝗘𝗔𝗥𝗖𝗛",
-                        body: `Resultados para: ${text}`,
+                        title: vid.titulo,
+                        body: `Voker Platform.`,
                         mediaType: 1,
                         thumbnailUrl: "https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1770066962767_D7Usn5pDF.jpeg",
                         renderLargerThumbnail: false,
