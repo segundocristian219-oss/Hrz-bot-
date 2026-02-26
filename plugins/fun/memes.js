@@ -4,31 +4,38 @@ const memesCommand = {
     name: 'memes',
     alias: ['meme'],
     category: 'fun',
-    run: async (m, { conn }) => {
+    run: async (m, { conn, usedPrefix, command }) => {
         try {
             await m.react('🕒');
 
+            
             const { data: res } = await axios.get(`https://Api.deylin.xyz/api/search/memes?apikey=by_deylin`);
 
             if (!res.success || !res.memes || res.memes.length === 0) {
                 await m.react('❌');
-                return conn.reply(m.chat, `> ⍰ No se encontraron memes en este momento.`, m);
+                return conn.reply(m.chat, `> ⍰ No hay memes disponibles.`, m);
             }
 
-            const maxMemes = Math.min(res.memes.length, 10);
-            const medias = res.memes.slice(0, maxMemes).map(url => ({
-                type: 'image',
-                data: { url }
-            }));
+            
+            const randomMeme = res.memes[Math.floor(Math.random() * res.memes.length)];
 
-            const caption = `\t\t*── 「 MEMES ALBUM 」 ──*\n\n` +
-                             `▢ *CANTIDAD:* ${medias.length}\n` +
-                             `> ⍰ Aquí tienes tus memes aleatorios...`;
+            const caption = `*── 「 VOKER MEME 」 ──*\n\n` +
+                             `> 😂 ¡Aquí tienes tu dosis de humor!\n\n` +
+                             `*❯❯ VOKER PLATFORM*`;
 
-            await sendAlbum(conn, m.chat, medias, {
-                caption: caption,
-                quoted: m,
-                delay: 800
+            
+            await conn.sendMessage(m.chat, { 
+                image: { url: randomMeme }, 
+                caption: caption 
+            }, { quoted: m });
+
+            
+            await conn.sendMessage(m.chat, {
+                poll: {
+                    name: "¿Quieres ver otro meme?",
+                    values: [`🔄 Enviar otro .${command}`, '✅ Ya fue suficiente'],
+                    selectableCount: 1
+                }
             });
 
             await m.react('✅');
@@ -36,53 +43,9 @@ const memesCommand = {
         } catch (error) {
             await m.react('❌');
             console.error(`> [ERROR MEMES]: ${error.message}`);
-            conn.reply(m.chat, '😿 Ocurrió un error al obtener los memes.', m);
+            conn.reply(m.chat, '😿 No pude conseguir un meme, intenta de nuevo.', m);
         }
     }
 };
-
-async function sendAlbum(conn, jid, medias, options = {}) {
-    const album = await conn.generateWAMessageFromContent(jid, {
-        messageContextInfo: {},
-        albumMessage: {
-            expectedImageCount: medias.filter(m => m.type === "image").length,
-            expectedVideoCount: medias.filter(m => m.type === "video").length,
-            ...(options.quoted ? {
-                contextInfo: {
-                    remoteJid: options.quoted.key.remoteJid,
-                    fromMe: options.quoted.key.fromMe,
-                    stanzaId: options.quoted.key.id,
-                    participant: options.quoted.key.participant || options.quoted.key.remoteJid,
-                    quotedMessage: options.quoted.message,
-                }
-            } : {}),
-        }
-    }, { userJid: conn.user.id });
-
-    await conn.relayMessage(jid, album.message, { messageId: album.key.id });
-
-    for (let i = 0; i < medias.length; i++) {
-        try {
-            const { type, data } = medias[i];
-            
-            const msg = await conn.generateWAMessage(jid, {
-                [type]: data,
-                ...(i === 0 ? { caption: options.caption || "" } : {})
-            }, { upload: conn.waUploadToServer });
-
-            msg.message.messageContextInfo = {
-                messageAssociation: { associationType: 1, parentMessageKey: album.key }
-            };
-
-            await conn.relayMessage(jid, msg.message, { messageId: msg.key.id });
-            await new Promise(resolve => setTimeout(resolve, options.delay || 500));
-            
-        } catch (err) {
-            
-            console.error(`> [ERROR ALBUM ITEM ${i}]: Falla al enviar media. Saltando...`);
-            continue; 
-        }
-    }
-}
 
 export default memesCommand;
