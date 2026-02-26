@@ -12,7 +12,7 @@ const ytSearchCommand = {
 
         
         yts(text).then(async (search) => {
-            const vid = search.videos[0]; // Tomamos solo el primero para máxima velocidad de respuesta
+            const vid = search.videos[0]; 
             if (!vid) return m.react('❌');
 
             const mensaje = `❯❯ 𝗬𝗢𝗨𝗧𝗨𝗕𝗘 𝗦𝗘𝗔𝗥𝗖𝗛\n\n` +
