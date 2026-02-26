@@ -33,8 +33,7 @@ const ytSearchCommand = {
                 text: mensaje.trim(),
                 contextInfo: {
                     externalAdReply: {
-                        title: vid.titulo,
-                        body: `Voker Platform.`,
+                        title: "𝗬𝗢𝗨𝗧𝗨𝗕𝗘 𝗦𝗘𝗔𝗥𝗖𝗛",
                         mediaType: 1,
                         thumbnailUrl: "https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1770066962767_D7Usn5pDF.jpeg",
                         renderLargerThumbnail: false,
