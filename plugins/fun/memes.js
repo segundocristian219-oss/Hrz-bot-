@@ -4,7 +4,7 @@ const memesCommand = {
     name: 'memes',
     alias: ['meme'],
     category: 'fun',
-    run: async (m, { conn }) => {
+    run: async (m, { conn, usedPrefix, command }) => {
         try {
             await m.react('🕒');
 
@@ -16,24 +16,19 @@ const memesCommand = {
             }
 
             const randomMeme = res.memes[Math.floor(Math.random() * res.memes.length)];
-
-            const caption = `*── 「 VOKER MEME 」 ──*\n\n` +
-                             `> 😂 ¡Humor instantáneo!\n\n` +
-                             `*¿Quieres otro?* Reacciona con 🔄\n` +
-                             `*──────────────────*`;
+            const caption = `*── 「 VOKER MEME 」 ──*\n\n> 😂 ¡Humor instantáneo!\n\n*¿Quieres otro?* Toca la reacción 🔄\n*──────────────────*`;
 
             const sentMsg = await conn.sendMessage(m.chat, { 
                 image: { url: randomMeme }, 
                 caption: caption 
             }, { quoted: m });
 
-            // El bot deja la reacción puesta para "enseñar" al usuario
+            // El bot deja la reacción lista. El usuario solo debe tocarla para "confirmar"
             await conn.sendMessage(m.chat, { react: { text: '🔄', key: sentMsg.key } });
             await m.react('✅');
 
         } catch (error) {
             console.error(`> [ERROR MEMES]:`, error);
-            await m.react('❌');
         }
     }
 };
