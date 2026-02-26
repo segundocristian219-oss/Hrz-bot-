@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const tiktokCommand = {
-    name: 'tiktok',
-    alias: ['tt', 'tk', 'tiktokdl'],
+    name: 'tiktoksearch',
+    alias: ['ttss'],
     category: 'search',
     run: async (m, { conn, text, usedPrefix, command }) => {
         if (!text) return conn.reply(m.chat, `*── 「 TIKTOK SEARCH 」 ──*\n\n*Uso:* ${usedPrefix + command} <términos>`, m);
