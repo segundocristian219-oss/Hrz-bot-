@@ -19,7 +19,7 @@ const memesCommand = {
 
             const caption = `\t\t\t\t*── 「 MEME 」 ──*\n\n` +
                              `> 😂 ¡Humor instantáneo!\n\n` +
-                             `*❯❯ ;
+                             `*❯❯*`;
 
             await conn.sendMessage(m.chat, { 
                 image: { url: randomMeme }, 
