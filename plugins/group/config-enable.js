@@ -1,57 +1,63 @@
 const enable = {
     name: 'enable',
-    alias: ['welcome', 'bv', 'bienvenida', 'detect', 'configuraciones', 'avisodegp', 'gacha', 'antisub', 'antilink', 'antistatus'],
+    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'autosticker', 'autostickers'],
     category: 'config',
     admin: true,
     group: true,
     run: async function (m, { conn, text, command, chat, usedPrefix }) {
+        
+        
+        const featureMap = {
+            'welcome': 'welcome',
+            'bv': 'welcome',
+            'bienvenida': 'welcome',
+            'detect': 'detect',
+            'configuraciones': 'detect',
+            'avisodegp': 'detect',
+            'gacha': 'gacha',
+            'antisub': 'antisub',
+            'antilink': 'antiLink',
+            'antistatus': 'antiStatus',
+            'antiestados': 'antiStatus',
+            'autosticker': 'autoStickers',
+            'autostickers': 'autoStickers'
+        };
 
-        const args = text.split(/\s+/)
-        const action = args[0]?.toLowerCase()
+        const type = command.toLowerCase();
 
-        if (!action || !['on', 'off'].includes(action)) {
-            return m.reply(`✧ ¿Qué deseas hacer?\n\n> Uso: *${usedPrefix}${command} on* u *off*`)
+        
+        if (type === 'enable' || !featureMap[type]) {
+            let menu = `❯❯ 𝗦𝗬𝗦𝗧𝗘𝗠 𝗖𝗢𝗡𝗙𝗜𝗚𝗨𝗥𝗔𝗧𝗜𝗢𝗡\n\n`;
+            menu += `Estado actual de las funciones en este grupo:\n\n`;
+            
+            const options = [
+                { name: 'Bienvenida', key: 'welcome' },
+                { name: 'Detección', key: 'detect' },
+                { name: 'Gacha System', key: 'gacha' },
+                { name: 'Anti-SubBots', key: 'antisub' },
+                { name: 'Anti-Links', key: 'antiLink' },
+                { name: 'Anti-Status', key: 'antiStatus' },
+                { name: 'Auto-Stickers', key: 'autoStickers' }
+            ];
+
+            options.forEach(opt => {
+                const status = chat[opt.key] ? '✅ ᴀᴄᴛɪᴠᴀᴅᴏ' : '❌ ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
+                menu += `❖ *${opt.name}:* ${status}\n`;
+            });
+
+            menu += `\n> Para cambiar un estado usa el nombre de la función.\n> Ejemplo: *${usedPrefix}antilink*`;
+            
+            return m.reply(menu.trim());
         }
 
-        let isEnable = action === 'on'
-        let type = command.toLowerCase()
-        let statusText = isEnable ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ'
-        let icon = isEnable ? '✰' : '卍'
+        const dbKey = featureMap[type];
+        chat[dbKey] = !chat[dbKey]; 
 
-        switch (type) {
-            case 'welcome':
-            case 'bv':
-            case 'bienvenida':
-                chat.welcome = isEnable
-                break
-            case 'detect':
-            case 'configuraciones':
-            case 'avisodegp':
-                chat.detect = isEnable
-                break
-            case 'gacha':
-                chat.gacha = isEnable
-                break
-            case 'antisub':
-                chat.antisub = isEnable
-                break
-            case 'antilink':
-                chat.antiLink = isEnable
-                break
-            case 'antistatus':
-            case 'antiestados':
-                chat.antiStatus = isEnable
-                break
-            case 'enable':
-            case 'enable_disable':
-                return m.reply(`> Especifique la función. Ejemplo: *${usedPrefix}antilink on*`)
-            default:
-                return m.reply(`> La función *${type}* no está configurada.`)
-        }
+        let statusText = chat[dbKey] ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
+        let icon = chat[dbKey] ? '✰' : '✧';
 
-        return m.reply(`> ${icon} ʟᴀ ғᴜɴᴄɪᴏɴ *${type.toUpperCase()}* sᴇ ʜᴀ ${statusText} ᴘᴀʀᴀ ᴇsᴛᴇ ᴄʜᴀᴛ.`)
+        return m.reply(`> ${icon} ʟᴀ ғᴜɴᴄɪᴏɴ *${type.toUpperCase()}* sᴇ ʜᴀ ${statusText} ᴘᴀʀᴀ ᴇsᴛᴇ ᴄʜᴀᴛ.`);
     }
 }
 
-export default enable
-
+export default enable;
