@@ -17,9 +17,9 @@ const memesCommand = {
 
             const randomMeme = res.memes[Math.floor(Math.random() * res.memes.length)];
 
-            const caption = `*── 「 VOKER MEME 」 ──*\n\n` +
+            const caption = `\t\t\t\t*── 「 MEME 」 ──*\n\n` +
                              `> 😂 ¡Humor instantáneo!\n\n` +
-                             `*❯❯ VOKER PLATFORM*`;
+                             `*❯❯ ;
 
             await conn.sendMessage(m.chat, { 
                 image: { url: randomMeme }, 
