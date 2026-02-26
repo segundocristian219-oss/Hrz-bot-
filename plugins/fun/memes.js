@@ -1,6 +1,6 @@
 import axios from 'axios';
 import pkg from '@whiskeysockets/baileys';
-const { generateWAMessageFromContent, prepareWAMessageMedia } = pkg;
+const { prepareWAMessageMedia, generateWAMessageFromContent } = pkg;
 
 const memesCommand = {
     name: 'memes',
