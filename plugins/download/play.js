@@ -122,7 +122,7 @@ const youtubeCommand = {
                             sha: sha
                         })
                     });
-                    localDB.data = data; // Actualizamos caché local
+                    localDB.data = data; 
                 }
             })().catch(() => null);
 
