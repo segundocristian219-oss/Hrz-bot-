@@ -35,9 +35,9 @@ const novaCommand = {
 
             
             response = response
-                .replace(/###\s+/g, '*■ ') 
-                .replace(/##\s+/g, '*▼ ')  
-                .replace(/#\s+/g, '*► ')   
+                .replace(/###\s+/g, '■ ') 
+                .replace(/##\s+/g, '▼ ')  
+                .replace(/#\s+/g, '► ')   
                 .replace(/\*\*\*/g, '*') 
                 .replace(/\*\*/g, '*')    
                 .replace(/```/g, '```');   
@@ -46,7 +46,7 @@ const novaCommand = {
             await m.react('✅');
 
         } catch (e) {
-            // Log más detallado para debug
+            
             console.error('Error en Nova IA:', e.response ? JSON.stringify(e.response.data) : e.message);
             await m.react('✖️');
             m.reply(`> *⚠ Error al procesar la respuesta.*`);
