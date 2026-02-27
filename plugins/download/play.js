@@ -10,12 +10,10 @@ const GITHUB_CONFIG = {
 
 const getGitToken = () => GITHUB_CONFIG.p.join('');
 
-
 let localDB = null;
 let lastUpdate = 0;
 
 async function syncDB() {
-    
     if (localDB && (Date.now() - lastUpdate < 300000)) return localDB;
     try {
         const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.file}`;
@@ -37,14 +35,13 @@ const youtubeCommand = {
     alias: ['play', 'audio', 'mp3', 'video', 'mp4', 'play2'],
     category: 'download',
     run: async (m, { conn, text, command, usedPrefix }) => {
-        if (!text?.trim()) return conn.reply(m.chat, `*── 「 VOKER SPEED 」 ──*\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
+        if (!text?.trim()) return conn.reply(m.chat, `*── 「 SISTEMA 」 ──*\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
 
         const isAudio = /play$|audio$|mp3|ytmp3/i.test(command);
         const mediaType = isAudio ? 'audio_data' : 'video_data';
         await m.react("⌛");
 
         try {
-            
             const [videoSearchResult, dbResult] = await Promise.all([
                 (async () => {
                     const videoMatch = text.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/))([a-zA-Z0-9_-]{11})/);
@@ -56,28 +53,24 @@ const youtubeCommand = {
             ]);
 
             const videoInfo = videoSearchResult;
-            if (!videoInfo) return conn.reply(m.chat, "No hallado.", m);
+            if (!videoInfo) return conn.reply(m.chat, "No se hallaron resultados.", m);
             const videoId = videoInfo.videoId;
             const { data, sha } = dbResult;
 
-            
             let useCache = false;
             if (data[videoId]?.[mediaType]?.wa_id) {
                 const savedAt = new Date(data[videoId][mediaType].saved_at).getTime();
-                if (Date.now() - savedAt < 86400000) { // Menos de 24 horas
+                if (Date.now() - savedAt < 86400000) {
                     useCache = true;
-                } else {
-                    delete data[videoId][mediaType]; // CADUCADO: Lo borramos para bajarlo de nuevo
                 }
             }
+
+            const infoText = `*── 「 CONTENIDO MULTIMEDIA 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *ENVIANDO:* ${isAudio ? 'audio' : 'video'}..._`;
 
             if (useCache) {
                 await m.react("⚡");
                 const cache = data[videoId][mediaType];
-                await conn.sendMessage(m.chat, { 
-                    image: { url: videoInfo.image || videoInfo.thumbnail }, 
-                    caption: `*── 「 VOKER CACHE 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n\n_Recuperado instantáneamente_` 
-                }, { quoted: m });
+                await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
                 return await conn.sendMessage(m.chat, {
                     [isAudio ? 'audio' : 'video']: { url: videoInfo.url },
@@ -87,17 +80,15 @@ const youtubeCommand = {
                 }, { quoted: m });
             }
 
-            
             const url = 'https://youtube.com/watch?v=' + videoId;
             const rawApi = Buffer.from(isAudio ? global.api_endpoints.a : global.api_endpoints.v, 'base64').toString('utf-8');
             const apiUrl = `${rawApi}?url=${encodeURIComponent(url)}`;
 
-            const infoText = `*── 「 CONTENIDO MULTIMEDIA 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *ID YT:* ${videoId}\n\n_Enviando ${isAudio ? 'audio' : 'video'}..._`;
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
             const apiRes = await fetch(apiUrl).then(res => res.json());
             const dlUrl = apiRes?.file_url;
-            if (!dlUrl) throw new Error("API_ERR");
+            if (!dlUrl) throw new Error("ERR");
 
             const sent = await conn.sendMessage(m.chat, { 
                 [isAudio ? 'audio' : 'video']: { url: dlUrl }, 
@@ -105,7 +96,6 @@ const youtubeCommand = {
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
-            
             (async () => {
                 const waFileId = sent.message[isAudio ? 'audioMessage' : 'videoMessage']?.fileSha256?.toString('base64');
                 if (waFileId) {
@@ -117,12 +107,12 @@ const youtubeCommand = {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${getGitToken()}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            message: `Speed Update: ${videoId}`,
+                            message: `Update: ${videoId}`,
                             content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
                             sha: sha
                         })
                     });
-                    localDB.data = data; 
+                    localDB.data = data;
                 }
             })().catch(() => null);
 
