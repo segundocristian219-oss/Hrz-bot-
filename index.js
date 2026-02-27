@@ -109,7 +109,7 @@ const connectionOptions = {
   version,
   logger: pino({ level: 'silent' }), 
   printQRInTerminal: false,
-  browser: Browsers.macOS("Safari"),
+  browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
@@ -118,7 +118,11 @@ const connectionOptions = {
   generateHighQualityLinkPreview: true,
   syncFullHistory: false,
   msgRetryCounterCache,
-  cachedGroupMetadata: async (jid) => global.groupCache.get(jid),
+  cachedGroupMetadata: async (jid) => {
+    const cache = global.groupCache.get(jid);
+    if (cache) return cache;
+    return global.db.data?.chats[jid]?.metadata || null;
+  },
   connectTimeoutMs: 60000,
   defaultQueryTimeoutMs: 0,
   keepAliveIntervalMs: 10000,
@@ -169,11 +173,18 @@ const cleanSessions = async () => {
 
 setInterval(cleanSessions, 3600000);
 
-if (global.db) setInterval(async () => { if (global.db.data) await global.db.write(); }, 30000);
+if (global.db) setInterval(async () => { 
+    if (global.db.data && !global.db.READ) {
+        await global.db.write().catch(console.error);
+    }
+}, 60000);
 
 global.reload = async function(restatConn) {
   if (restatConn) {
-    try { global.conn.ws.close(); } catch (e) { console.error(e); }
+    if (global.conn) {
+        global.conn.ev.removeAllListeners();
+        try { global.conn.ws.close(); } catch (e) {}
+    }
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
     global.conn.contacts = global.conn.contacts || {}; 
