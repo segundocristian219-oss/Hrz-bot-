@@ -8,7 +8,7 @@ let respuestasPredefinidas = fs.existsSync(respuestasPath) ? JSON.parse(fs.readF
 
 const geminiCommand = {
     name: 'gemini',
-    alias: ['bot', 'gato', 'cat', 'ia'],
+    alias: ['bot', 'gato', 'cat'],
     category: 'ai',
     run: async (m, { conn, text }) => {
         await chatAI(m, conn, text || '');
