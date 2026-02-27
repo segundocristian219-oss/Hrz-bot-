@@ -123,12 +123,12 @@ const connectionOptions = {
     if (cache) return cache;
     return global.db.data?.chats[jid]?.metadata || null;
   },
-  connectTimeoutMs: 60000,
+  connectTimeoutMs: 90000,
   defaultQueryTimeoutMs: 0,
-  keepAliveIntervalMs: 10000,
+  keepAliveIntervalMs: 30000,
   emitOwnEvents: true,
-  retryRequestDelayMs: 2000,
-  maxRetries: 15,
+  retryRequestDelayMs: 5000,
+  maxRetries: 20,
   getMessage: async (key) => ({ conversation: "" })
 };
 
@@ -181,12 +181,12 @@ if (global.db) setInterval(async () => {
 
 global.reload = async function(restatConn) {
   if (restatConn) {
-   msgRetryCounterCache.flushAll(); 
+    msgRetryCounterCache.flushAll();
     if (global.conn) {
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.close(); } catch (e) {}
     }
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 15000));
     global.conn = makeWASocket(connectionOptions);
     global.conn.contacts = global.conn.contacts || {}; 
   }
@@ -201,8 +201,10 @@ global.reload = async function(restatConn) {
         const Func = module.message || module.default?.message || module.default;
         if (typeof Func === 'function') await Func.call(conn, m, chatUpdate);
     } catch (e) {
-        console.error(e);
-        await uploadCriticalError(e, 'Message Upsert');
+        if (!e.message.includes('decrypt')) {
+          console.error(e);
+          await uploadCriticalError(e, 'Message Upsert');
+        }
     }
   });
 
@@ -249,6 +251,14 @@ global.reload = async function(restatConn) {
         global.isBotReady = true;
         await monitorBot(conn, 'online');
         await cleanSessions();
+        
+        if (global.keepAlive) clearInterval(global.keepAlive);
+        global.keepAlive = setInterval(async () => {
+            try {
+                await conn.updateProfileStatus(`Voker Active: ${new Date().toLocaleString()}`);
+            } catch (e) {}
+        }, 10 * 60 * 1000);
+
         if (!global.subBotsStarted) {
             global.subBotsStarted = true;
             await initSubBots();
@@ -256,18 +266,21 @@ global.reload = async function(restatConn) {
     }
 
     if (connection === 'close') {
-    const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-    console.error(chalk.red(`Conexión cerrada: ${reason}`));
+      await monitorBot(conn, 'offline');
+      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
+      console.error(chalk.red(`Conexión cerrada: ${reason}`));
 
-    if (reason !== DisconnectReason.loggedOut) {
-      
-        let delay = reason === 428 ? 10000 : 5000; 
-        console.log(chalk.yellow(`Reconectando en ${delay/1000}s...`));
-        setTimeout(() => global.reload(true), delay);
-    } else {
-        process.exit(1);
+      if (reason === 403 || (lastDisconnect?.error?.message?.includes('decrypt'))) {
+          console.log(chalk.red('┃ Error crítico de llaves. Reasentando sesión...'));
+          await global.reload(true);
+      } else if (reason !== DisconnectReason.loggedOut) {
+          let delay = reason === 428 ? 20000 : 10000; 
+          console.log(chalk.yellow(`Reconectando en ${delay/1000}s...`));
+          setTimeout(() => global.reload(true), delay);
+      } else {
+          process.exit(1); 
+      }
     }
-}
   });
 
   global.conn.ev.on('creds.update', async () => {
