@@ -181,6 +181,7 @@ if (global.db) setInterval(async () => {
 
 global.reload = async function(restatConn) {
   if (restatConn) {
+   msgRetryCounterCache.flushAll(); 
     if (global.conn) {
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.close(); } catch (e) {}
@@ -255,19 +256,18 @@ global.reload = async function(restatConn) {
     }
 
     if (connection === 'close') {
-      await monitorBot(conn, 'offline');
-      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-      console.error(chalk.red(`Conexión cerrada con código: ${reason}`));
+    const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
+    console.error(chalk.red(`Conexión cerrada: ${reason}`));
 
-      if (reason !== DisconnectReason.loggedOut) {
-          console.log(chalk.cyan('┃ ') + chalk.yellow(`Reconectando automáticamente...`));
-          await global.reload(true);
-      } else {
-          console.log(chalk.red('┗ Sesión finalizada por WhatsApp (401/Logout).'));
-          console.log(chalk.red('┃ No se borrará la carpeta sessions automáticamente.'));
-          process.exit(1); 
-      }
+    if (reason !== DisconnectReason.loggedOut) {
+      
+        let delay = reason === 428 ? 10000 : 5000; 
+        console.log(chalk.yellow(`Reconectando en ${delay/1000}s...`));
+        setTimeout(() => global.reload(true), delay);
+    } else {
+        process.exit(1);
     }
+}
   });
 
   global.conn.ev.on('creds.update', async () => {
