@@ -28,10 +28,9 @@ const geminiCommand = {
 
 async function chatAI(m, conn, query) {
     let q = m.quoted ? m.quoted : m;
-    let mime = (q.msg || q).mimetype || '';
+    let mime = (q.msg || q).mimetype || (q.mediaMessage?.imageMessage?.mimetype) || (q.mediaMessage?.videoMessage?.mimetype) || (q.mediaMessage?.audioMessage?.mimetype) || (q.mediaMessage?.documentMessage?.mimetype) || '';
     
-    // Si no hay texto pero hay imagen, le damos un prompt por defecto
-    let finalPrompt = query.trim() || "Analiza esta imagen detalladamente";
+    let finalPrompt = query.trim() || "Analiza este archivo detalladamente";
 
     let body = {
         id: m.sender,
@@ -40,21 +39,20 @@ async function chatAI(m, conn, query) {
         mimeType: null
     };
 
-    if (/image|video|audio|pdf|text/.test(mime)) {
+    if (mime && /image|video|audio|pdf|text/.test(mime)) {
         try {
             let media = await q.download();
-            // Importante: Enviar solo el base64 puro sin encabezados data:
-            body.fileBase64 = media.toString('base64');
-            body.mimeType = mime;
+            if (media) {
+                body.fileBase64 = media.toString('base64');
+                body.mimeType = mime;
+            }
         } catch (e) {
             console.error("Error al descargar media:", e);
         }
     }
 
     try {
-        
         const url = `https://api.deylin.xyz/api/ai/text/ai`; 
-        
         const response = await fetch(url, {
             method: 'POST',
             headers: { 
@@ -64,20 +62,15 @@ async function chatAI(m, conn, query) {
             body: JSON.stringify(body)
         });
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
         const json = await response.json();
 
         if (json.response) {
-            
             let reply = json.response.replace(/\*\*/g, '*').trim();
             await conn.sendMessage(m.chat, { text: reply }, { quoted: m });
-        } else {
-            throw new Error('Sin respuesta en el JSON');
         }
     } catch (err) {
         console.error("Error en chatAI:", err);
-        await conn.sendMessage(m.chat, { text: '*[ ❌ ] Error al procesar con Gemini 3.*' }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: '*[ ❌ ] Error de comunicación con la API.*' }, { quoted: m });
     }
 }
 
