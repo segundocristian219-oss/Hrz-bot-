@@ -11,18 +11,24 @@ const GITHUB_CONFIG = {
 const getGitToken = () => GITHUB_CONFIG.p.join('');
 
 
-async function getDB() {
+let localDB = null;
+let lastUpdate = 0;
+
+async function syncDB() {
+    
+    if (localDB && (Date.now() - lastUpdate < 300000)) return localDB;
     try {
         const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.file}`;
         const res = await fetch(url, { 
             headers: { 'Authorization': `Bearer ${getGitToken()}`, 'Accept': 'application/vnd.github.v3+json' } 
         });
-        if (res.status === 404) return { data: {}, sha: null };
         const json = await res.json();
-        return { 
+        localDB = { 
             data: JSON.parse(Buffer.from(json.content, 'base64').toString()), 
             sha: json.sha 
         };
+        lastUpdate = Date.now();
+        return localDB;
     } catch { return { data: {}, sha: null }; }
 }
 
@@ -31,7 +37,7 @@ const youtubeCommand = {
     alias: ['play', 'audio', 'mp3', 'video', 'mp4', 'play2'],
     category: 'download',
     run: async (m, { conn, text, command, usedPrefix }) => {
-        if (!text?.trim()) return conn.reply(m.chat, `*── 「 SISTEMA DE DESCARGAS 」 ──*\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
+        if (!text?.trim()) return conn.reply(m.chat, `*── 「 VOKER SPEED 」 ──*\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
 
         const isAudio = /play$|audio$|mp3|ytmp3/i.test(command);
         const mediaType = isAudio ? 'audio_data' : 'video_data';
@@ -46,21 +52,31 @@ const youtubeCommand = {
                     const search = await yts(text);
                     return search.videos?.[0] || null;
                 })(),
-                getDB()
+                syncDB()
             ]);
 
             const videoInfo = videoSearchResult;
-            if (!videoInfo) return conn.reply(m.chat, "No se hallaron resultados.", m);
+            if (!videoInfo) return conn.reply(m.chat, "No hallado.", m);
             const videoId = videoInfo.videoId;
             const { data, sha } = dbResult;
 
-            // CASO CACHÉ (INSTANTÁNEO)
+            
+            let useCache = false;
             if (data[videoId]?.[mediaType]?.wa_id) {
+                const savedAt = new Date(data[videoId][mediaType].saved_at).getTime();
+                if (Date.now() - savedAt < 86400000) { // Menos de 24 horas
+                    useCache = true;
+                } else {
+                    delete data[videoId][mediaType]; // CADUCADO: Lo borramos para bajarlo de nuevo
+                }
+            }
+
+            if (useCache) {
                 await m.react("⚡");
                 const cache = data[videoId][mediaType];
                 await conn.sendMessage(m.chat, { 
                     image: { url: videoInfo.image || videoInfo.thumbnail }, 
-                    caption: data[videoId].infoText || `*── 「 RECUPERADO 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}` 
+                    caption: `*── 「 VOKER CACHE 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n\n_Recuperado instantáneamente_` 
                 }, { quoted: m });
 
                 return await conn.sendMessage(m.chat, {
@@ -76,12 +92,9 @@ const youtubeCommand = {
             const rawApi = Buffer.from(isAudio ? global.api_endpoints.a : global.api_endpoints.v, 'base64').toString('utf-8');
             const apiUrl = `${rawApi}?url=${encodeURIComponent(url)}`;
 
-            const infoText = `*── 「 CONTENIDO MULTIMEDIA 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* ${url}\n\n_Enviando ${isAudio ? 'audio' : 'video'}..._`;
-
-            
+            const infoText = `*── 「 CONTENIDO MULTIMEDIA 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *ID YT:* ${videoId}\n\n_Enviando ${isAudio ? 'audio' : 'video'}..._`;
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
-            
             const apiRes = await fetch(apiUrl).then(res => res.json());
             const dlUrl = apiRes?.file_url;
             if (!dlUrl) throw new Error("API_ERR");
@@ -89,35 +102,33 @@ const youtubeCommand = {
             const sent = await conn.sendMessage(m.chat, { 
                 [isAudio ? 'audio' : 'video']: { url: dlUrl }, 
                 mimetype: isAudio ? "audio/mp4" : "video/mp4",
-                fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`,
-                caption: isAudio ? null : `❑ *${videoInfo.title}*`
+                fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
+            
             (async () => {
                 const waFileId = sent.message[isAudio ? 'audioMessage' : 'videoMessage']?.fileSha256?.toString('base64');
                 if (waFileId) {
-                    const freshDB = await getDB(); // Refrescamos por si hubo cambios
-                    if (!freshDB.data[videoId]) freshDB.data[videoId] = {};
-                    freshDB.data[videoId].infoText = infoText;
-                    freshDB.data[videoId][mediaType] = { wa_id: waFileId, saved_at: new Date().toLocaleString() };
-                    
-                    const urlPut = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.file}`;
-                    await fetch(urlPut, {
+                    if (!data[videoId]) data[videoId] = {};
+                    data[videoId].infoText = infoText;
+                    data[videoId][mediaType] = { wa_id: waFileId, saved_at: new Date().toISOString() };
+
+                    await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.file}`, {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${getGitToken()}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            message: `DB Update: ${videoId}`,
-                            content: Buffer.from(JSON.stringify(freshDB.data, null, 2)).toString('base64'),
-                            sha: freshDB.sha
+                            message: `Speed Update: ${videoId}`,
+                            content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
+                            sha: sha
                         })
                     });
+                    localDB.data = data; // Actualizamos caché local
                 }
-            })().catch(e => console.error("Error guardando en DB:", e));
+            })().catch(() => null);
 
             await m.react("✅");
         } catch (error) {
             await m.react("❌");
-            console.error(error);
         }
     }
 };
