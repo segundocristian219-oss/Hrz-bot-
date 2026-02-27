@@ -58,8 +58,11 @@ const youtubeCommand = {
             const { data, sha } = dbResult;
 
             let useCache = false;
-            if (data[videoId]?.[mediaType]?.wa_id) {
-                const savedAt = new Date(data[videoId][mediaType].saved_at).getTime();
+            let cacheData = null;
+
+            if (data[videoId]?.[mediaType]) {
+                cacheData = data[videoId][mediaType];
+                const savedAt = new Date(cacheData.saved_at).getTime();
                 if (Date.now() - savedAt < 86400000) {
                     useCache = true;
                 }
@@ -67,16 +70,18 @@ const youtubeCommand = {
 
             const infoText = `*── 「 CONTENIDO MULTIMEDIA 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *ENVIANDO:* ${isAudio ? 'audio' : 'video'}..._`;
 
-            if (useCache) {
+            if (useCache && cacheData) {
                 await m.react("⚡");
-                const cache = data[videoId][mediaType];
                 await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
                 return await conn.sendMessage(m.chat, {
-                    [isAudio ? 'audio' : 'video']: { url: videoInfo.url },
-                    fileSha256: Buffer.from(cache.wa_id, 'base64'),
+                    [isAudio ? 'audio' : 'video'] : { url: cacheData.raw.url },
                     mimetype: isAudio ? "audio/mp4" : "video/mp4",
-                    fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
+                    fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`,
+                    ...cacheData.raw,
+                    fileSha256: Buffer.from(cacheData.raw.fileSha256, 'base64'),
+                    fileEncSha256: Buffer.from(cacheData.raw.fileEncSha256, 'base64'),
+                    mediaKey: Buffer.from(cacheData.raw.mediaKey, 'base64')
                 }, { quoted: m });
             }
 
@@ -87,27 +92,38 @@ const youtubeCommand = {
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
             const apiRes = await fetch(apiUrl).then(res => res.json());
-            const dlUrl = apiRes?.file_url;
-            if (!dlUrl) throw new Error("ERR");
+            if (!apiRes?.file_url) throw new Error("ERR");
 
             const sent = await conn.sendMessage(m.chat, { 
-                [isAudio ? 'audio' : 'video']: { url: dlUrl }, 
+                [isAudio ? 'audio' : 'video']: { url: apiRes.file_url }, 
                 mimetype: isAudio ? "audio/mp4" : "video/mp4",
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
             (async () => {
-                const waFileId = sent.message[isAudio ? 'audioMessage' : 'videoMessage']?.fileSha256?.toString('base64');
-                if (waFileId) {
+                const msg = sent.message[isAudio ? 'audioMessage' : 'videoMessage'];
+                if (msg) {
+                    const rawJson = {
+                        url: msg.url,
+                        fileSha256: msg.fileSha256.toString('base64'),
+                        fileEncSha256: msg.fileEncSha256.toString('base64'),
+                        mediaKey: msg.mediaKey.toString('base64'),
+                        fileLength: msg.fileLength,
+                        directPath: msg.directPath,
+                        mediaKeyTimestamp: msg.mediaKeyTimestamp
+                    };
+
                     if (!data[videoId]) data[videoId] = {};
-                    data[videoId].infoText = infoText;
-                    data[videoId][mediaType] = { wa_id: waFileId, saved_at: new Date().toISOString() };
+                    data[videoId][mediaType] = { 
+                        raw: rawJson, 
+                        saved_at: new Date().toISOString() 
+                    };
 
                     await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.file}`, {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${getGitToken()}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            message: `Update: ${videoId}`,
+                            message: `SpeedCache: ${videoId}`,
                             content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
                             sha: sha
                         })
