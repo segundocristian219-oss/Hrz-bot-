@@ -21,6 +21,7 @@ import { smsg } from './lib/serializer.js';
 import { monitorBot } from './lib/telemetry.js';
 import { uploadCriticalError } from './lib/db_logs.js';
 import { EventEmitter } from 'events';
+import * as MsgHandler from './lib/message.js';
 
 const originalLog = console.log;
 console.log = function () {
@@ -196,10 +197,11 @@ global.reload = async function(restatConn) {
         const msg = chatUpdate.messages[0];
         if (!msg || (!msg.message && !msg.messageStubType)) return;
         const m = await smsg(conn, msg);
-        const Path = path.join(process.cwd(), 'lib/message.js');
-        const module = await import(`file://${Path}?update=${Date.now()}`);
-        const Func = module.message || module.default?.message || module.default;
-        if (typeof Func === 'function') await Func.call(conn, m, chatUpdate);
+        
+        const handler = MsgHandler.message || MsgHandler.default?.message || MsgHandler.default;
+        if (typeof handler === 'function') {
+            await handler.call(conn, m, chatUpdate);
+        }
     } catch (e) {
         if (!e.message.includes('decrypt')) {
           console.error(e);
@@ -251,7 +253,7 @@ global.reload = async function(restatConn) {
         global.isBotReady = true;
         await monitorBot(conn, 'online');
         await cleanSessions();
-        
+
         if (global.keepAlive) clearInterval(global.keepAlive);
         global.keepAlive = setInterval(async () => {
             try {
