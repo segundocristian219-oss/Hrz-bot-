@@ -15,6 +15,7 @@ const geminiCommand = {
             }, { quoted: m });
         }
 
+        await m.react('💬');
         await chatAI(m, conn, text || '');
     },
     all: async function (m, { conn }) {
@@ -72,9 +73,11 @@ async function chatAI(m, conn, query) {
         const json = await response.json();
 
         if (json.response) {
+        await m.react('✍️');
             
             let reply = json.response.replace(/\*\*/g, '*').trim();
             await conn.sendMessage(m.chat, { text: reply }, { quoted: m });
+        await m.react('🐈');
         }
     } catch (err) {
         m.reply("Error en chatAI:", err);
