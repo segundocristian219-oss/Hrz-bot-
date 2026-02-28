@@ -60,13 +60,12 @@ async function chatAI(m, conn, query) {
         const json = await response.json();
 
         if (json.image) {
+            let captionText = json.response ? json.response.replace(/\*\*/g, '*').trim() : `> *♛ Imagen generada por Gato Bot AI*`;
             await conn.sendMessage(m.chat, { 
                 image: { url: json.image }, 
-                caption: `> *♛ Imagen generada por Gato Bot AI*` 
+                caption: captionText
             }, { quoted: m });
-        }
-
-        if (json.response) {
+        } else if (json.response) {
             let reply = json.response.replace(/\*\*/g, '*').trim();
             await conn.sendMessage(m.chat, { text: reply }, { quoted: m });
         }
