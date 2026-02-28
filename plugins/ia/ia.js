@@ -77,8 +77,7 @@ async function chatAI(m, conn, query) {
             await conn.sendMessage(m.chat, { text: reply }, { quoted: m });
         }
     } catch (err) {
-        console.error("Error en chatAI:", err);
-        await conn.sendMessage(m.chat, { text: '*[ ❌ ] Error de comunicación con la API de VOKER.*' }, { quoted: m });
+        m.reply("Error en chatAI:", err);
     }
 }
 
