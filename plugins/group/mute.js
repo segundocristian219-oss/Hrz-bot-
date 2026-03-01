@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'
-
 const muteCommand = {
     name: 'mute',
     alias: ['unmute', 'mutar', 'silenciar'],
@@ -7,38 +5,36 @@ const muteCommand = {
     admin: true,
     botAdmin: true,
     group: true,
-    run: async (m, { conn, command, text, isAdmin, isROwner }) => {
-        let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+    run: async (m, { conn, command, text, chat }) => {
+        let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null;
 
-        if (!who || who === '@s.whatsapp.net') return conn.reply(m.chat, `*👑 Menciona o responde al mensaje de la persona que deseas ${command === 'mute' ? 'mutar' : 'demutar'}*`, m)
+        if (!who || who === '@s.whatsapp.net') return m.reply(`*👑 Menciona o responde al mensaje de la persona que deseas ${command === 'unmute' ? 'desmutar' : 'mutar'}*`);
 
-        const ownerBot = global.owner[0][0] + '@s.whatsapp.net'
-        
-        
-        if (who === ownerBot) return conn.reply(m.chat, '🔥 *No puedes mutar al creador del bot*', m)
-        if (who === conn.user.jid) return conn.reply(m.chat, '🔥 *No puedes mutar al propio bot*', m)
+        const ownerBot = global.owner[0][0] + '@s.whatsapp.net';
+        if (who === ownerBot) return m.reply('🔥 *No puedes mutar al creador del bot*');
+        if (who === conn.user.id.split(':')[0] + '@s.whatsapp.net') return m.reply('🔥 *No puedes mutar al propio bot*');
 
-        const groupMetadata = await conn.groupMetadata(m.chat)
-        const groupOwner = groupMetadata.owner || m.chat.split`-`[0] + '@s.whatsapp.net'
-        if (who === groupOwner) return conn.reply(m.chat, '🔥 *No puedes mutar al creador del grupo*', m)
-        
+        const groupMetadata = await conn.groupMetadata(m.chat);
+        const groupOwner = groupMetadata.owner || m.chat.split('-')[0] + '@s.whatsapp.net';
+        if (who === groupOwner) return m.reply('🔥 *No puedes mutar al creador del grupo*');
 
-        let chat = global.db.data.chats[m.chat]
-        if (!chat.mutos) chat.mutos = []
+        if (!chat.mutos) chat.mutos = [];
 
         if (command === 'mute' || command === 'mutar' || command === 'silenciar') {
-            if (chat.mutos.includes(who)) return conn.reply(m.chat, '🔥 *Este usuario ya ha sido mutado en este grupo*', m)
+            if (chat.mutos.includes(who)) return m.reply('🔥 *Este usuario ya ha sido mutado en este grupo*');
 
-            chat.mutos.push(who)
-            await conn.reply(m.chat, '𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗺𝘂𝘁𝗮𝗱𝗼\n*Sus mensajes serán eliminados automáticamente en este grupo.*', m, { mentions: [who] })
+            chat.mutos.push(who);
+            await chat.save();
+            await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗺𝘂𝘁𝗮𝗱𝗼\n*Sus mensajes serán eliminados automáticamente en este grupo.*`, mentions: [who] }, { quoted: m });
 
         } else if (command === 'unmute') {
-            if (!chat.mutos.includes(who)) return conn.reply(m.chat, '🔥 *Este usuario no está mutado en este grupo*', m)
+            if (!chat.mutos.includes(who)) return m.reply('🔥 *Este usuario no está mutado en este grupo*');
 
-            chat.mutos = chat.mutos.filter(id => id !== who)
-            await conn.reply(m.chat, '𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗱𝗲𝗺𝘂𝘁𝗮𝗱𝗼\n*Ya puede enviar mensajes normalmente.*', m, { mentions: [who] })
+            chat.mutos = chat.mutos.filter(id => id !== who);
+            await chat.save();
+            await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗱𝗲𝗺𝘂𝘁𝗮𝗱𝗼\n*Ya puede enviar mensajes normalmente.*`, mentions: [who] }, { quoted: m });
         }
     }
 }
 
-export default muteCommand
+export default muteCommand;
