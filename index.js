@@ -105,18 +105,15 @@ const connectionOptions = {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
-  markOnlineOnConnect: true,
-  generateHighQualityLinkPreview: true,
-  syncFullHistory: false,
+  maxMsgRetryCount: 5,
   msgRetryCounterCache,
-  connectTimeoutMs: 60000,
-  defaultQueryTimeoutMs: 0,
-  keepAliveIntervalMs: 30000,
-  emitOwnEvents: true,
-  retryRequestDelayMs: 5000,
-  maxRetries: 20,
-  getMessage: async (key) => ({ conversation: "" })
+  connectTimeoutMs: 30000, 
+  defaultQueryTimeoutMs: 0, 
+  keepAliveIntervalMs: 10000, 
+  generateHighQualityLinkPreview: false, 
+  syncFullHistory: false,
 };
+
 
 global.conn = makeWASocket(connectionOptions);
 global.conn.contacts = global.conn.contacts || {}; 
