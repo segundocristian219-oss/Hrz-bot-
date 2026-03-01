@@ -123,12 +123,12 @@ const connectionOptions = {
     if (cache) return cache;
     return global.db.data?.chats[jid]?.metadata || null;
   },
-  connectTimeoutMs: 90000,
-  defaultQueryTimeoutMs: 0,
-  keepAliveIntervalMs: 30000,
+  connectTimeoutMs: 60000,
+  defaultQueryTimeoutMs: 60000,
+  keepAliveIntervalMs: 10000,
   emitOwnEvents: true,
-  retryRequestDelayMs: 5000,
-  maxRetries: 20,
+  retryRequestDelayMs: 2000,
+  maxRetries: 5,
   getMessage: async (key) => ({ conversation: "" })
 };
 
@@ -265,10 +265,28 @@ global.reload = async function(restatConn) {
         }
     }
 
-    if (connection === 'close') {
-      await monitorBot(conn, 'offline');
-      const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-      console.error(chalk.red(`Conexión cerrada: ${reason}`));
+        if (connection === 'close') {
+        await monitorBot(conn, 'offline');
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
+
+        if (reason === DisconnectReason.loggedOut) {
+            process.exit(1);
+        }
+
+        console.error(chalk.red(`[!] Conexión cerrada: ${reason}. Reiniciando...`));
+        
+        if (global.conn) {
+            global.conn.ev.removeAllListeners();
+            try { global.conn.ws.close(); } catch {}
+        }
+
+        let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 2000;
+
+        setTimeout(() => {
+            global.reload(true);
+        }, delay);
+    }
+
 
       if (reason === 403 || (lastDisconnect?.error?.message?.includes('decrypt'))) {
           console.log(chalk.red('┃ Error crítico de llaves. Reasentando sesión...'));
