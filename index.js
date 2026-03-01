@@ -39,10 +39,18 @@ process.on('uncaughtException', async (err) => {
 
 mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority', {
     tls: true,
-    tlsAllowInvalidCertificates: true 
+    tlsAllowInvalidCertificates: true, 
+    serverSelectionTimeoutMS: 5000,    
+    connectTimeoutMS: 10000,
+    family: 4                          
 })
-.then(() => console.log(chalk.greenBright('┃ DATABASE: Local MongoDB Conectado')))
-.catch((err) => console.log(chalk.red('┃ DATABASE: Error ->'), err));
+.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado (Bypass SSL Activo)')))
+.catch((err) => {
+    console.error(chalk.red('┃ DATABASE: Error de Conexión ->'), err.message);
+    
+    setTimeout(() => global.reload(true), 5000);
+});
+
 
 const userSchema = new mongoose.Schema({
     id: { type: String, unique: true },
