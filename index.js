@@ -223,4 +223,40 @@ async function readRecursive(folder) {
         global.plugins.set(pluginName, plugin);
         if (plugin.alias) {
             const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
-            aliases
+            aliases.forEach(a => global.aliases.set(a, pluginName));
+        }
+      } catch (e) { console.error(e); }
+    }
+  }
+}
+await readRecursive(pluginFolder);
+
+watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
+  if (filename.endsWith('.js')) {
+    const dir = join(pluginFolder, filename);
+    if (existsSync(dir) && statSync(dir).isFile()) {
+      try {
+        const module = await import(`file://${dir}?update=${Date.now()}`);
+        const plugin = module.default || module;
+        const pluginName = plugin.name || basename(filename, '.js');
+        global.plugins.set(pluginName, plugin);
+        if (plugin.alias) {
+            const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
+            aliases.forEach(a => global.aliases.set(a, pluginName));
+        }
+      } catch {}
+    }
+  }
+});
+
+async function initSubBots() {
+    const jadibtsDir = path.join(process.cwd(), 'jadibts');
+    if (!existsSync(jadibtsDir)) return;
+    const folders = readdirSync(jadibtsDir).filter(f => statSync(join(jadibtsDir, f)).isDirectory() && existsSync(join(jadibtsDir, f, 'creds.json')));
+    for (const folder of folders) {
+        try {
+            const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
+            await assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
+        } catch {}
+    }
+}
