@@ -88,7 +88,7 @@ const menuCommand = {
                 contextInfo: {
                     mentionedJid: [m.sender],
                     externalAdReply: {
-                        title: '\t\t\t\t\t\t\t\t${nameBot}',
+                        title: `\t\t\t\t\t\t\t\t${nameBot}`,
                         body: 'Mᴇɴᴜ́ ᴅᴇ Cᴏᴍᴀɴᴅᴏs Iɴᴛᴇʀᴀᴄᴛɪᴠᴏs',
                         thumbnailUrl: (typeof global.img === 'function' ? global.img() : 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771018082759_bwnA5OM5c.jpeg'), 
                         mediaType: 1,
