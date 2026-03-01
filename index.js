@@ -105,15 +105,15 @@ const connectionOptions = {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
-  maxMsgRetryCount: 5,
+  maxMsgRetryCount: 9,
   msgRetryCounterCache,
-  connectTimeoutMs: 30000, 
+  connectTimeoutMs: 60000, 
   defaultQueryTimeoutMs: 0, 
   keepAliveIntervalMs: 10000, 
   generateHighQualityLinkPreview: false, 
   syncFullHistory: false,
+  markOnlineOnConnect: true
 };
-
 
 global.conn = makeWASocket(connectionOptions);
 global.conn.contacts = global.conn.contacts || {}; 
@@ -159,7 +159,7 @@ global.reload = async function(restatConn) {
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.close(); } catch {}
     }
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
     global.conn.contacts = global.conn.contacts || {}; 
   }
@@ -170,7 +170,7 @@ global.reload = async function(restatConn) {
         if (!msg || !msg.message) return;
         const m = await smsg(conn, msg);
         const handler = MsgHandler.message || MsgHandler.default;
-        if (typeof handler === 'function') await handler.call(conn, m, chatUpdate);
+        if (typeof handler === 'function') handler.call(conn, m, chatUpdate);
     } catch (e) {
         if (!e.message.includes('decrypt')) {
           console.error(e);
@@ -183,7 +183,7 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando...`);
     if (connection === 'open') {
-        global.botNumber = conn.user.id;
+        global.botNumber = jidNormalizedUser(conn.user.id);
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
@@ -200,7 +200,7 @@ global.reload = async function(restatConn) {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
       if (reason !== DisconnectReason.loggedOut) {
-          setTimeout(() => global.reload(true), 10000);
+          setTimeout(() => global.reload(true), 5000);
       } else { process.exit(1); }
     }
   });
@@ -223,40 +223,4 @@ async function readRecursive(folder) {
         global.plugins.set(pluginName, plugin);
         if (plugin.alias) {
             const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
-            aliases.forEach(a => global.aliases.set(a, pluginName));
-        }
-      } catch (e) { console.error(e); }
-    }
-  }
-}
-await readRecursive(pluginFolder);
-
-watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
-  if (filename.endsWith('.js')) {
-    const dir = join(pluginFolder, filename);
-    if (existsSync(dir) && statSync(dir).isFile()) {
-      try {
-        const module = await import(`file://${dir}?update=${Date.now()}`);
-        const plugin = module.default || module;
-        const pluginName = plugin.name || basename(filename, '.js');
-        global.plugins.set(pluginName, plugin);
-        if (plugin.alias) {
-            const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
-            aliases.forEach(a => global.aliases.set(a, pluginName));
-        }
-      } catch {}
-    }
-  }
-});
-
-async function initSubBots() {
-    const jadibtsDir = path.join(process.cwd(), 'jadibts');
-    if (!existsSync(jadibtsDir)) return;
-    const folders = readdirSync(jadibtsDir).filter(f => statSync(join(jadibtsDir, f)).isDirectory() && existsSync(join(jadibtsDir, f, 'creds.json')));
-    for (const folder of folders) {
-        try {
-            const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
-            await assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
-        } catch {}
-    }
-}
+            aliases
