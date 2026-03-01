@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -37,7 +37,8 @@ process.on('uncaughtException', async (err) => {
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
 
-mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true')
+
     .then(() => console.log(chalk.greenBright('┃ DATABASE: Local MongoDB Conectado')))
     .catch(() => console.log(chalk.red('┃ DATABASE: Error de Conexión')));
 
