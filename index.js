@@ -44,9 +44,6 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
 .then(() => console.log(chalk.greenBright('┃ DATABASE: Local MongoDB Conectado')))
 .catch((err) => console.log(chalk.red('┃ DATABASE: Error ->'), err));
 
-    .then(() => console.log(chalk.greenBright('┃ DATABASE: Local MongoDB Conectado')))
-    .catch(() => console.log(chalk.red('┃ DATABASE: Error de Conexión')));
-
 const userSchema = new mongoose.Schema({
     id: { type: String, unique: true },
     name: String,
