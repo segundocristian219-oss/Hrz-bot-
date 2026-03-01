@@ -23,7 +23,6 @@ const menuCommand = {
 ┃ ✎ Tipo: ${(conn.user.jid == global.conn?.user?.jid ? 'Principal 🅥' : 'Prem Bot 🅑')}
 ┃ ✎ Usuarios: ${totalreg}
 ┃ ✎ Uptime: ${uptime}
-┃ ✎ Comandos: ${totalCommands}
 ┃ ✎ Sub-Bots: ${users.length}
 ╰━━━━━━━━━━━━━━━━━━━━━⌬\n\n`;
 
