@@ -37,7 +37,12 @@ process.on('uncaughtException', async (err) => {
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
 
-mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true')
+mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority', {
+    tls: true,
+    tlsAllowInvalidCertificates: true 
+})
+.then(() => console.log(chalk.greenBright('┃ DATABASE: Local MongoDB Conectado')))
+.catch((err) => console.log(chalk.red('┃ DATABASE: Error ->'), err));
 
     .then(() => console.log(chalk.greenBright('┃ DATABASE: Local MongoDB Conectado')))
     .catch(() => console.log(chalk.red('┃ DATABASE: Error de Conexión')));
