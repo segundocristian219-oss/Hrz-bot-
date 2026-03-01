@@ -73,21 +73,18 @@ const qcCommand = {
             let realText = text ? text.replace(/@\d+/g, '').trim() : (m.quoted ? m.quoted.text : null);
 
             if (!realText) return m.reply(`> *✎ Ingresa un texto.*`);
-            if (realText.length > 40) return m.reply(`> *⚠ Máximo 40 caracteres.*`);
+            if (realText.length > 50) return m.reply(`> *⚠ Máximo 50 caracteres.*`);
 
             await m.react('🕓');
 
             const pp = await conn.profilePictureUrl(who, 'image').catch(() => 'https://telegra.ph/file/24fa902ead26340f3df2c.png');
+
             
-            const nameFromConn = await conn.getName(who);
-            const nameFromDb = global.db.data?.users[who]?.name;
-            const pushName = m.quoted?.pushName; 
+            let targetUser = await global.User.findOne({ id: who });
+            let nombre = targetUser?.name || m.quoted?.pushName || await conn.getName(who);
+
             
-            
-            let nombre = nameFromConn;
-            if (/^\d+$/.test(nombre) || nombre.includes('@')) {
-                nombre = (nameFromDb && !/^\d+$/.test(nameFromDb)) ? nameFromDb : (pushName || who.split('@')[0]);
-            }
+            if (/^\d+$/.test(nombre)) nombre = who.split('@')[0];
 
             const obj = {
                 "type": "quote",
@@ -109,11 +106,11 @@ const qcCommand = {
                 }]
             };
 
-            const json = await axios.post('https://bot.lyo.su/quote/generate', obj, { 
+            const response = await axios.post('https://bot.lyo.su/quote/generate', obj, { 
                 headers: { 'Content-Type': 'application/json' } 
             });
 
-            const buffer = Buffer.from(json.data.result.image, 'base64');
+            const buffer = Buffer.from(response.data.result.image, 'base64');
             let stikerBuffer = await sticker6(buffer);
 
             let pack = "CAT-BOT"; 
@@ -124,7 +121,7 @@ const qcCommand = {
             await m.react('✅');
 
         } catch (e) {
-            console.error(e);
+            console.error('Error en QC:', e);
             await m.react('✖️');
         }
     }
