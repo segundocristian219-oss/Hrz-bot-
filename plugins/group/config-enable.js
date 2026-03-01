@@ -4,7 +4,7 @@ const enable = {
     category: 'config',
     admin: true,
     group: true,
-    run: async function (m, { conn, text, command, chat, usedPrefix }) {
+    run: async function (m, { conn, command, chat, usedPrefix }) {
 
         const featureMap = {
             'welcome': 'welcome',
@@ -49,12 +49,18 @@ const enable = {
         }
 
         const dbKey = featureMap[type];
-        chat[dbKey] = !chat[dbKey]; 
-        
-        await chat.save();
+        const newValue = !chat[dbKey];
 
-        let statusText = chat[dbKey] ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
-        let icon = chat[dbKey] ? '✰' : '✧';
+        await global.Chat.findOneAndUpdate(
+            { id: m.chat },
+            { $set: { [dbKey]: newValue } },
+            { new: true }
+        );
+
+        chat[dbKey] = newValue;
+
+        let statusText = newValue ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
+        let icon = newValue ? '✰' : '✧';
 
         return m.reply(`> ${icon} ʟᴀ ғᴜɴᴄɪᴏɴ *${type.toUpperCase()}* sᴇ ʜᴀ ${statusText} ᴘᴀʀᴀ ᴇsᴛᴇ ᴄʜᴀᴛ.`);
     }
