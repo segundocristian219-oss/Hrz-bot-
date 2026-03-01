@@ -105,14 +105,17 @@ const connectionOptions = {
     creds: state.creds,
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
-  maxMsgRetryCount: 9,
-  msgRetryCounterCache,
-  connectTimeoutMs: 60000, 
-  defaultQueryTimeoutMs: 0, 
-  keepAliveIntervalMs: 10000, 
-  generateHighQualityLinkPreview: false, 
+  markOnlineOnConnect: true,
+  generateHighQualityLinkPreview: true,
   syncFullHistory: false,
-  markOnlineOnConnect: true
+  msgRetryCounterCache,
+  connectTimeoutMs: 60000,
+  defaultQueryTimeoutMs: 0,
+  keepAliveIntervalMs: 30000,
+  emitOwnEvents: true,
+  retryRequestDelayMs: 5000,
+  maxRetries: 20,
+  getMessage: async (key) => ({ conversation: "" })
 };
 
 global.conn = makeWASocket(connectionOptions);
@@ -159,7 +162,7 @@ global.reload = async function(restatConn) {
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.close(); } catch {}
     }
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 10000));
     global.conn = makeWASocket(connectionOptions);
     global.conn.contacts = global.conn.contacts || {}; 
   }
@@ -170,7 +173,7 @@ global.reload = async function(restatConn) {
         if (!msg || !msg.message) return;
         const m = await smsg(conn, msg);
         const handler = MsgHandler.message || MsgHandler.default;
-        if (typeof handler === 'function') handler.call(conn, m, chatUpdate);
+        if (typeof handler === 'function') await handler.call(conn, m, chatUpdate);
     } catch (e) {
         if (!e.message.includes('decrypt')) {
           console.error(e);
@@ -183,7 +186,7 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     if (connection === 'connecting') console.log(chalk.cyan('┃ ') + `Sincronizando...`);
     if (connection === 'open') {
-        global.botNumber = jidNormalizedUser(conn.user.id);
+        global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: CAT-BOT ONLINE`));
         global.isBotReady = true;
         await monitorBot(conn, 'online');
@@ -200,7 +203,7 @@ global.reload = async function(restatConn) {
       await monitorBot(conn, 'offline');
       const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
       if (reason !== DisconnectReason.loggedOut) {
-          setTimeout(() => global.reload(true), 5000);
+          setTimeout(() => global.reload(true), 10000);
       } else { process.exit(1); }
     }
   });
