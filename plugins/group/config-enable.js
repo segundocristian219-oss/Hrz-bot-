@@ -5,8 +5,7 @@ const enable = {
     admin: true,
     group: true,
     run: async function (m, { conn, text, command, chat, usedPrefix }) {
-        
-        
+
         const featureMap = {
             'welcome': 'welcome',
             'bv': 'welcome',
@@ -25,11 +24,10 @@ const enable = {
 
         const type = command.toLowerCase();
 
-        
         if (type === 'enable' || !featureMap[type]) {
             let menu = `❯❯ 𝗦𝗬𝗦𝗧𝗘𝗠 𝗖𝗢𝗡𝗙𝗜𝗚𝗨𝗥𝗔𝗧𝗜𝗢𝗡\n\n`;
             menu += `Estado actual de las funciones en este grupo:\n\n`;
-            
+
             const options = [
                 { name: 'Bienvenida', key: 'welcome' },
                 { name: 'Detección', key: 'detect' },
@@ -46,12 +44,14 @@ const enable = {
             });
 
             menu += `\n> Para cambiar un estado usa el nombre de la función.\n> Ejemplo: *${usedPrefix}antilink*`;
-            
+
             return m.reply(menu.trim());
         }
 
         const dbKey = featureMap[type];
         chat[dbKey] = !chat[dbKey]; 
+        
+        await chat.save();
 
         let statusText = chat[dbKey] ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
         let icon = chat[dbKey] ? '✰' : '✧';
