@@ -9,14 +9,11 @@ const menuCommand = {
         try {
             await m.react('⏳');
             
-            // --- Métricas de Sistema ---
             let uptime = clockString(process.uptime() * 1000);
             
-            // Conteo real desde MongoDB
             let totalreg = await global.User.countDocuments();
             let totalCommands = Object.keys(global.plugins || {}).length;
             
-            // Conteo de Sub-Bots activos
             const subBots = (global.conns || []).filter(c => 
                 c.user && c.ws?.socket?.readyState !== 3 
             ).length;
@@ -25,12 +22,11 @@ const menuCommand = {
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V3.0';
 
             let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
-            menuText += `║ 👤 *Usuario:* @${m.sender.split('@')[0]}\n`;
-            menuText += `║ 🤖 *Tipo:* ${(conn.user.id.includes(':') ? 'Sub-Bot 🅑' : 'Principal 🅥')}\n`;
-            menuText += `║ 👥 *Usuarios:* ${totalreg}\n`;
-            menuText += `║ ⏱️ *Uptime:* ${uptime}\n`;
-            menuText += `║ 🖇️ *Nodos:* ${subBots}\n`;
-            menuText += `╚════════════════════╝\n\n`;
+            menuText += `║ ❑ *Usuario:* @${m.sender.split('@')[0]}\n`;
+            menuText += `║ ❐ *Usuarios:* ${totalreg}\n`;
+            menuText += `║ ❑ *Uptime:* ${uptime}\n`;
+            menuText += `║ ❐ *Nodos:* ${subBots}\n`;
+            menuText += `╚═════════════════╝\n\n`;
 
             menuText += `*${rmrText}*\n\n`;
 
@@ -92,7 +88,7 @@ const menuCommand = {
                 contextInfo: {
                     mentionedJid: [m.sender],
                     externalAdReply: {
-                        title: nameBot,
+                        title: '\t\t\t\t\t\t\t\t${nameBot}',
                         body: 'Mᴇɴᴜ́ ᴅᴇ Cᴏᴍᴀɴᴅᴏs Iɴᴛᴇʀᴀᴄᴛɪᴠᴏs',
                         thumbnailUrl: (typeof global.img === 'function' ? global.img() : 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771018082759_bwnA5OM5c.jpeg'), 
                         mediaType: 1,
