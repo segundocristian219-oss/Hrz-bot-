@@ -67,7 +67,18 @@ const emojiCommand = {
         : [name, m.pushName];
 
       const sticker = await addExif(webp, packname, author);
-      await conn.sendMessage(m.chat, { sticker: sticker }, { quoted: m });
+                  await conn.sendMessage(m.chat, { 
+                sticker: sticker,
+                contextInfo: {
+                    forwardingScore: 1, 
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363406846602793@newsletter',
+                        serverMessageId: 100,
+                        newsletterName: name()
+                    }
+                }
+            }, { quoted: m });
       await m.react('✅');
 
     } catch (e) {
