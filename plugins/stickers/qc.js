@@ -113,7 +113,7 @@ const qcCommand = {
             const buffer = Buffer.from(response.data.result.image, 'base64');
             let stikerBuffer = await sticker6(buffer);
 
-            let pack = "CAT-BOT"; 
+            let pack = name(); 
             let auth = nombre;
             let exifSticker = await addExif(stikerBuffer, pack, auth);
 
