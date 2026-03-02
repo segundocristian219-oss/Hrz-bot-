@@ -86,8 +86,8 @@ const youtubeCommand = {
             }
 
             const url = 'https://youtube.com/watch?v=' + videoId;
-            const rawApi = Buffer.from(isAudio ? global.api_endpoints.a : global.api_endpoints.v, 'base64').toString('utf-8');
-            const apiUrl = `${rawApi}?url=${encodeURIComponent(url)}`;
+            const endpoint = isAudio ? 'download_audio' : 'download_video';
+            const apiUrl = `https://salya.alyabot.xyz/${endpoint}?url=${encodeURIComponent(url)}`;
 
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
