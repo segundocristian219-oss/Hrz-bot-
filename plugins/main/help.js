@@ -26,6 +26,7 @@ const menuCommand = {
             menuText += `║ ❐ *Usuarios:* ${totalreg}\n`;
             menuText += `║ ❑ *Uptime:* ${uptime}\n`;
             menuText += `║ ❐ *Nodos:* ${subBots}\n`;
+            menuText += `║ ❐ *Versión:* ${v}\n`;
             menuText += `╚═════════════════╝\n\n`;
 
             menuText += `*${rmrText}*\n\n`;
