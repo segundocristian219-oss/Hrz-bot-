@@ -7,6 +7,7 @@ const menuCommand = {
     category: 'main',
     run: async (m, { conn, usedPrefix }) => {
         try {
+
             await m.react('⏳');
             
             let uptime = clockString(process.uptime() * 1000);
