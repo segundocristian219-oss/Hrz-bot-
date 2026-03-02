@@ -83,7 +83,6 @@ const stickerCommand = {
             if (!/image|video|webp/.test(mime)) return m.reply('> *✎ Responde a una imagen o video.*');
 
             if (/video/.test(mime)) {
-
                 let duration = q.msg?.seconds || q.seconds || 0;
                 if (duration > 7) {
                     await m.react('❌');
@@ -97,12 +96,26 @@ const stickerCommand = {
             if (!buffer) return m.reply('> ⚔ Error al descargar.');
 
             let stikerBuffer = await sticker6(buffer);
-            let bot = name() 
-            let user = m.pushName
-            let [pack, auth] = txt.includes('|') ? txt.split('|').map(v => v.trim()) : [`BOT: ${bot}`, `AUTOR: ${user}`];
+            
+            let bot = typeof global.botNames === 'object' ? global.botNames[0] : 'GUILTY CROWN — VX';
+            let user = m.pushName || 'User';
+            
+            let [pack, auth] = txt.includes('|') ? txt.split('|').map(v => v.trim()) : [bot, user];
             let exifSticker = await addExif(stikerBuffer, pack, auth);
 
-            await conn.sendMessage(m.chat, { sticker: exifSticker }, { quoted: m });
+            await conn.sendMessage(m.chat, { 
+                sticker: exifSticker,
+                contextInfo: {
+                    forwardingScore: 1, 
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363406846602793@newsletter',
+                        serverMessageId: 100,
+                        newsletterName: name()
+                    }
+                }
+            }, { quoted: m });
+            
             await m.react('✅');
 
         } catch (e) {
