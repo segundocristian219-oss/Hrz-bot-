@@ -28,7 +28,7 @@ const tiktokCommand = {
                             `▢ *TÍTULO:* ${video.title || 'Sin descripción'}\n` +
                             `▢ *AUTOR:* ${video.author.nickname}\n` +
                             `▢ *LINK:* ${videoUrl}\n\n` +
-                            `*❯❯ VOKER PLATFORM - AUTOMATION*`;
+                            `*❯❯*`;
 
             await conn.sendMessage(m.chat, { 
                 video: videoBuffer, 
