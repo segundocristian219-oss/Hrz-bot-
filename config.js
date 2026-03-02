@@ -63,6 +63,7 @@ global.ch = { ch1: conf.social.channel }
 global.rmr = more.repeat(850)
 global.name = () => global.botNames[Math.floor(Math.random() * global.botNames.length)]
 global.img = () => global.botImages[Math.floor(Math.random() * global.botImages.length)]
+global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 
 global.getBuffer = async (url, options = {}) => {
   try {
@@ -81,6 +82,7 @@ global.getBuffer = async (url, options = {}) => {
     return null
   }
 }
+
 
 const d = new Date(new Date().getTime() + 3600000)
 global.fecha = d.toLocaleDateString('es', { day: 'numeric', month: 'numeric', year: 'numeric' })
