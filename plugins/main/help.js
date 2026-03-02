@@ -1,4 +1,4 @@
-import { promises } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const menuCommand = {
@@ -7,21 +7,19 @@ const menuCommand = {
     category: 'main',
     run: async (m, { conn, usedPrefix }) => {
         try {
-
             await m.react('⏳');
-            
+
             let uptime = clockString(process.uptime() * 1000);
-            
             let totalreg = await global.User.countDocuments();
-            let totalCommands = Object.keys(global.plugins || {}).length;
             
+            const v = JSON.parse(readFileSync('./package.json', 'utf-8')).version;
+
             const subBots = (global.conns || []).filter(c => 
                 c.user && c.ws?.socket?.readyState !== 3 
             ).length;
 
-            const nameBot = typeof global.name === 'function' ? global.name();
-            const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V3.0';
-            const v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
+            const nameBot = typeof global.botNames === 'object' ? global.botNames[0] : 'GUILTY CROWN — VX';
+            const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
             let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
             menuText += `║ ❑ *Usuario:* @${m.sender.split('@')[0]}\n`;
@@ -91,7 +89,7 @@ const menuCommand = {
                 contextInfo: {
                     mentionedJid: [m.sender],
                     externalAdReply: {
-                        title: `\t\t\t\t\t\t\t\t${name()}`,
+                        title: `\t\t\t\t\t\t\t\t${nameBot}`,
                         body: 'Mᴇɴᴜ́ ᴅᴇ Cᴏᴍᴀɴᴅᴏs Iɴᴛᴇʀᴀᴄᴛɪᴠᴏs',
                         thumbnailUrl: (typeof global.img === 'function' ? global.img() : 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771018082759_bwnA5OM5c.jpeg'), 
                         mediaType: 1,
