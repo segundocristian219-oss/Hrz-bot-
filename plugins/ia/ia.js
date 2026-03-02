@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 const geminiCommand = {
     name: 'gemini',
-    alias: ['bot', 'gato', 'cat'],
+    alias: ['bot'],
     category: 'ai',
     run: async (m, { conn, text }) => {
         let q = m.quoted ? m.quoted : m;
@@ -10,7 +10,7 @@ const geminiCommand = {
 
         if (!text && !mime) {
             return await conn.sendMessage(m.chat, { 
-                text: `> *✎ Hola, soy Gato Bot. ¿En qué puedo ayudarte hoy?*\n\n*Puedes enviarme:* \n*• Texto:* Consultas de cualquier tipo.\n*• Imágenes/Video:* Para que los analice.\n*• Audio:* Para transcribir o resumir.` 
+                text: `> *✎ Hola, soy ${name()}. ¿En qué puedo ayudarte hoy?*\n\n*Puedes enviarme:* \n*• Texto:* Consultas de cualquier tipo.\n*• Imágenes/Video:* Para que los analice.\n*• Audio:* Para transcribir o resumir.` 
             }, { quoted: m });
         }
 
@@ -60,7 +60,7 @@ async function chatAI(m, conn, query) {
         const json = await response.json();
 
         if (json.image) {
-            let captionText = json.response ? json.response.replace(/\*\*/g, '*').trim() : `> *♛ Imagen generada por Gato Bot AI*`;
+            let captionText = json.response ? json.response.replace(/\*\*/g, '*').trim();
             await conn.sendMessage(m.chat, { 
                 image: { url: json.image }, 
                 caption: captionText
