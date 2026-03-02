@@ -70,7 +70,18 @@ const emojiCommand = {
             const stickerBuffer = await processEmoji(buffer);
             const finalSticker = await addExif(stickerBuffer, name(), m.pushName);
 
-            await conn.sendMessage(m.chat, { sticker: finalSticker }, { quoted: m });
+            await conn.sendMessage(m.chat, { 
+                sticker: finalSticker,
+                contextInfo: {
+                    forwardingScore: 1, 
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363406846602793@newsletter',
+                        serverMessageId: 100,
+                        newsletterName: name()
+                    }
+                }
+            }, { quoted: m });
             await m.react('✅');
 
         } catch (e) {
