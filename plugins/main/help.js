@@ -18,7 +18,7 @@ const menuCommand = {
                 c.user && c.ws?.socket?.readyState !== 3 
             ).length;
 
-            const nameBot = typeof global.name === 'function' ? global.name() : 'CAT-BOT';
+            const nameBot = typeof global.name === 'function' ? global.name();
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V3.0';
 
             let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
