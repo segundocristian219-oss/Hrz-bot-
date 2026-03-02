@@ -19,7 +19,14 @@ global.botNames = [
   '⌬ ᴀᴘᴏᴄᴀʟʏᴘsᴇ ᴠx ⌬'       
 ]
 
-global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1769830797656_735ec22d06753956aca8872c55c24368_EeBjc84my.jpg',  'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1769830818259_9d44b99d4d0952f51bf52fdb2c05986e_Xps4LJO8r.jpg', 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1769830821110_c20a3c37f4bd68fef7d7fb44d65303db_wVW7oX9KD.jpg', 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1769830823123_e336030d2dfd15b3f2a9bec8d30e15f3_YZEsD9KKM.jpg', 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1769830825552_79bf9a7935e94394d716bf6dd5b20f47_OQ4Crquzs.jpg' ]
+global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482544090_b8c3881cd7221257817e375cd7283918_NorYLEcDgv.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482546371_5cb90b226cda01be4f9cd9dc0d1a2f54_98pFKQ1yF.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482547877_53235316261c8f750b4b18d860a4bfae_5JnvBVkoh.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482549626_c94e03ca0366250b9cd992212ce2cd2a_NO0OlKGK1L.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482551338_5baab5fe0420f3ef4e41ebf01d3f7c2c_HYkdcMVk2.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482552940_ff92f9e59231e37dff39c36b9c3e84dd_i-O-zUzR3H.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482554714_b23011009fb8df483b52a257f0c414a8_oXi_9P1Qq.jpg',
+'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482556697_b7337a5a637b1e0865937d2dc3ca40ac_P39z6eYIA.jpg' ]
 
 global.api_endpoints = {
     a: "aHR0cHM6Ly9zbWFzaGEuYWx5YWJvdC54eXovZG93bmxvYWRfYXVkaW8=",
