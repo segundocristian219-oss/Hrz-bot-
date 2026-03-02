@@ -20,6 +20,7 @@ const menuCommand = {
 
             const nameBot = typeof global.name === 'function' ? global.name();
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V3.0';
+            const v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 
             let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
             menuText += `║ ❑ *Usuario:* @${m.sender.split('@')[0]}\n`;
