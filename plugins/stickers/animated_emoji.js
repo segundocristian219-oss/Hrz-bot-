@@ -74,7 +74,7 @@ const emojiCommand = {
               forwardedNewsletterMessageInfo: {
                   newsletterJid: '120363406846602793@newsletter',
                   serverMessageId: 100,
-                  newsletterName: botName
+                  newsletterName: name()
               }
           }
       }, { quoted: m });
