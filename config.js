@@ -29,8 +29,8 @@ global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482544
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482556697_b7337a5a637b1e0865937d2dc3ca40ac_P39z6eYIA.jpg' ]
 
 global.api_endpoints = {
-    a: "aHR0cHM6Ly9zbWFzaGEuYWx5YWJvdC54eXovZG93bmxvYWRfYXVkaW8=",
-    v: "aHR0cHM6Ly9zbWFzaGEuYWx5YWJvdC54eXovZG93bmxvYWRfdmlkZW8="
+    a: "aHR0cHM6Ly9zYWx5YS5hbHlhYm90Lnh5ei9kb3dubG9hZF9hdWRpbz91cmw9",
+    v: ""
 };
 
 const conf = {
