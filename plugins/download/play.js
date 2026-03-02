@@ -92,10 +92,12 @@ const youtubeCommand = {
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
             const apiRes = await fetch(apiUrl).then(res => res.json());
-            if (!apiRes?.file_url) throw new Error("ERR");
+            const downloadUrl = apiRes?.file_url;
+            
+            if (!downloadUrl) throw new Error("ERR_NO_URL");
 
             const sent = await conn.sendMessage(m.chat, { 
-                [isAudio ? 'audio' : 'video']: { url: apiRes.file_url }, 
+                [isAudio ? 'audio' : 'video']: { url: downloadUrl }, 
                 mimetype: isAudio ? "audio/mp4" : "video/mp4",
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
