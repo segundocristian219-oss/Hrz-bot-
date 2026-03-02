@@ -78,7 +78,7 @@ const {
 if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
-cfonts.say('CAT-BOT', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
+cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 cfonts.say('Powered by VOKER', { font: 'console', align: 'center', colors: ['white'], space: false });
 console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
 
