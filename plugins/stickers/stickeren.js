@@ -51,7 +51,18 @@ const wmCommand = {
 
             let exifSticker = await addExif(buffer, pack, aut);
 
-            await conn.sendMessage(m.chat, { sticker: exifSticker }, { quoted: m });
+            await conn.sendMessage(m.chat, { 
+                sticker: exifSticker,
+                contextInfo: {
+                    forwardingScore: 1, 
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363406846602793@newsletter',
+                        serverMessageId: 100,
+                        newsletterName: name()
+                    }
+                }
+            }, { quoted: m });
             await m.react('✅');
 
         } catch (e) {
