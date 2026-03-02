@@ -10,14 +10,14 @@ const novaCommand = {
         await m.react('💬');
 
         try {
-            const name = user?.name || m.pushName || 'Usuario';
+            const name2 = user?.name || m.pushName || 'Usuario';
 
             const payload = {
                 model: "nova-2-lite-v1",
                 messages: [
                     { 
                         role: "system", 
-                        content: `Eres CAT-BOT, un asistente útil. Responde de forma clara. Evita usar tablas de Markdown complicadas, usa mejor listas con guiones. Estás hablando con ${name}.` 
+                        content: `Eres ${name()}, un asistente útil. Responde de forma clara. Evita usar tablas de Markdown complicadas, usa mejor listas con guiones. Estás hablando con ${name2}.` 
                     },
                     { role: "user", content: text }
                 ]
