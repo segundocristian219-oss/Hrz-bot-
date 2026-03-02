@@ -18,7 +18,7 @@ const menuCommand = {
                 c.user && c.ws?.socket?.readyState !== 3 
             ).length;
 
-            const nameBot = typeof global.botNames === 'object' ? global.botNames[0] : 'GUILTY CROWN — VX';
+            const nameBot = typeof global.name() === 'object' ? global.name() : 'GUILTY CROWN — VX';
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
             let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
