@@ -117,7 +117,18 @@ const qcCommand = {
             let auth = nombre;
             let exifSticker = await addExif(stikerBuffer, pack, auth);
 
-            await conn.sendMessage(m.chat, { sticker: exifSticker }, { quoted: m });
+            await conn.sendMessage(m.chat, { 
+                sticker: exifSticker,
+                contextInfo: {
+                    forwardingScore: 1, 
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363406846602793@newsletter',
+                        serverMessageId: 100,
+                        newsletterName: name()
+                    }
+                }
+            }, { quoted: m });
             await m.react('✅');
 
         } catch (e) {
