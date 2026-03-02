@@ -19,7 +19,7 @@ const geminiCommand = {
     all: async function (m, { conn }) {
         if (!m.text || m.fromMe || m.isBaileys) return;
         let queryLower = m.text.toLowerCase().trim();
-        const keywords = ['gato', 'cat', 'bot', 'gemini'];
+        const keywords = ['bot', 'gemini'];
         if (keywords.some(word => queryLower.includes(word)) && !m.isGroup) {
             await chatAI(m, conn, m.text);
         }
