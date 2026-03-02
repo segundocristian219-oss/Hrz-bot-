@@ -1,4 +1,3 @@
-
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import * as crypto from 'crypto';
@@ -29,7 +28,7 @@ async function addExif(webpBuffer, packname, author, emojis = ['🤩']) {
 
   await img.load(webpBuffer);
   img.exif = exif;
-  await img.save(null);
+  return await img.save(null); 
 }
 
 async function processEmoji(buffer) {
@@ -46,15 +45,14 @@ const emojiCommand = {
   run: async (m, { conn, args, text }) => {
     try {
       let input = args[0];
-      if (!input) return m.reply('> *✎ Ingresa ese emoji junto con el comando.');
+      if (!input) return m.reply('> *✎ Ingresa un emoji junto con el comando.*');
 
       await m.react('🕓');
 
-      let emojiCode = input.includes('1f')
-        ? input
-        : [...input].map(c => c.codePointAt(0).toString(16)).join('-');
+      
+      let emojiCode = [...input].map(c => c.codePointAt(0).toString(16)).join('-');
 
-      const url = 'https://fonts.gstatic.com/s/e/notoemoji/latest/' + emojiCode + '/512.gif';
+      const url = `https://fonts.gstatic.com/s/e/notoemoji/latest/${emojiCode}/512.gif`;
       const response = await fetch(url);
 
       if (!response.ok) return m.reply('> ⚔ No encontré la animación para ese emoji.');
@@ -62,29 +60,34 @@ const emojiCommand = {
       const buffer = await response.buffer();
       const webp = await processEmoji(buffer);
 
+      
+      const botName = name();
+      
       let [packname, author] = text.includes('|')
         ? text.split('|').map(s => s.trim())
-        : [name, m.pushName];
+        : [botName, m.pushName || 'VOKER Platform'];
 
       const sticker = await addExif(webp, packname, author);
-                  await conn.sendMessage(m.chat, { 
-                sticker: sticker,
-                contextInfo: {
-                    forwardingScore: 1, 
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363406846602793@newsletter',
-                        serverMessageId: 100,
-                        newsletterName: name()
-                    }
-                }
-            }, { quoted: m });
+
+      await conn.sendMessage(m.chat, { 
+          sticker: sticker,
+          contextInfo: {
+              forwardingScore: 1, 
+              isForwarded: true,
+              forwardedNewsletterMessageInfo: {
+                  newsletterJid: '120363406846602793@newsletter',
+                  serverMessageId: 100,
+                  newsletterName: botName
+              }
+          }
+      }, { quoted: m });
+
       await m.react('✅');
 
     } catch (e) {
       console.error(e);
       await m.react('✖️');
-      m.reply('> ⚔ Error en la versión: ' + e.toString());
+      m.reply('> ⚔ Error en el sistema: ' + e.message);
     }
   }
 };
