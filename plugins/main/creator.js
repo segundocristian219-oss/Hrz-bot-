@@ -28,7 +28,7 @@ const ownerCommand = {
                 externalAdReply: {
                     title: 'VOKER™ OFFICIAL CONTACT',
                     body: 'Advanced Automation Infrastructure',
-                    thumbnailUrl: 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771264506865_a7j8pxEJj.jpeg',
+                    thumbnailUrl: img(),
                     sourceUrl: `https://wa.me/${myNumber}`,
                     mediaType: 1,
                     showAdAttribution: false, 
