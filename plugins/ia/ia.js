@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import axios from 'axios';
 
 const geminiCommand = {
     name: 'gemini',
@@ -9,9 +9,8 @@ const geminiCommand = {
         let mime = (q.msg || q).mimetype || '';
 
         if (!text && !mime) {
-            
             return await conn.sendMessage(m.chat, { 
-                text: `> *✎ Hola, soy Gemini AI. ¿En qué puedo ayudarte hoy?*\n\n*Puedes enviarme:* \n*• Texto:* Consultas de cualquier tipo.\n*• Imágenes/Video:* Para que los analice.\n*• Audio:* Para transcribir o resumir.` 
+                text: `> *✎ Hola, soy Gemini AI con Búsqueda Real. ¿En qué puedo ayudarte hoy?*` 
             }, { quoted: m });
         }
 
@@ -20,10 +19,7 @@ const geminiCommand = {
     all: async function (m, { conn }) {
         if (!m.text || m.fromMe || m.isBaileys) return;
         let queryLower = m.text.toLowerCase().trim();
-        const keywords = ['bot', 'gemini'];
-        
-        
-        if (keywords.some(word => queryLower.includes(word)) && !m.isGroup) {
+        if (['bot', 'gemini'].some(word => queryLower.includes(word)) && !m.isGroup) {
             await chatAI(m, conn, m.text);
         }
     }
@@ -32,11 +28,10 @@ const geminiCommand = {
 async function chatAI(m, conn, query) {
     let q = m.quoted ? m.quoted : m;
     let mime = (q.msg || q).mimetype || '';
-    let finalPrompt = query ? query.trim() : "Analiza este archivo detalladamente";
-
+    
     let body = {
         id: m.sender,
-        prompt: finalPrompt,
+        prompt: query.trim() || "Analiza esto",
         fileBase64: null,
         mimeType: null
     };
@@ -48,38 +43,31 @@ async function chatAI(m, conn, query) {
                 body.fileBase64 = media.toString('base64');
                 body.mimeType = mime;
             }
-        } catch (e) {
-            console.error("Error al descargar media:", e);
-        }
+        } catch (e) { console.error("Error descarga:", e); }
     }
 
     try {
-        const response = await fetch(`https://api.deylin.xyz/api/ai/text/ai`, {
-            method: 'POST',
+        
+        const { data } = await axios.post(`https://api.deylin.xyz/api/ai/text/ai`, body, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            timeout: 30000 
         });
 
-        if (!response.ok) throw new Error(`Server status: ${response.status}`);
-
-        const json = await response.json();
-
-        if (json.image) {
-            let captionText = json.response ? json.response.replace(/\*\*/g, '*').trim() : '';
+        if (data.image) {
             await conn.sendMessage(m.chat, { 
-                image: { url: json.image }, 
-                caption: captionText
+                image: { url: data.image }, 
+                caption: data.response?.replace(/\*\*/g, '*') 
             }, { quoted: m });
-        } else if (json.response) {
-            let reply = json.response.replace(/\*\*/g, '*').trim();
-            await conn.sendMessage(m.chat, { text: reply }, { quoted: m });
+        } else if (data.response) {
+            await conn.sendMessage(m.chat, { text: data.response.replace(/\*\*/g, '*') }, { quoted: m });
         } else {
-          
-            await conn.sendMessage(m.chat, { text: "_El asistente no pudo generar una respuesta._" }, { quoted: m });
+            throw new Error("Respuesta vacía del servidor");
         }
+
     } catch (err) {
-        console.error("Error en chatAI:", err);
-        await conn.sendMessage(m.chat, { text: "*[ ❌ ] Error en los servidores.*" }, { quoted: m });
+        
+        console.error("DETALLE DEL ERROR:", err.response?.data || err.message);
+        await conn.sendMessage(m.chat, { text: "*[ ❌ ] Error: El servidor tardó demasiado o la API Key falló.*" }, { quoted: m });
     }
 }
 
