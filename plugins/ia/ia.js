@@ -9,8 +9,9 @@ const geminiCommand = {
         let mime = (q.msg || q).mimetype || '';
 
         if (!text && !mime) {
+            
             return await conn.sendMessage(m.chat, { 
-                text: `> *✎ Hola, soy ${name()}. ¿En qué puedo ayudarte hoy?*\n\n*Puedes enviarme:* \n*• Texto:* Consultas de cualquier tipo.\n*• Imágenes/Video:* Para que los analice.\n*• Audio:* Para transcribir o resumir.` 
+                text: `> *✎ Hola, soy Gemini AI. ¿En qué puedo ayudarte hoy?*\n\n*Puedes enviarme:* \n*• Texto:* Consultas de cualquier tipo.\n*• Imágenes/Video:* Para que los analice.\n*• Audio:* Para transcribir o resumir.` 
             }, { quoted: m });
         }
 
@@ -20,6 +21,8 @@ const geminiCommand = {
         if (!m.text || m.fromMe || m.isBaileys) return;
         let queryLower = m.text.toLowerCase().trim();
         const keywords = ['bot', 'gemini'];
+        
+        
         if (keywords.some(word => queryLower.includes(word)) && !m.isGroup) {
             await chatAI(m, conn, m.text);
         }
@@ -29,7 +32,7 @@ const geminiCommand = {
 async function chatAI(m, conn, query) {
     let q = m.quoted ? m.quoted : m;
     let mime = (q.msg || q).mimetype || '';
-    let finalPrompt = query.trim() || "Analiza este archivo detalladamente";
+    let finalPrompt = query ? query.trim() : "Analiza este archivo detalladamente";
 
     let body = {
         id: m.sender,
@@ -46,7 +49,7 @@ async function chatAI(m, conn, query) {
                 body.mimeType = mime;
             }
         } catch (e) {
-            console.error("Error media:", e);
+            console.error("Error al descargar media:", e);
         }
     }
 
@@ -57,10 +60,12 @@ async function chatAI(m, conn, query) {
             body: JSON.stringify(body)
         });
 
+        if (!response.ok) throw new Error(`Server status: ${response.status}`);
+
         const json = await response.json();
 
         if (json.image) {
-            let captionText = json.response ? json.response.replace(/\*\*/g, '*').trim();
+            let captionText = json.response ? json.response.replace(/\*\*/g, '*').trim() : '';
             await conn.sendMessage(m.chat, { 
                 image: { url: json.image }, 
                 caption: captionText
@@ -68,9 +73,13 @@ async function chatAI(m, conn, query) {
         } else if (json.response) {
             let reply = json.response.replace(/\*\*/g, '*').trim();
             await conn.sendMessage(m.chat, { text: reply }, { quoted: m });
+        } else {
+          
+            await conn.sendMessage(m.chat, { text: "_El asistente no pudo generar una respuesta._" }, { quoted: m });
         }
     } catch (err) {
-        await conn.sendMessage(m.chat, { text: "*[ ❌ ] Error en los servidores de VOKER.*" }, { quoted: m });
+        console.error("Error en chatAI:", err);
+        await conn.sendMessage(m.chat, { text: "*[ ❌ ] Error en los servidores.*" }, { quoted: m });
     }
 }
 
