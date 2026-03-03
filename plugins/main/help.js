@@ -50,7 +50,7 @@ const menuCommand = {
                 },
                 {
                     title: '🧠 INTELIGENCIA ARTIFICIAL',
-                    cmds: ['.imgg', '.ia', '.tts', '.chatgpt', '.gemini']
+                    cmds: ['.imgg', '.ia', '.tts', '.chatgpt', '.gemini', '.removebg', '.hd']
                 },
                 {
                     title: '🛡️ GROUP CONFIG',
