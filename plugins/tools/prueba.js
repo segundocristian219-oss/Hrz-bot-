@@ -1,120 +1,51 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import * as fs from "fs";
-import * as path from "path";
-import fluent_ffmpeg from "fluent-ffmpeg";
+import axios from 'axios';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const investigarCommand = {
+    name: 'investigar',
+    alias: ['tavily', 'buscar', 'ia'],
+    category: 'herramientas',
+    run: async (m, { conn, text }) => {
+        if (!text) return m.reply('Necesito un tema para investigar. Ejemplo: *.investigar qué es la computación cuántica*');
 
-const statusCommand = {
-    name: 'setstatus',
-    alias: ['estado', 'ups'],
-    category: 'owner',
-    run: async (m, { conn, isOwner, text }) => {
-        if (!isOwner) return m.reply(`> *⚠ Solo mi desarrollador.*`);
+        const TAVILY_API_KEY = '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';
 
-        let q = m.quoted ? m.quoted : m;
-        let mime = (q.msg || q).mimetype || '';
-        let isMedia = /audio|video|image/.test(mime);
-
-        // Si no hay media y tampoco hay texto, pedimos contenido
-        if (!isMedia && !text) return m.reply(`> *✎ Proporciona texto o etiqueta un archivo (audio/foto/video).*`);
+        // Reacción visual para que el usuario sepa que el bot está "pensando"
+        await conn.sendMessage(m.chat, { react: { text: "🔍", key: m.key } });
 
         try {
-            await m.react('🕓');
-            
-            // 1. Recopilar participantes para visibilidad
-            let participants = Object.values(conn.contacts || {})
-                .filter(v => v.id && v.id.endsWith('@s.whatsapp.net'))
-                .map(v => v.id);
-
-            let me = conn.user.id.split(':')[0] + '@s.whatsapp.net';
-            if (!participants.includes(me)) participants.push(me);
-            if (!participants.includes(m.sender)) participants.push(m.sender);
-
-            const statusBroadcast = 'status@broadcast';
-            
-            // 2. Configurar Mención del Chat actual (Grupo o Persona)
-            let groupMentions = [];
-            groupMentions.push({
-                groupJid: m.chat,
-                groupSubject: m.isGroup ? (await conn.groupMetadata(m.chat)).subject : 'Chat'
+            const res = await axios.post('https://api.tavily.com/search', {
+                api_key: TAVILY_API_KEY,
+                query: text,
+                search_depth: "smart", // "smart" ofrece mejores resultados que "basic"
+                include_answer: true,  // Tavily genera un resumen automático
+                max_results: 3
             });
 
-            let contextInfo = {
-                forwardingScore: 1,
-                isForwarded: false,
-                canForward: true,
-                statusV2: true,
-                groupMentions: groupMentions
-            };
-
-            let msg = {};
-
-            // LÓGICA SEGÚN EL TIPO DE CONTENIDO
-            if (isMedia) {
-                let media = await q.download();
-                
-                if (/audio/.test(mime)) {
-                    const tmpDir = path.join(__dirname, '../../tmp');
-                    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-                    const inputPath = path.join(tmpDir, `in_${Date.now()}.audio`);
-                    const outputPath = path.join(tmpDir, `out_${Date.now()}.opus`);
-                    await fs.promises.writeFile(inputPath, media);
-
-                    await new Promise((resolve, reject) => {
-                        fluent_ffmpeg(inputPath)
-                            .toFormat('opus')
-                            .on('error', reject)
-                            .on('end', resolve)
-                            .save(outputPath);
-                    });
-
-                    const audioBuffer = await fs.promises.readFile(outputPath);
-                    msg = { 
-                        audio: audioBuffer, 
-                        mimetype: 'audio/ogg; codecs=opus', 
-                        ptt: true,
-                        seconds: 30,
-                        caption: text || '', // Texto que acompaña al audio
-                        contextInfo
-                    };
-
-                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
-                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-                } else if (/video/.test(mime)) {
-                    msg = { video: media, caption: text || '', contextInfo };
-                } else if (/image/.test(mime)) {
-                    msg = { image: media, caption: text || '', contextInfo };
-                }
-            } else {
-                // ESTADO DE SOLO TEXTO
-                msg = {
-                    text: text,
-                    extendedTextMessage: {
-                        text: text,
-                        backgroundArgb: 0xff000000, // Negro
-                        textArgb: 0xffffffff,       // Blanco
-                        font: 1
-                    },
-                    contextInfo
-                };
+            const data = res.data;
+            
+            // Si Tavily generó una respuesta directa (IA Answer)
+            let respuesta = `🧠 *ANÁLISIS DE INTELIGENCIA*\n\n`;
+            respuesta += `*Tema:* _${text}_\n\n`;
+            
+            if (data.answer) {
+                respuesta += `📝 *Resumen:* ${data.answer}\n\n`;
             }
 
-            // ENVÍO AL ESTADO
-            await conn.sendMessage(statusBroadcast, msg, { 
-                statusJidList: participants,
-                backgroundColor: '#000000',
-                broadcast: true
+            respuesta += `🌐 *Fuentes Encontradas:* \n`;
+            
+            data.results.forEach((result, i) => {
+                respuesta += `\n${i + 1}. *${result.title}*\n🔗 _${result.url}_\n`;
             });
 
-            await m.react('✅');
+            respuesta += `\n──────────────────\n*Suministro de Información por Deylin*`;
 
-        } catch (e) {
-            console.error(e);
-            await m.react('✖️');
+            await conn.sendMessage(m.chat, { text: respuesta }, { quoted: m });
+
+        } catch (error) {
+            console.error('Error en Tavily Search:', error);
+            await conn.sendMessage(m.chat, { text: "❌ Error al conectar con el motor de búsqueda." }, { quoted: m });
         }
     }
-}
+};
 
-export default statusCommand;
+export default investigarCommand;
