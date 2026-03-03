@@ -2,15 +2,33 @@ import axios from 'axios';
 
 const geminiCommand = {
     name: 'gemini',
-    alias: ['bot'],
+    alias: ['bot', 'ia'],
     category: 'ai',
-    async function chatAI(m, conn, query) {
+    run: async (m, { conn, text }) => {
+        let q = m.quoted ? m.quoted : m;
+        let mime = (q.msg || q).mimetype || '';
+
+        if (!text && !mime) {
+            return await conn.sendMessage(m.chat, { 
+                text: `> *✎ Hola, soy Gemini AI. ¿En qué puedo ayudarte hoy?*` 
+            }, { quoted: m });
+        }
+
+        await chatAI(m, conn, text || '');
+    },
+    all: async function (m, { conn }) {
+        if (!m.text || m.fromMe || m.isBaileys) return;
+        let queryLower = m.text.toLowerCase().trim();
+        if (['bot', 'gemini'].some(word => queryLower.includes(word)) && !m.isGroup) {
+            await chatAI(m, conn, m.text);
+        }
+    }
+};
+
+async function chatAI(m, conn, query) {
     let q = m.quoted ? m.quoted : m;
     let mime = (q.msg || q).mimetype || '';
     
-    // Mostramos que el bot está trabajando (da profesionalismo)
-    await conn.sendMessage(m.chat, { react: { text: "⏳", key: m.key } });
-
     let body = {
         id: m.sender,
         prompt: query.trim() || "Analiza esto",
@@ -18,48 +36,46 @@ const geminiCommand = {
         mimeType: null
     };
 
-    if (mime && /image|video|audio/.test(mime)) {
+    if (mime && /image|video|audio|pdf|text/.test(mime)) {
         try {
             let media = await q.download();
             if (media) {
-                // Si el archivo es muy grande, Vercel fallará. Limitamos a 8MB.
-                if (media.length > 8 * 1024 * 1024) return m.reply("❌ El archivo es demasiado pesado para la IA.");
+                if (media.length > 10 * 1024 * 1024) return m.reply("❌ Archivo demasiado grande (Máx 10MB).");
                 body.fileBase64 = media.toString('base64');
                 body.mimeType = mime;
             }
-        } catch (e) { console.error("Error media:", e); }
+        } catch (e) { console.error(e); }
     }
 
     try {
-        const response = await axios.post(`https://api.deylin.xyz/api/ai/text/ai`, body, {
+        const { data } = await axios.post(`https://api.deylin.xyz/api/ai/text/ai`, body, {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 40000 // Aumentamos a 40 segundos para Tavily + Gemini
+            timeout: 45000 
         });
-
-        const data = response.data;
 
         if (data.image) {
             await conn.sendMessage(m.chat, { 
                 image: { url: data.image }, 
-                caption: data.response
+                caption: data.response?.replace(/\*\*/g, '*') 
             }, { quoted: m });
-        } else {
-            await conn.sendMessage(m.chat, { text: data.response }, { quoted: m });
+        } else if (data.response) {
+            await conn.sendMessage(m.chat, { text: data.response.replace(/\*\*/g, '*') }, { quoted: m });
         }
-        
-        await conn.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
 
     } catch (err) {
-        console.error("DEBUG ERROR:", err.response?.data || err.message);
+        let errorDetalle = err.message;
+        if (err.response) {
+            errorDetalle = `Status: ${err.response.status} - Data: ${JSON.stringify(err.response.data)}`;
+        }
         
-        // El bot ahora te dirá la verdad del error
-        let msgError = "*[ ❌ ] Error en el Suministro*";
-        if (err.code === 'ECONNABORTED') msgError = "*[ ❌ ] Tiempo agotado (El servidor tardó mucho).*";
-        if (err.response?.status === 500) msgError = "*[ ❌ ] Error Interno del Servidor (Revisa logs de Vercel).*";
-        if (err.response?.status === 404) msgError = "*[ ❌ ] No se encontró la ruta de la API.*";
+        console.error("DEBUG:", errorDetalle);
+        
+        const errorMsg = `*⚠️ ERROR TÉCNICO DETECTADO*\n\n` +
+                         `*Tipo:* ${err.code || 'API_ERROR'}\n` +
+                         `*Detalle:* ${errorDetalle}\n\n` +
+                         `_Revisa la consola de Vercel para más información._`;
 
-        await conn.sendMessage(m.chat, { text: msgError }, { quoted: m });
-        await conn.sendMessage(m.chat, { react: { text: "❌", key: m.key } });
+        await conn.sendMessage(m.chat, { text: errorMsg }, { quoted: m });
     }
 }
 
