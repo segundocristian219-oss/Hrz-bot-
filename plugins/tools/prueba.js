@@ -2,48 +2,44 @@ import axios from 'axios';
 
 const investigarCommand = {
     name: 'investigar',
-    alias: ['tavily', 'buscar', 'ia'],
+    alias: ['buscar', 'ia'],
     category: 'herramientas',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply('Necesito un tema para investigar. Ejemplo: *.investigar qué es la computación cuántica*');
+        if (!text) return m.reply('Escribe qué quieres investigar.');
 
-        const TAVILY_API_KEY = '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';
-
-        // Reacción visual para que el usuario sepa que el bot está "pensando"
-        await conn.sendMessage(m.chat, { react: { text: "🔍", key: m.key } });
+        const TAVILY_API_KEY = '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';
 
         try {
-            const res = await axios.post('https://api.tavily.com/search', {
+            const { data } = await axios.post('https://api.tavily.com/search', {
                 api_key: TAVILY_API_KEY,
                 query: text,
-                search_depth: "smart", // "smart" ofrece mejores resultados que "basic"
-                include_answer: true,  // Tavily genera un resumen automático
+                search_depth: "basic",
+                include_answer: true,
                 max_results: 3
+            }, {
+                headers: { 'Content-Type': 'application/json' }
             });
 
-            const data = res.data;
-            
-            // Si Tavily generó una respuesta directa (IA Answer)
-            let respuesta = `🧠 *ANÁLISIS DE INTELIGENCIA*\n\n`;
-            respuesta += `*Tema:* _${text}_\n\n`;
+            let respuesta = `🧠 *INVESTIGACIÓN REALIZADA*\n\n`;
             
             if (data.answer) {
                 respuesta += `📝 *Resumen:* ${data.answer}\n\n`;
             }
 
-            respuesta += `🌐 *Fuentes Encontradas:* \n`;
-            
-            data.results.forEach((result, i) => {
-                respuesta += `\n${i + 1}. *${result.title}*\n🔗 _${result.url}_\n`;
-            });
+            if (data.results && data.results.length > 0) {
+                respuesta += `🌐 *Fuentes:* \n`;
+                data.results.forEach((res, i) => {
+                    respuesta += `\n${i + 1}. *${res.title}*\n🔗 ${res.url}\n`;
+                });
+            } else if (!data.answer) {
+                return m.reply("No se encontraron resultados.");
+            }
 
-            respuesta += `\n──────────────────\n*Suministro de Información por Deylin*`;
-
-            await conn.sendMessage(m.chat, { text: respuesta }, { quoted: m });
+            await conn.sendMessage(m.chat, { text: respuesta.trim() }, { quoted: m });
 
         } catch (error) {
-            console.error('Error en Tavily Search:', error);
-            await conn.sendMessage(m.chat, { text: "❌ Error al conectar con el motor de búsqueda." }, { quoted: m });
+            console.error('Tavily Error:', error.response?.data || error.message);
+            m.reply("❌ Error al conectar con el servicio de búsqueda.");
         }
     }
 };
