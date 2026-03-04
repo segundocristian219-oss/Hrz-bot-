@@ -28,7 +28,7 @@ const menuCommand = {
             menuText += `║ • Uptime: ${uptime}\n`;
             menuText += `║ • Nodos: ${subBots}\n`;
             menuText += `║ • Versión: ${v}\n`;
-            menuText += `║ • dix.lat/chanel\n`;
+            menuText += `║ • *dix.lat/channel*\n`;
             menuText += `╚═════════════════╝\n\n`;
             
             menuText += `*${rmrText}*\n\n`;
