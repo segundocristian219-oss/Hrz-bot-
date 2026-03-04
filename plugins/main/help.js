@@ -31,7 +31,7 @@ const menuCommand = {
             menuText += `║ • *dix.lat/channel*\n`;
             menuText += `╚═════════════════╝\n\n`;
             
-            menuText += `*${rmrText}*\n\n`;
+            menuText += `${rmrText}\n\n`;
 
 
             const categories = [
