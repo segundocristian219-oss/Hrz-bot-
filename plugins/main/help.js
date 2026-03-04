@@ -172,8 +172,7 @@ const menuCommand = {
 
             menuText += `> © Powered by VOKER Platform.`;
 
-
-    await conn.sendMessage(m.chat, { 
+await conn.sendMessage(m.chat, { 
     text: menuText,
     contextInfo: {
         mentionedJid: [m.sender],
@@ -188,8 +187,6 @@ const menuCommand = {
         }
     }
 }, { quoted: m });
-
-
 
 
             await m.react('🍃');
