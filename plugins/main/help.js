@@ -62,7 +62,7 @@ const menuCommand = {
                 },
                 {
                     title: '🔍 SEARCH',
-                    cmds: ['.pinterest', '.ttss', '.gif', '.ytsearch']
+                    cmds: ['.pinterest', '.ttss', '.gif', '.ytsearch', '.buscar']
                 },
                 {
                     title: '🛠️ TOOLS',
