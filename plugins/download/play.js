@@ -35,7 +35,7 @@ const youtubeCommand = {
     alias: ['play', 'audio', 'mp3', 'video', 'mp4', 'play2'],
     category: 'download',
     run: async (m, { conn, text, command, usedPrefix }) => {
-        if (!text?.trim()) return conn.reply(m.chat, `*── 「 SISTEMA 」 ──*\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
+        if (!text?.trim()) return conn.reply(m.chat, `ᰔᩚ   *YOUTUBE DOWNLOAD*  ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
 
         const isAudio = /play$|audio$|mp3|ytmp3/i.test(command);
         const mediaType = isAudio ? 'audio_data' : 'video_data';
@@ -68,7 +68,7 @@ const youtubeCommand = {
                 }
             }
 
-            const infoText = `*── 「 CONTENIDO MULTIMEDIA 」 ──*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *ENVIANDO:* ${isAudio ? 'audio' : 'video'}..._`;
+            const infoText = `\t\t\t\t*YOUTUBE DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *ENVIANDO:* ${isAudio ? 'audio' : 'video'}..._`;
 
             if (useCache && cacheData) {
                 await m.react("⚡");
