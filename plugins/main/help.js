@@ -177,15 +177,15 @@ await conn.sendMessage(m.chat, {
     contextInfo: {
         mentionedJid: [m.sender],
         externalAdReply: {
-                title: name(),
-                body: '🚀 Toca para ver canal',
-                thumbnail: await (await fetch(global.img())).buffer(),
-                mediaType: 1,
-                renderLargerThumbnail: false,
-                showAdAttribution: true,
-                sourceUrl: 'https://dix.lat/channel',
-                mediaUrl: 'https://dix.lat/channel'
-            }
+            title: nameBot,
+            //body: 'Únete a nuestro canal oficial',
+            thumbnail: await (await fetch(global.img())).buffer(),
+            sourceUrl: 'https://dix.lat/channel',
+            mediaUrl: 'https://dix.lat/channel',
+            mediaType: 1,
+            showAdAttribution: true,
+            renderLargerThumbnail: true
+        }
     }
 }, { quoted: m });
 
