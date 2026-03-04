@@ -174,20 +174,21 @@ const menuCommand = {
 
 
     await conn.sendMessage(m.chat, { 
-       text: menuText,
-       contextInfo: {
-           mentionedJid: [m.sender],
-           externalAdReply: {
-               title: `\t\t\t\t\t\t${nameBot}`,
-               body: 'Menú de Comandos Interactivos',
-               thumbnailUrl: global.img(), 
-               sourceUrl: 'https://dix.lat/channel', 
-               mediaType: 1,
-               showAdAttribution: true,
-               renderLargerThumbnail: true
-           }
-       }
-   }, { quoted: m });
+    text: menuText,
+    contextInfo: {
+        mentionedJid: [m.sender],
+        externalAdReply: {
+            title: nameBot,
+            body: 'Únete a nuestro canal oficial',
+            thumbnailUrl: global.img(), 
+            sourceUrl: 'https://dix.lat/channel', 
+            mediaUrl: 'https://dix.lat/channel',  
+            mediaType: 1,
+            showAdAttribution: true,
+            renderLargerThumbnail: true
+        }
+    }
+}, { quoted: m });
 
 
             await m.react('🍃');
