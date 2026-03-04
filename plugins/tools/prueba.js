@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const investigarCommand = {
     name: 'investigar',
-    alias: ['buscar', 'ia'],
+    alias: ['buscar'],
     category: 'herramientas',
     run: async (m, { conn, text }) => {
         if (!text) return m.reply('Escribe qué quieres investigar.');
