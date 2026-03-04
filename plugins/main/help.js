@@ -173,20 +173,22 @@ const menuCommand = {
             menuText += `> © Powered by VOKER Platform.`;
 
 
-            await conn.sendMessage(m.chat, { 
-                text: menuText,
-                contextInfo: {
-                    mentionedJid: [m.sender],
-                    externalAdReply: {
-                        title: `\t\t\t\t\t\t\t\t${nameBot}`,
-                        body: 'Menú de Comandos Interactivos',
-                        thumbnailUrl: global.img(), 
-                        mediaType: 1,
-                        showAdAttribution: true,
-                        renderLargerThumbnail: true
-                    }
-                }
-            }, { quoted: m });
+    await conn.sendMessage(m.chat, { 
+       text: menuText,
+       contextInfo: {
+           mentionedJid: [m.sender],
+           externalAdReply: {
+               title: `\t\t\t\t\t\t${nameBot}`,
+               body: 'Menú de Comandos Interactivos',
+               thumbnailUrl: global.img(), 
+               sourceUrl: 'https://dix.lat/channel', 
+               mediaType: 1,
+               showAdAttribution: true,
+               renderLargerThumbnail: true
+           }
+       }
+   }, { quoted: m });
+
 
             await m.react('🍃');
 
