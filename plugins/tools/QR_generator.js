@@ -43,7 +43,7 @@ const qrCommand = {
             if (!qrData) return m.reply('> ✎ Responde a una imagen o escribe un texto.');
 
             
-            const qrFinalUrl = `https://quickchart.io/qr?text=${encodeURIComponent(qrData)}&size=600&centerImageUrl=https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772004635541_catbot_icon_1772004615817_xyw6-cx5O.png&centerImageSize=0.2&margin=2`;
+            const qrFinalUrl = `https://quickchart.io/qr?text=${encodeURIComponent(qrData)}&size=600&centerImageUrl=${logoUrl}&centerImageSize=0.2&margin=2`;
 
             await conn.sendMessage(m.chat, { 
                 image: { url: qrFinalUrl }, 
