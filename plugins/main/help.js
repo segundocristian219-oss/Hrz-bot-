@@ -21,7 +21,7 @@ const menuCommand = {
             const nameBot = typeof global.name() === 'object' ? global.name() : 'GUILTY CROWN — VX';
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
-            // --- Encabezado con información general ---
+
             let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
             menuText += `║ • Usuario: @${m.sender.split('@')[0]}\n`;
             menuText += `║ • Usuarios: ${totalreg}\n`;
@@ -29,17 +29,17 @@ const menuCommand = {
             menuText += `║ • Nodos: ${subBots}\n`;
             menuText += `║ • Versión: ${v}\n`;
             menuText += `╚═════════════════╝\n\n`;
-
+            menuText += `dix.lat/chanel`;
             menuText += `*${rmrText}*\n\n`;
 
-            // --- Definición de categorías y comandos con descripciones ---
+
             const categories = [
                 {
                     title: 'MAIN',
                     cmds: [
                         { cmd: '.menu', desc: 'Muestra este menú de ayuda.' },
-                        { cmd: '.bots', desc: 'Lista los sub-bots activos.' },
-                        { cmd: '.code', desc: 'Obtén el código fuente del bot.' },
+                        //{ cmd: '.bots', desc: 'Lista los sub-bots activos.' },
+                       // { cmd: '.code', desc: 'Obtén el código fuente del bot.' },
                         { cmd: '.creador', desc: 'Información sobre el creador.' }
                     ]
                 },
@@ -55,25 +55,25 @@ const menuCommand = {
                     cmds: [
                         { cmd: '.play', desc: 'Descarga audio de YouTube (música).' },
                         { cmd: '.play2', desc: 'Descarga video de YouTube.' },
-                        { cmd: '.facebook', desc: 'Descarga video de Facebook.' },
-                        { cmd: '.instagram', desc: 'Descarga contenido de Instagram (post/reel/story).' },
-                        { cmd: '.tiktok', desc: 'Descarga video de TikTok sin marca de agua.' }
+                        { cmd: '.facebook/fb', desc: 'Descarga video de Facebook.' },
+                        { cmd: '.instagram/ig', desc: 'Descarga contenido de Instagram (post/reel/story).' },
+                        { cmd: '.tiktok/tt', desc: 'Descarga video de TikTok sin marca de agua.' }
                     ]
                 },
                 {
                     title: 'ANIME',
                     cmds: [
-                        { cmd: '.kill', desc: 'Envía un sticker/gif de "matar" estilo anime.' },
-                        { cmd: '.kiss', desc: 'Sticker de beso anime.' },
-                        { cmd: '.kiss2', desc: 'Segunda versión de beso anime.' },
-                        { cmd: '.hug', desc: 'Sticker de abrazo anime.' },
-                        { cmd: '.hello', desc: 'Sticker de saludo anime.' },
-                        { cmd: '.coffee', desc: 'Sticker de café anime.' },
-                        { cmd: '.angry', desc: 'Sticker de enojo anime.' },
-                        { cmd: '.happy', desc: 'Sticker de felicidad anime.' },
-                        { cmd: '.sad', desc: 'Sticker de tristeza anime.' },
-                        { cmd: '.slap', desc: 'Sticker de bofetada anime.' },
-                        { cmd: '.laugh', desc: 'Sticker de risa anime.' }
+                        { cmd: '.kill', desc: 'Envía un gif de "matar" estilo anime.' },
+                        { cmd: '.kiss', desc: 'gif de beso anime.' },
+                        { cmd: '.kiss2', desc: 'gif de beso gay anime.' },
+                        { cmd: '.hug', desc: 'gif de abrazo anime.' },
+                        { cmd: '.hello', desc: 'gif de saludo anime.' },
+                        { cmd: '.coffee', desc: 'gif de café anime.' },
+                        { cmd: '.angry', desc: 'gif de enojo anime.' },
+                        { cmd: '.happy', desc: 'gif de felicidad anime.' },
+                        { cmd: '.sad', desc: 'gif de tristeza anime.' },
+                        { cmd: '.slap', desc: 'gif de bofetada anime.' },
+                        { cmd: '.laugh', desc: 'gif de risa anime.' }
                     ]
                 },
                 {
@@ -91,9 +91,9 @@ const menuCommand = {
                 {
                     title: 'GROUP CONFIG',
                     cmds: [
-                        { cmd: '.antisub', desc: 'Activa/desactiva anti-sub (evita que se unan números sospechosos).' },
+                       // { cmd: '.antisub', desc: 'Activa/desactiva anti-sub (evita que se unan números sospechosos).' },
                         { cmd: '.antilink', desc: 'Activa/desactiva anti-enlaces en el grupo.' },
-                        { cmd: '.antiestados', desc: 'Activa/desactiva anti-estados (fotos de perfil, etc.).' },
+                        { cmd: '.antiestados', desc: 'Activa/desactiva anti-estados (Mención en Estados.).' },
                         { cmd: '.config_group', desc: 'Muestra la configuración actual del grupo.' },
                         { cmd: '.hidetag', desc: 'Menciona a todos los miembros silenciosamente.' },
                         { cmd: '.setwelcome', desc: 'Establece un mensaje de bienvenida personalizado.' },
@@ -107,19 +107,18 @@ const menuCommand = {
                         { cmd: '.kick', desc: 'Expulsa a un miembro del grupo (requiere ser admin).' },
                         { cmd: '.link', desc: 'Obtiene el enlace de invitación del grupo.' },
                         { cmd: '.open/close', desc: 'Abre o cierra el grupo (solo admins pueden enviar mensajes).' },
-                        { cmd: '.mute/unmute', desc: 'Silencia o activa el grupo (restricción de envío).' }
+                        { cmd: '.mute/unmute', desc: 'Silencia los mensajes de un usuario.' }
                     ]
                 },
                 {
                     title: 'STICKERS',
                     cmds: [
                         { cmd: '.s', desc: 'Crea un sticker a partir de imagen/video/gif.' },
-                        { cmd: '.wm', desc: 'Crea sticker con texto (watermark) personalizado.' },
+                        { cmd: '.wm', desc: 'Cambia o agrega información a un sticker.' },
                         { cmd: '.brat', desc: 'Crea sticker con estilo "brat" (texto distorsionado).' },
                         { cmd: '.qc', desc: 'Crea sticker de quote (cita) con avatar.' },
-                        { cmd: '.emo', desc: 'Crea sticker a partir de un emoji.' },
-                        { cmd: '.emojimix', desc: 'Combina dos emojis en un sticker.' },
-                        { cmd: '.sticker', desc: 'Alias para crear sticker (similar a .s).' }
+                        { cmd: '.emo', desc: 'Crea sticker animados a partir de un emoji.' },
+                        { cmd: '.emojimix', desc: 'Combina emojis.' }
                     ]
                 },
                 {
@@ -137,15 +136,14 @@ const menuCommand = {
                     cmds: [
                         { cmd: '.get', desc: 'Obtiene información de un enlace (metadata, headers).' },
                         { cmd: '.upload', desc: 'Sube un archivo a servicios de alojamiento temporal.' },
-                        { cmd: '.read', desc: 'Lee el texto de una imagen (OCR).' },
-                        { cmd: '.ver', desc: 'Muestra información detallada de un mensaje citado.' },
+                        { cmd: '.read/ver', desc: 'Extraer archivos de una sola visualización.' },
                         { cmd: '.whatmusic', desc: 'Reconoce música a partir de un audio (Shazam).' },
                         { cmd: '.traducir', desc: 'Traduce texto a otro idioma.' },
                         { cmd: '.qr', desc: 'Genera un código QR a partir de texto.' },
-                        { cmd: '.acortar', desc: 'Acorta una URL usando un servicio (bit.ly, etc.).' },
+                        { cmd: '.acortar', desc: 'Acorta una URL usando un servicio (dix.lat).' },
                         { cmd: '.toimg', desc: 'Convierte un sticker a imagen PNG.' },
                         { cmd: '.pfp', desc: 'Obtiene la foto de perfil de un usuario.' },
-                        { cmd: '.reducir', desc: 'Reduce el tamaño/peso de una imagen.' },
+                        { cmd: '.reducir', desc: 'Reduce el tamaño de una imagen.' },
                         { cmd: '.ssweb', desc: 'Toma una captura de pantalla de una página web.' }
                     ]
                 },
@@ -160,20 +158,20 @@ const menuCommand = {
                 }
             ];
 
-            // --- Generar el listado por categoría con formato limpio ---
+
             categories.forEach(cat => {
-                // Título de categoría sin emojis, con líneas simples
+
                 menuText += `┌──「 *${cat.title}* 」──\n`;
                 cat.cmds.forEach(item => {
-                    // Formato: │ #.comando > descripción
-                    menuText += `│ #${item.cmd} > ${item.desc}\n`;
+
+                    menuText += `♛ *${item.cmd}* \n> ${item.desc}\n`;
                 });
-                menuText += `└───────────────\n\n`; // Espacio extra entre categorías
+                menuText += `└───────────────\n\n`; 
             });
 
             menuText += `> © Powered by VOKER Platform.`;
 
-            // --- Enviar mensaje con contexto enriquecido ---
+
             await conn.sendMessage(m.chat, { 
                 text: menuText,
                 contextInfo: {
@@ -181,7 +179,7 @@ const menuCommand = {
                     externalAdReply: {
                         title: `\t\t\t\t\t\t\t\t${nameBot}`,
                         body: 'Menú de Comandos Interactivos',
-                        thumbnailUrl: (typeof global.img === 'function' ? global.img() : 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771018082759_bwnA5OM5c.jpeg'), 
+                        thumbnailUrl: global.img(), 
                         mediaType: 1,
                         showAdAttribution: true,
                         renderLargerThumbnail: true
