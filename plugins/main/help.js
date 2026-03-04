@@ -179,16 +179,16 @@ const menuCommand = {
         mentionedJid: [m.sender],
         externalAdReply: {
             title: nameBot,
-            body: 'Únete a nuestro canal oficial',
-            thumbnail: await (await fetch(global.img())).buffer(),
-            sourceUrl: 'https://dix.lat/channel',
-            mediaUrl: 'https://dix.lat/channel',
+            body: '🚀 Toca para ver canal',
             mediaType: 1,
-            showAdAttribution: true,
-            renderLargerThumbnail: true
+            previewType: 0,
+            renderLargerThumbnail: true,
+            thumbnailUrl: global.img(),
+            sourceUrl: 'https://dix.lat/channel'
         }
     }
 }, { quoted: m });
+
 
 
 
