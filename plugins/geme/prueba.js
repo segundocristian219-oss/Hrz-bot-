@@ -13,39 +13,35 @@ const scrambleGame = {
     category: 'game',
 
     async before(m) {
-        global.wordGames = global.wordGames || {};
-        if (!m.chat || !global.wordGames[m.chat] || m.isBaileys) return false;
+        if (!m.text || m.isBaileys) return false;
+        if (!global.wordGames || !global.wordGames[m.chat]) return false;
 
         const game = global.wordGames[m.chat];
-        const userGuess = cleanText(m.text || "");
+        const userGuess = cleanText(m.text);
         const correctAnswer = cleanText(game.original);
 
         if (userGuess === correctAnswer) {
-            delete global.wordGames[m.chat];
             await this.reply(m.chat, `🎉 ¡Increíble @${m.sender.split('@')[0]}!\n\nLa palabra era: *${game.original.toUpperCase()}*`, m, { mentions: [m.sender] });
             await m.react("✅");
+            delete global.wordGames[m.chat];
             return true;
         }
         return false;
     },
 
-    run: async (m, { conn, usedPrefix, command }) => {
+    run: async (m, { conn }) => {
         global.wordGames = global.wordGames || {};
-        const chatId = m.chat;
-
-        if (global.wordGames[chatId]) {
-            return conn.reply(chatId, `⚠️ Ya hay un juego activo.\n\nPalabra: *${global.wordGames[chatId].scrambled.toUpperCase()}*`, m);
-        }
+        if (global.wordGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay un juego activo. Palabra: *${global.wordGames[m.chat].scrambled.toUpperCase()}*`, m);
 
         const selectedWord = words[Math.floor(Math.random() * words.length)];
         const scrambled = shuffle(selectedWord);
 
-        global.wordGames[chatId] = {
+        global.wordGames[m.chat] = {
             original: selectedWord,
             scrambled: scrambled
         };
 
-        return conn.reply(chatId, `🧩 *JUEGO DE PALABRAS*\n\nOrdena las letras:\n\n👉 *${scrambled.toUpperCase()}*\n\n_¡Responde directamente para ganar!_`, m);
+        return conn.reply(m.chat, `🧩 *JUEGO DE PALABRAS*\n\nOrdena las letras:\n👉 *${scrambled.toUpperCase()}*\n\n_¡Responde directamente para ganar!_`, m);
     }
 };
 
