@@ -47,10 +47,8 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
 .then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado (Bypass SSL Activo)')))
 .catch((err) => {
     console.error(chalk.red('┃ DATABASE: Error de Conexión ->'), err.message);
-    
     setTimeout(() => global.reload(true), 5000);
 });
-
 
 const userSchema = new mongoose.Schema({
     id: { type: String, unique: true },
@@ -160,6 +158,17 @@ setInterval(async () => {
     } catch (e) {}
 }, 86400000);
 
+let messageHandler;
+const loadHandler = async () => {
+    try {
+        const Path = path.join(process.cwd(), 'lib/message.js');
+        const module = await import(`file://${Path}?update=${Date.now()}`);
+        messageHandler = module.message || module.default?.message || module.default;
+    } catch (e) { console.error(e); }
+};
+await loadHandler();
+watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
+
 global.reload = async function(restatConn) {
   if (restatConn) {
     msgRetryCounterCache.flushAll();
@@ -176,12 +185,9 @@ global.reload = async function(restatConn) {
         const msg = chatUpdate.messages[0];
         if (!msg || (!msg.message && !msg.messageStubType)) return;
         const m = await smsg(conn, msg);
-        const Path = path.join(process.cwd(), 'lib/message.js');
-        const module = await import(`file://${Path}?update=${Date.now()}`);
-        const Func = module.message || module.default?.message || module.default;
-        if (typeof Func === 'function') await Func.call(conn, m, chatUpdate);
+        if (typeof messageHandler === 'function') await messageHandler.call(conn, m, chatUpdate);
     } catch (e) {
-        if (!e.message.includes('decrypt')) {
+        if (!e.message?.includes('decrypt')) {
             console.error(e);
             await uploadCriticalError(e, 'Message Upsert');
         }
