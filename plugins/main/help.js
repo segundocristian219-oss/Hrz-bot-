@@ -177,7 +177,7 @@ const menuCommand = {
                 menuText += `┌──「 *${cat.title}* 」──\n`;
                 cat.cmds.forEach(item => {
 
-                    menuText += `♛ *${item.cmd}* \n> ${item.desc}\n`;
+                    menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
                 });
                 menuText += `└───────────────\n\n`; 
             });
