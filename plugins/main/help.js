@@ -65,6 +65,16 @@ const menuCommand = {
                     ]
                 },
                 {
+                    title: 'GANE',
+                    cmds: [
+                        { cmd: '.tesoro/.mapa', desc: 'Encuentra el tesoro oculto.' },
+                        { cmd: '.mate/.math', desc: 'Resuelve una suma matemática.' },
+                        { cmd: '.', desc: 'Una reflexión aleatoria.' },
+                        { cmd: '.consejo', desc: 'Consejos aleatorios.' },
+                        { cmd: '.meme', desc: 'Envía un meme aleatorio para reír.' }
+                    ]
+                },
+                {
                     title: 'ANIME',
                     cmds: [
                         { cmd: '.kill', desc: 'Envía un gif de "matar" estilo anime.' },
