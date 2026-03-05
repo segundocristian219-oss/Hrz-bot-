@@ -48,6 +48,9 @@ const menuCommand = {
                     title: 'FUN',
                     cmds: [
                         { cmd: '.gay', desc: 'Mide tu nivel de homosexualidad (simulación).' },
+                        { cmd: '.poema', desc: 'Poemas Aleatorios.' },
+                        { cmd: '.reflexión', desc: 'Una reflexión aleatoria.' },
+                        { cmd: '.consejo', desc: 'Consejos aleatorios.' },
                         { cmd: '.meme', desc: 'Envía un meme aleatorio para reír.' }
                     ]
                 },
