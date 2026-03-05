@@ -55,14 +55,16 @@ async function chatAI(m, conn, query) {
             timeout: 45000 
         });
 
-        await m.react('👑');
+        
 
         if (data.image) {
+         await m.react('🖼️');
             await conn.sendMessage(m.chat, { 
                 image: { url: data.image }, 
                 caption: data.response?.replace(/\*\*/g, '*') 
             }, { quoted: m });
         } else if (data.response) {
+          await m.react('📚');
             await conn.sendMessage(m.chat, { text: data.response.replace(/\*\*/g, '*') }, { quoted: m });
         }
 
