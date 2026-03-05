@@ -10,7 +10,6 @@ const scrambleGame = {
     async before(m) {
         const txt = (m.text || m.msg?.caption || m.msg?.text || m.message?.conversation || "").trim();
         
-        // FILTROS CRÍTICOS: Evitar procesar comandos, mensajes del bot o mensajes vacíos
         if (!txt || m.isBaileys || m.fromMe || new RegExp('^[#!./]').test(txt)) return false;
 
         global.wordGames = global.wordGames || {};
@@ -26,9 +25,15 @@ const scrambleGame = {
             delete global.wordGames[m.chat];
             return true;
         } else {
-            // Reaccionar con X y dar pista sin textos extra para evitar bucles
+            game.attempts++;
             await m.react("❌");
-            
+
+            if (game.attempts >= 3) {
+                await this.reply(m.chat, `❌ *JUEGO TERMINADO*\n\nSe agotaron los 3 intentos. La palabra era: *${game.original.toUpperCase()}*`, m);
+                delete global.wordGames[m.chat];
+                return true;
+            }
+
             const orig = game.original;
             const mid = Math.floor(orig.length / 2);
             const hints = [
@@ -38,7 +43,7 @@ const scrambleGame = {
             ];
             const randomHint = hints[Math.floor(Math.random() * hints.length)];
             
-            await this.reply(m.chat, `❌ *Incorrecto*\n💡 ${randomHint}`, m);
+            await this.reply(m.chat, `❌ *Incorrecto* (Intento ${game.attempts}/3)\n💡 ${randomHint}`, m);
             return true;
         }
     },
@@ -49,10 +54,11 @@ const scrambleGame = {
         const original = words[Math.floor(Math.random() * words.length)];
         global.wordGames[m.chat] = {
             original,
-            scrambled: shuffle(original)
+            scrambled: shuffle(original),
+            attempts: 0
         };
 
-        return conn.reply(m.chat, `🧩 *ADIVINA LA PALABRA*\n\nOrdena: *${global.wordGames[m.chat].scrambled.toUpperCase()}*\n\n_Escribe la respuesta directamente sin prefijos._`, m);
+        return conn.reply(m.chat, `🧩 *ADIVINA LA PALABRA*\n\nOrdena: *${global.wordGames[m.chat].scrambled.toUpperCase()}*\n\n_Tienes 3 intentos. Escribe la respuesta directamente._`, m);
     }
 };
 
