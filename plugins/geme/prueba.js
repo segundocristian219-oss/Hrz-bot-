@@ -1,47 +1,42 @@
-const words = [
-    "computadora", "relámpago", "mariposa", "escritorio", 
-    "universo", "tallarines", "aventura", "película", "guitarra",
-    "elefante", "diamante", "estrella", "mochila", "planeta"
-];
+const words = ["computadora", "relampago", "mariposa", "escritorio", "universo", "aventura", "guitarra", "planeta"];
 
 const shuffle = (str) => str.split('').sort(() => Math.random() - 0.5).join('');
-const cleanText = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
 const scrambleGame = {
     name: 'adivina',
-    alias: ['acertijo', 'palabra', 'ordenar'],
+    alias: ['palabra'],
     category: 'game',
 
+    // Esta es la parte que "detecta" sin prefijo, igual que tus stickers
     async before(m) {
-        if (!m.text || m.isBaileys) return false;
-        if (!global.wordGames || !global.wordGames[m.chat]) return false;
+        if (!m.text || m.isBaileys || !m.chat) return false;
+        
+        // Usamos el objeto global para que persista entre ejecuciones
+        global.wordGames = global.wordGames || {};
+        if (!global.wordGames[m.chat]) return false;
 
         const game = global.wordGames[m.chat];
-        const userGuess = cleanText(m.text);
-        const correctAnswer = cleanText(game.original);
-
-        if (userGuess === correctAnswer) {
-            await this.reply(m.chat, `🎉 ¡Increíble @${m.sender.split('@')[0]}!\n\nLa palabra era: *${game.original.toUpperCase()}*`, m, { mentions: [m.sender] });
+        if (clean(m.text) === clean(game.original)) {
+            await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} ganaste!\n\nLa palabra era: *${game.original.toUpperCase()}*`, m, { mentions: [m.sender] });
             await m.react("✅");
             delete global.wordGames[m.chat];
-            return true;
+            return true; // Detiene el flujo para que no busque comandos
         }
         return false;
     },
 
     run: async (m, { conn }) => {
         global.wordGames = global.wordGames || {};
-        if (global.wordGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay un juego activo. Palabra: *${global.wordGames[m.chat].scrambled.toUpperCase()}*`, m);
+        if (global.wordGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay un juego: *${global.wordGames[m.chat].scrambled.toUpperCase()}*`, m);
 
-        const selectedWord = words[Math.floor(Math.random() * words.length)];
-        const scrambled = shuffle(selectedWord);
-
+        const original = words[Math.floor(Math.random() * words.length)];
         global.wordGames[m.chat] = {
-            original: selectedWord,
-            scrambled: scrambled
+            original,
+            scrambled: shuffle(original)
         };
 
-        return conn.reply(m.chat, `🧩 *JUEGO DE PALABRAS*\n\nOrdena las letras:\n👉 *${scrambled.toUpperCase()}*\n\n_¡Responde directamente para ganar!_`, m);
+        return conn.reply(m.chat, `🧩 *ADIVINA LA PALABRA*\n\nOrdena: *${global.wordGames[m.chat].scrambled.toUpperCase()}*\n\n_Escribe la respuesta directamente._`, m);
     }
 };
 
