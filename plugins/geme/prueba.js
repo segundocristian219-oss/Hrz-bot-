@@ -9,7 +9,9 @@ const scrambleGame = {
     category: 'game',
     async before(m) {
         const txt = (m.text || m.msg?.caption || m.msg?.text || m.message?.conversation || "").trim();
-        if (!txt || m.isBaileys || !m.chat || new RegExp('^[#!./]').test(txt)) return false;
+        
+        // FILTROS CRÍTICOS: Evitar procesar comandos, mensajes del bot o mensajes vacíos
+        if (!txt || m.isBaileys || m.fromMe || new RegExp('^[#!./]').test(txt)) return false;
 
         global.wordGames = global.wordGames || {};
         if (!global.wordGames[m.chat]) return false;
@@ -19,11 +21,12 @@ const scrambleGame = {
         const correctAnswer = clean(game.original);
 
         if (userGuess === correctAnswer) {
-            await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} ganaste!\n\nLa palabra era: *${game.original.toUpperCase()}*`, m, { mentions: [m.sender] });
             await m.react("✅");
+            await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} ganaste!\n\nLa palabra era: *${game.original.toUpperCase()}*`, m, { mentions: [m.sender] });
             delete global.wordGames[m.chat];
             return true;
         } else {
+            // Reaccionar con X y dar pista sin textos extra para evitar bucles
             await m.react("❌");
             
             const orig = game.original;
@@ -35,7 +38,7 @@ const scrambleGame = {
             ];
             const randomHint = hints[Math.floor(Math.random() * hints.length)];
             
-            await this.reply(m.chat, `Libre de prefijos detectado.\n\n❌ Incorrecto.\n💡 ${randomHint}`, m);
+            await this.reply(m.chat, `❌ *Incorrecto*\n💡 ${randomHint}`, m);
             return true;
         }
     },
