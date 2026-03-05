@@ -1,0 +1,68 @@
+const clean = (str) => str.trim();
+
+const mathGame = {
+    name: 'math',
+    alias: ['mate', 'calculo'],
+    category: 'game',
+    async before(m) {
+        const txt = (m.text || m.msg?.caption || m.msg?.text || m.message?.conversation || "").trim();
+        
+        if (!txt || m.isBaileys || m.fromMe || new RegExp('^[#!./]').test(txt)) return false;
+
+        global.mathGames = global.mathGames || {};
+        if (!global.mathGames[m.chat]) return false;
+
+        const game = global.mathGames[m.chat];
+        
+        if (parseInt(txt) === game.result) {
+            await m.react("✅");
+            await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} eres un genio matemático!\n\nLa respuesta correcta era: *${game.result}*`, m, { mentions: [m.sender] });
+            delete global.mathGames[m.chat];
+            return true;
+        } else {
+            game.attempts++;
+            await m.react("❌");
+
+            if (game.attempts >= 3) {
+                await this.reply(m.chat, `❌ *JUEGO TERMINADO*\n\nSe agotaron los 3 intentos. La respuesta era: *${game.result}*`, m);
+                delete global.mathGames[m.chat];
+                return true;
+            }
+
+            const diff = Math.abs(parseInt(txt) - game.result);
+            const hint = diff < 5 ? "¡Estás muy cerca!" : (parseInt(txt) < game.result ? "Es un número más alto." : "Es un número más bajo.");
+            
+            await this.reply(m.chat, `❌ *Incorrecto* (Intento ${game.attempts}/3)\n💡 ${hint}`, m);
+            return true;
+        }
+    },
+    run: async (m, { conn }) => {
+        global.mathGames = global.mathGames || {};
+        if (global.mathGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una operación pendiente: *${global.mathGames[m.chat].equation}*`, m);
+
+        const operators = ['+', '-', '*'];
+        const op = operators[Math.floor(Math.random() * operators.length)];
+        let num1, num2;
+
+        if (op === '*') {
+            num1 = Math.floor(Math.random() * 12) + 1;
+            num2 = Math.floor(Math.random() * 12) + 1;
+        } else {
+            num1 = Math.floor(Math.random() * 100) + 1;
+            num2 = Math.floor(Math.random() * 100) + 1;
+        }
+
+        const equation = `${num1} ${op} ${num2}`;
+        const result = eval(equation);
+
+        global.mathGames[m.chat] = {
+            equation,
+            result,
+            attempts: 0
+        };
+
+        return conn.reply(m.chat, `🧮 *RETO MATEMÁTICO*\n\nResuelve la siguiente operación:\n\n💡 *${equation}*\n\n_Escribe la respuesta directamente (3 intentos)._`, m);
+    }
+};
+
+export default mathGame;
