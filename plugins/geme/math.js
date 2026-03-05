@@ -23,7 +23,7 @@ const mathGame = {
             game.attempts++;
             await m.react("❌");
 
-            if (game.attempts >= 3) {
+            if (game.attempts >= 2) {
                 await this.reply(m.chat, `❌ *JUEGO TERMINADO*\n\nSe agotaron los 3 intentos. La respuesta era: *${game.result}*`, m);
                 delete global.mathGames[m.chat];
                 return true;
@@ -61,7 +61,7 @@ const mathGame = {
             attempts: 0
         };
 
-        return conn.reply(m.chat, `🧮 *RETO MATEMÁTICO*\n\nResuelve la siguiente operación:\n\n💡 *${equation}*\n\n_Escribe la respuesta directamente (3 intentos)._`, m);
+        return conn.reply(m.chat, `🧮 *RETO MATEMÁTICO*\n\nResuelve la siguiente operación:\n\n💡 *${equation}*\n\n_Escribe la respuesta directamente (2 intentos)._`, m);
     }
 };
 
