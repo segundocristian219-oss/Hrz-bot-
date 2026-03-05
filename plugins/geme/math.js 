@@ -1,3 +1,4 @@
+
 const clean = (str) => str.trim();
 
 const mathGame = {
