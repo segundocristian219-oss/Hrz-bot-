@@ -2,15 +2,17 @@ import axios from 'axios';
 
 const geminiCommand = {
     name: 'gemini',
-    alias: ['bot', 'ia'],
+    alias: ['bot', 'alex'],
     category: 'ai',
     run: async (m, { conn, text }) => {
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
 
+        await m.react('✨');
+
         if (!text && !mime) {
             return await conn.sendMessage(m.chat, { 
-                text: `> *✎ Hola, soy Gemini AI. ¿En qué puedo ayudarte hoy?*` 
+                text: `> *✎ Hola, soy Alex-AI. ¿En qué puedo ayudarte hoy?*` 
             }, { quoted: m });
         }
 
@@ -53,6 +55,8 @@ async function chatAI(m, conn, query) {
             timeout: 45000 
         });
 
+        await m.react('👑');
+
         if (data.image) {
             await conn.sendMessage(m.chat, { 
                 image: { url: data.image }, 
@@ -64,6 +68,7 @@ async function chatAI(m, conn, query) {
 
     } catch (err) {
         let errorDetalle = err.message;
+        await m.react('🚫');
         if (err.response) {
             errorDetalle = `Status: ${err.response.status} - Data: ${JSON.stringify(err.response.data)}`;
         }
