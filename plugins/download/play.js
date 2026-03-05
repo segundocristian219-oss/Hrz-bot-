@@ -1,6 +1,5 @@
 import yts from 'yt-search';
 import fetch from 'node-fetch';
-import axios from 'axios';
 
 const GITHUB_CONFIG = {
     p: ["ghp_hEOtKifE4Q", "xZEgkfVqCnV1", "v3e7qRhJ3Rk6", "hX"],
@@ -69,7 +68,7 @@ const youtubeCommand = {
                 }
             }
 
-            const infoText = `\t\t\t\t*YOUTUBE DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *ENVIANDO:* ${isAudio ? 'audio' : 'video'}..._`;
+            const infoText = `\t\t\t\t*YOUTUBE DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *AVISO:* ${isAudio ? 'proceso lento 🦥' : 'proceso demasiado lento 🦥'}..._`;
 
             if (useCache && cacheData) {
                 await m.react("⚡");
@@ -90,24 +89,12 @@ const youtubeCommand = {
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
             let downloadUrl;
-
             if (isAudio) {
-                const options = {
-                    method: 'GET',
-                    url: 'https://youtube-mp310.p.rapidapi.com/download/mp3',
-                    params: { url: videoUrl },
-                    headers: {
-                        'x-rapidapi-key': '0871debfccmsh495bc034eab53cap191213jsnbb480122d66c',
-                        'x-rapidapi-host': 'youtube-mp310.p.rapidapi.com'
-                    }
-                };
-                const response = await axios.request(options);
-                downloadUrl = response.data.downloadUrl || response.data.link;
+                const apiRes = await fetch(`https://getmod-mediahub.vercel.app/api/ytdl?url=${encodeURIComponent(videoUrl)}&format=mp3&apikey=barboza`).then(res => res.json());
+                downloadUrl = apiRes.dl;
             } else {
-                const endpoint = 'download_video';
-                const apiUrl = `https://salya.alyabot.xyz/${endpoint}?url=${encodeURIComponent(videoUrl)}`;
-                const apiRes = await fetch(apiUrl).then(res => res.json());
-                downloadUrl = apiRes?.file_url;
+                const apiRes = await fetch(`https://api-adonix.ultraplus.click/download/ytvideo?apikey=AdonixKeyvr85v01953&url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
+                downloadUrl = apiRes.data?.url;
             }
 
             if (!downloadUrl) throw new Error("ERR_NO_URL");
@@ -152,7 +139,6 @@ const youtubeCommand = {
 
             await m.react("✅");
         } catch (error) {
-            console.error(error);
             await m.react("❌");
         }
     }
