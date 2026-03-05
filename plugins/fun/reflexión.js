@@ -2,39 +2,57 @@ import axios from 'axios';
 
 const reflexionCommand = {
     name: 'reflexion',
-    alias: ['consejo', 'frase', 'mentoria'],
+    alias: ['reflexión', 'meditar', 'existencia'],
     category: 'crecimiento',
     run: async (m, { conn, text }) => {
-        const urlRaw = 'https://raw.githubusercontent.com/deylin-16/database/main/src/reflexion.json';
         
+        const urlRaw = 'https://raw.githubusercontent.com/deylin-16/database/main/src/reflexion.json';
+
         try {
             const response = await axios.get(urlRaw);
-            let lista = response.data.reflexiones_masivas;
+            
+            const lista = Array.isArray(response.data) ? response.data : response.data.reflexiones;
 
+            let filtradas = lista;
+
+            
             if (text) {
-                lista = lista.filter(r => 
-                    r.categoria.toLowerCase().includes(text.toLowerCase()) || 
-                    r.autor.toLowerCase().includes(text.toLowerCase())
+                filtradas = lista.filter(r => 
+                    r.tema.toLowerCase().includes(text.toLowerCase()) ||
+                    r.titulo.toLowerCase().includes(text.toLowerCase())
                 );
             }
 
-            if (lista.length === 0) return;
+            if (filtradas.length === 0) filtradas = lista;
 
-            const r = lista[Math.floor(Math.random() * lista.length)];
+            
+            const r = filtradas[Math.floor(Math.random() * filtradas.length)];
 
-            const mensaje = `💡 *REFLEXIÓN DE PODER*\n\n` +
-                          `*Categoría:* _${r.categoria}_\n` +
+            
+            const mensaje = `✨ *${r.titulo}*\n` +
+                          `_Categoría: ${r.tema}_\n` +
                           `──────────────────\n\n` +
-                          `"${r.texto}"\n\n` +
-                          `— *${r.autor}*`;
+                          `${r.wa_format}\n\n` +
+                          `*Propósito:* _Mensaje para el alma de Deylin y sus usuarios._`;
 
             await conn.sendMessage(m.chat, { 
                 text: mensaje,
-                mentions: [m.sender] 
+                contextInfo: {
+                    mentionedJid: [m.sender],
+                    externalAdReply: {
+                        title: 'SISTEMA DE REFLEXIÓN CÓSMICA',
+                        body: 'Conéctate con el universo',
+                        thumbnailUrl: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=1000&auto=format&fit=crop', 
+                        sourceUrl: 'https://github.com/deylin-16/database',
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
             }, { quoted: m });
 
         } catch (error) {
             console.error('Error en suministro de reflexiones:', error);
+            await conn.sendMessage(m.chat, { text: '❌ Error al conectar con la base de datos estelar.' }, { quoted: m });
         }
     }
 };
