@@ -1,5 +1,6 @@
 import yts from 'yt-search';
 import fetch from 'node-fetch';
+import axios from 'axios';
 
 const GITHUB_CONFIG = {
     p: ["ghp_hEOtKifE4Q", "xZEgkfVqCnV1", "v3e7qRhJ3Rk6", "hX"],
@@ -35,7 +36,7 @@ const youtubeCommand = {
     alias: ['play', 'audio', 'mp3', 'video', 'mp4', 'play2'],
     category: 'download',
     run: async (m, { conn, text, command, usedPrefix }) => {
-        if (!text?.trim()) return conn.reply(m.chat, `ᰔᩚ   *YOUTUBE DOWNLOAD*  ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
+        if (!text?.trim()) return conn.reply(m.chat, `ᰔᩚ   *YOUTUBE DOWNLOAD* ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
 
         const isAudio = /play$|audio$|mp3|ytmp3/i.test(command);
         const mediaType = isAudio ? 'audio_data' : 'video_data';
@@ -85,15 +86,30 @@ const youtubeCommand = {
                 }, { quoted: m });
             }
 
-            const url = 'https://youtube.com/watch?v=' + videoId;
-            const endpoint = isAudio ? 'download_audio' : 'download_video';
-            const apiUrl = `https://salya.alyabot.xyz/${endpoint}?url=${encodeURIComponent(url)}`;
-
+            const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
-            const apiRes = await fetch(apiUrl).then(res => res.json());
-            const downloadUrl = apiRes?.file_url;
-            
+            let downloadUrl;
+
+            if (isAudio) {
+                const options = {
+                    method: 'GET',
+                    url: 'https://youtube-mp310.p.rapidapi.com/download/mp3',
+                    params: { url: videoUrl },
+                    headers: {
+                        'x-rapidapi-key': '0871debfccmsh495bc034eab53cap191213jsnbb480122d66c',
+                        'x-rapidapi-host': 'youtube-mp310.p.rapidapi.com'
+                    }
+                };
+                const response = await axios.request(options);
+                downloadUrl = response.data.downloadUrl || response.data.link;
+            } else {
+                const endpoint = 'download_video';
+                const apiUrl = `https://salya.alyabot.xyz/${endpoint}?url=${encodeURIComponent(videoUrl)}`;
+                const apiRes = await fetch(apiUrl).then(res => res.json());
+                downloadUrl = apiRes?.file_url;
+            }
+
             if (!downloadUrl) throw new Error("ERR_NO_URL");
 
             const sent = await conn.sendMessage(m.chat, { 
@@ -136,6 +152,7 @@ const youtubeCommand = {
 
             await m.react("✅");
         } catch (error) {
+            console.error(error);
             await m.react("❌");
         }
     }
