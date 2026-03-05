@@ -70,8 +70,7 @@ const menuCommand = {
                         { cmd: '.tesoro/.mapa', desc: 'Encuentra el tesoro oculto.' },
                         { cmd: '.mate/.math', desc: 'Resuelve una suma matemática.' },
                         { cmd: '.tresenraya/.x0', desc: 'Juega tresenraya con tu amigo.' },
-                        { cmd: '.letras', desc: 'Consejos aleatorios.' },
-                        { cmd: '.meme', desc: 'Envía un meme aleatorio para reír.' }
+                        { cmd: '.palabra', desc: 'Adivina la palabra.' }
                     ]
                 },
                 {
