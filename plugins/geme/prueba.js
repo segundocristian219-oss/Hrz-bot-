@@ -1,4 +1,4 @@
-const words = ["computadora", "relampago", "mariposa", "escritorio", "universo", "aventura", "guitarra", "planeta"];
+const words = ["computadora", "relampago", "mariposa", "escritorio", "universo", "aventura", "guitarra", "planeta", "perro", "gato", "hierro", "sapo", "oro", "tecnología"];
 
 const shuffle = (str) => str.split('').sort(() => Math.random() - 0.5).join('');
 const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
