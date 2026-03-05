@@ -33,7 +33,7 @@ const reflexionCommand = {
                           `_Categoría: ${r.tema}_\n` +
                           `──────────────────\n\n` +
                           `${r.wa_format}\n\n` +
-                          `*Propósito:* _Mensaje para el alma de Deylin y sus usuarios._`;
+                          `*Propósito:* _Apoyo emocional digital._`;
 
             await conn.sendMessage(m.chat, { 
                 text: mensaje,
