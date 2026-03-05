@@ -9,19 +9,35 @@ const scrambleGame = {
     category: 'game',
     async before(m) {
         const txt = (m.text || m.msg?.caption || m.msg?.text || m.message?.conversation || "").trim();
-        if (!txt || m.isBaileys || !m.chat) return false;
+        if (!txt || m.isBaileys || !m.chat || new RegExp('^[#!./]').test(txt)) return false;
 
         global.wordGames = global.wordGames || {};
         if (!global.wordGames[m.chat]) return false;
 
         const game = global.wordGames[m.chat];
-        if (clean(txt) === clean(game.original)) {
+        const userGuess = clean(txt);
+        const correctAnswer = clean(game.original);
+
+        if (userGuess === correctAnswer) {
             await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} ganaste!\n\nLa palabra era: *${game.original.toUpperCase()}*`, m, { mentions: [m.sender] });
             await m.react("✅");
             delete global.wordGames[m.chat];
             return true;
+        } else {
+            await m.react("❌");
+            
+            const orig = game.original;
+            const mid = Math.floor(orig.length / 2);
+            const hints = [
+                `Pista: Inicia con *${orig[0]}* y termina con *${orig[orig.length - 1]}*`,
+                `Pista: La letra media es *${orig[mid]}* y termina con *${orig[orig.length - 1]}*`,
+                `Pista: Inicia con *${orig[0]}* y la letra media es *${orig[mid]}*`
+            ];
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            
+            await this.reply(m.chat, `Libre de prefijos detectado.\n\n❌ Incorrecto.\n💡 ${randomHint}`, m);
+            return true;
         }
-        return false;
     },
     run: async (m, { conn }) => {
         global.wordGames = global.wordGames || {};
