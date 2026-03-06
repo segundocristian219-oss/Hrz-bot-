@@ -16,7 +16,7 @@ const chatgptCommand = {
             if (!data.response) throw new Error();
 
             await m.react('✅');
-            await conn.sendMessage(m.chat, { text: data.response }, { quoted: m });
+            await conn.sendMessage(m.chat, { text: data.content }, { quoted: m });
 
         } catch (e) {
             await m.react('❌');
