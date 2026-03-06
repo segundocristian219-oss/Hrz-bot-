@@ -9,7 +9,7 @@ const imagekit = new ImageKit({
 
 const uploadCommand = {
     name: 'upload',
-    alias: ['tourl', 'ik', 'tourl'],
+    alias: ['tourl', 'ik'],
     category: 'tools',
     run: async (m, { conn, command }) => {
         let q = m.quoted ? m.quoted : m
@@ -18,28 +18,38 @@ const uploadCommand = {
 
         await m.react('🕒')
 
-        let media = await q.download()
-        let fileName = `${Date.now()}.${mime.split('/')[1]}`
+        try {
+            let media = await q.download()
+            let fileName = `${Date.now()}.${mime.split('/')[1]}`
 
-        imagekit.upload({
-            file: media,
-            fileName: fileName,
-            folder: `/bot_by_voker`
-        }, async (err, result) => {
-            if (err) {
-                await m.react('❌')
-                return m.reply('*LOG:* ' + err.message)
-            }
+            imagekit.upload({
+                file: media,
+                fileName: fileName,
+                folder: `/bot_by_voker`
+            }, async (err, result) => {
+                if (err) {
+                    await m.react('❌')
+                    return m.reply('*LOG:* ' + err.message)
+                }
 
-            let txt = `*── 「 UPLOAD SUCCESS 」 ──*\n\n`
-            txt += `▢ *ID:* ${result.fileId}\n`
-            txt += `▢ *NAME:* ${result.name}\n`
-            txt += `▢ *URL:* ${result.url}\n`
-            txt += `▢ *TYPE:* ${result.fileType}\n\n`
+                const miDominio = "https://api.dix.lat"
+                const rutaLimpia = result.url.replace("https://ik.imagekit.io/pm10ywrf6f", "")
+                const finalUrl = `${miDominio}/media${rutaLimpia}`
 
-            await conn.sendMessage(m.chat, { text: txt }, { quoted: m })
-            await m.react('✅')
-        })
+                let txt = `*── 「 VOKER DRIVE 」 ──*\n\n`
+                txt += `▢ *ID:* ${result.fileId}\n`
+                txt += `▢ *NAME:* ${result.name}\n`
+                txt += `▢ *URL:* ${finalUrl}\n`
+                txt += `▢ *TIPO:* ${result.fileType}\n\n`
+                txt += `> *Powered by Voker Systems*`
+
+                await conn.sendMessage(m.chat, { text: txt }, { quoted: m })
+                await m.react('✅')
+            })
+        } catch (e) {
+            await m.react('❌')
+            m.reply("*ERROR:* No se pudo procesar el archivo.")
+        }
     }
 }
 
