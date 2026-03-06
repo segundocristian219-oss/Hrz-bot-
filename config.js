@@ -42,7 +42,7 @@ const conf = {
     moment
   },
   api: {
-    url: 'https://api.deylin.xyz',
+    url: 'https://api.dix.lat',
     key: 'dk_ofical_user'
   },
   sessions: {
