@@ -9,7 +9,7 @@ const chatgptCommand = {
         
         await m.react('⏳');
         try {
-            const url = `${global.url_api}/api/ai/text/chatgpt?q=${encodeURIComponent(text)}&apikey=by_deylin`;
+            const url = `${global.url_api}/api/ai/text/chatgpt?q=${encodeURIComponent(text)}&apikey=dix.lat`;
             const res = await fetch(url);
             const data = await res.json();
 
