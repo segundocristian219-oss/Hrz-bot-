@@ -33,8 +33,7 @@ const uploadCommand = {
                 }
 
                 const miDominio = "https://api.dix.lat"
-                const rutaLimpia = result.url.replace("https://ik.imagekit.io/pm10ywrf6f", "")
-                const finalUrl = `${miDominio}/media${rutaLimpia}`
+                const finalUrl = `${miDominio}/media/${result.name}`
 
                 let txt = `*── 「 VOKER DRIVE 」 ──*\n\n`
                 txt += `▢ *ID:* ${result.fileId}\n`
