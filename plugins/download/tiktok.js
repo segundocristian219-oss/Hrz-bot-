@@ -10,13 +10,12 @@ const tiktok = {
         try {
             await m.react("⏳")
 
-            const apikey = "dk_ofical_user"
             const res = await fetch(`${url_api}/tiktok?url=${encodeURIComponent(args[0])}&apikey=${apikey}`)
             const data = await res.json()
 
             if (!data.success) throw new Error("API_ERROR")
 
-            // Extraemos los datos directamente del nivel principal de 'data'
+            
             const { 
                 title, play, duration, music_info, author,
                 play_count, digg_count, comment_count, share_count 
