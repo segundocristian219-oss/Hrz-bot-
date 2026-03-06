@@ -36,8 +36,7 @@ const tomp3Command = {
 
                 await conn.sendMessage(m.chat, { 
                     audio: audioBuffer, 
-                    mimetype: 'audio/mp4', 
-                    ptt: false 
+                    mimetype: 'audio/mp4'
                 }, { quoted: m });
 
                 await m.react('✅');
