@@ -10,7 +10,7 @@ const pinterestCommand = {
         try {
             await m.react('🕒');
 
-            const { data: res } = await axios.get(`${global.url_api}/api/search/pin?q=${encodeURIComponent(text)}&apikey=${global.key}`);
+            const { data: res } = await axios.get(`${global.url_api}/pin?q=${encodeURIComponent(text)}&apikey=${global.key}`);
 
             if (!res.success || !res.results || res.results.length === 0) {
                 await m.react('❌');
