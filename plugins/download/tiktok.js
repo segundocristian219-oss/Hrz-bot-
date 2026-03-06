@@ -11,7 +11,7 @@ const tiktok = {
             await m.react("⏳")
 
             const apikey = "dk_ofical_user"
-            const res = await fetch(`https://api.deylin.xyz/api/download/tiktok?url=${encodeURIComponent(args[0])}&apikey=${apikey}`)
+            const res = await fetch(`${url_api}/tiktok?url=${encodeURIComponent(args[0])}&apikey=${apikey}`)
             const data = await res.json()
 
             if (!data.success) throw new Error("API_ERROR")
