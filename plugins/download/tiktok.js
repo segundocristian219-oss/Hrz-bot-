@@ -10,7 +10,7 @@ const tiktok = {
         try {
             await m.react("⏳")
 
-            const res = await fetch(`${url_api}/tiktok?url=${encodeURIComponent(args[0])}&apikey=${apikey}`)
+            const res = await fetch(`${url_api}/tiktok?url=${encodeURIComponent(args[0])}&apikey=${key}`)
             const data = await res.json()
 
             if (!data.success) throw new Error("API_ERROR")
