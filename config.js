@@ -43,7 +43,7 @@ const conf = {
   },
   api: {
     url: 'https://api.dix.lat',
-    key: 'dk_ofical_user'
+    key: 'VOKER_FREE_2026'
   },
   sessions: {
     main: 'sessions',
