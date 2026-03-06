@@ -9,7 +9,7 @@ const memesCommand = {
             
             m.react('🕒');
 
-            const { data: res } = await axios.get(`https://Api.deylin.xyz/api/search/memes?apikey=by_deylin`);
+            const { data: res } = await axios.get(`https://Api.deylin.xyz/api/search/memes?apikey=voker`);
 
             if (!res?.success || !res.memes?.length) {
                 m.react('❌');
