@@ -10,7 +10,7 @@ const animeCommand = {
             const caption = options.text || options.caption || ""
             const delayTime = !isNaN(options.delay) ? options.delay : 500
 
-            // Se usa conn.generateWAMessageFromContent inyectado
+            
             const album = conn.generateWAMessageFromContent(
                 jid,
                 {
@@ -53,7 +53,7 @@ const animeCommand = {
         }
 
         try {
-            const res = await fetch(`https://api.deylin.xyz/api/search/anime?apikey=400klob`)
+            const res = await fetch(`${url_api}/api/search/anime?apikey=400klob`)
             const json = await res.json()
 
             if (!json.status || !json.images || !Array.isArray(json.images)) throw new Error()
