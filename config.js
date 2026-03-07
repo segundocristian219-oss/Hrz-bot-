@@ -8,7 +8,7 @@ import axios from 'axios'
 import moment from 'moment-timezone'
 import path from 'path'
 
-global.owner = [['50432955554', 'Eliac', true], ['50432569059']]
+global.owner = [['50432955554'], ['50432569059']]
 
 global.botNames = [
   'ɢᴜɪʟᴛʏ ᴄʀᴏᴡɴ — ᴠx',      
@@ -27,11 +27,6 @@ global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482544
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482552940_ff92f9e59231e37dff39c36b9c3e84dd_i-O-zUzR3H.jpg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482554714_b23011009fb8df483b52a257f0c414a8_oXi_9P1Qq.jpg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482556697_b7337a5a637b1e0865937d2dc3ca40ac_P39z6eYIA.jpg' ]
-
-global.api_endpoints = {
-    a: "aHR0cHM6Ly9zYWx5YS5hbHlhYm90Lnh5ei9kb3dubG9hZF9hdWRpbz91cmw9",
-    v: ""
-};
 
 const conf = {
   utils: {
@@ -88,8 +83,16 @@ const d = new Date(new Date().getTime() + 3600000)
 global.fecha = d.toLocaleDateString('es', { day: 'numeric', month: 'numeric', year: 'numeric' })
 global.tiempo = d.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
 
-const hour = new Date().getHours()
-global.saludo = hour < 12 ? 'Lɪɴᴅᴀ Mᴀɴ̃ᴀɴᴀ 🌅' : hour < 18 ? 'Lɪɴᴅᴀ T Tᴀʀᴅᴇ 🌆' : 'Lɪɴᴅᴀ Nᴏᴄʜᴇ 🌃'
+const hour = new Intl.DateTimeFormat('es-HN', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: 'America/Tegucigalpa'
+}).format(new Date());
+
+global.saludo = hour >= 6 && hour < 12 ? 'Lɪɴᴅᴀ Mᴀɴ̃ᴀɴᴀ 🌅' : 
+                 hour >= 12 && hour < 19 ? 'Lɪɴᴅᴀ Tᴀʀᴅᴇ 🌆' : 
+                 'Lɪɴᴅᴀ Nᴏᴄʜᴇ 🌃';
+
 
 let file = fileURLToPath(import.meta.url)
 watchFile(file, () => {
