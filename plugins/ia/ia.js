@@ -50,7 +50,7 @@ async function chatAI(m, conn, query) {
     }
 
     try {
-        const { data } = await axios.post(`${url_api}/ai`, body, {
+        const { data } = await axios.post(`${url_api}/ia`, body, {
             headers: { 'Content-Type': 'application/json' },
             timeout: 45000 
         });
