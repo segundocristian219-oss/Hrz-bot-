@@ -5,90 +5,75 @@ const reportSystem = {
     alias: ['report', 'bug', 'idea', 'responder', 'reply', 'r'],
     category: 'main',
     run: async (m, { conn, text, usedPrefix, command }) => {
-        const owners = global.owner.map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
-        const isOwner = owners.includes(m.sender);
+        const owners = (global.owner || []).map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+        const isOwner = owners.includes(m.sender.split(':')[0] + '@s.whatsapp.net') || m.fromMe;
 
         if (['responder', 'reply', 'r'].includes(command)) {
             if (!isOwner) return;
-            if (!m.quoted) return m.reply('⚠ Error: Etiqueta el mensaje del reporte para responder.');
+            if (!m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEtiqueta el reporte para responder.');
 
             const quotedContent = m.quoted.text || m.quoted.caption || '';
             if (!quotedContent.includes('⬡ NUEVO REPORTE RECIBIDO')) {
-                return m.reply('⚠ Error: El mensaje etiquetado no es un reporte valido.');
+                return m.reply('⚠ ERROR\n\nEl mensaje no es un reporte.');
             }
 
             try {
                 const userJid = quotedContent.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
                 const chatId = quotedContent.split('⌬ Chat ID: ')[1]?.split('\n')[0];
 
-                if (!userJid || !chatId) return m.reply('⚠ Error: Datos del reporte ilegibles.');
+                if (!userJid || !chatId) return m.reply('⚠ ERROR\n\nDatos ilegibles.');
 
                 let q = m;
                 let mime = (q.msg || q).mimetype || '';
                 let isGroup = chatId.endsWith('@g.us');
-                let content = { mentions: isGroup ? [userJid] : [] };
+                let content = { mentions: [userJid] };
                 
                 const header = '⌬ RESPUESTA DEL DESARROLLADOR\n\n';
                 const body = text || '';
 
-                if (/image|video|audio/.test(mime)) {
-                    const media = await q.download();
-                    if (/image/.test(mime)) content.image = media;
-                    else if (/video/.test(mime)) content.video = media;
-                    else if (/audio/.test(mime)) {
-                        content.audio = media;
-                        content.mimetype = 'audio/mp4';
-                        content.ptt = true;
-                    }
+                if (/image/.test(mime)) {
+                    content.image = await q.download();
                     content.caption = header + body;
+                } else if (/video/.test(mime)) {
+                    content.video = await q.download();
+                    content.caption = header + body;
+                } else if (/audio/.test(mime)) {
+                    content.audio = await q.download();
+                    content.mimetype = 'audio/mp4';
+                    content.ptt = true;
                 } else {
-                    if (!text) return m.reply('⚠ Error: Escribe un mensaje para responder.');
+                    if (!text) return m.reply('⚠ ERROR\n\nEscribe un mensaje.');
                     content.text = header + body;
                 }
 
                 await conn.sendMessage(chatId, content);
-                return await m.reply('✓ Respuesta enviada con exito.');
-
+                return await m.reply('✓ Enviado.');
             } catch (e) {
-                return m.reply('☒ Error al procesar el envio.');
+                return m.reply('☒ Error: ' + e.message);
             }
         }
 
-        if (!text) {
-            return m.reply('⚠ USO INCORRECTO\n\nEscriba el reporte o idea despues del comando.\n\nEjemplo: ' + usedPrefix + command + ' el bot no responde');
-        }
+        if (!text) return m.reply('⚠ USO INCORRECTO\n\nEscribe el reporte despues del comando.');
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
         
         let reportMsg = '⬡ NUEVO REPORTE RECIBIDO\n\n' +
-                        '⊛ Usuario: @' + m.sender.split('@')[0] + '\n' +
+                        '⊛ Usuario: @' + m.sender.split('@')[0].split(':')[0] + '\n' +
                         '⊛ Tipo: ' + command.toUpperCase() + '\n' +
                         '⊛ Mensaje: ' + text + '\n\n' +
                         '⌬ Chat ID: ' + m.chat;
 
         try {
-            let media = null;
-            if (mime && /image|video/.test(mime)) {
-                media = await q.download();
-            }
-
+            let media = (mime && /image|video/.test(mime)) ? await q.download() : null;
             for (const jid of owners) {
-                // Validación para evitar envío a JIDs vacíos o mal formados
-                if (!jid || jid.length < 10) continue; 
-
-                if (media) {
-                    await conn.sendMessage(jid, { image: media, caption: reportMsg, mentions: [m.sender] });
-                } else {
-                    await conn.sendMessage(jid, { text: reportMsg, mentions: [m.sender] });
-                }
+                const opt = { mentions: [m.sender] };
+                if (media) await conn.sendMessage(jid, { image: media, caption: reportMsg, ...opt });
+                else await conn.sendMessage(jid, { text: reportMsg, ...opt });
             }
-
-            await m.reply('✓ Reporte enviado con exito.');
-
+            await m.reply('✓ Reporte enviado.');
         } catch (err) {
-            console.error(err);
-            await m.reply('☒ Error al procesar el reporte en privado.');
+            await m.reply('☒ Error interno.');
         }
     }
 };
