@@ -27,16 +27,11 @@ const reportCommand = {
             }
 
             for (const jid of owners) {
-                const sendOptions = {
-                    mentions: [m.sender],
-                    caption: media ? reportMsg : undefined,
-                    text: media ? undefined : reportMsg
-                };
-
+                const sendOptions = { mentions: [m.sender] };
                 if (media) {
-                    await conn.sendMessage(jid, { image: media, ...sendOptions });
+                    await conn.sendMessage(jid, { image: media, caption: reportMsg, ...sendOptions });
                 } else {
-                    await conn.sendMessage(jid, sendOptions);
+                    await conn.sendMessage(jid, { text: reportMsg, ...sendOptions });
                 }
             }
 
@@ -44,6 +39,46 @@ const reportCommand = {
 
         } catch (err) {
             await m.reply('☒ Error interno al procesar el reporte.');
+        }
+    },
+
+    all: async function (m, { conn }) {
+        const owners = global.owner.map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+        if (!owners.includes(m.sender) || !m.quoted || !m.quoted.text) return;
+
+        const quotedText = m.quoted.text;
+        if (!quotedText.includes('⬡ NUEVO REPORTE RECIBIDO')) return;
+
+        try {
+            const userJid = quotedText.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
+            const chatId = quotedText.split('⌬ Chat ID: ')[1]?.split('\n')[0];
+
+            if (!userJid || !chatId) return;
+
+            let q = m;
+            let mime = (q.msg || q).mimetype || '';
+            let content = { mentions: [userJid] };
+            let isGroup = chatId.endsWith('@g.us');
+
+            const replyText = m.text ? '⌬ RESPUESTA DEL DESARROLLADOR\n\n' + m.text : '⌬ RESPUESTA DEL DESARROLLADOR';
+
+            if (/image/.test(mime)) content.image = await q.download();
+            else if (/video/.test(mime)) content.video = await q.download();
+            else if (/audio/.test(mime)) {
+                content.audio = await q.download();
+                content.mimetype = 'audio/mp4';
+                content.ptt = true;
+            }
+
+            if (content.image || content.video) content.caption = replyText;
+            else if (!content.audio) content.text = replyText;
+
+            await conn.sendMessage(chatId, content);
+            await m.reply('✓ Respuesta enviada correctamente.');
+
+        } catch (e) {
+            console.error(e);
+            await m.reply('☒ Error al reenviar la respuesta.');
         }
     }
 };
