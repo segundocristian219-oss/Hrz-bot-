@@ -273,17 +273,19 @@ global.conn.ev.on('connection.update', async (update) => {
 
 
 
-    if (connection === 'close') {
+       if (connection === 'close') {
         await monitorBot(conn, 'offline');
         if (reason === DisconnectReason.loggedOut) process.exit(1);
         if (global.conn) {
             global.conn.ev.removeAllListeners();
-            try { global.conn.ws.close(); } catch {}
+            try { 
+                global.conn.ws.terminate(); 
+            } catch {}
         }
         let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
         setTimeout(() => global.reload(true), delay);
     }
-  });
+
 
   global.conn.ev.on('creds.update', saveCreds);
 
