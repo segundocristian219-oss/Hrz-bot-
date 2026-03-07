@@ -185,20 +185,20 @@ const menuCommand = {
             menuText += `> © Powered by VOKER Platform.`;
 
 await conn.sendMessage(m.chat, { 
-    text: menuText,
+    text: menuText, 
     contextInfo: {
         mentionedJid: [m.sender],
-        externalAdReply: {
+        linkPreview: {
             title: nameBot,
-            body: 'Sistema Operativo', 
-            thumbnail: await (await fetch(global.img())).buffer(), 
-            sourceUrl: 'https://www.google.com', 
-            mediaType: 1,
-            showAdAttribution: true,
-            renderLargerThumbnail: true
-        }
+            body: 'Sistema Operativo',
+            thumbnail: await (await fetch(global.img())).buffer(),
+            sourceUrl: 'https://www.google.com' 
+        },
+        forwardingScore: 0,
+        isForwarded: false
     }
 }, { quoted: m });
+
 
 
 
