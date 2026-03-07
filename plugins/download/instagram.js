@@ -33,7 +33,7 @@ const instagram = {
             if (m.react) await m.react("✅")
         } catch (e) {
             console.error(e)
-            m.reply(`⍰ Error al procesar Instagram.`)
+            m.reply(`⍰ Error al procesar Instagram.\n\nUsa el comando *#report* para reportar esté error.`)
         }
     }
 }
