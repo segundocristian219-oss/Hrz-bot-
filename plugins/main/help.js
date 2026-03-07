@@ -202,7 +202,7 @@ const url = 'https://dix.lat/channel';
                     body: "ESTRUCTURA DE VIDEO",
                     mediaType: 1,
                     renderLargerThumbnail: true,
-                    thumbnailUrl: img(),
+                    thumbnail: imgBuffer,
                     sourceUrl: url,
                     mediaUrl: url
                   }
