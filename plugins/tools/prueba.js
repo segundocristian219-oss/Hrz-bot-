@@ -1,48 +1,70 @@
 import axios from 'axios';
 
-const testViewPlugin = {
-    name: 'testview',
-    alias: ['pv', 'previewtest'],
+const testPreviewsPlugin = {
+    name: 'test-previews',
+    alias: ['tpv', 'fulltest'],
     category: 'tools',
-    admin: false, // Lo dejamos abierto para que puedas probarlo tú mismo
-    group: false,
-    run: async (m, { conn, text }) => {
-        // 1. Definimos una URL de imagen random para la vista previa
-        const imageUrl = "https://picsum.photos/800/600";
+    run: async (m, { conn }) => {
+        const targetUrl = "https://github.com/DeylinQ/";
+        const thumbUrl = "https://picsum.photos/800/600"; // Imagen random
         
-        // 2. Obtenemos el buffer de la imagen (necesario para el thumbnail)
-        const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        // Obtenemos el buffer una sola vez para eficiencia
+        const response = await axios.get(thumbUrl, { responseType: 'arraybuffer' });
         const buffer = Buffer.from(response.data);
 
-        // 3. Estructura exacta que solicitaste replicar
-        const msg = {
-            extendedTextMessage: {
-                text: `❀ *MENSAJE DE PRUEBA*\n\t✰ @${m.sender.split('@')[0]}\n\nEste es un test de diseño para tu nuevo sistema de automatización.\n\n> ✐ Estado: *Operativo*\n> 🜸 https://github.com/DeylinQ/`,
-                matchedText: "https://github.com/DeylinQ/",
-                description: "Deylin | Automation & Web Scrapping",
-                title: "System Test | Preview Design",
-                previewType: "NONE",
-                jpegThumbnail: buffer, // El buffer de la imagen random
-                contextInfo: {
-                    mentionedJid: [m.sender],
-                    forwardingScore: 1,
-                    isForwarded: true,
-                    // externalAdReply es lo que genera la tarjeta visual en la mayoría de versiones de WA
-                    externalAdReply: {
-                        title: "System Test | Preview Design",
-                        body: "Made with ❤️ by Deylin",
-                        mediaType: 1,
-                        thumbnail: buffer,
-                        sourceUrl: "https://github.com/DeylinQ/",
-                        renderLargerThumbnail: false // Cambiar a true si quieres que la imagen se vea grande
-                    }
+        // --- VARIANTE 1: MINIATURA ESTÁNDAR (ESTILO NEKO'S) ---
+        // Es la más limpia, la imagen aparece pequeña a la derecha.
+        await conn.sendMessage(m.chat, {
+            text: `*Variante 1: Estilo Neko's*\nEsta versión usa la miniatura clásica lateral.\n\nLink: ${targetUrl}`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "Deylin | Automation System",
+                    body: "Haz clic para ir al repositorio",
+                    previewType: "PHOTO",
+                    thumbnail: buffer,
+                    sourceUrl: targetUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: false // Miniatura pequeña
                 }
             }
-        };
+        }, { quoted: m });
 
-        // 4. Enviamos usando relayMessage para respetar la estructura cruda del JSON detectado
-        return conn.relayMessage(m.chat, msg, { quoted: m });
+        // --- VARIANTE 2: MINIATURA GRANDE (FULL CARD) ---
+        // Ideal para captar atención, la imagen ocupa todo el ancho.
+        await conn.sendMessage(m.chat, {
+            text: `*Variante 2: Formato Grande*\nIdeal para catálogos o anuncios visuales.\n\nLink: ${targetUrl}`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "SISTEMA ACTUALIZADO v2.0",
+                    body: "Estructura Minimalista Detectada",
+                    previewType: "PHOTO",
+                    thumbnail: buffer,
+                    sourceUrl: targetUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: true // Imagen grande
+                }
+            }
+        }, { quoted: m });
+
+        // --- VARIANTE 3: MODO "FORWARD" CON MENCIONES ---
+        // Réplica exacta de lo que pediste: reenviado + mención + link.
+        await conn.sendMessage(m.chat, {
+            text: `❀ *BIENVENIDO* ✰ @${m.sender.split('@')[0]}\n\n> Esta es la réplica exacta con forwarding activado.\n\n${targetUrl}`,
+            contextInfo: {
+                mentionedJid: [m.sender],
+                forwardingScore: 999,
+                isForwarded: true,
+                externalAdReply: {
+                    title: "Neko's Club Replica",
+                    body: "Héctor, Made with ❤️",
+                    mediaType: 1,
+                    thumbnail: buffer,
+                    sourceUrl: targetUrl,
+                    renderLargerThumbnail: false
+                }
+            }
+        }, { quoted: m });
     }
 };
 
-export default testViewPlugin;
+export default testPreviewsPlugin;
