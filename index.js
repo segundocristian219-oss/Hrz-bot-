@@ -213,21 +213,41 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
 
-    if (connection === 'open') {
+        if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
+
+        const ownerJid = global.owner[0][0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        const botName = 'APOCALYPSE VX';
+        const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
+
+        const statusMsg = `╔══『 *ESTADO DEL SISTEMA* 』══╗\n` +
+                          `║ • *Dispositivo:* Vinculado ✅\n` +
+                          `║ • *Bot:* ${botName}\n` +
+                          `║ • *Estado:* Cuenta Bot Activa\n` +
+                          `║ • *Inicio:* ${timeNow}\n` +
+                          `╚══════════════════════╝\n` +
+                          `> © Powered by VOKER Platform.`;
+
+        try {
+            await conn.sendMessage(ownerJid, { text: statusMsg });
+        } catch (e) {
+            console.log(chalk.red('Error al notificar inicio:'), e);
+        }
+
         await monitorBot(conn, 'online');
         if (global.keepAlive) clearInterval(global.keepAlive);
         global.keepAlive = setInterval(async () => {
-            try { await conn.updateProfileStatus(`Voker Active: ${new Date().toLocaleString()}`); } catch {}
+            try { await conn.updateProfileStatus(`${botName} Online | ${new Date().toLocaleString()}`); } catch {}
         }, 10 * 60 * 1000);
         if (!global.subBotsStarted) {
             global.subBotsStarted = true;
             await initSubBots();
         }
     }
+
 
     if (connection === 'close') {
         await monitorBot(conn, 'offline');
