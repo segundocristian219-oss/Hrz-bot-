@@ -27,7 +27,6 @@ const menuCommand = {
             menuText += `║ • Usuario: @${m.sender.split('@')[0]}\n`;
             menuText += `║ • Usuarios: ${totalreg}\n`;
             menuText += `║ • Uptime: ${uptime}\n`;
-            menuText += `║ • Nodos: ${subBots}\n`;
             menuText += `║ • Versión: ${v}\n`;
             menuText += `║ • dix.lat/channel\n`;
             menuText += `╚═════════════════╝\n\n`;
