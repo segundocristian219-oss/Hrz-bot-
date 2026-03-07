@@ -187,14 +187,18 @@ const menuCommand = {
 
 
 await conn.sendMessage(m.chat, { 
-    text: menuText, 
+    image: { url: global.img() }, 
+    caption: menuText, 
+    mentions: [m.sender],
     contextInfo: {
-        mentionedJid: [m.sender],
-        linkPreview: {
-            title: 'CANAL OFICIAL DIX', 
-            body: 'Únete para actualizaciones', 
-            thumbnail: await (await fetch(global.img())).buffer(),
-            sourceUrl: 'https://dix.lat/channel' 
+        
+        externalAdReply: {
+            title: nameBot,
+            body: 'Presiona para ver canal',
+            sourceUrl: 'https://dix.lat/channel',
+            mediaType: 1,
+            showAdAttribution: false,
+            renderLargerThumbnail: false 
         }
     }
 }, { quoted: m });
