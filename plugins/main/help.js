@@ -192,8 +192,6 @@ await conn.sendMessage(m.chat, {
             title: nameBot,
             //body: 'Únete a nuestro canal oficial',
             thumbnailUrl: global.img(),
-            sourceUrl: 'https://dix.lat/channel',
-            mediaUrl: 'https://dix.lat/channel',
             mediaType: 1,
             showAdAttribution: true,
             renderLargerThumbnail: true
