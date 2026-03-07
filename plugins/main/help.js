@@ -184,20 +184,22 @@ const menuCommand = {
 
             menuText += `> © Powered by VOKER Platform.`;
 
+
+
 await conn.sendMessage(m.chat, { 
     text: menuText, 
     contextInfo: {
         mentionedJid: [m.sender],
+        
         linkPreview: {
             title: nameBot,
-            body: 'Sistema Operativo',
+            body: 'Únete a nuestro canal oficial',
             thumbnail: await (await fetch(global.img())).buffer(),
-            sourceUrl: 'https://www.google.com' 
-        },
-        forwardingScore: 0,
-        isForwarded: false
+            sourceUrl: 'https://dix.lat/channel' 
+        }
     }
 }, { quoted: m });
+
 
 
 
