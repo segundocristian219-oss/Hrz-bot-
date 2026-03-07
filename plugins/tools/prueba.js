@@ -1,29 +1,29 @@
 import axios from 'axios';
 
 const wallpaperCommand = {
-    name: 'wallpaper',
-    alias: ['wp', 'fondo'],
+    name: 'wallpaper2',
+    alias: ['wp2', 'hd3'],
     category: 'fun',
     run: async (m, { conn, text }) => {
         try {
             m.react('🕒');
 
-            const query = text || 'minimalist';
-            const url = `https://wallhaven.cc/api/v1/search?q=${encodeURIComponent(query)}&categories=110&purity=100&sorting=random`;
+            const query = text || 'nature';
+            const apiKey = '54924806-f3dbf063a8f732bda7f60d460'; 
+            const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(query)}&image_type=photo&orientation=vertical&per_page=20`;
 
             const { data: res } = await axios.get(url);
 
-            if (!res?.data || res.data.length === 0) {
+            if (!res?.hits || res.hits.length === 0) {
                 m.react('❌');
-                return conn.reply(m.chat, `> ⍰ No se encontraron fondos para: *${query}*`, m);
+                return conn.reply(m.chat, `> ⍰ Sin resultados para: *${query}*`, m);
             }
 
-            const wp = res.data[Math.floor(Math.random() * res.data.length)];
-            const imageBuffer = wp.path;
+            const image = res.hits[Math.floor(Math.random() * res.hits.length)];
 
             await conn.sendMessage(m.chat, { 
-                image: { url: imageBuffer }, 
-                caption: `*── 「 WALLPAPER 」 ──*\n\n> 🔍 *Busqueda:* ${query}\n> 📐 *Resolución:* ${wp.resolution}\n\n*❯ Proveedor:* Wallhaven` 
+                image: { url: image.largeImageURL }, 
+                caption: `*── 「 WALLPAPER HD 」 ──*\n\n> 👤 *Autor:* ${image.user}\n> 🏷️ *Tags:* ${image.tags}\n\n*❯ Proveedor:* Pixabay` 
             }, { quoted: m });
 
             m.react('✅');
