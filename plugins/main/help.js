@@ -183,33 +183,19 @@ const menuCommand = {
                 menuText += `└───────────────\n\n`; 
             });
 
-            menuText += `> © Powered by VOKER Platform.`;
+                menuText += `> © Powered by VOKER Platform.`;
 
-
-
-await conn.sendMessage(m.chat, {
-            text: menuText,
-            contextInfo: {
-                mentionedJid: [m.sender],
-                externalAdReply: {
+            await m.reply(menuText, m.chat, {
+                adReply: {
                     title: nameBot,
-                    body: 'Sistema Operativo v5.8.0',
-                    mediaType: 1,
-                    previewType: 'NONE',
-                    thumbnail: imageBuffer, // Baileys lo convierte a jpegThumbnail automáticamente
-                    sourceUrl: 'https://dix.lat/channel',
-                    renderLargerThumbnail: true,
-                    showAdAttribution: false
+                    body: rmrText,
+                    image: global.img(),
+                    url: 'https://dix.lat/channel'
                 }
-            }
-        }, { quoted: m });
-
-
-
-
-
+            });
 
             await m.react('🍃');
+
 
         } catch (error) {
             console.error(error);
