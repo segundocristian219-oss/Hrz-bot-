@@ -201,7 +201,7 @@ await conn.sendMessage(m.chat, {
             mediaType: 2,
             mediaUrl: urlCanal,
             sourceUrl: urlCanal,
-            thumbnail: imgBuffer,
+            thumbnailUrl: img(),
             renderLargerThumbnail: true,
             showAdAttribution: true,
             containsAutoReply: true,
