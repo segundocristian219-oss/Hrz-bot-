@@ -214,7 +214,23 @@ global.reload = async function(restatConn) {
     const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
 
         
-               if (connection === 'open') {
+            
+
+global.conn.ev.on('connection.update', async (update) => {
+    const { connection, lastDisconnect } = update;
+
+    if (connection === 'close') {
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+        
+        if (reason !== DisconnectReason.loggedOut) {
+            console.log(chalk.red('┃ ') + chalk.white('Conexión cerrada. Reiniciando...'));
+            startBot(); 
+        } else {
+            console.log(chalk.red('┃ ') + chalk.bold('SESIÓN CERRADA PERMANENTEMENTE.'));
+        }
+    }
+
+    if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
@@ -253,6 +269,7 @@ global.reload = async function(restatConn) {
             await initSubBots();
         }
     }
+});
 
 
 
