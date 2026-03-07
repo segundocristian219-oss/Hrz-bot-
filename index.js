@@ -174,9 +174,9 @@ global.reload = async function(restatConn) {
     msgRetryCounterCache.flushAll();
     if (global.conn) {
         global.conn.ev.removeAllListeners();
-        try { global.conn.ws.close(); } catch {}
+        try { global.conn.ws.terminate(); } catch {}
     }
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
   }
 
@@ -213,21 +213,16 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
 
-        
-            
-
-global.conn.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
-
     if (connection === 'close') {
-        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        
-        if (reason !== DisconnectReason.loggedOut) {
-            console.log(chalk.red('┃ ') + chalk.white('Conexión cerrada. Reiniciando...'));
-            startBot(); 
-        } else {
-            console.log(chalk.red('┃ ') + chalk.bold('SESIÓN CERRADA PERMANENTEMENTE.'));
+        await monitorBot(conn, 'offline');
+        if (reason === DisconnectReason.loggedOut) process.exit(1);
+        if (global.conn) {
+            global.conn.ev.removeAllListeners();
+            try { global.conn.ws.terminate(); } catch {}
         }
+        let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
+        console.log(chalk.red('┃ ') + chalk.white(`Conexión cerrada. Razón: ${reason}. Reiniciando...`));
+        setTimeout(() => global.reload(true), delay);
     }
 
     if (connection === 'open') {
@@ -252,7 +247,7 @@ global.conn.ev.on('connection.update', async (update) => {
             await conn.sendMessage(myNumber, { text: statusMsg });
             await conn.updateProfileStatus(`${botName} Online | ${timeNow}`);
         } catch (e) {
-            console.log(chalk.red('Error:'), e);
+            console.error('Error al notificar inicio:', e);
         }
 
         await monitorBot(conn, 'online');
@@ -269,23 +264,7 @@ global.conn.ev.on('connection.update', async (update) => {
             await initSubBots();
         }
     }
-});
-
-
-
-       if (connection === 'close') {
-        await monitorBot(conn, 'offline');
-        if (reason === DisconnectReason.loggedOut) process.exit(1);
-        if (global.conn) {
-            global.conn.ev.removeAllListeners();
-            try { 
-                global.conn.ws.terminate(); 
-            } catch {}
-        }
-        let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
-        setTimeout(() => global.reload(true), delay);
-    }
-});
+  });
 
   global.conn.ev.on('creds.update', saveCreds);
 
