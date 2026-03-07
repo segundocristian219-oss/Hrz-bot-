@@ -2,24 +2,16 @@ const restartCommand = {
     name: 'restart',
     alias: ['reiniciar', 'reboot'],
     category: 'owner',
-    run: async (m, { conn, isROwner }) => {
-        
-        if (!isROwner) return;
+    run: async (m, { conn }) => {
+        const owners = (global.owner || []).map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+        if (!owners.includes(m.sender.split(':')[0] + '@s.whatsapp.net') && !m.fromMe) return;
 
         try {
-            await m.reply(`*── 「 REINICIO DEL SISTEMA 」 ──*\n\n▢ *ESTADO:* Reiniciando servidor...\n▢ *TIEMPO:* ~2 segundos\n\n_Espere un momento por favor._`);
-            
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            if (conn.ws.readyState === 1) { 
-                await conn.logout().catch(() => {});
-            }
-
+            await m.reply('⌬ REINICIANDO SISTEMA\n\nEspere unos segundos...');
+            await new Promise(r => setTimeout(r, 2000));
             process.exit(0);
-            
-        } catch (error) {
-            console.error(error);
-            conn.reply(m.chat, `❌ *ERROR CRÍTICO DURANTE EL REINICIO*\n\n*LOG:* ${error.message}`, m);
+        } catch (e) {
+            await m.reply('☒ Error: ' + e.message);
         }
     }
 };
