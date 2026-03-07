@@ -28,7 +28,7 @@ const menuCommand = {
             menuText += `║ • Uptime: ${uptime}\n`;
             menuText += `║ • Nodos: ${subBots}\n`;
             menuText += `║ • Versión: ${v}\n`;
-            menuText += `║ • *dix.lat/channel*\n`;
+            menuText += `║ • dix.lat/channel\n`;
             menuText += `╚═════════════════╝\n\n`;
             
             menuText += `${rmrText}\n\n`;
@@ -190,15 +190,15 @@ await conn.sendMessage(m.chat, {
     text: menuText, 
     contextInfo: {
         mentionedJid: [m.sender],
-        
         linkPreview: {
-            title: nameBot,
-            body: 'Únete a nuestro canal oficial',
+            title: 'CANAL OFICIAL DIX', 
+            body: 'Únete para actualizaciones', 
             thumbnail: await (await fetch(global.img())).buffer(),
             sourceUrl: 'https://dix.lat/channel' 
         }
     }
 }, { quoted: m });
+
 
 
 
