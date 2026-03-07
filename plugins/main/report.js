@@ -1,61 +1,25 @@
 import axios from 'axios';
 
-const reportCommand = {
-    name: 'reporte',
-    alias: ['report', 'bug', 'idea', 'sugerencia'],
-    category: 'main',
+const replyReportCommand = {
+    name: 'responder',
+    alias: ['reply', 'rta', 'r'],
+    category: 'owner',
     run: async (m, { conn, text, usedPrefix, command }) => {
         const owners = global.owner.map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+        if (!owners.includes(m.sender)) return;
 
-        if (!text) {
-            return m.reply('⚠ USO INCORRECTO\n\nEscriba el reporte o idea después del comando.\n\nEjemplo: ' + usedPrefix + command + ' el sistema presenta lentitud');
-        }
-
-        let q = m.quoted ? m.quoted : m;
-        let mime = (q.msg || q).mimetype || '';
-        
-        let reportMsg = '⬡ NUEVO REPORTE RECIBIDO\n\n' +
-                        '⊛ Usuario: @' + m.sender.split('@')[0] + '\n' +
-                        '⊛ Tipo: ' + command.toUpperCase() + '\n' +
-                        '⊛ Mensaje: ' + text + '\n\n' +
-                        '⌬ Chat ID: ' + m.chat;
-
-        try {
-            let media = null;
-            if (mime && /image|video/.test(mime)) {
-                media = await q.download();
-            }
-
-            for (const jid of owners) {
-                const sendOptions = { mentions: [m.sender] };
-                if (media) {
-                    await conn.sendMessage(jid, { image: media, caption: reportMsg, ...sendOptions });
-                } else {
-                    await conn.sendMessage(jid, { text: reportMsg, ...sendOptions });
-                }
-            }
-
-            await m.reply('✓ Reporte enviado con exito.\nLos administradores revisaran la informacion.');
-
-        } catch (err) {
-            await m.reply('☒ Error interno al procesar el reporte.');
-        }
-    },
-
-    before: async function (m, { conn }) {
-        const owners = global.owner.map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
-        
-        if (!m.quoted || !m.quoted.fromMe || !owners.includes(m.sender)) return false;
-        if (!m.quoted.text && !m.quoted.caption) return false;
+        if (!m.quoted) return m.reply('⚠ Error: Debes etiquetar el mensaje del reporte para responder.');
 
         const quotedContent = m.quoted.text || m.quoted.caption || '';
-        if (!quotedContent.includes('⬡ NUEVO REPORTE RECIBIDO')) return false;
+        if (!quotedContent.includes('⬡ NUEVO REPORTE RECIBIDO')) {
+            return m.reply('⚠ Error: El mensaje etiquetado no es un reporte valido.');
+        }
 
         try {
             const userJid = quotedContent.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
             const chatId = quotedContent.split('⌬ Chat ID: ')[1]?.split('\n')[0];
 
-            if (!userJid || !chatId) return false;
+            if (!userJid || !chatId) return m.reply('⚠ Error: No se pudo extraer la informacion del reporte.');
 
             let q = m;
             let mime = (q.msg || q).mimetype || '';
@@ -63,32 +27,31 @@ const reportCommand = {
             
             let content = { mentions: isGroup ? [userJid] : [] };
             const header = '⌬ RESPUESTA DEL DESARROLLADOR\n\n';
-            const replyBody = m.text || '';
+            const body = text || '';
 
             if (/image/.test(mime)) {
                 content.image = await q.download();
-                content.caption = header + replyBody;
+                content.caption = header + body;
             } else if (/video/.test(mime)) {
                 content.video = await q.download();
-                content.caption = header + replyBody;
+                content.caption = header + body;
             } else if (/audio/.test(mime)) {
                 content.audio = await q.download();
                 content.mimetype = 'audio/mp4';
                 content.ptt = true;
             } else {
-                content.text = header + replyBody;
+                if (!text) return m.reply('⚠ Error: Escribe un mensaje para responder.');
+                content.text = header + body;
             }
 
-            await conn.sendMessage(chatId, content, { quoted: isGroup ? m : null });
-            await m.react('✅');
-            return true;
+            await conn.sendMessage(chatId, content);
+            await m.reply('✓ Respuesta enviada con exito al destino original.');
 
         } catch (e) {
             console.error(e);
-            await m.react('✖');
-            return false;
+            await m.reply('☒ Error al procesar el envio de la respuesta.');
         }
     }
 };
 
-export default reportCommand;
+export default replyReportCommand;
