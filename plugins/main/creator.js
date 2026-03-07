@@ -3,7 +3,7 @@ const ownerCommand = {
     alias: ['creador', 'contacto', 'soporte'],
     category: 'main',
     run: async (m, { conn }) => {
-        const myNumber = '50432955554'
+        const myNumber = '50432569059'
         const myJid = myNumber + '@s.whatsapp.net'
         const brandName = 'VOKER | Platform' 
 
