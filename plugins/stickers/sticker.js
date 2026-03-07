@@ -121,7 +121,7 @@ const stickerCommand = {
         } catch (e) {
             console.error(e);
             await m.react('✖️');
-            m.reply('> ⚔ Error en el procesamiento interno.');
+            m.reply('> ⚔ Error en el procesamiento interno.\n\nUsa el comando *#report* para reportar esté error.');
         }
     }
 }
