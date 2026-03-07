@@ -139,6 +139,7 @@ const youtubeCommand = {
 
             await m.react("✅");
         } catch (error) {
+            conn.reply(m.chat, error, "\n\nUsa el comando *#report* para reportar esté error.", m)
             await m.react("❌");
         }
     }
