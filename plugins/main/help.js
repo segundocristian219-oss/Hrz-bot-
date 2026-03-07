@@ -10,6 +10,7 @@ const menuCommand = {
             await m.react('⏳');
 
             let uptime = clockString(process.uptime() * 1000);
+          const imageBuffer = await (await fetch(global.img())).buffer();
             let totalreg = await global.User.countDocuments();
 
             const v = JSON.parse(readFileSync('./package.json', 'utf-8')).version;
@@ -186,22 +187,22 @@ const menuCommand = {
 
 
 
-await conn.sendMessage(m.chat, { 
-    image: { url: global.img() }, 
-    caption: menuText, 
-    mentions: [m.sender],
-    contextInfo: {
-        
-        externalAdReply: {
-            title: nameBot,
-            body: 'Presiona para ver canal',
-            sourceUrl: 'https://dix.lat/channel',
-            mediaType: 1,
-            showAdAttribution: false,
-            renderLargerThumbnail: false 
-        }
-    }
-}, { quoted: m });
+await conn.sendMessage(m.chat, {
+            text: menuText,
+            contextInfo: {
+                mentionedJid: [m.sender],
+                externalAdReply: {
+                    title: nameBot,
+                    body: 'Sistema Operativo v5.8.0',
+                    mediaType: 1,
+                    previewType: 'NONE',
+                    thumbnail: imageBuffer, // Baileys lo convierte a jpegThumbnail automáticamente
+                    sourceUrl: 'https://dix.lat/channel',
+                    renderLargerThumbnail: true,
+                    showAdAttribution: false
+                }
+            }
+        }, { quoted: m });
 
 
 
