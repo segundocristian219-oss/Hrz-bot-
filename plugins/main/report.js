@@ -31,31 +31,31 @@ const reportSystem = {
                 const header = '⌬ RESPUESTA DEL DESARROLLADOR\n\n';
                 const body = text || '';
 
-                if (/image/.test(mime)) {
-                    content.image = await q.download();
+                if (/image|video|audio/.test(mime)) {
+                    const media = await q.download();
+                    if (/image/.test(mime)) content.image = media;
+                    else if (/video/.test(mime)) content.video = media;
+                    else if (/audio/.test(mime)) {
+                        content.audio = media;
+                        content.mimetype = 'audio/mp4';
+                        content.ptt = true;
+                    }
                     content.caption = header + body;
-                } else if (/video/.test(mime)) {
-                    content.video = await q.download();
-                    content.caption = header + body;
-                } else if (/audio/.test(mime)) {
-                    content.audio = await q.download();
-                    content.mimetype = 'audio/mp4';
-                    content.ptt = true;
                 } else {
                     if (!text) return m.reply('⚠ Error: Escribe un mensaje para responder.');
                     content.text = header + body;
                 }
 
                 await conn.sendMessage(chatId, content);
-                return await m.reply('✓ Respuesta enviada con exito al destino original.');
+                return await m.reply('✓ Respuesta enviada con exito.');
 
             } catch (e) {
-                return m.reply('☒ Error al procesar el envio de la respuesta.');
+                return m.reply('☒ Error al procesar el envio.');
             }
         }
 
         if (!text) {
-            return m.reply('⚠ USO INCORRECTO\n\nEscriba el reporte o idea despues del comando.\n\nEjemplo: ' + usedPrefix + command + ' el bot no responde imagenes');
+            return m.reply('⚠ USO INCORRECTO\n\nEscriba el reporte o idea despues del comando.\n\nEjemplo: ' + usedPrefix + command + ' el bot no responde');
         }
 
         let q = m.quoted ? m.quoted : m;
@@ -74,18 +74,21 @@ const reportSystem = {
             }
 
             for (const jid of owners) {
-                const sendOptions = { mentions: [m.sender] };
+                // Validación para evitar envío a JIDs vacíos o mal formados
+                if (!jid || jid.length < 10) continue; 
+
                 if (media) {
-                    await conn.sendMessage(jid, { image: media, caption: reportMsg, ...sendOptions });
+                    await conn.sendMessage(jid, { image: media, caption: reportMsg, mentions: [m.sender] });
                 } else {
-                    await conn.sendMessage(jid, { text: reportMsg, ...sendOptions });
+                    await conn.sendMessage(jid, { text: reportMsg, mentions: [m.sender] });
                 }
             }
 
-            await m.reply('✓ Reporte enviado con exito.\nLos administradores revisaran la informacion.');
+            await m.reply('✓ Reporte enviado con exito.');
 
         } catch (err) {
-            await m.reply('☒ Error interno al procesar el reporte.');
+            console.error(err);
+            await m.reply('☒ Error al procesar el reporte en privado.');
         }
     }
 };
