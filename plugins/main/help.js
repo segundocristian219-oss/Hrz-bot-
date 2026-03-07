@@ -190,14 +190,16 @@ await conn.sendMessage(m.chat, {
         mentionedJid: [m.sender],
         externalAdReply: {
             title: nameBot,
-            //body: 'Únete a nuestro canal oficial',
-            thumbnailUrl: global.img(),
+            body: 'Sistema Operativo', 
+            thumbnail: await (await fetch(global.img())).buffer(), 
+            sourceUrl: 'https://www.google.com', 
             mediaType: 1,
             showAdAttribution: true,
             renderLargerThumbnail: true
         }
     }
 }, { quoted: m });
+
 
 
             await m.react('🍃');
