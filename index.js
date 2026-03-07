@@ -285,7 +285,7 @@ global.conn.ev.on('connection.update', async (update) => {
         let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
         setTimeout(() => global.reload(true), delay);
     }
-
+}
 
   global.conn.ev.on('creds.update', saveCreds);
 
