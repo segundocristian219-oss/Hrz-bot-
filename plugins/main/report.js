@@ -42,43 +42,51 @@ const reportCommand = {
         }
     },
 
-    all: async function (m, { conn }) {
+    before: async function (m, { conn }) {
         const owners = global.owner.map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
-        if (!owners.includes(m.sender) || !m.quoted || !m.quoted.text) return;
+        
+        if (!m.quoted || !m.quoted.fromMe || !owners.includes(m.sender)) return false;
+        if (!m.quoted.text && !m.quoted.caption) return false;
 
-        const quotedText = m.quoted.text;
-        if (!quotedText.includes('⬡ NUEVO REPORTE RECIBIDO')) return;
+        const quotedContent = m.quoted.text || m.quoted.caption || '';
+        if (!quotedContent.includes('⬡ NUEVO REPORTE RECIBIDO')) return false;
 
         try {
-            const userJid = quotedText.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
-            const chatId = quotedText.split('⌬ Chat ID: ')[1]?.split('\n')[0];
+            const userJid = quotedContent.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
+            const chatId = quotedContent.split('⌬ Chat ID: ')[1]?.split('\n')[0];
 
-            if (!userJid || !chatId) return;
+            if (!userJid || !chatId) return false;
 
             let q = m;
             let mime = (q.msg || q).mimetype || '';
-            let content = { mentions: [userJid] };
             let isGroup = chatId.endsWith('@g.us');
+            
+            let content = { mentions: isGroup ? [userJid] : [] };
+            const header = '⌬ RESPUESTA DEL DESARROLLADOR\n\n';
+            const replyBody = m.text || '';
 
-            const replyText = m.text ? '⌬ RESPUESTA DEL DESARROLLADOR\n\n' + m.text : '⌬ RESPUESTA DEL DESARROLLADOR';
-
-            if (/image/.test(mime)) content.image = await q.download();
-            else if (/video/.test(mime)) content.video = await q.download();
-            else if (/audio/.test(mime)) {
+            if (/image/.test(mime)) {
+                content.image = await q.download();
+                content.caption = header + replyBody;
+            } else if (/video/.test(mime)) {
+                content.video = await q.download();
+                content.caption = header + replyBody;
+            } else if (/audio/.test(mime)) {
                 content.audio = await q.download();
                 content.mimetype = 'audio/mp4';
                 content.ptt = true;
+            } else {
+                content.text = header + replyBody;
             }
 
-            if (content.image || content.video) content.caption = replyText;
-            else if (!content.audio) content.text = replyText;
-
-            await conn.sendMessage(chatId, content);
-            await m.reply('✓ Respuesta enviada correctamente.');
+            await conn.sendMessage(chatId, content, { quoted: isGroup ? m : null });
+            await m.react('✅');
+            return true;
 
         } catch (e) {
             console.error(e);
-            await m.reply('☒ Error al reenviar la respuesta.');
+            await m.react('✖');
+            return false;
         }
     }
 };
