@@ -202,7 +202,7 @@ const url = 'https://dix.lat/channel';
                     body: "CANAL",
                     mediaType: 2,
                     renderLargerThumbnail: true,
-                    thumbnail: imgBuffer,
+                  //  thumbnail: imgBuffer,
                     sourceUrl: url,
                     mediaUrl: url
                   }
