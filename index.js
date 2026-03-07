@@ -213,13 +213,14 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
 
-        if (connection === 'open') {
+        
+               if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
 
-        const ownerJid = global.owner[0][0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        const myNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net';
         const botName = 'APOCALYPSE VX';
         const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
 
@@ -232,21 +233,27 @@ global.reload = async function(restatConn) {
                           `> © Powered by VOKER Platform.`;
 
         try {
-            await conn.sendMessage(ownerJid, { text: statusMsg });
+            await conn.sendMessage(myNumber, { text: statusMsg });
+            await conn.updateProfileStatus(`${botName} Online | ${timeNow}`);
         } catch (e) {
-            console.log(chalk.red('Error al notificar inicio:'), e);
+            console.log(chalk.red('Error:'), e);
         }
 
         await monitorBot(conn, 'online');
         if (global.keepAlive) clearInterval(global.keepAlive);
         global.keepAlive = setInterval(async () => {
-            try { await conn.updateProfileStatus(`${botName} Online | ${new Date().toLocaleString()}`); } catch {}
+            try { 
+                const liveTime = new Date().toLocaleString('es-HN', { hour12: true });
+                await conn.updateProfileStatus(`${botName} Online | ${liveTime}`); 
+            } catch {}
         }, 10 * 60 * 1000);
+
         if (!global.subBotsStarted) {
             global.subBotsStarted = true;
             await initSubBots();
         }
     }
+
 
 
     if (connection === 'close') {
