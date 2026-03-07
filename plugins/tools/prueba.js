@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const fullTestPlugin = {
-    name: 'fulltest',
-    alias: ['ft'],
+const videoRedirectPlugin = {
+    name: 'videoredirect',
+    alias: ['vurl', 'redirect'],
     category: 'tools',
     run: async (m, { conn }) => {
         const url = "https://github.com/DeylinQ/";
@@ -11,77 +11,32 @@ const fullTestPlugin = {
         const buffer = Buffer.from(res.data);
 
         await conn.sendMessage(m.chat, {
-            text: `ESTRUCTURA TIPO A (LARGE AD)\n${url}`,
+            text: `❀ *SISTEMA OPERATIVO* ✰\n\n> 🜸 ${url}`,
             contextInfo: {
                 mentionedJid: [m.sender],
-                forwardingScore: 1,
+                forwardingScore: 999,
                 isForwarded: true,
                 externalAdReply: {
-                    title: "DEYLIN SYSTEM v3",
-                    body: "CLICK AQUÍ PARA REDIRIGIR",
-                    mediaType: 1,
-                    renderLargerThumbnail: true,
-                    thumbnail: buffer,
-                    sourceUrl: url,
-                    mediaUrl: url,
-                    showAdAttribution: true
-                }
-            }
-        }, { quoted: m });
-
-        await conn.sendMessage(m.chat, {
-            text: `ESTRUCTURA TIPO B (VIDEO SIMULADO)\n${url}`,
-            contextInfo: {
-                externalAdReply: {
-                    title: "MULTIMEDIA REDIRECT",
-                    body: "ESTRUCTURA DE VIDEO",
+                    title: "DEYLIN AUTOMATION SYSTEM",
+                    body: "CLICK PARA ACCEDER AL CONTENIDO",
                     mediaType: 2,
-                    renderLargerThumbnail: true,
-                    thumbnail: buffer,
+                    mediaUrl: url,
                     sourceUrl: url,
-                    mediaUrl: url
-                }
-            }
-        });
-
-        await conn.sendMessage(m.chat, {
-            text: `ESTRUCTURA TIPO C (DOCUMENT STYLE)\n${url}`,
-            contextInfo: {
-                externalAdReply: {
-                    title: "SYSTEM DOCUMENT",
-                    body: "SOURCE URL TEST",
-                    mediaType: 1,
-                    renderLargerThumbnail: true,
+                    previewType: "VIDEO",
                     thumbnail: buffer,
-                    sourceUrl: url,
+                    renderLargerThumbnail: true,
+                    showAdAttribution: true,
                     containsAutoReply: true,
-                    type: 'UA'
-                }
-            }
-        });
-
-        const msg = {
-            extendedTextMessage: {
-                text: `ESTRUCTURA TIPO D (RELAY RAW)\n${url}`,
-                matchedText: url,
-                canonicalUrl: url,
-                description: "DESCRIPCIÓN DE PRUEBA",
-                title: "TITULO ESTRUCTURA RAW",
-                jpegThumbnail: buffer,
-                previewType: "PHOTO",
-                contextInfo: {
-                    externalAdReply: {
-                        title: "RELIANCE TEST",
-                        mediaType: 1,
-                        renderLargerThumbnail: true,
-                        thumbnail: buffer,
-                        sourceUrl: url
+                    thumbnailUrl: img,
+                    sourceId: "Deylin-Dev",
+                    ctwaContext: {
+                        sourceUrl: url,
+                        description: "Neko's Club Style Redirect"
                     }
                 }
             }
-        };
-        await conn.relayMessage(m.chat, msg, { quoted: m });
+        }, { quoted: m });
     }
 };
 
-export default fullTestPlugin;
+export default videoRedirectPlugin;
