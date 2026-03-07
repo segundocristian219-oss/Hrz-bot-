@@ -198,11 +198,11 @@ const url = 'https://dix.lat/channel';
                 contextInfo: {
 
                     externalAdReply: {
-                    title: "MULTIMEDIA REDIRECT",
+                    title: name(),
                     body: "ESTRUCTURA DE VIDEO",
-                    mediaType: 2,
+                    mediaType: 1,
                     renderLargerThumbnail: true,
-                    thumbnail: imgBuffer,
+                    thumbnailUrl: img(),
                     sourceUrl: url,
                     mediaUrl: url
                   }
