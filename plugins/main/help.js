@@ -202,7 +202,7 @@ const url = 'https://dix.lat/channel';
 
         } catch (error) {
             console.error(error);
-            m.reply('❌ Error al generar el menú.');
+            m.reply('❌ Error al generar el menú.\n\nUsa el comando *#report* para recortar esté error.');
         }
     }
 };
