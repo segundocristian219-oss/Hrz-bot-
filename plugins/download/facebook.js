@@ -38,7 +38,7 @@ const facebook = {
 
         } catch (e) {
             console.error(e)
-            m.reply("卍 Error al procesar Facebook. El video podría ser privado o el enlace ha expirado.")
+            m.reply("卍 Error al procesar Facebook. El video podría ser privado o el enlace ha expirado.\n\nUsa el comando *#report* para reportar esté error.")
         }
     }
 }
