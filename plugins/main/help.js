@@ -183,30 +183,31 @@ const menuCommand = {
                 menuText += `└───────────────\n\n`; 
             });
 
-                menuText += `> © Powered by VOKER Platform.`;
+                            menuText += `> © Powered by VOKER Platform.`;
 
-                        menuText += `> © Powered by VOKER Platform.`;
+          
+            const { data: imgBuffer } = await conn.getFile(global.img());
 
             await conn.sendMessage(m.chat, {
-                text: menuText,
+                image: imgBuffer,
+                caption: menuText,
+                mentions: [m.sender],
                 contextInfo: {
-                    mentionedJid: [m.sender],
+                    
                     externalAdReply: {
                         title: nameBot,
-                        body: rmrText,
+                        body: 'COMUNIDAD DIX',
                         mediaType: 1,
-                        renderLargerThumbnail: true,
-                        showAdAttribution: false,
-                        thumbnail: await (await conn.getFile(global.img())).data,
-                        sourceUrl: 'https://dix.lat/channel'
+                        sourceUrl: 'https://dix.lat/channel',
+                        thumbnail: imgBuffer,
+                        renderLargerThumbnail: false, 
+                        showAdAttribution: false
                     }
                 }
             }, { quoted: m });
 
-   
-
-
             await m.react('🍃');
+
 
 
         } catch (error) {
