@@ -39,8 +39,8 @@ const menuCommand = {
                     title: 'MAIN',
                     cmds: [
                         { cmd: '.menu', desc: 'Muestra este menú de ayuda.' },
-                        //{ cmd: '.bots', desc: 'Lista los sub-bots activos.' },
-                       // { cmd: '.code', desc: 'Obtén el código fuente del bot.' },
+                        { cmd: '.reporte/.report/.bug', desc: 'Reporta un error en el sistema.' },
+                        { cmd: '.idea/.sugerencia', desc: 'Sugiere un nuevo comando o comparte una idea.' },
                         { cmd: '.creador', desc: 'Información sobre el creador.' }
                     ]
                 },
