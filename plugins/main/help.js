@@ -187,29 +187,27 @@ const menuCommand = {
 
           
             const { data: imgBuffer } = await conn.getFile(global.img());
-const urlCanal = 'https://dix.lat/channel';
+const url = 'https://dix.lat/channel';
 
-await conn.sendMessage(m.chat, {
-    text: menuText,
-    contextInfo: {
-        mentionedJid: [m.sender],
-        isForwarded: true,
-        forwardingScore: 999,
-        externalAdReply: {
-            title: nameBot,
-            body: 'COMUNIDAD DIX',
-            mediaType: 2,
-            mediaUrl: urlCanal,
-            sourceUrl: urlCanal,
-            thumbnailUrl: img(),
-            renderLargerThumbnail: true,
-            showAdAttribution: true,
-            containsAutoReply: true,
-            sourceId: 'Dix-Community'
-        }
-    }
-}, { quoted: m });
+            
 
+            await conn.sendMessage(m.chat, {
+                image: imgBuffer,
+                caption: menuText,
+                mentions: [m.sender],
+                contextInfo: {
+
+                    externalAdReply: {
+                    title: "MULTIMEDIA REDIRECT",
+                    body: "ESTRUCTURA DE VIDEO",
+                    mediaType: 2,
+                    renderLargerThumbnail: true,
+                    thumbnail: imgBuffer,
+                    sourceUrl: url,
+                    mediaUrl: url
+                  }
+                }
+            }, { quoted: m });
 
             await m.react('🍃');
 
