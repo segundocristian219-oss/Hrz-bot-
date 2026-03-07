@@ -194,19 +194,7 @@ const url = 'https://dix.lat/channel';
             await conn.sendMessage(m.chat, {
                 image: imgBuffer,
                 caption: menuText,
-                mentions: [m.sender],
-                contextInfo: {
-
-                    externalAdReply: {
-                    title: name(),
-                    body: "CANAL",
-                    mediaType: 2,
-                    renderLargerThumbnail: true,
-                  //  thumbnail: imgBuffer,
-                    sourceUrl: url,
-                    mediaUrl: url
-                  }
-                }
+                mentions: [m.sender]
             }, { quoted: m });
 
             await m.react('🍃');
