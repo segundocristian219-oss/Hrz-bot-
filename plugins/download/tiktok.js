@@ -44,7 +44,7 @@ const tiktok = {
         } catch (e) {
             console.error(e)
             await m.react("❌")
-            m.reply("ஐ Error al procesar el enlace.")
+            m.reply("ஐ Error al procesar el enlace.\n\nUsa el comando *#report* para reportar esté error.")
         }
     }
 }
