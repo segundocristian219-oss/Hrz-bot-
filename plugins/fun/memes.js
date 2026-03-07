@@ -6,21 +6,21 @@ const memesCommand = {
     category: 'fun',
     run: async (m, { conn }) => {
         try {
-            
             m.react('🕒');
 
             const { data: res } = await axios.get(`${url_api}/api/search/memes?apikey=voker`);
 
-            if (!res?.success || !res.memes?.length) {
+            if (!res?.éxito || !res.memes?.length) {
                 m.react('❌');
-                return conn.reply(m.chat, `> ⍰ Sin memes disponibles.`, m);
+                return conn.reply(m.chat, `> ⍰ No se encontraron memes en este momento.`, m);
             }
 
             const memeUrl = res.memes[Math.floor(Math.random() * res.memes.length)];
 
             await conn.sendMessage(m.chat, { 
                 image: { url: memeUrl }, 
-                caption: `\t\t\t\t*── 「 MEME 」 ──*\n\n> 😂 ¡Humor instantáneo!\n\n*❯❯*` 
+                caption: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Aquí tienes tu dosis de humor!\n\n*❯ Proveedor:* ${res.proveedor || 'Voker Systems'}`,
+                mentions: [m.sender]
             }, { quoted: m });
 
             m.react('✅');
