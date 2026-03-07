@@ -15,7 +15,7 @@ const reportCommand = {
         let mime = (q.msg || q).mimetype || '';
         
         let reportMsg = '⬡ NUEVO REPORTE RECIBIDO\n\n' +
-                        '⊛ Usuario: ' + m.sender.split('@')[0] + '\n' +
+                        '⊛ Usuario: @' + m.sender.split('@')[0] + '\n' +
                         '⊛ Tipo: ' + command.toUpperCase() + '\n' +
                         '⊛ Mensaje: ' + text + '\n\n' +
                         '⌬ Chat ID: ' + m.chat;
@@ -27,17 +27,16 @@ const reportCommand = {
             }
 
             for (const jid of owners) {
+                const sendOptions = {
+                    mentions: [m.sender],
+                    caption: media ? reportMsg : undefined,
+                    text: media ? undefined : reportMsg
+                };
+
                 if (media) {
-                    await conn.sendMessage(jid, { 
-                        image: media, 
-                        caption: reportMsg,
-                        mentions: [m.sender] 
-                    });
+                    await conn.sendMessage(jid, { image: media, ...sendOptions });
                 } else {
-                    await conn.sendMessage(jid, { 
-                        text: reportMsg,
-                        mentions: [m.sender] 
-                    });
+                    await conn.sendMessage(jid, sendOptions);
                 }
             }
 
