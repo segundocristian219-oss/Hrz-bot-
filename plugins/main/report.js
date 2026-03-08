@@ -8,7 +8,7 @@ const reportSystem = {
         const owners = (global.owner || []).map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
         
         if (['responder', 'reply', 'r'].includes(command)) {
-            if (!isOwner) return m.reply('solo desarrolladores');
+            if (!isROwner) return m.reply('solo desarrolladores');
             if (!m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEtiqueta el reporte para responder.');
 
             const quotedContent = m.quoted.text || m.quoted.caption || '';
