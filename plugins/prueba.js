@@ -1,48 +1,50 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerCustomLabelCommand = {
-    name: 'vlabel',
-    alias: ['vokerbrand'],
-    category: 'fun',
+const vokerBruteForceCommand = {
+    name: 'vforce',
+    alias: ['hacklabel', 'fuerzabruta'],
+    category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🕒');
+            m.react('🔥');
 
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const videoBuffer = Buffer.from(response.data, 'utf-8');
+            const buffer = Buffer.from(response.data);
 
-            await conn.sendMessage(m.chat, { 
-                video: videoBuffer, 
-                caption: `*── 「 VOKER SYSTEM 」 ──*`,
-                mimetype: 'video/mp4',
-                // IMPORTANTE: Eliminamos gifPlayback para que sea VIDEO NORMAL
-                gifPlayback: false, 
-                contextInfo: {
-                    externalAdReply: {
-                        // AQUÍ PONES TU NOMBRE PERSONALIZADO
-                        title: 'VOKER-SYSTEM-V2', 
-                        body: 'Contenido Verificado',
-                        mediaType: 2,
-                        // Logo de tu bot para que se vea más profesional
-                        thumbnailUrl: 'https://dix.lat/logo.png', 
+            // Construcción del Proto con inyección de metadatos de "Fuerza Bruta"
+            const message = generateWAMessageFromContent(m.chat, {
+                videoMessage: {
+                    url: videoUrl,
+                    mimetype: 'video/mp4',
+                    fileLength: buffer.length,
+                    caption: `*── 「 VOKER SYSTEM FORCE 」 ──*`,
+                    gifPlayback: false, // Desactivamos el bucle
+                    // Inyectamos un valor de atribución fuera del rango estándar (1-2)
+                    // Intentamos forzar al motor de renderizado a leer un string personalizado
+                    gifAttribution: 3, 
+                    contextInfo: {
+                        // Forzamos la etiqueta de "Contenido de Voker" mediante el campo sourceUrl
                         sourceUrl: 'https://dix.lat',
-                        // Esto fuerza a que se vea como un contenido de marca propia
-                        showAdAttribution: true 
-                    },
-                    // Mantenemos esto para el estilo Premium
-                    forwardingScore: 1,
-                    isForwarded: true
+                        sourceLabel: 'VOKER-SYSTEM-V2', // Aquí es donde engañamos al motor visual
+                        showAdAttribution: true,
+                        isForwarded: true,
+                        forwardingScore: 1000
+                    }
                 }
-            }, { quoted: m });
+            }, { userJid: conn.user.id, quoted: m });
+
+            // Enviamos el nodo crudo al socket de WhatsApp
+            await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [ERROR]: ${error.message}`);
-            m.react('❌');
+            console.error(`> [BRUTE FORCE ERROR]: ${error.message}`);
+            m.react('💀');
         }
     }
 };
 
-export default vokerCustomLabelCommand;
+export default vokerBruteForceCommand;
