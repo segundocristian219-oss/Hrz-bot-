@@ -1,49 +1,101 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerGhostBrand = {
+const vokerOfficialTests = {
     name: 'vbrand',
-    alias: ['vmark', 'ghost'],
+    alias: ['oficial', 'vokerbrand'],
     category: 'system',
     run: async (m, { conn, text }) => {
+        m.react('🧪');
+
+        const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
+        let videoBuffer;
+
         try {
-            m.react('⚡');
-
-            const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const buffer = Buffer.from(response.data);
+            videoBuffer = Buffer.from(response.data);
+        } catch (e) {
+            return m.react('❌');
+        }
 
-            const message = generateWAMessageFromContent(m.chat, {
+        // --- PRUEBA 1: ETIQUETA DE MIEMBRO (NATIVA 2026) ---
+        // Esta es la más limpia: texto puro bajo el nombre del bot.
+        try {
+            await conn.sendMessage(m.chat, {
+                video: videoBuffer,
+                caption: '*── 「 VOKER SYSTEM v5: MÉTODO NATIVO 」 ──*',
+                gifPlayback: true,
+                contextInfo: {
+                    mentionedJid: [m.sender],
+                    // En 2026, este campo inyecta la "Etiqueta de Miembro" oficial
+                    externalAdReply: {
+                        title: 'VOKER-SYSTEM-OFFICIAL',
+                        body: 'Desarrollador Independiente',
+                        showAdAttribution: false, // Quitamos el botón de canal
+                        renderLargerThumbnail: false,
+                        mediaType: 1
+                    }
+                }
+            }, { quoted: m });
+        } catch (e) { console.error('Fallo Método 1'); }
+
+        // --- PRUEBA 2: FOOTER DE UTILIDAD (ESTÉTICA EMPRESARIAL) ---
+        // Pone tu marca en gris pequeño al final del mensaje, sin botones.
+        try {
+            await conn.sendMessage(m.chat, {
+                video: videoBuffer,
+                caption: '*── 「 VOKER SYSTEM v5: MÉTODO FOOTER 」 ──*',
+                gifPlayback: true,
+                footer: 'VOKER-SYSTEM-V2 | DEYLIN ELIAC',
+                viewOnce: false
+            }, { quoted: m });
+        } catch (e) { console.error('Fallo Método 2'); }
+
+        // --- PRUEBA 3: SOURCE LABEL (STAY CLEAN) ---
+        // Intenta poner el nombre arriba del video sin URL asociada.
+        try {
+            const msg3 = generateWAMessageFromContent(m.chat, {
                 videoMessage: {
-                    video: buffer,
+                    video: videoBuffer,
                     mimetype: 'video/mp4',
-                    caption: `*── 「 VOKER SYSTEM 」 ──*`,
+                    caption: '*── 「 VOKER SYSTEM v5: SOURCE LABEL 」 ──*',
                     gifPlayback: true,
                     contextInfo: {
-                        // FORZAMOS LA IDENTIDAD SIN CANAL
                         isForwarded: true,
                         forwardingScore: 1,
-                        // El truco: sourceLabel es el único que no genera botones
                         sourceLabel: 'VOKER-SYSTEM-V2',
-                        // Inyectamos un JID inexistente para que el sistema intente 
-                        // resolver el nombre pero solo muestre el texto de la marca.
-                        participant: '0@s.whatsapp.net',
-                        remoteJid: 'status@broadcast'
+                        sourceUrl: '' // Vacío para no generar botón
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
+            await conn.relayMessage(m.chat, msg3.message, { messageId: msg3.key.id });
+        } catch (e) { console.error('Fallo Método 3'); }
 
-            await conn.relayMessage(m.chat, message.message, { 
-                messageId: message.key.id 
-            });
+        // --- PRUEBA 4: NEWSLETTER JID 0 (ÚLTIMO RECURSO) ---
+        // Intenta forzar el color verde pero con un ID nulo para romper el botón.
+        try {
+            const msg4 = generateWAMessageFromContent(m.chat, {
+                videoMessage: {
+                    video: videoBuffer,
+                    mimetype: 'video/mp4',
+                    caption: '*── 「 VOKER SYSTEM v5: GHOST NEWSLETTER 」 ──*',
+                    gifPlayback: true,
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardingScore: 1,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '0@newsletter',
+                            serverMessageId: 1,
+                            newsletterName: 'VOKER-SYSTEM-V2'
+                        }
+                    }
+                }
+            }, { userJid: conn.user.id, quoted: m });
+            await conn.relayMessage(m.chat, msg4.message, { messageId: msg4.key.id });
+        } catch (e) { console.error('Fallo Método 4'); }
 
-            m.react('✅');
-
-        } catch (error) {
-            console.error('> [PROTOCOL ERROR]:', error.message);
-            m.react('❌');
-        }
+        m.react('✅');
     }
 };
 
-export default vokerGhostBrand;
+export default vokerOfficialTests;
