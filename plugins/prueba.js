@@ -1,40 +1,48 @@
-import axios from 'axios';
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-const premiumVideoCommand = {
-    name: 'vpremium',
-    alias: ['vokerlabel'],
-    category: 'fun',
+const vokerForwardHack = {
+    name: 'vforward',
+    alias: ['fwd', 'superpremium'],
+    category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🕒');
+            m.react('🛡️');
 
-            const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
-            
-            // Obtenemos el video como buffer para asegurar que los metadatos se inyecten correctamente
-            const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const videoBuffer = Buffer.from(response.data, 'utf-8');
-
-            await conn.sendMessage(m.chat, { 
-                video: videoBuffer, 
-                caption: `*── 「 VOKER PREMIUM 」 ──*`,
-                mimetype: 'video/mp4',
-                // Engaño: Activamos esto para la etiqueta, pero el buffer de video normal mantendrá sus propiedades
-                gifPlayback: true, 
-                gifAttribution: "huijc", // Usar 1 (GIPHY) o 2 (TENOR) fuerza la aparición del logo en el chat
-                contextInfo: {
-                    // Esto ayuda a que el sistema lo vea como contenido de plataforma
-                    isForwarded: true,
-                    forwardingScore: 999
+            const message = generateWAMessageFromContent(m.chat, {
+                extendedTextMessage: {
+                    text: text || 'Este es un mensaje con identidad de sistema.',
+                    contextInfo: {
+                        // FORZAMOS el estado de reenvío masivo
+                        isForwarded: true,
+                        forwardingScore: 999,
+                        // INYECTAMOS la identidad del Canal para "tapar" la etiqueta genérica
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '1203631600301@newsletter',
+                            serverMessageId: 100,
+                            // ESTE ES EL NOMBRE QUE REEMPLAZA LA IDENTIDAD VISUAL
+                            newsletterName: 'VOKER-SYSTEM-OFFICIAL' 
+                        },
+                        // Segunda capa: Etiqueta de "Publicidad" o "Verificado"
+                        externalAdReply: {
+                            title: 'VOKER-SYSTEM-V2',
+                            body: 'Contenido de Alta Prioridad',
+                            mediaType: 1,
+                            thumbnailUrl: 'https://dix.lat/logo.png',
+                            showAdAttribution: true 
+                        }
+                    }
                 }
-            }, { quoted: m });
+            }, { userJid: conn.user.id, quoted: m });
+
+            await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [ERROR]: ${error.message}`);
+            console.error(`> [FORWARD HACK ERROR]: ${error.message}`);
             m.react('❌');
         }
     }
 };
 
-export default premiumVideoCommand;
+export default vokerForwardHack;
