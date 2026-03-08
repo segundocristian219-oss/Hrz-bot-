@@ -1,9 +1,9 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerUltimateLabel = {
+const vokerCleanLabel = {
     name: 'vbrand',
-    alias: ['etiqueta', 'vokerbrand'],
+    alias: ['vokerlabel', 'clean'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
@@ -11,46 +11,38 @@ const vokerUltimateLabel = {
 
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const buffer = Buffer.from(response.data);
+            const videoBuffer = Buffer.from(response.data);
 
             const message = generateWAMessageFromContent(m.chat, {
                 videoMessage: {
-                    video: buffer,
+                    video: videoBuffer,
                     mimetype: 'video/mp4',
-                    caption: `*── 「 SISTEMA VOKER 」 ──*`,
+                    caption: `*── 「 VOKER SYSTEM 」 ──*`,
                     gifPlayback: true,
-                    // QUITAMOS gifAttribution para evitar el bloqueo del servidor
+                    gifAttribution: 1, // Mantenemos esto para reservar el espacio de la etiqueta
                     contextInfo: {
-                        // FORZAMOS LA ETIQUETA DE CANAL (Esta es tu nueva etiqueta de marca)
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '1203631600301@newsletter', // ID genérico
-                            serverMessageId: 1,
-                            newsletterName: 'VOKER-SYSTEM-OFFICIAL' // AQUÍ TU MARCA
-                        },
+                        // EL HACK PARA EVITAR BOTONES:
+                        // Usamos sourceLabel para el nombre, pero dejamos sourceUrl vacío.
+                        // Esto hace que aparezca el nombre en la parte superior sin ser un link.
+                        sourceLabel: 'VOKER-SYSTEM-V2',
+                        sourceUrl: '', 
                         isForwarded: true,
                         forwardingScore: 1,
-                        // Añadimos una marca de agua visual extra
-                        externalAdReply: {
-                            title: 'VOKER AUTOMATION',
-                            body: 'Desarrollador Independiente',
-                            mediaType: 2,
-                            thumbnailUrl: 'https://dix.lat/logo.png',
-                            showAdAttribution: true
-                        }
+                        // NO incluir forwardedNewsletterMessageInfo para que no aparezca el botón de canal.
+                        // NO incluir externalAdReply para que no aparezca la "publicidad" de la miniatura.
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
 
-            // ENVÍO DIRECTO
             await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
             m.react('✅');
 
         } catch (error) {
-            console.error('> [BRAND ERROR]:', error.message);
+            console.error('> [ERROR]:', error.message);
             m.react('❌');
         }
     }
 };
 
-export default vokerUltimateLabel;
+export default vokerCleanLabel;
