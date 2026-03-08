@@ -1,78 +1,56 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerTripleFinalForce = {
-    name: 'vtestgif',
-    alias: ['vgif3', 'pruebagif'],
+const vokerBrandingSystem = {
+    name: 'vbrand',
+    alias: ['marcar', 'vokerlogo'],
     category: 'system',
-    run: async (m, { conn }) => {
-        m.react('🧪');
-
-        let videoBuffer;
-        const videoUrl = 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
-        
+    run: async (m, { conn, text }) => {
         try {
+            m.react('🏷️');
+
+            const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            videoBuffer = Buffer.from(response.data);
-        } catch (e) {
-            return m.react('❌');
+            const buffer = Buffer.from(response.data);
+
+            const message = generateWAMessageFromContent(m.chat, {
+                videoMessage: {
+                    video: buffer,
+                    mimetype: 'video/mp4',
+                    caption: `*── 「 PROPIEDAD DE VOKER SYSTEM 」 ──*\n\n_Contenido generado y verificado mediante motor de automatización profesional._`,
+                    gifPlayback: true,
+                    gifAttribution: 1, // Espacio reservado para etiqueta
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardingScore: 1,
+                        // INYECCIÓN DE MARCA DE AGUA DIGITAL
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '1203631600301@newsletter',
+                            serverMessageId: 100,
+                            newsletterName: 'DEYLIN-ELIAC | VOKER-SYSTEM' // TU ETIQUETA DE MARCA
+                        },
+                        // CABECERA DE VERIFICACIÓN
+                        externalAdReply: {
+                            title: 'VOKER AUTOMATION ENGINE v5.0',
+                            body: 'Verified Independent Developer',
+                            mediaType: 2,
+                            thumbnailUrl: 'https://dix.lat/logo.png',
+                            sourceUrl: 'https://dix.lat',
+                            showAdAttribution: true
+                        }
+                    }
+                }
+            }, { userJid: conn.user.id, quoted: m });
+
+            await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
+
+            m.react('✅');
+
+        } catch (error) {
+            console.error('> [BRANDING ERROR]:', error.message);
+            m.react('❌');
         }
-
-        // PRUEBA 1: Inyección vía ViewOnce (A veces salta filtros de metadatos)
-        try {
-            await conn.sendMessage(m.chat, {
-                video: videoBuffer,
-                caption: '*── 「 PRUEBA 1: NATIVO + GIPHY 」 ──*',
-                gifPlayback: true,
-                gifAttribution: 1,
-                viewOnce: true,
-                contextInfo: {
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '0@newsletter',
-                        serverMessageId: 1,
-                        newsletterName: 'VOKER-SYSTEM-V2'
-                    }
-                }
-            }, { quoted: m });
-        } catch (e) {}
-
-        // PRUEBA 2: Inyección vía AdReply (La más estable para que no se borre)
-        try {
-            await conn.sendMessage(m.chat, {
-                video: videoBuffer,
-                caption: '*── 「 PRUEBA 2: AD REPLY HACK 」 ──*',
-                gifPlayback: true,
-                gifAttribution: 1,
-                contextInfo: {
-                    externalAdReply: {
-                        title: 'VOKER-SYSTEM-V2',
-                        body: 'Verified Media',
-                        mediaType: 2,
-                        thumbnailUrl: 'https://dix.lat/logo.png',
-                        showAdAttribution: true,
-                        sourceUrl: 'https://dix.lat'
-                    }
-                }
-            }, { quoted: m });
-        } catch (e) {}
-
-        // PRUEBA 3: Inyección vía Mentions (Engaña al renderizado de etiqueta)
-        try {
-            await conn.sendMessage(m.chat, {
-                video: videoBuffer,
-                caption: '*── 「 PRUEBA 3: MENTION HACK 」 ──*',
-                gifPlayback: true,
-                gifAttribution: 1,
-                mentions: [m.sender],
-                contextInfo: {
-                    isForwarded: true,
-                    forwardingScore: 1,
-                    sourceLabel: 'VOKER-SYSTEM-V2'
-                }
-            }, { quoted: m });
-        } catch (e) {}
-
-        m.react('✅');
     }
 };
 
-export default vokerTripleFinalForce;
+export default vokerBrandingSystem;
