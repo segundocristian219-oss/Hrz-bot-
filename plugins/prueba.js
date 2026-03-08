@@ -1,9 +1,9 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerGiphyHack = {
-    name: 'vhack',
-    alias: ['nombregif', 'vlabelgif'],
+const vokerGiphyHackRaw = {
+    name: 'vokerraw',
+    alias: ['inyectar'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
@@ -18,38 +18,36 @@ const vokerGiphyHack = {
                     url: videoUrl,
                     mimetype: 'video/mp4',
                     fileLength: buffer.length,
-                    caption: `*── 「 VOKER SYSTEM HACK 」 ──*`,
-                    gifPlayback: true, // Se envía como GIF para activar la etiqueta
-                    gifAttribution: 1, // Reservamos el espacio de GIPHY
+                    seconds: 3,
+                    gifPlayback: true, 
+                    // Engañamos al enumerador para que abra el espacio de etiqueta
+                    gifAttribution: 1, 
                     contextInfo: {
+                        // FUERZA BRUTA: Inyectamos tu nombre donde el sistema espera el origen
+                        sourceLabel: 'VOKER-SYSTEM-V2', 
+                        sourceUrl: 'https://dix.lat',
                         isForwarded: true,
                         forwardingScore: 1,
-                        // EL HACK: Inyectamos metadatos de Newsletter para cambiar el nombre
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '1203631600301@newsletter',
                             serverMessageId: 100,
-                            newsletterName: 'VOKER-SYSTEM-V2' // ESTE ES EL NOMBRE QUE APARECERÁ
-                        },
-                        // Opcional: Esto añade una segunda capa de marca
-                        externalAdReply: {
-                            title: 'CONTENIDO PREMIUM',
-                            mediaType: 2,
-                            thumbnailUrl: 'https://dix.lat/logo.png',
-                            showAdAttribution: true
+                            // Este campo suele pisar visualmente a "GIPHY" en versiones modernas
+                            newsletterName: 'VOKER-SYSTEM-V2' 
                         }
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
 
+            // Enviamos el mensaje crudo al socket
             await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [HACK ERROR]: ${error.message}`);
+            console.error(`> [RAW HACK ERROR]: ${error.message}`);
             m.react('❌');
         }
     }
 };
 
-export default vokerGiphyHack;
+export default vokerGiphyHackRaw;
