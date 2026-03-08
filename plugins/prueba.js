@@ -1,15 +1,15 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerTripleTest = {
-    name: 'vtest',
-    alias: ['tripletest', 'voker3'],
+const vokerTripleGifTest = {
+    name: 'vtestgif',
+    alias: ['vgif3', 'pruebagif'],
     category: 'system',
-    run: async (m, { conn, text }) => {
+    run: async (m, { conn }) => {
         try {
             m.react('🧪');
 
-            const videoUrl = 'https://raw.githubusercontent.com/DeylinEliac/voker-assets/main/video_demo.mp4';
+            const videoUrl = 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
             const videoBuffer = Buffer.from(response.data);
 
@@ -17,7 +17,7 @@ const vokerTripleTest = {
                 videoMessage: {
                     video: videoBuffer,
                     mimetype: 'video/mp4',
-                    caption: '*── 「 PRUEBA 1: VIDEO + GIPHY HACK 」 ──*',
+                    caption: '*── 「 PRUEBA 1: NEWSLETTER OVERLAY 」 ──*',
                     gifPlayback: true,
                     gifAttribution: 1,
                     contextInfo: {
@@ -34,29 +34,40 @@ const vokerTripleTest = {
             await conn.relayMessage(m.chat, msg1.message, { messageId: msg1.key.id });
 
             const msg2 = generateWAMessageFromContent(m.chat, {
-                extendedTextMessage: {
-                    text: '*── 「 PRUEBA 2: IDENTIDAD PREMIUM 」 ──*\nMensaje con estética de canal oficial.',
+                videoMessage: {
+                    video: videoBuffer,
+                    mimetype: 'video/mp4',
+                    caption: '*── 「 PRUEBA 2: SOURCE LABEL INJECTION 」 ──*',
+                    gifPlayback: true,
+                    gifAttribution: 1,
                     contextInfo: {
                         isForwarded: true,
                         forwardingScore: 1,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '1203631600301@newsletter',
-                            serverMessageId: 100,
-                            newsletterName: 'VOKER-OFFICIAL-BRAND'
-                        }
+                        sourceLabel: 'VOKER-SYSTEM-V2',
+                        sourceUrl: 'https://dix.lat',
+                        showAdAttribution: true
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
             await conn.relayMessage(m.chat, msg2.message, { messageId: msg2.key.id });
 
             const msg3 = generateWAMessageFromContent(m.chat, {
-                extendedTextMessage: {
-                    text: '*── 「 PRUEBA 3: TEXTO VERDE LIMPIO 」 ──*\nSin botones y sin vistas previas.',
+                videoMessage: {
+                    video: videoBuffer,
+                    mimetype: 'video/mp4',
+                    caption: '*── 「 PRUEBA 3: AD ATTRIBUTION HACK 」 ──*',
+                    gifPlayback: true,
+                    gifAttribution: 1,
                     contextInfo: {
                         isForwarded: true,
                         forwardingScore: 1,
-                        sourceLabel: 'VOKER-SYSTEM-V2',
-                        sourceUrl: ''
+                        externalAdReply: {
+                            title: 'VOKER-SYSTEM-V2',
+                            body: 'Verified Media',
+                            mediaType: 2,
+                            thumbnailUrl: 'https://dix.lat/logo.png',
+                            showAdAttribution: true
+                        }
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
@@ -71,4 +82,4 @@ const vokerTripleTest = {
     }
 };
 
-export default vokerTripleTest;
+export default vokerTripleGifTest;
