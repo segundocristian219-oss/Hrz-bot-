@@ -33,6 +33,7 @@ console.error = function () {
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', async (err) => {
+    if (err.message?.includes('EPIPE') || err.message?.includes('ECONNRESET')) return;
     console.error(chalk.red.bold('CRITICAL:'), err);
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
@@ -96,14 +97,16 @@ const { version } = await fetchLatestBaileysVersion();
 const msgRetryCounterCache = new NodeCache();
 global.groupCache = new Map();
 
+const silentLogger = pino({ level: 'silent' });
+
 const connectionOptions = {
   version,
-  logger: pino({ level: 'silent' }), 
+  logger: silentLogger, 
   printQRInTerminal: false,
   browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
+    keys: makeCacheableSignalKeyStore(state.keys, silentLogger), 
   },
   markOnlineOnConnect: true,
   generateHighQualityLinkPreview: true,
@@ -129,7 +132,7 @@ if (!state.creds.registered) {
             let codeBot = await conn.requestPairingCode(addNumber);
             codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
             console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
-        } catch (e) { console.error(e); }
+        } catch (e) { }
     }, 3000);
 }
 
@@ -164,7 +167,7 @@ const loadHandler = async () => {
         const Path = path.join(process.cwd(), 'lib/message.js');
         const module = await import(`file://${Path}?update=${Date.now()}`);
         messageHandler = module.message || module.default?.message || module.default;
-    } catch (e) { console.error(e); }
+    } catch (e) { }
 };
 await loadHandler();
 watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
@@ -173,16 +176,16 @@ global.reload = async function(restatConn) {
   if (restatConn) {
     msgRetryCounterCache.flushAll();
     if (global.conn) {
-        const originalWrite = process.stdout.write;
-        process.stdout.write = () => {}; 
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.terminate(); } catch {}
-        setTimeout(() => { process.stdout.write = originalWrite; }, 200);
     }
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
+    setupEvents();
   }
+};
 
+function setupEvents() {
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const msg = chatUpdate.messages[0];
@@ -191,7 +194,6 @@ global.reload = async function(restatConn) {
         if (typeof messageHandler === 'function') await messageHandler.call(conn, m, chatUpdate);
     } catch (e) {
         if (!e.message?.includes('decrypt')) {
-            console.error(e);
             await uploadCriticalError(e, 'Message Upsert');
         }
     }
@@ -205,11 +207,8 @@ global.reload = async function(restatConn) {
         await monitorBot(conn, 'offline');
         if (reason === DisconnectReason.loggedOut) process.exit(1);
         if (global.conn) {
-            const originalWrite = process.stdout.write;
-            process.stdout.write = () => {};
             global.conn.ev.removeAllListeners();
             try { global.conn.ws.terminate(); } catch {}
-            setTimeout(() => { process.stdout.write = originalWrite; }, 200);
         }
         let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
         setTimeout(() => global.reload(true), delay);
@@ -240,9 +239,7 @@ global.reload = async function(restatConn) {
                 attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
                 content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Activo | ${timeNow}`, 'utf-8') }]
             });
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { }
 
         await monitorBot(conn, 'online');
         if (global.keepAlive) clearInterval(global.keepAlive);
@@ -278,9 +275,9 @@ global.reload = async function(restatConn) {
           }
       });
   }
-};
+}
 
-await global.reload();
+setupEvents();
 
 const pluginFolder = join(process.cwd(), './plugins');
 const pluginFilter = (filename) => /\.js$/.test(filename);
