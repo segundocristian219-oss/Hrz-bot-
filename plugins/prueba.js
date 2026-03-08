@@ -1,30 +1,38 @@
 import axios from 'axios';
 
-const premiumVideoCommand = {
-    name: 'vpremium',
-    alias: ['vokerlabel'],
+const vokerCustomLabelCommand = {
+    name: 'vlabel',
+    alias: ['vokerbrand'],
     category: 'fun',
     run: async (m, { conn, text }) => {
         try {
             m.react('🕒');
 
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
-            
-            // Obtenemos el video como buffer para asegurar que los metadatos se inyecten correctamente
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
             const videoBuffer = Buffer.from(response.data, 'utf-8');
 
             await conn.sendMessage(m.chat, { 
                 video: videoBuffer, 
-                caption: `*── 「 VOKER PREMIUM 」 ──*`,
+                caption: `*── 「 VOKER SYSTEM 」 ──*`,
                 mimetype: 'video/mp4',
-                // Engaño: Activamos esto para la etiqueta, pero el buffer de video normal mantendrá sus propiedades
-                gifPlayback: true, 
-                gifAttribution: 1, // Usar 1 (GIPHY) o 2 (TENOR) fuerza la aparición del logo en el chat
+                // IMPORTANTE: Eliminamos gifPlayback para que sea VIDEO NORMAL
+                gifPlayback: false, 
                 contextInfo: {
-                    // Esto ayuda a que el sistema lo vea como contenido de plataforma
-                    isForwarded: true,
-                    forwardingScore: 999
+                    externalAdReply: {
+                        // AQUÍ PONES TU NOMBRE PERSONALIZADO
+                        title: 'VOKER-SYSTEM-V2', 
+                        body: 'Contenido Verificado',
+                        mediaType: 2,
+                        // Logo de tu bot para que se vea más profesional
+                        thumbnailUrl: 'https://dix.lat/logo.png', 
+                        sourceUrl: 'https://dix.lat',
+                        // Esto fuerza a que se vea como un contenido de marca propia
+                        showAdAttribution: true 
+                    },
+                    // Mantenemos esto para el estilo Premium
+                    forwardingScore: 1,
+                    isForwarded: true
                 }
             }, { quoted: m });
 
@@ -37,4 +45,4 @@ const premiumVideoCommand = {
     }
 };
 
-export default premiumVideoCommand;
+export default vokerCustomLabelCommand;
