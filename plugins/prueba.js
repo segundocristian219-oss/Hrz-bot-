@@ -1,33 +1,21 @@
 import axios from 'axios';
 
-const vokerVideoCommand = {
-    name: 'vvideo',
-    alias: ['vgif', 'etiqueta'],
+const vokerVideoCleanCommand = {
+    name: 'vvideo2',
+    alias: ['vclean', 'etiquetapura'],
     category: 'fun',
     run: async (m, { conn, text }) => {
         try {
             m.react('🕒');
 
-            // URL de video random (puedes cambiarla por cualquier link directo a un mp4)
-            const videoUrl = text || 'https://api.dix.lat/media/1772941561826_pQa-g7DfE.mp4';
+            const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
 
             await conn.sendMessage(m.chat, { 
                 video: { url: videoUrl }, 
-                caption: `*── 「 VIDEO ATTRIBUTION 」 ──*\n\n> 🎬 Video enviado con etiqueta oficial.\n\n*❯ Proveedor:* GIPHY`,
+                caption: `*── 「 VIDEO CON ETIQUETA 」 ──*\n\n> 🎬 Video normal con atribución oficial.`,
                 mimetype: 'video/mp4',
-                // EL TRUCO: Enviamos true para la etiqueta, pero WhatsApp lo tratará como video por el mimetype
-                gifPlayback: true, 
-                gifAttribution: "GIPHY",
-                contextInfo: {
-                    externalAdReply: {
-                        title: 'Voker Systems Official Content',
-                        body: 'Verified Media via GIPHY',
-                        mediaType: 2,
-                        // Aquí podrías poner una miniatura si quisieras
-                        thumbnailUrl: 'https://dix.lat/logo.png', 
-                        sourceUrl: 'https://dix.lat'
-                    }
-                }
+                // Enviamos la atribución pero NO el playback de GIF para que sea un video normal
+                gifAttribution: name()
             }, { quoted: m });
 
             m.react('✅');
@@ -39,4 +27,4 @@ const vokerVideoCommand = {
     }
 };
 
-export default vokerVideoCommand;
+export default vokerVideoCleanCommand;
