@@ -1,67 +1,55 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerBruteForceV2 = {
-    name: 'vforce2',
-    alias: ['hacklabel2', 'fuerzatotal'],
+const vokerGiphyHack = {
+    name: 'vhack',
+    alias: ['nombregif', 'vlabelgif'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('⚡');
+            m.react('🧬');
 
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
             const buffer = Buffer.from(response.data);
 
-            // CREACIÓN DEL PROTOBUFF CON ENGAÑO DE ORIGEN
             const message = generateWAMessageFromContent(m.chat, {
                 videoMessage: {
                     url: videoUrl,
                     mimetype: 'video/mp4',
                     fileLength: buffer.length,
-                    caption: `*── 「 VOKER SYSTEM FORCE 」 ──*`,
-                    // Forzamos el envío como GIF para activar la etiqueta negra
-                    gifPlayback: true, 
-                    gifAttribution: 1, // Simulamos GIPHY para que el cliente abra el espacio de la etiqueta
+                    caption: `*── 「 VOKER SYSTEM HACK 」 ──*`,
+                    gifPlayback: true, // Se envía como GIF para activar la etiqueta
+                    gifAttribution: 1, // Reservamos el espacio de GIPHY
                     contextInfo: {
-                        // AQUÍ ESTÁ EL HACK: Sobreescribimos la etiqueta de plataforma
-                        // Engañamos al visualizador para que use nuestro texto en lugar del nombre del proveedor
-                        sourceLabel: 'VOKER-BOT-V2', 
-                        sourceUrl: 'https://dix.lat',
-                        externalAdReply: {
-                            title: 'VOKER PREMIUM CONTENT',
-                            body: 'Sistema Verificado',
-                            mediaType: 2,
-                            thumbnailUrl: 'https://dix.lat/logo.png',
-                            showAdAttribution: true
-                        },
                         isForwarded: true,
-                        forwardingScore: 1000,
+                        forwardingScore: 1,
+                        // EL HACK: Inyectamos metadatos de Newsletter para cambiar el nombre
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '1203631600301@newsletter',
                             serverMessageId: 100,
-                            newsletterName: 'Voker Systems Updates' // Nombre que aparecerá arriba del mensaje
+                            newsletterName: 'VOKER-SYSTEM-V2' // ESTE ES EL NOMBRE QUE APARECERÁ
+                        },
+                        // Opcional: Esto añade una segunda capa de marca
+                        externalAdReply: {
+                            title: 'CONTENIDO PREMIUM',
+                            mediaType: 2,
+                            thumbnailUrl: 'https://dix.lat/logo.png',
+                            showAdAttribution: true
                         }
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
 
-            // RELAY MESSAGE: Envío de fuerza bruta directo al flujo de datos
-            await conn.relayMessage(m.chat, message.message, { 
-                messageId: message.key.id,
-                additionalAttributes: {
-                    // Forzamos el atributo de procedencia
-                    category: 'platform_verified'
-                }
-            });
+            await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [FATAL ERROR]: ${error.message}`);
+            console.error(`> [HACK ERROR]: ${error.message}`);
             m.react('❌');
         }
     }
 };
 
-export default vokerBruteForceV2;
+export default vokerGiphyHack;
