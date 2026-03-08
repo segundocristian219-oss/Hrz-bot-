@@ -10,7 +10,9 @@ const dsCommand = {
             return m.reply('> *Este comando solo puede ser ejecutado por el bot principal.*')
         }*/
 
-        if (!isROwner) return;
+        if (!isROwner) {
+            return m.reply('> *Este comando solo puede ser ejecutado por los desarrolladores.*')
+        }
 
         const sessionPath = `./${global.sessions || 'sessions'}/`
         const tmpPath = './tmp/'
