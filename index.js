@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+Process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -8,7 +8,7 @@ import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, unlinkSync } f
 import chalk from 'chalk';
 import pino from 'pino';
 import yargs from 'yargs';
-import { Boom } from '@hapi/boom';
+import { Boom } from '@hapi_boom';
 import NodeCache from 'node-cache';
 import readline from 'readline';
 import cfonts from 'cfonts';
@@ -33,7 +33,6 @@ console.error = function () {
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', async (err) => {
-    if (err.message?.includes('EPIPE') || err.message?.includes('ECONNRESET')) return;
     console.error(chalk.red.bold('CRITICAL:'), err);
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
@@ -45,9 +44,9 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
     connectTimeoutMS: 10000,
     family: 4                          
 })
-.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado')))
+.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado (Bypass SSL Activo)')))
 .catch((err) => {
-    console.error(chalk.red('┃ DATABASE: Error ->'), err.message);
+    console.error(chalk.red('┃ DATABASE: Error de Conexión ->'), err.message);
     setTimeout(() => global.reload(true), 5000);
 });
 
@@ -97,16 +96,14 @@ const { version } = await fetchLatestBaileysVersion();
 const msgRetryCounterCache = new NodeCache();
 global.groupCache = new Map();
 
-const silentLogger = pino({ level: 'silent' });
-
 const connectionOptions = {
   version,
-  logger: silentLogger, 
+  logger: pino({ level: 'silent' }), 
   printQRInTerminal: false,
   browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, silentLogger), 
+    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
   markOnlineOnConnect: true,
   generateHighQualityLinkPreview: true,
@@ -118,23 +115,6 @@ const connectionOptions = {
   emitOwnEvents: true,
   getMessage: async (key) => ({ conversation: "" })
 };
-
-global.conn = makeWASocket(connectionOptions);
-
-if (!state.creds.registered) {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
-    console.log(chalk.cyan('┃ ') + chalk.bold('AUTENTICACIÓN REQUERIDA'));
-    let phoneNumber = await question(chalk.cyan('┃ ') + `Ingresa el número:\n` + chalk.cyan('┗ ') + `> `);
-    let addNumber = phoneNumber.replace(/\D/g, '');
-    setTimeout(async () => {
-        try {
-            let codeBot = await conn.requestPairingCode(addNumber);
-            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
-        } catch (e) { }
-    }, 3000);
-}
 
 const cleanSessions = async () => {
     const sessionDir = './sessions';
@@ -167,7 +147,7 @@ const loadHandler = async () => {
         const Path = path.join(process.cwd(), 'lib/message.js');
         const module = await import(`file://${Path}?update=${Date.now()}`);
         messageHandler = module.message || module.default?.message || module.default;
-    } catch (e) { }
+    } catch (e) { console.error(e); }
 };
 await loadHandler();
 watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
@@ -177,15 +157,29 @@ global.reload = async function(restatConn) {
     msgRetryCounterCache.flushAll();
     if (global.conn) {
         global.conn.ev.removeAllListeners();
-        try { global.conn.ws.terminate(); } catch {}
+        try { global.conn.ws.close(); } catch {}
     }
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
-    setupEvents();
+  } else {
+    global.conn = makeWASocket(connectionOptions);
   }
-};
 
-function setupEvents() {
+  if (!state.creds.registered) {
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+      const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
+      console.log(chalk.cyan('┃ ') + chalk.bold('AUTENTICACIÓN REQUERIDA'));
+      let phoneNumber = await question(chalk.cyan('┃ ') + `Ingresa el número:\n` + chalk.cyan('┗ ') + `> `);
+      let addNumber = phoneNumber.replace(/\D/g, '');
+      setTimeout(async () => {
+          try {
+              let codeBot = await conn.requestPairingCode(addNumber);
+              codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
+              console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
+          } catch (e) { console.error(e); }
+      }, 3000);
+  }
+
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const msg = chatUpdate.messages[0];
@@ -194,24 +188,41 @@ function setupEvents() {
         if (typeof messageHandler === 'function') await messageHandler.call(conn, m, chatUpdate);
     } catch (e) {
         if (!e.message?.includes('decrypt')) {
+            console.error(e);
             await uploadCriticalError(e, 'Message Upsert');
         }
     }
   });
 
+  global.conn.ev.on('groups.update', async ([update]) => {
+      const id = update.id;
+      if (global.groupCache.has(id)) {
+          let current = global.groupCache.get(id);
+          global.groupCache.set(id, { ...current, ...update });
+      }
+  });
+
+  global.conn.ev.on('group-participants.update', async ({ id }) => {
+      try {
+          const fresh = await conn.groupMetadata(id);
+          global.groupCache.set(id, fresh);
+      } catch (e) {}
+  });
+
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
-    const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
 
     if (connection === 'close') {
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
         await monitorBot(conn, 'offline');
-        if (reason === DisconnectReason.loggedOut) process.exit(1);
-        if (global.conn) {
-            global.conn.ev.removeAllListeners();
-            try { global.conn.ws.terminate(); } catch {}
+        if (reason === DisconnectReason.loggedOut) {
+            console.log(chalk.red('┃ ') + chalk.bold('SESIÓN CERRADA PERMANENTEMENTE.'));
+            process.exit(1);
+        } else {
+            console.log(chalk.red('┃ ') + chalk.white('Conexión cerrada. Reiniciando...'));
+            let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
+            setTimeout(() => global.reload(true), delay);
         }
-        let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
-        setTimeout(() => global.reload(true), delay);
     }
 
     if (connection === 'open') {
@@ -220,26 +231,20 @@ function setupEvents() {
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
 
-        const ownerJid = global.owner[0][0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
         const botName = 'APOCALYPSE VX';
         const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
 
-        const statusMsg = `╔══『 *ESTADO DEL SISTEMA* 』══╗\n` +
-                          `║ • *Dispositivo:* Vinculado ✅\n` +
-                          `║ • *Bot:* ${botName}\n` +
-                          `║ • *Estado:* Cuenta Bot Activa\n` +
-                          `║ • *Inicio:* ${timeNow}\n` +
-                          `╚══════════════════════╝\n` +
-                          `> © Powered by VOKER Platform.`;
-
         try {
-            await conn.sendMessage(ownerJid, { text: statusMsg });
             await conn.query({
                 tag: 'iq',
                 attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Activo | ${timeNow}`, 'utf-8') }]
+                content: [{
+                    tag: 'status',
+                    attrs: {},
+                    content: Buffer.from(`${botName} Online | ${timeNow}`, 'utf-8')
+                }]
             });
-        } catch (e) { }
+        } catch (e) { console.error(e); }
 
         await monitorBot(conn, 'online');
         if (global.keepAlive) clearInterval(global.keepAlive);
@@ -249,7 +254,11 @@ function setupEvents() {
                 await conn.query({
                     tag: 'iq',
                     attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Activo | ${liveTime}`, 'utf-8') }]
+                    content: [{
+                        tag: 'status',
+                        attrs: {},
+                        content: Buffer.from(`${botName} Online | ${liveTime}`, 'utf-8')
+                    }]
                 });
             } catch {}
         }, 10 * 60 * 1000);
@@ -275,9 +284,9 @@ function setupEvents() {
           }
       });
   }
-}
+};
 
-setupEvents();
+await global.reload();
 
 const pluginFolder = join(process.cwd(), './plugins');
 const pluginFilter = (filename) => /\.js$/.test(filename);
@@ -285,7 +294,6 @@ global.plugins = new Map();
 global.aliases = new Map();
 
 async function readRecursive(folder) {
-  if (!existsSync(folder)) return;
   for (const filename of readdirSync(folder)) {
     const file = join(folder, filename);
     if (statSync(file).isDirectory()) await readRecursive(file);
