@@ -1,48 +1,56 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerStealthBrand = {
-    name: 'vbrandfinal',
-    alias: ['vfinal', 'fuerza'],
+const vokerUltimateLabel = {
+    name: 'vbrand',
+    alias: ['etiqueta', 'vokerbrand'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🧪');
+            m.react('🏷️');
 
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const videoBuffer = Buffer.from(response.data);
+            const buffer = Buffer.from(response.data);
 
             const message = generateWAMessageFromContent(m.chat, {
                 videoMessage: {
-                    video: videoBuffer,
+                    video: buffer,
                     mimetype: 'video/mp4',
-                    caption: `*── 「 VOKER SYSTEM BRAND 」 ──*`,
+                    caption: `*── 「 SISTEMA VOKER 」 ──*`,
                     gifPlayback: true,
-                    gifAttribution: 1, // Activamos el espacio de etiqueta
+                    // QUITAMOS gifAttribution para evitar el bloqueo del servidor
                     contextInfo: {
+                        // FORZAMOS LA ETIQUETA DE CANAL (Esta es tu nueva etiqueta de marca)
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '1203631600301@newsletter', // ID genérico
+                            serverMessageId: 1,
+                            newsletterName: 'VOKER-SYSTEM-OFFICIAL' // AQUÍ TU MARCA
+                        },
                         isForwarded: true,
                         forwardingScore: 1,
-                        // ESTE ES EL NOMBRE QUE QUEREMOS INYECTAR
-                        sourceLabel: 'VOKER-SYSTEM-V2',
-                        sourceUrl: 'https://dix.lat',
-                        showAdAttribution: true
+                        // Añadimos una marca de agua visual extra
+                        externalAdReply: {
+                            title: 'VOKER AUTOMATION',
+                            body: 'Desarrollador Independiente',
+                            mediaType: 2,
+                            thumbnailUrl: 'https://dix.lat/logo.png',
+                            showAdAttribution: true
+                        }
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
 
-            // RELAY SIN ATRIBUTOS EXTRA (Limpieza total del nodo)
-            await conn.relayMessage(m.chat, message.message, { 
-                messageId: message.key.id 
-            });
+            // ENVÍO DIRECTO
+            await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
             m.react('✅');
 
         } catch (error) {
-            console.error('> [FATAL ERROR]:', error.message);
+            console.error('> [BRAND ERROR]:', error.message);
             m.react('❌');
         }
     }
 };
 
-export default vokerStealthBrand;
+export default vokerUltimateLabel;
