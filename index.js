@@ -1,4 +1,4 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
@@ -8,7 +8,7 @@ import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, unlinkSync } f
 import chalk from 'chalk';
 import pino from 'pino';
 import yargs from 'yargs';
-import { Boom } from '@hapi_boom';
+import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
 import readline from 'readline';
 import cfonts from 'cfonts';
@@ -33,7 +33,6 @@ console.error = function () {
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', async (err) => {
-    console.error(chalk.red.bold('CRITICAL:'), err);
     try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
 });
 
@@ -44,9 +43,8 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
     connectTimeoutMS: 10000,
     family: 4                          
 })
-.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado (Bypass SSL Activo)')))
-.catch((err) => {
-    console.error(chalk.red('┃ DATABASE: Error de Conexión ->'), err.message);
+.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado')))
+.catch(() => {
     setTimeout(() => global.reload(true), 5000);
 });
 
@@ -113,22 +111,38 @@ const connectionOptions = {
   defaultQueryTimeoutMs: 60000,
   keepAliveIntervalMs: 10000,
   emitOwnEvents: true,
-  getMessage: async (key) => ({ conversation: "" })
+  getMessage: async () => ({ conversation: "" })
 };
 
+global.conn = makeWASocket(connectionOptions);
+
+if (!state.creds.registered) {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
+    console.log(chalk.cyan('┃ ') + chalk.bold('AUTENTICACIÓN REQUERIDA'));
+    let phoneNumber = await question(chalk.cyan('┃ ') + `Número:\n` + chalk.cyan('┗ ') + `> `);
+    let addNumber = phoneNumber.replace(/\D/g, '');
+    setTimeout(async () => {
+        try {
+            let codeBot = await conn.requestPairingCode(addNumber);
+            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
+            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
+        } catch {}
+    }, 3000);
+}
+
 const cleanSessions = async () => {
-    const sessionDir = './sessions';
-    if (!existsSync(sessionDir)) return;
-    const files = readdirSync(sessionDir);
+    if (!existsSync(sessionPath)) return;
+    const files = readdirSync(sessionPath);
     const now = Date.now();
     const limit = 3 * 24 * 60 * 60 * 1000;
     for (const file of files) {
         if (file === 'creds.json') continue;
-        const filePath = join(sessionDir, file);
+        const filePath = join(sessionPath, file);
         try {
             const { mtime } = statSync(filePath);
             if (now - mtime.getTime() > limit) unlinkSync(filePath);
-        } catch (e) {}
+        } catch {}
     }
 };
 
@@ -138,7 +152,7 @@ setInterval(async () => {
         await global.User.deleteMany({ lastSeen: { $lt: tresDiasAgo } });
         await global.Chat.deleteMany({ lastUpdate: { $lt: tresDiasAgo } });
         await cleanSessions();
-    } catch (e) {}
+    } catch {}
 }, 86400000);
 
 let messageHandler;
@@ -147,7 +161,7 @@ const loadHandler = async () => {
         const Path = path.join(process.cwd(), 'lib/message.js');
         const module = await import(`file://${Path}?update=${Date.now()}`);
         messageHandler = module.message || module.default?.message || module.default;
-    } catch (e) { console.error(e); }
+    } catch {}
 };
 await loadHandler();
 watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
@@ -161,23 +175,6 @@ global.reload = async function(restatConn) {
     }
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
-  } else {
-    global.conn = makeWASocket(connectionOptions);
-  }
-
-  if (!state.creds.registered) {
-      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-      const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
-      console.log(chalk.cyan('┃ ') + chalk.bold('AUTENTICACIÓN REQUERIDA'));
-      let phoneNumber = await question(chalk.cyan('┃ ') + `Ingresa el número:\n` + chalk.cyan('┗ ') + `> `);
-      let addNumber = phoneNumber.replace(/\D/g, '');
-      setTimeout(async () => {
-          try {
-              let codeBot = await conn.requestPairingCode(addNumber);
-              codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-              console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
-          } catch (e) { console.error(e); }
-      }, 3000);
   }
 
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
@@ -187,10 +184,7 @@ global.reload = async function(restatConn) {
         const m = await smsg(conn, msg);
         if (typeof messageHandler === 'function') await messageHandler.call(conn, m, chatUpdate);
     } catch (e) {
-        if (!e.message?.includes('decrypt')) {
-            console.error(e);
-            await uploadCriticalError(e, 'Message Upsert');
-        }
+        if (!e.message?.includes('decrypt')) await uploadCriticalError(e, 'Message Upsert');
     }
   });
 
@@ -206,7 +200,7 @@ global.reload = async function(restatConn) {
       try {
           const fresh = await conn.groupMetadata(id);
           global.groupCache.set(id, fresh);
-      } catch (e) {}
+      } catch {}
   });
 
   global.conn.ev.on('connection.update', async (update) => {
@@ -215,14 +209,15 @@ global.reload = async function(restatConn) {
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
         await monitorBot(conn, 'offline');
-        if (reason === DisconnectReason.loggedOut) {
-            console.log(chalk.red('┃ ') + chalk.bold('SESIÓN CERRADA PERMANENTEMENTE.'));
-            process.exit(1);
-        } else {
-            console.log(chalk.red('┃ ') + chalk.white('Conexión cerrada. Reiniciando...'));
-            let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
-            setTimeout(() => global.reload(true), delay);
+        if (reason === DisconnectReason.loggedOut) process.exit(1);
+        
+        if (global.conn) {
+            global.conn.ev.removeAllListeners();
+            try { global.conn.ws.terminate(); } catch {}
         }
+        
+        let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
+        setTimeout(() => global.reload(true), delay);
     }
 
     if (connection === 'open') {
@@ -232,36 +227,22 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
 
         const botName = 'APOCALYPSE VX';
-        const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
-
-        try {
-            await conn.query({
-                tag: 'iq',
-                attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                content: [{
-                    tag: 'status',
-                    attrs: {},
-                    content: Buffer.from(`${botName} Online | ${timeNow}`, 'utf-8')
-                }]
-            });
-        } catch (e) { console.error(e); }
-
-        await monitorBot(conn, 'online');
-        if (global.keepAlive) clearInterval(global.keepAlive);
-        global.keepAlive = setInterval(async () => {
-            try { 
-                const liveTime = new Date().toLocaleString('es-HN', { hour12: true });
+        const updateStatus = async () => {
+            try {
+                const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
                 await conn.query({
                     tag: 'iq',
                     attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{
-                        tag: 'status',
-                        attrs: {},
-                        content: Buffer.from(`${botName} Online | ${liveTime}`, 'utf-8')
-                    }]
+                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Online | ${timeNow}`, 'utf-8') }]
                 });
             } catch {}
-        }, 10 * 60 * 1000);
+        };
+
+        await updateStatus();
+        await monitorBot(conn, 'online');
+
+        if (global.keepAlive) clearInterval(global.keepAlive);
+        global.keepAlive = setInterval(updateStatus, 10 * 60 * 1000);
 
         if (!global.subBotsStarted) {
             global.subBotsStarted = true;
@@ -280,7 +261,7 @@ global.reload = async function(restatConn) {
                   const module = await import(`file://${join(eventFolder, file)}?update=${Date.now()}`);
                   const eventFunc = module.default || module;
                   if (typeof eventFunc === 'function') eventFunc(global.conn);
-              } catch (e) {}
+              } catch {}
           }
       });
   }
@@ -307,7 +288,7 @@ async function readRecursive(folder) {
             const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
             aliases.forEach(a => global.aliases.set(a, pluginName));
         }
-      } catch (e) {}
+      } catch {}
     }
   }
 }
@@ -328,7 +309,7 @@ watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
             aliases.forEach(a => global.aliases.set(a, pluginName));
         }
         console.log(chalk.cyan('┃ ') + chalk.white(`Update: ${pluginName}`));
-      } catch (e) {}
+      } catch {}
     }
   }
 });
@@ -343,6 +324,6 @@ async function initSubBots() {
         try {
             const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
             await assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
-        } catch (e) {}
+        } catch {}
     }));
 }
