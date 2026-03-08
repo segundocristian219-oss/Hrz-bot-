@@ -5,11 +5,12 @@ const dsCommand = {
     name: 'ds',
     alias: ['cleansession', 'limpiar'],
     category: 'owner',
-    rowner: true,
     run: async (m, { conn, isMainBot }) => {
        /* if (!isMainBot) {
             return m.reply('> *Este comando solo puede ser ejecutado por el bot principal.*')
         }*/
+
+        if (!isROwner) return;
 
         const sessionPath = `./${global.sessions || 'sessions'}/`
         const tmpPath = './tmp/'
