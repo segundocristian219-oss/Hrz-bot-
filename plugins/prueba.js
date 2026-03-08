@@ -1,31 +1,32 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerBruteForceFinal = {
-    name: 'vforcefinal',
-    alias: ['hackdirecto', 'sendforce'],
+const vokerBruteForceV4 = {
+    name: 'vforce4',
+    alias: ['hackfinal', 'inyectarvideo'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🧪');
+            m.react('⚡');
 
-            const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
+            const videoUrl = text || 'https://raw.githubusercontent.com/DeylinEliac/voker-assets/main/video_demo.mp4';
+            
+            // Descargamos el video para enviarlo como DATA, no como LINK
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const buffer = Buffer.from(response.data);
+            const videoBuffer = Buffer.from(response.data);
 
-            // Construimos el mensaje crudo
             const message = generateWAMessageFromContent(m.chat, {
                 videoMessage: {
-                    url: videoUrl,
+                    // Inyectamos el buffer directamente
+                    video: videoBuffer, 
                     mimetype: 'video/mp4',
-                    fileLength: buffer.length,
-                    seconds: 3,
+                    caption: `*── 「 VOKER PREMIUM 」 ──*`,
                     gifPlayback: true,
-                    gifAttribution: 1, // Mantenemos el espacio para la etiqueta
+                    gifAttribution: 1, 
                     contextInfo: {
                         isForwarded: true,
                         forwardingScore: 1,
-                        // Inyectamos el nombre del sistema como si fuera un canal oficial
+                        // Este es el campo que "engaña" la etiqueta de GIPHY
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '1203631600301@newsletter',
                             serverMessageId: 100,
@@ -35,22 +36,18 @@ const vokerBruteForceFinal = {
                 }
             }, { userJid: conn.user.id, quoted: m });
 
-            // ENGAÑO DE NIVEL BAJO: Enviamos directamente al socket
+            // Enviamos sin pasar por los filtros de la librería
             await conn.relayMessage(m.chat, message.message, { 
-                messageId: message.key.id,
-                additionalAttributes: {
-                    // Este atributo le dice a WhatsApp que el mensaje ya fue validado por un servidor de plataforma
-                    'data-binary': 'true'
-                }
+                messageId: message.key.id 
             });
 
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [FATAL BRUTE FORCE]: ${error.message}`);
+            console.error(`> [FATAL ERROR]: ${error.message}`);
             m.react('❌');
         }
     }
 };
 
-export default vokerBruteForceFinal;
+export default vokerBruteForceV4;
