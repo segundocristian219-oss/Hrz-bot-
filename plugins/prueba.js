@@ -1,35 +1,27 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-const vokerForwardHack = {
-    name: 'vforward',
-    alias: ['fwd', 'superpremium'],
+const vokerCleanGreenCommand = {
+    name: 'vgreen',
+    alias: ['verdepuro', 'cleanlabel'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🛡️');
+            m.react('🧪');
 
             const message = generateWAMessageFromContent(m.chat, {
                 extendedTextMessage: {
-                    text: text || 'Este es un mensaje con identidad de sistema.',
+                    text: text || 'Mensaje con etiqueta limpia.',
                     contextInfo: {
-                        // FORZAMOS el estado de reenvío masivo
+                        // Forzamos el estado de reenvío para activar el renderizado de etiquetas
                         isForwarded: true,
-                        forwardingScore: 999,
-                        // INYECTAMOS la identidad del Canal para "tapar" la etiqueta genérica
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '1203631600301@newsletter',
-                            serverMessageId: 100,
-                            // ESTE ES EL NOMBRE QUE REEMPLAZA LA IDENTIDAD VISUAL
-                            newsletterName: 'VOKER-SYSTEM-OFFICIAL' 
-                        },
-                        // Segunda capa: Etiqueta de "Publicidad" o "Verificado"
-                        externalAdReply: {
-                            title: 'VOKER-SYSTEM-V2',
-                            body: 'Contenido de Alta Prioridad',
-                            mediaType: 1,
-                            thumbnailUrl: 'https://dix.lat/logo.png',
-                            showAdAttribution: true 
-                        }
+                        forwardingScore: 1,
+                        // HACK: Inyectamos el nombre en el label de origen
+                        // Esto suele aparecer en verde en la parte superior sin crear un botón de canal
+                        sourceLabel: 'VOKER-SYSTEM-V2', 
+                        // Dejamos estos campos vacíos o inexistentes para quitar la vista previa y el link
+                        sourceUrl: '', 
+                        externalAdReply: null, 
+                        // No incluimos forwardedNewsletterMessageInfo para evitar el botón de "Ver canal"
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
@@ -39,10 +31,10 @@ const vokerForwardHack = {
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [FORWARD HACK ERROR]: ${error.message}`);
+            console.error(`> [CLEAN GREEN ERROR]: ${error.message}`);
             m.react('❌');
         }
     }
 };
 
-export default vokerForwardHack;
+export default vokerCleanGreenCommand;
