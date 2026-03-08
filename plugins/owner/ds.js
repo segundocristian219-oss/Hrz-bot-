@@ -5,7 +5,7 @@ const dsCommand = {
     name: 'ds',
     alias: ['cleansession', 'limpiar'],
     category: 'owner',
-    run: async (m, { conn, isMainBot }) => {
+    run: async (m, { conn, isMainBot, isROwner }) => {
        /* if (!isMainBot) {
             return m.reply('> *Este comando solo puede ser ejecutado por el bot principal.*')
         }*/
