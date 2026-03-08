@@ -48,7 +48,7 @@ const aimgCommand = {
 
             await conn.sendMessage(m.chat, {
                 image: imageBuffer,
-                caption: `>  *♛ Imagen generada con éxito 𝗜𝗔 𝗖𝗔𝗧 𝗕𝗢𝗧*`
+                caption: `>  *♛ Imagen generada con éxito.*`
             }, { quoted: m });
 
             await m.react('✅');
