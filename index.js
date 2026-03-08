@@ -5,6 +5,7 @@ import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
 import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, unlinkSync } from 'fs';
+import { promises as fsP } from 'fs';
 import chalk from 'chalk';
 import pino from 'pino';
 import yargs from 'yargs';
@@ -40,25 +41,20 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
     tls: true,
     tlsAllowInvalidCertificates: true, 
     serverSelectionTimeoutMS: 5000,    
-    connectTimeoutMS: 10000,
     family: 4                          
-})
-.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado')))
-.catch(() => {
+}).catch(() => {
     setTimeout(() => global.reload(true), 5000);
 });
 
 const userSchema = new mongoose.Schema({
     id: { type: String, unique: true },
-    name: String,
     lastSeen: { type: Date, default: Date.now }
 }, { strict: false });
 global.User = mongoose.model('User', userSchema);
 
 const chatSchema = new mongoose.Schema({
     id: { type: String, unique: true },
-    isBanned: { type: Boolean, default: false },
-    lastUpdate: { type: Date, default: Date.now }
+    isBanned: { type: Boolean, default: false }
 }, { strict: false });
 global.Chat = mongoose.model('Chat', chatSchema);
 
@@ -75,7 +71,7 @@ if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
 cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
-cfonts.say('Powered by VOKER', { font: 'console', align: 'center', colors: ['white'], space: false });
+cfonts.say('ULTRA SPEED', { font: 'console', align: 'center', colors: ['white'], space: false });
 console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
@@ -104,12 +100,11 @@ const connectionOptions = {
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
   markOnlineOnConnect: true,
-  generateHighQualityLinkPreview: true,
+  generateHighQualityLinkPreview: false,
   syncFullHistory: false,
   msgRetryCounterCache,
-  connectTimeoutMs: 60000,
-  defaultQueryTimeoutMs: 60000,
-  keepAliveIntervalMs: 10000,
+  connectTimeoutMs: 30000,
+  keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
   getMessage: async () => ({ conversation: "" })
 };
@@ -119,39 +114,39 @@ global.conn = makeWASocket(connectionOptions);
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
-    console.log(chalk.cyan('┃ ') + chalk.bold('AUTENTICACIÓN REQUERIDA'));
-    let phoneNumber = await question(chalk.cyan('┃ ') + `Número:\n` + chalk.cyan('┗ ') + `> `);
+    let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
     let addNumber = phoneNumber.replace(/\D/g, '');
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
-            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot} `));
+            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
         } catch {}
-    }, 3000);
+    }, 2000);
 }
 
 const cleanSessions = async () => {
     if (!existsSync(sessionPath)) return;
-    const files = readdirSync(sessionPath);
+    const files = await fsP.readdir(sessionPath);
     const now = Date.now();
     const limit = 3 * 24 * 60 * 60 * 1000;
-    for (const file of files) {
-        if (file === 'creds.json') continue;
+    await Promise.all(files.map(async (file) => {
+        if (file === 'creds.json') return;
         const filePath = join(sessionPath, file);
         try {
-            const { mtime } = statSync(filePath);
-            if (now - mtime.getTime() > limit) unlinkSync(filePath);
+            const st = await fsP.stat(filePath);
+            if (now - st.mtimeMs > limit) await fsP.unlink(filePath);
         } catch {}
-    }
+    }));
 };
 
 setInterval(async () => {
-    const tresDiasAgo = new Date(Date.now() - (3 * 24 * 60 * 60 * 1000));
     try {
-        await global.User.deleteMany({ lastSeen: { $lt: tresDiasAgo } });
-        await global.Chat.deleteMany({ lastUpdate: { $lt: tresDiasAgo } });
-        await cleanSessions();
+        const tresDiasAgo = new Date(Date.now() - 259200000);
+        await Promise.all([
+            global.User.deleteMany({ lastSeen: { $lt: tresDiasAgo } }),
+            global.Chat.deleteMany({ lastUpdate: { $lt: tresDiasAgo } }),
+            cleanSessions()
+        ]);
     } catch {}
 }, 86400000);
 
@@ -173,157 +168,85 @@ global.reload = async function(restatConn) {
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.close(); } catch {}
     }
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(r => setTimeout(r, 2000));
     global.conn = makeWASocket(connectionOptions);
   }
 
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
+    const msg = chatUpdate.messages[0];
+    if (!msg || (!msg.message && !msg.messageStubType)) return;
     try {
-        const msg = chatUpdate.messages[0];
-        if (!msg || (!msg.message && !msg.messageStubType)) return;
         const m = await smsg(conn, msg);
-        if (typeof messageHandler === 'function') await messageHandler.call(conn, m, chatUpdate);
+        if (messageHandler) messageHandler.call(conn, m, chatUpdate);
     } catch (e) {
-        if (!e.message?.includes('decrypt')) await uploadCriticalError(e, 'Message Upsert');
+        if (!e.message?.includes('decrypt')) uploadCriticalError(e, 'Message Upsert');
     }
-  });
-
-  global.conn.ev.on('groups.update', async ([update]) => {
-      const id = update.id;
-      if (global.groupCache.has(id)) {
-          let current = global.groupCache.get(id);
-          global.groupCache.set(id, { ...current, ...update });
-      }
-  });
-
-  global.conn.ev.on('group-participants.update', async ({ id }) => {
-      try {
-          const fresh = await conn.groupMetadata(id);
-          global.groupCache.set(id, fresh);
-      } catch {}
   });
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
-
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        await monitorBot(conn, 'offline');
         if (reason === DisconnectReason.loggedOut) process.exit(1);
-        
-        if (global.conn) {
-            global.conn.ev.removeAllListeners();
-            try { global.conn.ws.terminate(); } catch {}
-        }
-        
-        let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
-        setTimeout(() => global.reload(true), delay);
+        setTimeout(() => global.reload(true), 3000);
     }
-
     if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
-        console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
-
-        const botName = 'APOCALYPSE VX';
+        
         const updateStatus = async () => {
             try {
-                const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
+                const time = new Date().toLocaleString('es-HN', { hour12: true });
                 await conn.query({
                     tag: 'iq',
                     attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Online | ${timeNow}`, 'utf-8') }]
+                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`APOCALYPSE VX | ${time}`, 'utf-8') }]
                 });
             } catch {}
         };
-
-        await updateStatus();
-        await monitorBot(conn, 'online');
-
+        updateStatus();
         if (global.keepAlive) clearInterval(global.keepAlive);
-        global.keepAlive = setInterval(updateStatus, 10 * 60 * 1000);
-
-        if (!global.subBotsStarted) {
-            global.subBotsStarted = true;
-            await initSubBots();
-        }
+        global.keepAlive = setInterval(updateStatus, 600000);
+        if (!global.subBotsStarted) { global.subBotsStarted = true; initSubBots(); }
     }
   });
 
   global.conn.ev.on('creds.update', saveCreds);
-
-  const eventFolder = join(process.cwd(), 'lib/event');
-  if (existsSync(eventFolder)) {
-      readdirSync(eventFolder).forEach(async (file) => {
-          if (file.endsWith('.js')) {
-              try {
-                  const module = await import(`file://${join(eventFolder, file)}?update=${Date.now()}`);
-                  const eventFunc = module.default || module;
-                  if (typeof eventFunc === 'function') eventFunc(global.conn);
-              } catch {}
-          }
-      });
-  }
 };
 
 await global.reload();
 
-const pluginFolder = join(process.cwd(), './plugins');
-const pluginFilter = (filename) => /\.js$/.test(filename);
 global.plugins = new Map();
 global.aliases = new Map();
 
 async function readRecursive(folder) {
-  for (const filename of readdirSync(folder)) {
+  const files = await fsP.readdir(folder);
+  await Promise.all(files.map(async (filename) => {
     const file = join(folder, filename);
-    if (statSync(file).isDirectory()) await readRecursive(file);
-    else if (pluginFilter(filename)) {
+    const st = await fsP.stat(file);
+    if (st.isDirectory()) await readRecursive(file);
+    else if (/\.js$/.test(filename)) {
       try {
         const module = await import(`file://${file}`);
         const plugin = module.default || module;
-        const pluginName = plugin.name || basename(filename, '.js');
-        global.plugins.set(pluginName, plugin);
-        if (plugin.alias) {
-            const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
-            aliases.forEach(a => global.aliases.set(a, pluginName));
-        }
+        const name = plugin.name || basename(filename, '.js');
+        global.plugins.set(name, plugin);
+        if (plugin.alias) (Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias]).forEach(a => global.aliases.set(a, name));
       } catch {}
     }
-  }
+  }));
 }
-await readRecursive(pluginFolder);
-
-watch(pluginFolder, { recursive: true }, async (_ev, filename) => {
-  if (pluginFilter(filename)) {
-    const dir = join(pluginFolder, filename);
-    if (existsSync(dir) && statSync(dir).isFile()) {
-      try {
-        const module = await import(`file://${dir}?update=${Date.now()}`);
-        const plugin = module.default || module;
-        const pluginName = plugin.name || basename(filename, '.js');
-        for (const [a, p] of global.aliases.entries()) if (p === pluginName) global.aliases.delete(a);
-        global.plugins.set(pluginName, plugin);
-        if (plugin.alias) {
-            const aliases = Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias];
-            aliases.forEach(a => global.aliases.set(a, pluginName));
-        }
-        console.log(chalk.cyan('┃ ') + chalk.white(`Update: ${pluginName}`));
-      } catch {}
-    }
-  }
-});
+await readRecursive(join(process.cwd(), './plugins'));
 
 async function initSubBots() {
-    const jadibtsDir = path.join(process.cwd(), 'jadibts');
-    if (!existsSync(jadibtsDir)) return;
-    const folders = readdirSync(jadibtsDir).filter(f => 
-        statSync(join(jadibtsDir, f)).isDirectory() && existsSync(join(jadibtsDir, f, 'creds.json'))
-    );
-    await Promise.allSettled(folders.map(async (folder) => {
+    const dir = join(process.cwd(), 'jadibts');
+    if (!existsSync(dir)) return;
+    const folders = readdirSync(dir).filter(f => statSync(join(dir, f)).isDirectory() && existsSync(join(dir, f, 'creds.json')));
+    folders.forEach(async (folder) => {
         try {
             const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
-            await assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
+            assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
         } catch {}
-    }));
+    });
 }
