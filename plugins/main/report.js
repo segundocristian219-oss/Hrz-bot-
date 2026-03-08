@@ -4,10 +4,9 @@ const reportSystem = {
     name: 'reporte',
     alias: ['report', 'bug', 'idea', 'responder', 'reply', 'r'],
     category: 'main',
-    run: async (m, { conn, text, usedPrefix, command }) => {
+    run: async (m, { conn, text, usedPrefix, command, isROwner }) => {
         const owners = (global.owner || []).map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
-        const isOwner = owners.includes(m.sender.split(':')[0] + '@s.whatsapp.net') || m.fromMe;
-
+        
         if (['responder', 'reply', 'r'].includes(command)) {
             if (!isOwner) return m.reply('solo desarrolladores');
             if (!m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEtiqueta el reporte para responder.');
