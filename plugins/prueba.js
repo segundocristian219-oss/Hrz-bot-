@@ -20,7 +20,7 @@ const premiumVideoCommand = {
                 mimetype: 'video/mp4',
                 // Engaño: Activamos esto para la etiqueta, pero el buffer de video normal mantendrá sus propiedades
                 gifPlayback: true, 
-                gifAttribution: 1, // Usar 1 (GIPHY) o 2 (TENOR) fuerza la aparición del logo en el chat
+                gifAttribution: "huijc", // Usar 1 (GIPHY) o 2 (TENOR) fuerza la aparición del logo en el chat
                 contextInfo: {
                     // Esto ayuda a que el sistema lo vea como contenido de plataforma
                     isForwarded: true,
