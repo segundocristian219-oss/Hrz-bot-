@@ -1,27 +1,28 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-const vokerCleanGreenCommand = {
-    name: 'vgreen',
-    alias: ['verdepuro', 'cleanlabel'],
+const vokerGreenFinal = {
+    name: 'vgreen2',
+    alias: ['vokerlabel'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🧪');
+            m.react('🧬');
 
             const message = generateWAMessageFromContent(m.chat, {
                 extendedTextMessage: {
-                    text: text || 'Mensaje con etiqueta limpia.',
+                    text: text || 'Contenido Premium Voker System',
                     contextInfo: {
-                        // Forzamos el estado de reenvío para activar el renderizado de etiquetas
                         isForwarded: true,
-                        forwardingScore: 1,
-                        // HACK: Inyectamos el nombre en el label de origen
-                        // Esto suele aparecer en verde en la parte superior sin crear un botón de canal
-                        sourceLabel: 'VOKER-SYSTEM-V2', 
-                        // Dejamos estos campos vacíos o inexistentes para quitar la vista previa y el link
-                        sourceUrl: '', 
-                        externalAdReply: null, 
-                        // No incluimos forwardedNewsletterMessageInfo para evitar el botón de "Ver canal"
+                        // Mantenemos 1 para que no aparezca "Reenviado muchas veces"
+                        // y permita mostrar tu nombre personalizado.
+                        forwardingScore: 1, 
+                        forwardedNewsletterMessageInfo: {
+                            // JID genérico para activar el color verde y el nombre
+                            newsletterJid: '0@newsletter', 
+                            serverMessageId: 1,
+                            // ESTE ES TU NOMBRE EN VERDE
+                            newsletterName: 'VOKER-SYSTEM-V2' 
+                        }
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
@@ -31,10 +32,10 @@ const vokerCleanGreenCommand = {
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [CLEAN GREEN ERROR]: ${error.message}`);
+            console.error(`> [GREEN ERROR]: ${error.message}`);
             m.react('❌');
         }
     }
 };
 
-export default vokerCleanGreenCommand;
+export default vokerGreenFinal;
