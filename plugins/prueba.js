@@ -1,48 +1,69 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
+import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
+import fs from 'fs';
+import { promisify } from 'util';
 
-const vokerCleanLabel = {
+const vokerFfmpegBrand = {
     name: 'vbrand',
-    alias: ['vokerlabel', 'clean'],
+    alias: ['marcarvideo', 'vforce'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('🏷️');
-
+            m.react('⏳');
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
+            const tempInput = `./temp_in_${Date.now()}.mp4`;
+            const tempOutput = `./temp_out_${Date.now()}.mp4`;
+
+            // 1. Descargamos el video
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            const videoBuffer = Buffer.from(response.data);
+            fs.writeFileSync(tempInput, Buffer.from(response.data));
 
-            const message = generateWAMessageFromContent(m.chat, {
-                videoMessage: {
-                    video: videoBuffer,
-                    mimetype: 'video/mp4',
-                    caption: `*── 「 VOKER SYSTEM 」 ──*`,
-                    gifPlayback: true,
-                    gifAttribution: 1, // Mantenemos esto para reservar el espacio de la etiqueta
-                    contextInfo: {
-                        // EL HACK PARA EVITAR BOTONES:
-                        // Usamos sourceLabel para el nombre, pero dejamos sourceUrl vacío.
-                        // Esto hace que aparezca el nombre en la parte superior sin ser un link.
-                        sourceLabel: 'VOKER-SYSTEM-V2',
-                        sourceUrl: '', 
-                        isForwarded: true,
-                        forwardingScore: 1,
-                        // NO incluir forwardedNewsletterMessageInfo para que no aparezca el botón de canal.
-                        // NO incluir externalAdReply para que no aparezca la "publicidad" de la miniatura.
+            // 2. Proceso de Fuerza Bruta: Inyectamos el texto en el video
+            ffmpeg(tempInput)
+                .videoFilters([
+                    {
+                        filter: 'drawtext',
+                        options: {
+                            text: 'VOKER SYSTEM v5', // TU MARCA AQUÍ
+                            fontcolor: 'white',
+                            fontsize: 24,
+                            x: 'w-tw-10', // 10px desde la derecha
+                            y: 'h-th-10', // 10px desde abajo
+                            shadowcolor: 'black',
+                            shadowx: 2,
+                            shadowy: 2
+                        }
                     }
-                }
-            }, { userJid: conn.user.id, quoted: m });
+                ])
+                .format('mp4')
+                .on('end', async () => {
+                    const videoBuffer = fs.readFileSync(tempOutput);
 
-            await conn.relayMessage(m.chat, message.message, { messageId: message.key.id });
+                    // 3. Enviamos el video LIMPIO de etiquetas de sistema que bloquean
+                    await conn.sendMessage(m.chat, {
+                        video: videoBuffer,
+                        mimetype: 'video/mp4',
+                        caption: `*── 「 SISTEMA VOKER 」 ──*`,
+                        gifPlayback: true
+                    }, { quoted: m });
 
-            m.react('✅');
+                    // Limpieza de archivos temporales
+                    fs.unlinkSync(tempInput);
+                    fs.unlinkSync(tempOutput);
+                    m.react('✅');
+                })
+                .on('error', (err) => {
+                    console.error(err);
+                    m.react('❌');
+                })
+                .save(tempOutput);
 
         } catch (error) {
-            console.error('> [ERROR]:', error.message);
+            console.error(error);
             m.react('❌');
         }
     }
 };
 
-export default vokerCleanLabel;
+export default vokerFfmpegBrand;
