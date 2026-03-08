@@ -9,7 +9,7 @@ const reportSystem = {
         const isOwner = owners.includes(m.sender.split(':')[0] + '@s.whatsapp.net') || m.fromMe;
 
         if (['responder', 'reply', 'r'].includes(command)) {
-            if (!isOwner) return m.reoly('solo desarrolladores');
+            if (!isOwner) return m.reply('solo desarrolladores');
             if (!m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEtiqueta el reporte para responder.');
 
             const quotedContent = m.quoted.text || m.quoted.caption || '';
