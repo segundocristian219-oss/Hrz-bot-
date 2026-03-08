@@ -1,7 +1,6 @@
-import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import axios from 'axios';
 
-const vokerTripleResistantTest = {
+const vokerTripleFinalForce = {
     name: 'vtestgif',
     alias: ['vgif3', 'pruebagif'],
     category: 'system',
@@ -15,78 +14,65 @@ const vokerTripleResistantTest = {
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
             videoBuffer = Buffer.from(response.data);
         } catch (e) {
-            console.error('Error al descargar video:', e.message);
             return m.react('❌');
         }
 
+        // PRUEBA 1: Inyección vía ViewOnce (A veces salta filtros de metadatos)
         try {
-            const msg1 = generateWAMessageFromContent(m.chat, {
-                videoMessage: {
-                    video: videoBuffer,
-                    mimetype: 'video/mp4',
-                    caption: '*── 「 PRUEBA 1: NEWSLETTER 」 ──*',
-                    gifPlayback: true,
-                    gifAttribution: 1,
-                    contextInfo: {
-                        isForwarded: true,
-                        forwardingScore: 1,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '0@newsletter',
-                            serverMessageId: 1,
-                            newsletterName: 'VOKER-SYSTEM-V2'
-                        }
+            await conn.sendMessage(m.chat, {
+                video: videoBuffer,
+                caption: '*── 「 PRUEBA 1: NATIVO + GIPHY 」 ──*',
+                gifPlayback: true,
+                gifAttribution: 1,
+                viewOnce: true,
+                contextInfo: {
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '0@newsletter',
+                        serverMessageId: 1,
+                        newsletterName: 'VOKER-SYSTEM-V2'
                     }
                 }
-            }, { userJid: conn.user.id, quoted: m });
-            await conn.relayMessage(m.chat, msg1.message, { messageId: msg1.key.id });
-        } catch (e) { console.error('Fallo prueba 1'); }
+            }, { quoted: m });
+        } catch (e) {}
 
+        // PRUEBA 2: Inyección vía AdReply (La más estable para que no se borre)
         try {
-            const msg2 = generateWAMessageFromContent(m.chat, {
-                videoMessage: {
-                    video: videoBuffer,
-                    mimetype: 'video/mp4',
-                    caption: '*── 「 PRUEBA 2: SOURCE LABEL 」 ──*',
-                    gifPlayback: true,
-                    gifAttribution: 1,
-                    contextInfo: {
-                        isForwarded: true,
-                        forwardingScore: 1,
-                        sourceLabel: 'VOKER-SYSTEM-V2',
-                        sourceUrl: 'https://dix.lat',
-                        showAdAttribution: true
+            await conn.sendMessage(m.chat, {
+                video: videoBuffer,
+                caption: '*── 「 PRUEBA 2: AD REPLY HACK 」 ──*',
+                gifPlayback: true,
+                gifAttribution: 1,
+                contextInfo: {
+                    externalAdReply: {
+                        title: 'VOKER-SYSTEM-V2',
+                        body: 'Verified Media',
+                        mediaType: 2,
+                        thumbnailUrl: 'https://dix.lat/logo.png',
+                        showAdAttribution: true,
+                        sourceUrl: 'https://dix.lat'
                     }
                 }
-            }, { userJid: conn.user.id, quoted: m });
-            await conn.relayMessage(m.chat, msg2.message, { messageId: msg2.key.id });
-        } catch (e) { console.error('Fallo prueba 2'); }
+            }, { quoted: m });
+        } catch (e) {}
 
+        // PRUEBA 3: Inyección vía Mentions (Engaña al renderizado de etiqueta)
         try {
-            const msg3 = generateWAMessageFromContent(m.chat, {
-                videoMessage: {
-                    video: videoBuffer,
-                    mimetype: 'video/mp4',
-                    caption: '*── 「 PRUEBA 3: AD REPLY 」 ──*',
-                    gifPlayback: true,
-                    gifAttribution: 1,
-                    contextInfo: {
-                        isForwarded: true,
-                        forwardingScore: 1,
-                        externalAdReply: {
-                            title: 'VOKER-SYSTEM-V2',
-                            body: 'Verified Media',
-                            mediaType: 2,
-                            thumbnailUrl: 'https://dix.lat/logo.png',
-                            showAdAttribution: true
-                        }
-                    }
+            await conn.sendMessage(m.chat, {
+                video: videoBuffer,
+                caption: '*── 「 PRUEBA 3: MENTION HACK 」 ──*',
+                gifPlayback: true,
+                gifAttribution: 1,
+                mentions: [m.sender],
+                contextInfo: {
+                    isForwarded: true,
+                    forwardingScore: 1,
+                    sourceLabel: 'VOKER-SYSTEM-V2'
                 }
-            }, { userJid: conn.user.id, quoted: m });
-            await conn.relayMessage(m.chat, msg3.message, { messageId: msg3.key.id });
-        } catch (e) { console.error('Fallo prueba 3'); }
+            }, { quoted: m });
+        } catch (e) {}
 
         m.react('✅');
     }
 };
 
-export default vokerTripleResistantTest;
+export default vokerTripleFinalForce;
