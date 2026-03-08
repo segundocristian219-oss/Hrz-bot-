@@ -44,9 +44,9 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
     connectTimeoutMS: 10000,
     family: 4                          
 })
-.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado (Bypass SSL Activo)')))
+.then(() => console.log(chalk.greenBright('┃ DATABASE: Conectado')))
 .catch((err) => {
-    console.error(chalk.red('┃ DATABASE: Error de Conexión ->'), err.message);
+    console.error(chalk.red('┃ DATABASE: Error ->'), err.message);
     setTimeout(() => global.reload(true), 5000);
 });
 
@@ -173,8 +173,11 @@ global.reload = async function(restatConn) {
   if (restatConn) {
     msgRetryCounterCache.flushAll();
     if (global.conn) {
+        const originalWrite = process.stdout.write;
+        process.stdout.write = () => {}; 
         global.conn.ev.removeAllListeners();
         try { global.conn.ws.terminate(); } catch {}
+        setTimeout(() => { process.stdout.write = originalWrite; }, 200);
     }
     await new Promise(resolve => setTimeout(resolve, 5000));
     global.conn = makeWASocket(connectionOptions);
@@ -194,21 +197,6 @@ global.reload = async function(restatConn) {
     }
   });
 
-  global.conn.ev.on('groups.update', async ([update]) => {
-      const id = update.id;
-      if (global.groupCache.has(id)) {
-          let current = global.groupCache.get(id);
-          global.groupCache.set(id, { ...current, ...update });
-      }
-  });
-
-  global.conn.ev.on('group-participants.update', async ({ id }) => {
-      try {
-          const fresh = await conn.groupMetadata(id);
-          global.groupCache.set(id, fresh);
-      } catch (e) {}
-  });
-
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
@@ -217,11 +205,13 @@ global.reload = async function(restatConn) {
         await monitorBot(conn, 'offline');
         if (reason === DisconnectReason.loggedOut) process.exit(1);
         if (global.conn) {
+            const originalWrite = process.stdout.write;
+            process.stdout.write = () => {};
             global.conn.ev.removeAllListeners();
             try { global.conn.ws.terminate(); } catch {}
+            setTimeout(() => { process.stdout.write = originalWrite; }, 200);
         }
         let delay = [408, 428, 500, 503].includes(reason) ? 10000 : 3000;
-        console.log(chalk.red('┃ ') + chalk.white(`Conexión cerrada. Razón: ${reason}. Reiniciando...`));
         setTimeout(() => global.reload(true), delay);
     }
 
@@ -231,7 +221,7 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.white(`USER: ${conn.user.name}`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
 
-        const myNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+        const ownerJid = global.owner[0][0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
         const botName = 'APOCALYPSE VX';
         const timeNow = new Date().toLocaleString('es-HN', { hour12: true });
 
@@ -244,10 +234,14 @@ global.reload = async function(restatConn) {
                           `> © Powered by VOKER Platform.`;
 
         try {
-            await conn.sendMessage(myNumber, { text: statusMsg });
-            await conn.updateProfileStatus(`${botName} Online | ${timeNow}`);
+            await conn.sendMessage(ownerJid, { text: statusMsg });
+            await conn.query({
+                tag: 'iq',
+                attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
+                content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Activo | ${timeNow}`, 'utf-8') }]
+            });
         } catch (e) {
-            console.error('Error al notificar inicio:', e);
+            console.error(e);
         }
 
         await monitorBot(conn, 'online');
@@ -255,7 +249,11 @@ global.reload = async function(restatConn) {
         global.keepAlive = setInterval(async () => {
             try { 
                 const liveTime = new Date().toLocaleString('es-HN', { hour12: true });
-                await conn.updateProfileStatus(`${botName} Online | ${liveTime}`); 
+                await conn.query({
+                    tag: 'iq',
+                    attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
+                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`${botName} Activo | ${liveTime}`, 'utf-8') }]
+                });
             } catch {}
         }, 10 * 60 * 1000);
 
@@ -290,6 +288,7 @@ global.plugins = new Map();
 global.aliases = new Map();
 
 async function readRecursive(folder) {
+  if (!existsSync(folder)) return;
   for (const filename of readdirSync(folder)) {
     const file = join(folder, filename);
     if (statSync(file).isDirectory()) await readRecursive(file);
