@@ -1,46 +1,48 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-const vokerBrandingFunctions = {
+const vokerOfficialLabels = {
     name: 'vlabels',
     alias: ['etiquetas', 'vokerpower'],
     category: 'system',
     run: async (m, { conn }) => {
         m.react('🕒');
 
-        // --- FUNCIÓN 1: ETIQUETA PROFESIONAL DE IA ---
-        // Ideal para que sepan que el poder del bot es automatización pura.
+        // --- MENSAJE 1: ETIQUETA OFICIAL DE IA (AI LABELED) ---
+        // Esta es la función más nueva de 2026. WhatsApp añade un distintivo oficial 
+        // de "🤖 Generado por IA" que le da un aire de tecnología avanzada.
         try {
             await conn.sendMessage(m.chat, {
-                text: "> 🤖 *VOKER SYSTEM AUTOMATION*\nEste contenido fue generado mediante procesos de alta prioridad.",
-                ai: true // NUEVO FLAG 2026: Inyecta la etiqueta oficial de IA
+                text: "*── 「 VOKER INTELLIGENCE 」 ──*\n\nEste proceso ha sido ejecutado mediante redes neuronales de automatización.",
+                ai: true // FLAG OFICIAL v7.x: Inyecta la etiqueta de IA en el encabezado.
             }, { quoted: m });
         } catch (e) { console.error('Fallo Etiqueta IA'); }
 
-        // --- FUNCIÓN 2: ETIQUETA DE MARCA PERSONAL (HACK SIN BOTONES) ---
-        // Usamos el nodo 'externalAdReply' pero desactivamos el renderizado de link
-        // para que solo aparezca el texto de tu sistema en la parte superior.
+        // --- MENSAJE 2: ETIQUETA DE MARCA VERIFICADA (AD ATTRIBUTION) ---
+        // Se usa para poner el nombre de tu bot en verde arriba del mensaje.
+        // Al NO usar 'newsletterJid', evitamos el botón molesto de "Ver canal".
         try {
             await conn.sendMessage(m.chat, {
-                text: "Verificación de integridad completada.",
+                text: "Verificación de protocolos de seguridad: *ÉXITO*",
                 contextInfo: {
                     externalAdReply: {
-                        title: 'DEYLIN-ELIAC | VOKER-SYSTEM-V5', // TU MARCA PERSONAL
-                        body: 'Verified Independent Developer',
+                        title: 'VOKER-SYSTEM-v5.0-STABLE', // TU MARCA PERSONAL
+                        body: 'Verified Media Provider',
                         mediaType: 1,
-                        showAdAttribution: true, // Esto pone la etiqueta "Publicidad" o "Marca"
+                        showAdAttribution: true, // Esto activa la estética de "Marca" o "Publicidad"
                         renderLargerThumbnail: false,
-                        sourceApp: 'whatsapp' // Engaña al sistema para que parezca oficial
+                        sourceApp: 'whatsapp' // Simula procedencia oficial
                     }
                 }
             }, { quoted: m });
-        } catch (e) { console.error('Fallo Etiqueta de Marca'); }
+        } catch (e) { console.error('Fallo Etiqueta Marca'); }
 
-        // --- FUNCIÓN 3: EL FOOTER DE PROPIEDAD ---
-        // Pone tu firma en la base del mensaje, estilo profesional de empresa.
+        // --- MENSAJE 3: FOOTER EMPRESARIAL (CLEAN POWER) ---
+        // Pone tu firma digital en color gris elegante al final del mensaje.
+        // Es el estándar para sistemas CRM profesionales en 2026.
         try {
             await conn.sendMessage(m.chat, {
-                text: "*── 「 VOKER POWER 」 ──*\nEjecución de comando exitosa.",
-                footer: "© 2026 DIX LATAM | VOKER-SYSTEM", // ETIQUETA DE PODER
+                text: "Comando de sistema finalizado.\n_Todos los datos han sido streadmados correctamente._",
+                footer: "© 2026 DIX LATAM | VOKER-SYSTEM-OFFICIAL", // ETIQUETA DE PROPIEDAD
                 viewOnce: false
             }, { quoted: m });
         } catch (e) { console.error('Fallo Footer'); }
@@ -49,4 +51,4 @@ const vokerBrandingFunctions = {
     }
 };
 
-export default vokerBrandingFunctions;
+export default vokerOfficialLabels;
