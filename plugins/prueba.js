@@ -1,21 +1,31 @@
 import axios from 'axios';
 
-const vokerVideoCleanCommand = {
-    name: 'vvideo2',
-    alias: ['vclean', 'etiquetapura'],
+const premiumVideoCommand = {
+    name: 'vpremium',
+    alias: ['vokerlabel'],
     category: 'fun',
     run: async (m, { conn, text }) => {
         try {
             m.react('🕒');
 
-            const videoUrl = text || 'https://raw.githubusercontent.com/DeylinEliac/voker-assets/main/video_demo.mp4';
+            const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
+            
+            // Obtenemos el video como buffer para asegurar que los metadatos se inyecten correctamente
+            const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
+            const videoBuffer = Buffer.from(response.data, 'utf-8');
 
             await conn.sendMessage(m.chat, { 
-                video: { url: videoUrl }, 
-                caption: `*── 「 VIDEO CON ETIQUETA 」 ──*\n\n> 🎬 Video normal con atribución oficial.`,
+                video: videoBuffer, 
+                caption: `*── 「 VOKER PREMIUM 」 ──*`,
                 mimetype: 'video/mp4',
-                // Enviamos la atribución pero NO el playback de GIF para que sea un video normal
-                gifAttribution: "GIPHY" 
+                // Engaño: Activamos esto para la etiqueta, pero el buffer de video normal mantendrá sus propiedades
+                gifPlayback: true, 
+                gifAttribution: 1, // Usar 1 (GIPHY) o 2 (TENOR) fuerza la aparición del logo en el chat
+                contextInfo: {
+                    // Esto ayuda a que el sistema lo vea como contenido de plataforma
+                    isForwarded: true,
+                    forwardingScore: 999
+                }
             }, { quoted: m });
 
             m.react('✅');
@@ -27,4 +37,4 @@ const vokerVideoCleanCommand = {
     }
 };
 
-export default vokerVideoCleanCommand;
+export default premiumVideoCommand;
