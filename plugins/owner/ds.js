@@ -7,9 +7,9 @@ const dsCommand = {
     category: 'owner',
     rowner: true,
     run: async (m, { conn, isMainBot }) => {
-        if (!isMainBot) {
+       /* if (!isMainBot) {
             return m.reply('> *Este comando solo puede ser ejecutado por el bot principal.*')
-        }
+        }*/
 
         const sessionPath = `./${global.sessions || 'sessions'}/`
         const tmpPath = './tmp/'
