@@ -1,69 +1,50 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
-import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
-import fs from 'fs';
-import { promisify } from 'util';
 
-const vokerFfmpegBrand = {
+const vokerQuickBrand = {
     name: 'vbrand',
-    alias: ['marcarvideo', 'vforce'],
+    alias: ['instant', 'vmark'],
     category: 'system',
     run: async (m, { conn, text }) => {
         try {
-            m.react('⏳');
+            m.react('⚡');
+
             const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
-            const tempInput = `./temp_in_${Date.now()}.mp4`;
-            const tempOutput = `./temp_out_${Date.now()}.mp4`;
-
-            // 1. Descargamos el video
             const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            fs.writeFileSync(tempInput, Buffer.from(response.data));
+            const buffer = Buffer.from(response.data);
 
-            // 2. Proceso de Fuerza Bruta: Inyectamos el texto en el video
-            ffmpeg(tempInput)
-                .videoFilters([
-                    {
-                        filter: 'drawtext',
-                        options: {
-                            text: 'VOKER SYSTEM v5', // TU MARCA AQUÍ
-                            fontcolor: 'white',
-                            fontsize: 24,
-                            x: 'w-tw-10', // 10px desde la derecha
-                            y: 'h-th-10', // 10px desde abajo
-                            shadowcolor: 'black',
-                            shadowx: 2,
-                            shadowy: 2
+            const message = generateWAMessageFromContent(m.chat, {
+                videoMessage: {
+                    video: buffer,
+                    mimetype: 'video/mp4',
+                    caption: `*── 「 VOKER SYSTEM 」 ──*`,
+                    gifPlayback: true,
+                    // NO usamos gifAttribution para que el servidor no valide contra GIPHY
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardingScore: 1,
+                        // Inyectamos la marca en el label de fuente
+                        sourceLabel: 'VOKER-SYSTEM-V2',
+                        // Usamos un JID que no sea de Newsletter para evitar el botón de "Ver Canal"
+                        // Pero que fuerce al sistema a mostrar la procedencia.
+                        forwardedInternalMessageContextInfo: {
+                            sourceLabel: 'VOKER-SYSTEM-V2'
                         }
                     }
-                ])
-                .format('mp4')
-                .on('end', async () => {
-                    const videoBuffer = fs.readFileSync(tempOutput);
+                }
+            }, { userJid: conn.user.id, quoted: m });
 
-                    // 3. Enviamos el video LIMPIO de etiquetas de sistema que bloquean
-                    await conn.sendMessage(m.chat, {
-                        video: videoBuffer,
-                        mimetype: 'video/mp4',
-                        caption: `*── 「 SISTEMA VOKER 」 ──*`,
-                        gifPlayback: true
-                    }, { quoted: m });
+            await conn.relayMessage(m.chat, message.message, { 
+                messageId: message.key.id 
+            });
 
-                    // Limpieza de archivos temporales
-                    fs.unlinkSync(tempInput);
-                    fs.unlinkSync(tempOutput);
-                    m.react('✅');
-                })
-                .on('error', (err) => {
-                    console.error(err);
-                    m.react('❌');
-                })
-                .save(tempOutput);
+            m.react('✅');
 
         } catch (error) {
-            console.error(error);
+            console.error('> [INSTANT ERROR]:', error.message);
             m.react('❌');
         }
     }
 };
 
-export default vokerFfmpegBrand;
+export default vokerQuickBrand;
