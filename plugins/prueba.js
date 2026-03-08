@@ -1,101 +1,52 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
-import axios from 'axios';
 
-const vokerOfficialTests = {
-    name: 'vbrand',
-    alias: ['oficial', 'vokerbrand'],
+const vokerBrandingFunctions = {
+    name: 'vlabels',
+    alias: ['etiquetas', 'vokerpower'],
     category: 'system',
-    run: async (m, { conn, text }) => {
-        m.react('🧪');
+    run: async (m, { conn }) => {
+        m.react('🕒');
 
-        const videoUrl = text || 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772941655924.mp4';
-        let videoBuffer;
-
-        try {
-            const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-            videoBuffer = Buffer.from(response.data);
-        } catch (e) {
-            return m.react('❌');
-        }
-
-        // --- PRUEBA 1: ETIQUETA DE MIEMBRO (NATIVA 2026) ---
-        // Esta es la más limpia: texto puro bajo el nombre del bot.
+        // --- FUNCIÓN 1: ETIQUETA PROFESIONAL DE IA ---
+        // Ideal para que sepan que el poder del bot es automatización pura.
         try {
             await conn.sendMessage(m.chat, {
-                video: videoBuffer,
-                caption: '*── 「 VOKER SYSTEM v5: MÉTODO NATIVO 」 ──*',
-                gifPlayback: true,
+                text: "> 🤖 *VOKER SYSTEM AUTOMATION*\nEste contenido fue generado mediante procesos de alta prioridad.",
+                ai: true // NUEVO FLAG 2026: Inyecta la etiqueta oficial de IA
+            }, { quoted: m });
+        } catch (e) { console.error('Fallo Etiqueta IA'); }
+
+        // --- FUNCIÓN 2: ETIQUETA DE MARCA PERSONAL (HACK SIN BOTONES) ---
+        // Usamos el nodo 'externalAdReply' pero desactivamos el renderizado de link
+        // para que solo aparezca el texto de tu sistema en la parte superior.
+        try {
+            await conn.sendMessage(m.chat, {
+                text: "Verificación de integridad completada.",
                 contextInfo: {
-                    mentionedJid: [m.sender],
-                    // En 2026, este campo inyecta la "Etiqueta de Miembro" oficial
                     externalAdReply: {
-                        title: 'VOKER-SYSTEM-OFFICIAL',
-                        body: 'Desarrollador Independiente',
-                        showAdAttribution: false, // Quitamos el botón de canal
+                        title: 'DEYLIN-ELIAC | VOKER-SYSTEM-V5', // TU MARCA PERSONAL
+                        body: 'Verified Independent Developer',
+                        mediaType: 1,
+                        showAdAttribution: true, // Esto pone la etiqueta "Publicidad" o "Marca"
                         renderLargerThumbnail: false,
-                        mediaType: 1
+                        sourceApp: 'whatsapp' // Engaña al sistema para que parezca oficial
                     }
                 }
             }, { quoted: m });
-        } catch (e) { console.error('Fallo Método 1'); }
+        } catch (e) { console.error('Fallo Etiqueta de Marca'); }
 
-        // --- PRUEBA 2: FOOTER DE UTILIDAD (ESTÉTICA EMPRESARIAL) ---
-        // Pone tu marca en gris pequeño al final del mensaje, sin botones.
+        // --- FUNCIÓN 3: EL FOOTER DE PROPIEDAD ---
+        // Pone tu firma en la base del mensaje, estilo profesional de empresa.
         try {
             await conn.sendMessage(m.chat, {
-                video: videoBuffer,
-                caption: '*── 「 VOKER SYSTEM v5: MÉTODO FOOTER 」 ──*',
-                gifPlayback: true,
-                footer: 'VOKER-SYSTEM-V2 | DEYLIN ELIAC',
+                text: "*── 「 VOKER POWER 」 ──*\nEjecución de comando exitosa.",
+                footer: "© 2026 DIX LATAM | VOKER-SYSTEM", // ETIQUETA DE PODER
                 viewOnce: false
             }, { quoted: m });
-        } catch (e) { console.error('Fallo Método 2'); }
-
-        // --- PRUEBA 3: SOURCE LABEL (STAY CLEAN) ---
-        // Intenta poner el nombre arriba del video sin URL asociada.
-        try {
-            const msg3 = generateWAMessageFromContent(m.chat, {
-                videoMessage: {
-                    video: videoBuffer,
-                    mimetype: 'video/mp4',
-                    caption: '*── 「 VOKER SYSTEM v5: SOURCE LABEL 」 ──*',
-                    gifPlayback: true,
-                    contextInfo: {
-                        isForwarded: true,
-                        forwardingScore: 1,
-                        sourceLabel: 'VOKER-SYSTEM-V2',
-                        sourceUrl: '' // Vacío para no generar botón
-                    }
-                }
-            }, { userJid: conn.user.id, quoted: m });
-            await conn.relayMessage(m.chat, msg3.message, { messageId: msg3.key.id });
-        } catch (e) { console.error('Fallo Método 3'); }
-
-        // --- PRUEBA 4: NEWSLETTER JID 0 (ÚLTIMO RECURSO) ---
-        // Intenta forzar el color verde pero con un ID nulo para romper el botón.
-        try {
-            const msg4 = generateWAMessageFromContent(m.chat, {
-                videoMessage: {
-                    video: videoBuffer,
-                    mimetype: 'video/mp4',
-                    caption: '*── 「 VOKER SYSTEM v5: GHOST NEWSLETTER 」 ──*',
-                    gifPlayback: true,
-                    contextInfo: {
-                        isForwarded: true,
-                        forwardingScore: 1,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '0@newsletter',
-                            serverMessageId: 1,
-                            newsletterName: 'VOKER-SYSTEM-V2'
-                        }
-                    }
-                }
-            }, { userJid: conn.user.id, quoted: m });
-            await conn.relayMessage(m.chat, msg4.message, { messageId: msg4.key.id });
-        } catch (e) { console.error('Fallo Método 4'); }
+        } catch (e) { console.error('Fallo Footer'); }
 
         m.react('✅');
     }
 };
 
-export default vokerOfficialTests;
+export default vokerBrandingFunctions;
