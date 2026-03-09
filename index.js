@@ -4,8 +4,7 @@ import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
-import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, unlinkSync } from 'fs';
-import { promises as fsP } from 'fs';
+import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, unlinkSync, promises as fsP } from 'fs';
 import chalk from 'chalk';
 import pino from 'pino';
 import yargs from 'yargs';
@@ -46,16 +45,9 @@ mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?
     setTimeout(() => global.reload(true), 5000);
 });
 
-const userSchema = new mongoose.Schema({
-    id: { type: String, unique: true },
-    lastSeen: { type: Date, default: Date.now }
-}, { strict: false });
+const userSchema = new mongoose.Schema({ id: { type: String, unique: true }, lastSeen: { type: Date, default: Date.now } }, { strict: false });
 global.User = mongoose.model('User', userSchema);
-
-const chatSchema = new mongoose.Schema({
-    id: { type: String, unique: true },
-    isBanned: { type: Boolean, default: false }
-}, { strict: false });
+const chatSchema = new mongoose.Schema({ id: { type: String, unique: true }, isBanned: { type: Boolean, default: false } }, { strict: false });
 global.Chat = mongoose.model('Chat', chatSchema);
 
 const { 
@@ -71,8 +63,7 @@ if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
 cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
-cfonts.say('ULTRA SPEED', { font: 'console', align: 'center', colors: ['white'], space: false });
-console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
+cfonts.say('CORE OPTIMIZED', { font: 'console', align: 'center', colors: ['white'], space: false });
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -103,8 +94,9 @@ const connectionOptions = {
   generateHighQualityLinkPreview: false,
   syncFullHistory: false,
   msgRetryCounterCache,
-  connectTimeoutMs: 30000,
-  keepAliveIntervalMs: 15000,
+  connectTimeoutMs: 45000,
+  defaultQueryTimeoutMs: 0,
+  keepAliveIntervalMs: 10000,
   emitOwnEvents: true,
   getMessage: async () => ({ conversation: "" })
 };
@@ -130,7 +122,7 @@ const cleanSessions = async () => {
     const now = Date.now();
     const limit = 3 * 24 * 60 * 60 * 1000;
     await Promise.all(files.map(async (file) => {
-        if (file === 'creds.json') return;
+        if (file === 'creds.json' || file.includes('app-state')) return;
         const filePath = join(sessionPath, file);
         try {
             const st = await fsP.stat(filePath);
@@ -174,7 +166,7 @@ global.reload = async function(restatConn) {
 
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
-    if (!msg || (!msg.message && !msg.messageStubType)) return;
+    if (!msg?.message || msg.key.remoteJid === 'status@broadcast') return;
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) messageHandler.call(conn, m, chatUpdate);
@@ -187,28 +179,26 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        if (reason === DisconnectReason.loggedOut) process.exit(1);
-        setTimeout(() => global.reload(true), 3000);
+        if (reason !== DisconnectReason.loggedOut) {
+            console.log(chalk.yellow('┃ Conexión inestable. Reintentando...'));
+            setTimeout(() => global.reload(true), 3000);
+        } else {
+            process.exit(1);
+        }
     }
     if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
-        console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
-                await conn.query({
-                    tag: 'iq',
-                    attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`APOCALYPSE VX | ${time}`, 'utf-8') }]
-                });
+                await conn.updateProfileStatus(`APOCALYPSE VX | ${time}`).catch(() => null);
             } catch {}
         };
         updateStatus();
         if (global.keepAlive) clearInterval(global.keepAlive);
         global.keepAlive = setInterval(updateStatus, 600000);
-        if (!global.subBotsStarted) { global.subBotsStarted = true; initSubBots(); }
     }
   });
 
@@ -238,15 +228,3 @@ async function readRecursive(folder) {
   }));
 }
 await readRecursive(join(process.cwd(), './plugins'));
-
-async function initSubBots() {
-    const dir = join(process.cwd(), 'jadibts');
-    if (!existsSync(dir)) return;
-    const folders = readdirSync(dir).filter(f => statSync(join(dir, f)).isDirectory() && existsSync(join(dir, f, 'creds.json')));
-    folders.forEach(async (folder) => {
-        try {
-            const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
-            assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
-        } catch {}
-    });
-}
