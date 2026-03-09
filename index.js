@@ -119,7 +119,7 @@ if (!state.creds.registered) {
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
-            console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
+            console.log(chalk.cyan('┃ ') + chalk.white.bold('CÓDIGO: ') + chalk.cyan.bold(codeBot?.match(/.{1,4}/g)?.join("-") || codeBot));
         } catch {}
     }, 2000);
 }
