@@ -1,5 +1,5 @@
 const promoSystem = {
-    name: 'promo_product_vx',
+    name: 'promo_pro_vx',
     category: 'system',
     async before(m, { conn }) {
         const txt = (m.text || m.msg?.caption || m.msg?.text || m.message?.conversation || "").trim().toLowerCase();
@@ -9,24 +9,40 @@ const promoSystem = {
         const botNumber = conn.user.id.split(':')[0];
         if (!(global.bots_free || []).map(String).includes(botNumber)) return false;
 
-        const triggers = ['venta', 'comprar', 'precio', 'adquirir', 'sistema', 'info bot', 'costo'];
+        const triggers = ['venta', 'comprar', 'precio', 'adquirir', 'sistema', 'info bot', 'costo', 'cuanto vale'];
         if (!triggers.some(key => txt.includes(key))) return false;
+
+        const ads = [
+            {
+                title: "POTENCIA TU GRUPO CON VX-BOT ⚡",
+                footer: "La infraestructura más avanzada para la gestión de comunidades en WhatsApp. Automatización total, seguridad y más de 200 funciones activas."
+            },
+            {
+                title: "VX-BOT: SISTEMA MULTIFUNCIONES 💎",
+                footer: "Transforma la experiencia de tus usuarios con el bot más rápido del mercado. Estabilidad garantizada y soporte técnico especializado."
+            },
+            {
+                title: "SOLUCIÓN INTEGRAL VX-BOT 🚀",
+                footer: "Lleva tu grupo al siguiente nivel con herramientas exclusivas de administración, juegos y descargas. Adquiere tu licencia hoy mismo."
+            }
+        ];
+
+        const selectedAd = ads[Math.floor(Math.random() * ads.length)];
 
         const productMessage = {
             product: {
                 productImage: { url: await global.img() },
-                productId: '2452968910',
-                title: 'SISTEMA DE AUTOMATIZACIÓN VX',
-                description: 'La mejor herramienta para gestionar tus grupos y ventas 24/7.',
+                productId: 'VX-PRO-' + Date.now(),
+                title: selectedAd.title,
+                description: 'Licencia profesional para sistemas multifuncionales.',
                 currencyCode: 'USD',
-                priceAmount1000: '0',
-                retailerId: 'VX-BOT-PRO',
-                url: 'https://wa.me/50432569059',
+                priceAmount1000: '19990',
+                retailerId: 'VX-SYSTEMS',
+                url: 'https://wa.me/50432569059?text=Hola+Deylin,+me+interesa+el+Sistema+VX',
                 productImageCount: 1
             },
             businessOwnerJid: '50432569059@s.whatsapp.net',
-            footer: `*¡OFERTA DE TEMPO LIMITADO!* 📉\n\nHas sido seleccionado para una promoción especial.\n\n✅ Control Total\n✅ Plugins Premium\n✅ Soporte VIP\n\n🔔 *ESTADO:* Solo quedan 3 cupos con descuento.`.trim(),
-           // footer: 'Toca el producto para más información',
+            footer: selectedAd.footer,
             mentions: [m.sender]
         };
 
@@ -38,7 +54,7 @@ const promoSystem = {
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363406846602793@newsletter',
                     serverMessageId: 100,
-                    newsletterName: `MARKETPLACE: ${global.name()}`
+                    newsletterName: `SISTEMA VERIFICADO: ${global.name()}`
                 }
             }
         });
