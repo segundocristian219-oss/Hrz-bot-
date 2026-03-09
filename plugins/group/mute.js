@@ -17,31 +17,20 @@ const muteCommand = {
             return m.reply('🔥 *No puedes realizar esta acción con el staff del bot*');
         }
 
-        let targetUser = await global.User.findOne({ id: who });
+        const isMuting = (command === 'mute' || command === 'mutar' || command === 'silenciar');
         
-        if (!targetUser) {
-            targetUser = await global.User.create({ 
-                id: who, 
-                name: "Usuario Nuevo", 
-                muto: false, 
-                exp: 0 
-            });
-        }
+        
+        let targetUser = await global.User.findOneAndUpdate(
+            { id: who },
+            { $set: { muto: isMuting } },
+            { new: true, upsert: true }
+        );
 
-        if (command === 'mute' || command === 'mutar' || command === 'silenciar') {
-            if (targetUser.muto) return m.reply('🔥 *Este usuario ya está en la lista de silenciados*');
-
-            targetUser.muto = true;
-            await targetUser.save();
-            await conn.sendMessage(m.chat, { text: `✅ *Usuario silenciado correctamente.*`, mentions: [who] }, { quoted: m });
-
-        } else if (command === 'unmute') {
-            if (!targetUser.muto) return m.reply('🔥 *Este usuario NO está silenciado en mi base de datos*');
-
-            targetUser.muto = false;
-            await targetUser.save();
-            await conn.sendMessage(m.chat, { text: `✅ *Usuario desmutado correctamente.*`, mentions: [who] }, { quoted: m });
-        }
+        const status = isMuting ? 'silenciado' : 'desmutado';
+        await conn.sendMessage(m.chat, { 
+            text: `✅ *Usuario ${status} correctamente en la base de datos.*`, 
+            mentions: [who] 
+        }, { quoted: m });
     }
 }
 
