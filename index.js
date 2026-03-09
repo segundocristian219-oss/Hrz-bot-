@@ -11,7 +11,7 @@ import pino from 'pino';
 import yargs from 'yargs';
 import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
-import医疗 readline from 'readline';
+import readline from 'readline';
 import cfonts from 'cfonts';
 import mongoose from 'mongoose';
 import { smsg } from './lib/serializer.js';
