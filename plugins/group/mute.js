@@ -5,38 +5,42 @@ const muteCommand = {
     admin: true,
     botAdmin: true,
     group: true,
-    run: async (m, { conn, command, text, chat }) => {
+    run: async (m, { conn, command, text }) => {
+        // Limpiamos el ID para que siempre sea consistente
         let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null;
 
-        if (!who || who === '@s.whatsapp.net') return m.reply(`*👑 Menciona o responde al mensaje de la persona que deseas ${command === 'unmute' ? 'desmutar' : 'mutar'}*`);
+        if (!who || who === '@s.whatsapp.net') return m.reply(`*👑 Menciona o responde a alguien*`);
 
+        // Validación de seguridad para dueños
         const ownerBot = global.owner[0][0] + '@s.whatsapp.net';
-        if (who === ownerBot) return m.reply('🔥 *No puedes mutar al creador del bot*');
-        if (who === conn.user.id.split(':')[0] + '@s.whatsapp.net') return m.reply('🔥 *No puedes mutar al propio bot*');
+        if (who === ownerBot || who === conn.user.id.split(':')[0] + '@s.whatsapp.net') {
+            return m.reply('🔥 *No puedes realizar esta acción con el staff del bot*');
+        }
 
-        const groupMetadata = await conn.groupMetadata(m.chat);
-        const groupOwner = groupMetadata.owner || m.chat.split('-')[0] + '@s.whatsapp.net';
-        if (who === groupOwner) return m.reply('🔥 *No puedes mutar al creador del grupo*');
-
-        
+        // BUSQUEDA O CREACIÓN: Si no existe en la DB, lo creamos para poder mutarlo
         let targetUser = await global.User.findOne({ id: who });
-        if (!targetUser) return m.reply('❌ El usuario no está registrado en mi base de datos.');
+        if (!targetUser) {
+            targetUser = await global.User.create({ 
+                id: who, 
+                name: "Usuario Nuevo", 
+                muto: false, 
+                exp: 0 
+            });
+        }
 
         if (command === 'mute' || command === 'mutar' || command === 'silenciar') {
-            if (targetUser.muto) return m.reply('🔥 *Este usuario ya está silenciado globalmente*');
-
-            targetUser.muto = true; 
-            await targetUser.save();
+            if (targetUser.muto) return m.reply('🔥 *Este usuario ya está en la lista de silenciados*');
             
-            await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗺𝘂𝘁𝗮𝗱𝗼\n*Sus mensajes serán eliminados automáticamente.*`, mentions: [who] }, { quoted: m });
+            targetUser.muto = true;
+            await targetUser.save(); // Forzamos la escritura en la DB
+            await conn.sendMessage(m.chat, { text: `✅ *Usuario silenciado correctamente.*`, mentions: [who] }, { quoted: m });
 
         } else if (command === 'unmute') {
-            if (!targetUser.muto) return m.reply('🔥 *Este usuario no está silenciado*');
+            if (!targetUser.muto) return m.reply('🔥 *Este usuario NO está silenciado en mi base de datos*');
 
-            targetUser.muto = false; // Desactivamos el mute
-            await targetUser.save();
-            
-            await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗱𝗲𝗺𝘂𝘁𝗮𝗱𝗼\n*Ya puede enviar mensajes normalmente.*`, mentions: [who] }, { quoted: m });
+            targetUser.muto = false;
+            await targetUser.save(); // Forzamos la actualización
+            await conn.sendMessage(m.chat, { text: `✅ *Usuario desmutado correctamente.*`, mentions: [who] }, { quoted: m });
         }
     }
 }
