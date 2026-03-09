@@ -18,20 +18,24 @@ const muteCommand = {
         const groupOwner = groupMetadata.owner || m.chat.split('-')[0] + '@s.whatsapp.net';
         if (who === groupOwner) return m.reply('🔥 *No puedes mutar al creador del grupo*');
 
-        if (!chat.mutos) chat.mutos = [];
+        
+        let targetUser = await global.User.findOne({ id: who });
+        if (!targetUser) return m.reply('❌ El usuario no está registrado en mi base de datos.');
 
         if (command === 'mute' || command === 'mutar' || command === 'silenciar') {
-            if (chat.mutos.includes(who)) return m.reply('🔥 *Este usuario ya ha sido mutado en este grupo*');
+            if (targetUser.muto) return m.reply('🔥 *Este usuario ya está silenciado globalmente*');
 
-            chat.mutos.push(who);
-            await chat.save();
-            await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗺𝘂𝘁𝗮𝗱𝗼\n*Sus mensajes serán eliminados automáticamente en este grupo.*`, mentions: [who] }, { quoted: m });
+            targetUser.muto = true; 
+            await targetUser.save();
+            
+            await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗺𝘂𝘁𝗮𝗱𝗼\n*Sus mensajes serán eliminados automáticamente.*`, mentions: [who] }, { quoted: m });
 
         } else if (command === 'unmute') {
-            if (!chat.mutos.includes(who)) return m.reply('🔥 *Este usuario no está mutado en este grupo*');
+            if (!targetUser.muto) return m.reply('🔥 *Este usuario no está silenciado*');
 
-            chat.mutos = chat.mutos.filter(id => id !== who);
-            await chat.save();
+            targetUser.muto = false; // Desactivamos el mute
+            await targetUser.save();
+            
             await conn.sendMessage(m.chat, { text: `𝗨𝘀𝘂𝗮𝗿𝗶𝗼 𝗱𝗲𝗺𝘂𝘁𝗮𝗱𝗼\n*Ya puede enviar mensajes normalmente.*`, mentions: [who] }, { quoted: m });
         }
     }
