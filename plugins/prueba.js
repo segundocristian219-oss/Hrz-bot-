@@ -1,54 +1,49 @@
-import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
+import axios from 'axios'
 
-const vokerOfficialLabels = {
-    name: 'vlabels',
-    alias: ['etiquetas', 'vokerpower'],
-    category: 'system',
-    run: async (m, { conn }) => {
-        m.react('🕒');
+const googleMaps = {
+    name: 'maps',
+    alias: ['gmaps', 'mapa', 'ubicacion'],
+    category: 'herramientas',
+    run: async (m, { conn, text, usedPrefix, command }) => {
+        if (!text) return conn.reply(m.chat, `❀ Te falta el lugar que deseas buscar.\n\n> Ejemplo: *${usedPrefix + command} Torre Eiffel*`, m)
 
-        // --- MENSAJE 1: ETIQUETA OFICIAL DE IA (AI LABELED) ---
-        // Esta es la función más nueva de 2026. WhatsApp añade un distintivo oficial 
-        // de "🤖 Generado por IA" que le da un aire de tecnología avanzada.
         try {
-            await conn.sendMessage(m.chat, {
-                text: "*── 「 VOKER INTELLIGENCE 」 ──*\n\nEste proceso ha sido ejecutado mediante redes neuronales de automatización.",
-                ai: true // FLAG OFICIAL v7.x: Inyecta la etiqueta de IA en el encabezado.
-            }, { quoted: m });
-        } catch (e) { console.error('Fallo Etiqueta IA'); }
+            if (m.react) await m.react('📍')
 
-        // --- MENSAJE 2: ETIQUETA DE MARCA VERIFICADA (AD ATTRIBUTION) ---
-        // Se usa para poner el nombre de tu bot en verde arriba del mensaje.
-        // Al NO usar 'newsletterJid', evitamos el botón molesto de "Ver canal".
-        try {
-            await conn.sendMessage(m.chat, {
-                text: "Verificación de protocolos de seguridad: *ÉXITO*",
-                contextInfo: {
-                    externalAdReply: {
-                        title: 'VOKER-SYSTEM-v5.0-STABLE', // TU MARCA PERSONAL
-                        body: 'Verified Media Provider',
-                        mediaType: 1,
-                        showAdAttribution: true, // Esto activa la estética de "Marca" o "Publicidad"
-                        renderLargerThumbnail: false,
-                        sourceApp: 'whatsapp' // Simula procedencia oficial
-                    }
-                }
-            }, { quoted: m });
-        } catch (e) { console.error('Fallo Etiqueta Marca'); }
+            // Usamos un servicio de búsqueda para obtener coordenadas y datos
+            const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&limit=1`
+            const { data } = await axios.get(searchUrl)
 
-        // --- MENSAJE 3: FOOTER EMPRESARIAL (CLEAN POWER) ---
-        // Pone tu firma digital en color gris elegante al final del mensaje.
-        // Es el estándar para sistemas CRM profesionales en 2026.
-        try {
-            await conn.sendMessage(m.chat, {
-                text: "Comando de sistema finalizado.\n_Todos los datos han sido streadmados correctamente._",
-                footer: "© 2026 DIX LATAM | VOKER-SYSTEM-OFFICIAL", // ETIQUETA DE PROPIEDAD
-                viewOnce: false
-            }, { quoted: m });
-        } catch (e) { console.error('Fallo Footer'); }
+            if (!data || data.length === 0) {
+                return conn.reply(m.chat, `❌ No se encontró el lugar: *${text}*`, m)
+            }
 
-        m.react('✅');
+            const place = data[0]
+            const lat = place.lat
+            const lon = place.lon
+            const name = place.display_name
+            
+            // Generamos un link directo a Google Maps
+            const mapLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
+            
+            // Generamos una imagen del mapa usando un servicio estático gratuito
+            const mapImage = `https://static-maps.yandex.ru/1.x/?lang=es_ES&ll=${lon},${lat}&z=15&l=map&size=600,400&pt=${lon},${lat},pm2rdm`
+
+            const textoFinal = `📍 *ʙᴜsᴄᴀᴅᴏʀ ᴅᴇ ᴍᴀᴘs*\n\n` +
+                               `> 🚩 *ʟᴜɢᴀʀ:* ${place.name || text}\n` +
+                               `> 🗺️ *ᴅɪʀᴇᴄᴄɪᴏɴ:* ${name}\n\n` +
+                               `🔗 *ʟɪɴᴋ:* ${mapLink}`
+
+            await conn.sendMessage(m.chat, {
+                image: { url: mapImage },
+                caption: textoFinal
+            }, { quoted: m })
+
+        } catch (e) {
+            console.error(e)
+            conn.reply(m.chat, `❌ Ocurrió un error al buscar el lugar.`, m)
+        }
     }
-};
+}
 
-export default vokerOfficialLabels;
+export default googleMaps
