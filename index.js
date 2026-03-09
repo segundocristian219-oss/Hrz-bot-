@@ -4,7 +4,7 @@ import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
-import fs, { existsSync, watch, mkdirSync } from 'fs';
+import fs, { existsSync, readdirSync, statSync, watch, mkdirSync } from 'fs';
 import { promises as fsP } from 'fs';
 import chalk from 'chalk';
 import pino from 'pino';
@@ -19,21 +19,27 @@ import { EventEmitter } from 'events';
 
 const originalLog = console.log;
 console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
-
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
 
 EventEmitter.defaultMaxListeners = 0;
 
-// Eliminado el sistema de logs externos en excepciones
-process.on('uncaughtException', (err) => {
-    console.error('CRITICAL ERROR:', err);
-});
-
 mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority', {
     serverSelectionTimeoutMS: 5000,    
     family: 4                          
-}).catch(err => console.error('DB Error:', err.message));
+}).catch(e => console.error(e));
+
+const userSchema = new mongoose.Schema({
+    id: { type: String, unique: true },
+    lastSeen: { type: Date, default: Date.now }
+}, { strict: false });
+global.User = mongoose.model('User', userSchema);
+
+const chatSchema = new mongoose.Schema({
+    id: { type: String, unique: true },
+    isBanned: { type: Boolean, default: false }
+}, { strict: false });
+global.Chat = mongoose.model('Chat', chatSchema);
 
 const { 
     makeWASocket, 
@@ -48,8 +54,6 @@ if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
 cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
-cfonts.say('ULTRA SPEED', { font: 'console', align: 'center', colors: ['white'], space: false });
-console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -64,25 +68,22 @@ global.prefix = new RegExp('^[#!./]');
 const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 const { version } = await fetchLatestBaileysVersion();
-
-// Caché optimizada para acelerar la gestión de mensajes
 const msgRetryCounterCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
 global.groupCache = new Map();
 
 const connectionOptions = {
   version,
-  logger: pino({ level: 'fatal' }), // Mostrar solo errores críticos para no saturar procesos
+  logger: pino({ level: 'fatal' }), 
   printQRInTerminal: false,
   browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
-    // El uso de caché en las llaves agiliza el cifrado tras desconexiones
     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })), 
   },
   markOnlineOnConnect: true,
   syncFullHistory: false,
   msgRetryCounterCache,
-  connectTimeoutMs: 60000, // Mayor tiempo de espera para servidores con lag
+  connectTimeoutMs: 60000,
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
   getMessage: async () => ({ conversation: "" })
@@ -92,37 +93,29 @@ global.conn = makeWASocket(connectionOptions);
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
+    const question = (t) => new Promise((r) => rl.question(t, r));
     let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
     let addNumber = phoneNumber.replace(/\D/g, '');
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
             console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
-        } catch (e) { console.error('Error Pairing:', e); }
-    }, 2000);
+        } catch (e) { console.error(e); }
+    }, 3000);
 }
 
 const cleanSessions = async () => {
-    if (!existsSync(sessionPath)) return;
-    const files = await fsP.readdir(sessionPath);
-    const limit = 3 * 24 * 60 * 60 * 1000;
-    await Promise.all(files.map(async (file) => {
-        if (file === 'creds.json' || file.startsWith('app-state')) return;
-        const filePath = join(sessionPath, file);
-        try {
+    try {
+        const files = await fsP.readdir(sessionPath);
+        const limit = 3 * 24 * 60 * 60 * 1000;
+        await Promise.all(files.map(async (file) => {
+            if (file === 'creds.json') return;
+            const filePath = join(sessionPath, file);
             const st = await fsP.stat(filePath);
             if (Date.now() - st.mtimeMs > limit) await fsP.unlink(filePath);
-        } catch {}
-    }));
+        }));
+    } catch {}
 };
-
-// Rutina de limpieza optimizada
-setInterval(async () => {
-    try {
-        await cleanSessions();
-    } catch (e) { console.error('Cleanup Error:', e); }
-}, 86400000);
 
 let messageHandler;
 const loadHandler = async () => {
@@ -130,18 +123,14 @@ const loadHandler = async () => {
         const Path = path.join(process.cwd(), 'lib/message.js');
         const module = await import(`file://${Path}?update=${Date.now()}`);
         messageHandler = module.message || module.default?.message || module.default;
-    } catch (e) { console.error('Handler Load Error:', e); }
+    } catch (e) { console.error(e); }
 };
 await loadHandler();
 watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
 
 global.reload = async function(restatConn) {
   if (restatConn) {
-    msgRetryCounterCache.flushAll();
-    if (global.conn) {
-        global.conn.ev.removeAllListeners();
-        try { global.conn.ws.close(); } catch {}
-    }
+    try { global.conn.ws.close(); } catch {}
     global.conn = makeWASocket(connectionOptions);
   }
 
@@ -151,14 +140,13 @@ global.reload = async function(restatConn) {
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
-    } catch (e) { console.error('Message Error:', e); }
+    } catch (e) { console.error(e); }
   });
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        console.log(chalk.red(`┃ Conexión cerrada: ${reason}`));
         if (reason !== DisconnectReason.loggedOut) setTimeout(() => global.reload(true), 3000);
         else process.exit(1);
     }
@@ -166,7 +154,7 @@ global.reload = async function(restatConn) {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
-
+        await cleanSessions();
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
@@ -189,6 +177,8 @@ global.reload = async function(restatConn) {
 await global.reload();
 
 global.plugins = new Map();
+global.aliases = new Map();
+
 async function readRecursive(folder) {
   const files = await fsP.readdir(folder);
   for (let filename of files) {
@@ -198,8 +188,11 @@ async function readRecursive(folder) {
     else if (/\.js$/.test(filename)) {
       try {
         const module = await import(`file://${file}`);
-        global.plugins.set(basename(filename, '.js'), module.default || module);
-      } catch (e) { console.error(`Plugin Error [${filename}]:`, e.message); }
+        const plugin = module.default || module;
+        const name = plugin.name || basename(filename, '.js');
+        global.plugins.set(name, plugin);
+        if (plugin.alias) (Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias]).forEach(a => global.aliases.set(a, name));
+      } catch (e) { console.error(e); }
     }
   }
 }
