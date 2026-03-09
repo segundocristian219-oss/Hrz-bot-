@@ -25,8 +25,8 @@ const promoSystem = {
                 productImageCount: 1
             },
             businessOwnerJid: '50432569059@s.whatsapp.net',
-            caption: `*¡OFERTA DE TEMPO LIMITADO!* 📉\n\nHas sido seleccionado para una promoción especial.\n\n✅ Control Total\n✅ Plugins Premium\n✅ Soporte VIP\n\n🔔 *ESTADO:* Solo quedan 3 cupos con descuento.`.trim(),
-            footer: 'Toca el producto para más información',
+            footer: `*¡OFERTA DE TEMPO LIMITADO!* 📉\n\nHas sido seleccionado para una promoción especial.\n\n✅ Control Total\n✅ Plugins Premium\n✅ Soporte VIP\n\n🔔 *ESTADO:* Solo quedan 3 cupos con descuento.`.trim(),
+           // footer: 'Toca el producto para más información',
             mentions: [m.sender]
         };
 
