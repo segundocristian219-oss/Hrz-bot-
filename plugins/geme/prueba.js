@@ -1,38 +1,44 @@
-import axios from 'axios';
+const promoSystem = {
+    name: 'promo_vx',
+    category: 'system',
+    async before(m, { conn }) {
+        const txt = (m.text || m.msg?.caption || m.msg?.text || m.message?.conversation || "").trim().toLowerCase();
 
-const wallpaperCommand = {
-    name: 'wallpaper',
-    alias: ['wp', 'fondo'],
-    category: 'fun',
-    run: async (m, { conn, text }) => {
-        try {
-            m.react('🕒');
+        if (!txt || m.isBaileys || m.fromMe || new RegExp('^[#!./]').test(txt)) return false;
 
-            const query = text || 'minimalist';
-            const url = `https://wallhaven.cc/api/v1/search?q=${encodeURIComponent(query)}&categories=110&purity=100&sorting=random`;
+        const botNumber = conn.user.id.split(':')[0];
+        const isFreeBot = (global.bots_free || []).some(id => id.toString() === botNumber);
+        if (!isFreeBot) return false;
 
-            const { data: res } = await axios.get(url);
+        const triggers = ['venta', 'comprar', 'precio', 'adquirir', 'sistema', 'info bot'];
+        const isTriggered = triggers.some(key => txt.includes(key));
 
-            if (!res?.data || res.data.length === 0) {
-                m.react('❌');
-                return conn.reply(m.chat, `> ⍰ No se encontraron fondos para: *${query}*`, m);
-            }
-
-            const wp = res.data[Math.floor(Math.random() * res.data.length)];
-            const imageBuffer = wp.path;
-
-            await conn.sendMessage(m.chat, { 
-                image: { url: imageBuffer }, 
-                caption: `*── 「 WALLPAPER 」 ──*\n\n> 🔍 *Busqueda:* ${query}\n> 📐 *Resolución:* ${wp.resolution}\n\n*❯ Proveedor:* Wallhaven` 
+        if (isTriggered) {
+            await conn.sendMessage(m.chat, {
+                text: `*¡OFERTA DE TIEMPO LIMITADO!* 📉\n\nHas sido seleccionado para una promoción especial en nuestro *Sistema de Automatización VX*.\n\n✅ *Control Total:* Administra tus grupos sin esfuerzo.\n✅ *Plugins Premium:* Stickers, descargas y seguridad.\n✅ *Soporte VIP:* Atención directa del desarrollador.\n\n🔔 *ESTADO:* Solo quedan 3 cupos con descuento.\n👉 *Toca el enlace abajo para reclamar tu precio especial.*`,
+                contextInfo: {
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363406846602793@newsletter',
+                        serverMessageId: 100,
+                        newsletterName: `📢 OFERTA: ${global.name()}`
+                    },
+                    externalAdReply: {
+                        title: "🚨 ¡OFERTA FLASH: 50% OFF!",
+                        body: "Sistema VX-Bot: La mejor inversión",
+                        mediaType: 1,
+                        previewType: 0,
+                        renderLargerThumbnail: true,
+                        thumbnail: await global.getBuffer(global.img()),
+                        sourceUrl: "https://wa.me/50432569059?text=Vengo+por+la+oferta"
+                    }
+                }
             }, { quoted: m });
-
-            m.react('✅');
-
-        } catch (error) {
-            console.error(`> [ERROR]: ${error.message}`);
-            m.react('❌');
+            return true;
         }
+        return false;
     }
 };
 
-export default wallpaperCommand;
+export default promoSystem;
