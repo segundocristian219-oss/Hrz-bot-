@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const reaction = {
     emoji: '☠️',
-    txt_solo: '> ❒ @user1 se intentó matar a todos los integrantes del grupo... ☠️',
+    txt_solo: '> ❒ @user1 intentó matar a todos los integrantes del grupo... ☠️',
     txt_mencion: '> ❏ @user1 mato a @user2 ☠️',
     links: [
 'https://media.tenor.com/WU4sP7m_FD8AAAPo/anime.mp4',
