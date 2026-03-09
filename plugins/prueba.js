@@ -5,34 +5,36 @@ const googleMaps = {
     alias: ['gmaps', 'mapa', 'ubicacion'],
     category: 'herramientas',
     run: async (m, { conn, text, usedPrefix, command }) => {
-        if (!text) return conn.reply(m.chat, `❀ Te falta el lugar que deseas buscar.\n\n> Ejemplo: *${usedPrefix + command} Torre Eiffel*`, m)
+        if (!text) return conn.reply(m.chat, `❀ Te falta el lugar que deseas buscar.\n\n> Ejemplo: *${usedPrefix + command} Multiplaza Tegucigalpa*`, m)
 
         try {
             if (m.react) await m.react('📍')
 
-            // Usamos un servicio de búsqueda para obtener coordenadas y datos
+            // Configuración de búsqueda con User-Agent para evitar el Error 403
             const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&limit=1`
-            const { data } = await axios.get(searchUrl)
+            const { data } = await axios.get(searchUrl, {
+                headers: {
+                    'User-Agent': 'Voker-Bot-Automation/1.0 (voker.business@gmail.com)'
+                }
+            })
 
             if (!data || data.length === 0) {
                 return conn.reply(m.chat, `❌ No se encontró el lugar: *${text}*`, m)
             }
 
             const place = data[0]
-            const lat = place.lat
-            const lon = place.lon
-            const name = place.display_name
+            const { lat, lon, display_name } = place
             
-            // Generamos un link directo a Google Maps
+            // Link universal de Google Maps
             const mapLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
             
-            // Generamos una imagen del mapa usando un servicio estático gratuito
-            const mapImage = `https://static-maps.yandex.ru/1.x/?lang=es_ES&ll=${lon},${lat}&z=15&l=map&size=600,400&pt=${lon},${lat},pm2rdm`
+            // Imagen estática del mapa (Yandex es más permisivo con los bots)
+            const mapImage = `https://static-maps.yandex.ru/1.x/?lang=es_ES&ll=${lon},${lat}&z=16&l=map&size=600,450&pt=${lon},${lat},pm2rdm`
 
-            const textoFinal = `📍 *ʙᴜsᴄᴀᴅᴏʀ ᴅᴇ ᴍᴀᴘs*\n\n` +
-                               `> 🚩 *ʟᴜɢᴀʀ:* ${place.name || text}\n` +
-                               `> 🗺️ *ᴅɪʀᴇᴄᴄɪᴏɴ:* ${name}\n\n` +
-                               `🔗 *ʟɪɴᴋ:* ${mapLink}`
+            const textoFinal = `📍 *ɢᴏᴏɢʟᴇ ᴍᴀᴘs sᴇᴀʀᴄʜ*\n\n` +
+                               `> 🚩 *ʟᴜɢᴀʀ:* ${text.toUpperCase()}\n` +
+                               `> 🗺️ *ᴅɪʀᴇᴄᴄɪᴏɴ:* ${display_name}\n\n` +
+                               `🔗 *ᴇɴʟᴀᴄᴇ:* ${mapLink}`
 
             await conn.sendMessage(m.chat, {
                 image: { url: mapImage },
@@ -40,8 +42,8 @@ const googleMaps = {
             }, { quoted: m })
 
         } catch (e) {
-            console.error(e)
-            conn.reply(m.chat, `❌ Ocurrió un error al buscar el lugar.`, m)
+            console.error('Error en Maps:', e.response ? e.response.status : e.message)
+            conn.reply(m.chat, `❌ Error de conexión con el servidor de mapas (Status: ${e.response?.status || 'desconocido'}).`, m)
         }
     }
 }
