@@ -1,4 +1,7 @@
 import acrcloud from 'acrcloud'
+import { ffmpeg } from '@ffmpeg-installer/ffmpeg'
+import fluent_ffmpeg from 'fluent-ffmpeg'
+import { Readable } from 'stream'
 import yts from 'yt-search'
 import fetch from 'node-fetch'
 
@@ -8,6 +11,25 @@ const acr = new acrcloud({
   access_secret: 'bvgaIAEtADBTbLwiPGYlxupWqkNGIjT7J9Ag2vIu'
 })
 
+const optimizeAudio = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = new Readable()
+        stream.push(buffer)
+        stream.push(null)
+        const chunks = []
+        fluent_ffmpeg(stream)
+            .setFfmpegPath(ffmpeg.path)
+            .toFormat('mp3')
+            .audioChannels(1)
+            .audioBitrate('64k')
+            .duration(10)
+            .on('error', reject)
+            .pipe()
+            .on('data', chunk => chunks.push(chunk))
+            .on('end', () => resolve(Buffer.concat(chunks)))
+    })
+}
+
 const whatmusicCommand = {
     name: 'whatmusic',
     alias: ['shazam', 'repro', 'quemusica'],
@@ -16,83 +38,67 @@ const whatmusicCommand = {
         try {
             let q = m.quoted ? m.quoted : m
             let mime = (q.msg || q).mimetype || q.mediaType || ''
-            
+
             if (!/video|audio/.test(mime)) {
-                return conn.reply(m.chat, `🍪 Etiqueta un *audio* o *video corto* con *${usedPrefix + command}* para identificar la música.`, m)
+                return conn.reply(m.chat, `『 ⛔ 』Menciona un audio o video para identificarlo.`, m)
             }
 
+            await m.react('⏳')
             let buffer = await q.download()
-            if (!buffer) return conn.reply(m.chat, '❌ No pude descargar el archivo.', m)
+            if (!buffer) return conn.reply(m.chat, '『 ✖ 』Fallo al descargar archivo.', m)
 
-            let duration = q.seconds || 0
-            if (duration > 40) {
-                return conn.reply(m.chat, `⚠️ El archivo solo puede durar *40 segundos máximo*. El que enviaste dura *${duration}s*.`, m)
+            const optimizedBuffer = await optimizeAudio(buffer)
+            let result = await acr.identify(optimizedBuffer)
+
+            if (result.status.code !== 0) {
+                await m.react('✖')
+                return conn.reply(m.chat, `『 ✖ 』Sin resultados: ${result.status.msg}`, m)
             }
 
-            await m.react('🕓')
+            const music = result.metadata.music[0]
+            const { title, artists, album, genres, release_date, external_metadata } = music
+            const ytId = external_metadata?.youtube?.vid
 
-            // Imagen de ImageKit para el fkontak (manteniendo tu ruta dinámica)
-            const res = await fetch('https://ik.imagekit.io/pm10ywrf6f/dynamic_Bot_by_deylin/1768371970918_R3378XlQy.jpeg')
-            const thumb2 = Buffer.from(await res.arrayBuffer())
+            let txt = `┏━━━━━━━◥◣◆◢◤━━━━━━━┓\n`
+            txt += `┃   ❖ 𝗪𝗛𝗔𝗧𝗠𝗨𝗦𝗜𝗖 𝗜𝗗𝗘𝗡𝗧𝗜𝗧𝗬 ❖\n`
+            txt += `┣━━━━━━━━━━━━━━━━━━━━━\n`
+            txt += `┃ ▷ 𝗧𝗶𝘁𝘂𝗹𝗼: ${title || 'No detectado'}\n`
+            txt += `┃ ▷ 𝗔𝗿𝘁𝗶𝘀𝘁𝗮: ${artists?.map(v => v.name).join(', ') || 'Desconocido'}\n`
+            txt += `┃ ▷ 𝗔𝗹𝗯𝘂𝗺: ${album?.name || '---'}\n`
+            txt += `┃ ▷ 𝗚𝗲𝗻𝗲𝗿𝗼: ${genres?.map(v => v.name).join(', ') || '---'}\n`
+            txt += `┃ ▷ 𝗟𝗮𝗻𝘇𝗮𝗺𝗶𝗲𝗻𝘁𝗼: ${release_date || '---'}\n`
 
-            const fkontak = {
-                key: { participants: '0@s.whatsapp.net', remoteJid: 'status@broadcast', fromMe: false, id: 'Halo' },
-                message: {
-                    locationMessage: {
-                        name: `𝗥𝗘𝗦𝗨𝗟𝗧𝗔𝗗𝗢𝗦 𝗗𝗘 𝗔𝗖𝗥𝗖𝗟𝗢𝗨𝗗`,
-                        jpegThumbnail: thumb2
-                    }
-                },
-                participant: '0@s.whatsapp.net'
+            let finalThumb = 'https://ik.imagekit.io/pm10ywrf6f/dynamic_Bot_by_deylin/1768371970918_R3378XlQy.jpeg'
+            
+            if (ytId || title) {
+                const search = await yts(ytId ? { videoId: ytId } : title)
+                const video = ytId ? search : (search.videos && search.videos[0])
+
+                if (video) {
+                    txt += `┣━━━━━━━━━━━━━━━━━━━━━\n`
+                    txt += `┃ ▷ 𝗬𝗼𝘂𝗧𝘂𝗯𝗲: ${video.title}\n`
+                    txt += `┃ ▷ 𝗖𝗮𝗻𝗮𝗹: ${video.author?.name || '---'}\n`
+                    txt += `┃ ▷ 𝗩𝗶𝘀𝘁𝗮𝘀: ${video.views || '---'}\n`
+                    txt += `┃ ▷ 𝗗𝘂𝗿𝗮𝗰𝗶𝗼𝗻: ${video.timestamp || '---'}\n`
+                    txt += `┃ ▷ 𝗨𝗥𝗟: ${video.url}\n`
+                    finalThumb = video.thumbnail
+                }
             }
+            txt += `┗━━━━━━━◥◣◆◢◤━━━━━━━┛`
 
-            let result = await acr.identify(buffer)
-            if (!result || !result.status) throw new Error('Respuesta inválida del servidor ACRCloud.')
+            const resImg = await fetch(finalThumb)
+            const thumbBuffer = Buffer.from(await resImg.arrayBuffer())
 
-            let { status, metadata } = result
-            if (status.code !== 0) return conn.reply(m.chat, `❌ ${status.msg}`, m)
-
-            if (!metadata || !metadata.music || metadata.music.length === 0) {
-                return conn.reply(m.chat, '❌ No se pudo identificar la música.', m)
-            }
-
-            let music = metadata.music[0]
-            let { title, artists, album, genres, release_date } = music
-
-            let txt = '┏╾❑「 *Whatmusic Tools* 」\n'
-            txt += `┃  ≡◦ *Título ∙* ${title || 'Desconocido'}\n`
-            if (artists) txt += `┃  ≡◦ *Artista ∙* ${artists.map(v => v.name).join(', ')}\n`
-            if (album) txt += `┃  ≡◦ *Álbum ∙* ${album.name}\n`
-            if (genres) txt += `┃  ≡◦ *Género ∙* ${genres.map(v => v.name).join(', ')}\n`
-            txt += `┃  ≡◦ *Fecha de lanzamiento ∙* ${release_date || 'Desconocida'}\n`
-
-            const searchResults = await yts.search(title).catch(() => null)
-
-            if (searchResults && searchResults.videos && searchResults.videos.length > 0) {
-                const video = searchResults.videos[0]
-                const { url, title: ytTitle, author, views, timestamp, thumbnail } = video
-
-                txt += `┃  ≡◦ *YouTube:* ${ytTitle}\n`
-                txt += `┃  ≡◦ *Canal:* ${author?.name || 'Desconocido'}\n`
-                txt += `┃  ≡◦ *Vistas:* ${views}\n`
-                txt += `┃  ≡◦ *Duración:* ${timestamp}\n`
-                txt += `┃  ≡◦ *URL del video:* ${url}\n`
-                txt += `┗╾❑`
-
-                const thumbRes = await fetch(thumbnail)
-                const thumbBuffer = Buffer.from(await thumbRes.arrayBuffer())
-
-                await m.react('✅')
-                await conn.sendMessage(m.chat, { image: thumbBuffer, caption: txt }, { quoted: fkontak })
-            } else {
-                txt += `┗╾❑`
-                await m.react('✅')
-                await conn.sendMessage(m.chat, { text: txt }, { quoted: fkontak })
-            }
+            await m.react('✅')
+            await conn.sendMessage(m.chat, { 
+                image: thumbBuffer, 
+                caption: txt 
+            }, { quoted: m })
 
         } catch (err) {
             console.error(err)
-            conn.reply(m.chat, `❌ Error al procesar la música: ${err.message}`, m)
+            await m.react('✖')
+            conn.reply(m.chat, `『 ✖ 』Error interno: ${err.message}`, m)
         }
     }
 }
