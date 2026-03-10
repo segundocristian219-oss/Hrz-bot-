@@ -24,7 +24,7 @@ global.botNames = [
 
 global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482544090_b8c3881cd7221257817e375cd7283918_NorYLEcDgv.jpg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482546371_5cb90b226cda01be4f9cd9dc0d1a2f54_98pFKQ1yF.jpg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482547877_53235316261c8f750b4b18d860a4bfae_5JnvBVkoh.jpg',
+'https://api.dix.lat/media/1773117845191_PSVLejyGg.jpeg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482549626_c94e03ca0366250b9cd992212ce2cd2a_NO0OlKGK1L.jpg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482551338_5baab5fe0420f3ef4e41ebf01d3f7c2c_HYkdcMVk2.jpg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482552940_ff92f9e59231e37dff39c36b9c3e84dd_i-O-zUzR3H.jpg',
