@@ -22,13 +22,13 @@ global.botNames = [
   '⌬ ᴀᴘᴏᴄᴀʟʏᴘsᴇ ᴠx ⌬'       
 ]
 
-global.botImages = [ 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482544090_b8c3881cd7221257817e375cd7283918_NorYLEcDgv.jpg',
+global.botImages = [ 'https://api.dix.lat/media/1773118196179_-Ez182ooE.jpeg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482546371_5cb90b226cda01be4f9cd9dc0d1a2f54_98pFKQ1yF.jpg',
 'https://api.dix.lat/media/1773117845191_PSVLejyGg.jpeg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482549626_c94e03ca0366250b9cd992212ce2cd2a_NO0OlKGK1L.jpg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482551338_5baab5fe0420f3ef4e41ebf01d3f7c2c_HYkdcMVk2.jpg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482552940_ff92f9e59231e37dff39c36b9c3e84dd_i-O-zUzR3H.jpg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482554714_b23011009fb8df483b52a257f0c414a8_oXi_9P1Qq.jpg',
+'https://api.dix.lat/media/1773118212138_rYszV87cc.jpeg',
+'https://api.dix.lat/media/1773118203803_ibJ-QR5lf.jpeg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482556697_b7337a5a637b1e0865937d2dc3ca40ac_P39z6eYIA.jpg' ]
 
 const conf = {
