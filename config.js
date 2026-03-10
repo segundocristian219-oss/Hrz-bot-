@@ -13,7 +13,15 @@ global.owner = [['50432955554'], ['157449910792287@lid'], ['155968113483985@lid'
 global.bots_free = ['50488198573']
 
 
-global.botNames = [
+Global.botNames = [
+  'sʜᴜ ᴏᴜᴍᴀ — ᴠx',       
+  'ɪɴᴏʀɪ ʏᴜᴢᴜʀɪʜᴀ — ᴠx', 
+  '𝖲𝖧𝖴 𝖮𝖴𝖬𝖳 — 𝖵𝖷',       
+  '𝖨𝖭𝖮𝖱𝖨 𝖸𝖴𝖹𝖴𝖱𝖨𝖧𝖠 — 𝖵𝖷', 
+  '𝐆𝐇𝐔 𝐎𝐔𝐌𝐀 𝐕𝐗',       
+  '𝐈𝐍𝐎𝐑𝐈 𝐘𝐔𝐙𝐔𝐑𝐈𝐇𝐀 𝐕𝐗', 
+  'ＧＨＵ ＯＵＭＡ ＶＸ',   
+  'ＩＮＯＲＩ ＹＵＺＵＲＩＨＡ ＶＸ', 
   'ɢᴜɪʟᴛʏ ᴄʀᴏᴡɴ — ᴠx',      
   '𝖦𝖴𝖨𝖫𝖳𝖸 𝖢𝖱𝖮𝖶𝖭 𝖵𝖷',      
   '𝐆𝐔𝐈𝐋𝐓𝐘 𝐂𝐑𝐎𝐖𝐍 𝐕𝐗',      
@@ -21,6 +29,7 @@ global.botNames = [
   '⧫ ᴠᴏɪᴅ ɢᴇɴᴏᴍᴇ ⧫',   
   '⌬ ᴀᴘᴏᴄᴀʟʏᴘsᴇ ᴠx ⌬'       
 ]
+
 
 global.botImages = [ 'https://api.dix.lat/media/1773118196179_-Ez182ooE.jpeg',
 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482546371_5cb90b226cda01be4f9cd9dc0d1a2f54_98pFKQ1yF.jpg',
