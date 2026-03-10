@@ -13,7 +13,7 @@ global.owner = [['50432955554'], ['157449910792287@lid'], ['155968113483985@lid'
 global.bots_free = ['50488198573']
 
 
-Global.botNames = [
+global.botNames = [
   'sʜᴜ ᴏᴜᴍᴀ — ᴠx',       
   'ɪɴᴏʀɪ ʏᴜᴢᴜʀɪʜᴀ — ᴠx', 
   '𝖲𝖧𝖴 𝖮𝖴𝖬𝖳 — 𝖵𝖷',       
