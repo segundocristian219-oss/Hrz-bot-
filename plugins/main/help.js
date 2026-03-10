@@ -19,11 +19,10 @@ const menuCommand = {
                 c.user && c.ws?.socket?.readyState !== 3 
             ).length;
 
-            const nameBot = typeof global.name() === 'object' ? global.name() : 'GUILTY CROWN — VX';
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
 
-            let menuText = `╔══『 *${nameBot.toUpperCase()}* 』══╗\n`;
+            let menuText = `╔══『 *${name()}* 』══╗\n`;
             menuText += `║ • Usuario: @${m.sender.split('@')[0]}\n`;
             menuText += `║ • Usuarios: ${totalreg}\n`;
             menuText += `║ • Uptime: ${uptime}\n`;
