@@ -1,5 +1,4 @@
 import acrcloud from 'acrcloud'
-import { ffmpeg } from '@ffmpeg-installer/ffmpeg'
 import fluent_ffmpeg from 'fluent-ffmpeg'
 import { Readable } from 'stream'
 import yts from 'yt-search'
@@ -17,13 +16,17 @@ const optimizeAudio = (buffer) => {
         stream.push(buffer)
         stream.push(null)
         const chunks = []
+        
+        // Aquí fluent-ffmpeg usará el comando 'ffmpeg' global de tu sistema
         fluent_ffmpeg(stream)
-            .setFfmpegPath(ffmpeg.path)
             .toFormat('mp3')
             .audioChannels(1)
             .audioBitrate('64k')
             .duration(10)
-            .on('error', reject)
+            .on('error', (err) => {
+                console.error('Error en FFmpeg:', err)
+                reject(err)
+            })
             .pipe()
             .on('data', chunk => chunks.push(chunk))
             .on('end', () => resolve(Buffer.concat(chunks)))
@@ -47,7 +50,7 @@ const whatmusicCommand = {
             let buffer = await q.download()
             if (!buffer) return conn.reply(m.chat, '『 ✖ 』Fallo al descargar archivo.', m)
 
-            const optimizedBuffer = await optimizeAudio(buffer)
+            const optimizedBuffer = await optimizeAudio(buffer).catch(() => buffer)
             let result = await acr.identify(optimizedBuffer)
 
             if (result.status.code !== 0) {
@@ -71,8 +74,9 @@ const whatmusicCommand = {
             let finalThumb = 'https://ik.imagekit.io/pm10ywrf6f/dynamic_Bot_by_deylin/1768371970918_R3378XlQy.jpeg'
             
             if (ytId || title) {
-                const search = await yts(ytId ? { videoId: ytId } : title)
-                const video = ytId ? search : (search.videos && search.videos[0])
+                const query = ytId ? { videoId: ytId } : title
+                const search = await yts(query).catch(() => null)
+                const video = ytId ? search : (search?.videos ? search.videos[0] : null)
 
                 if (video) {
                     txt += `┣━━━━━━━━━━━━━━━━━━━━━\n`
