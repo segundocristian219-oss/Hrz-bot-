@@ -44,7 +44,7 @@ const youtubeCommand = {
         try {
             const [videoSearchResult, dbResult] = await Promise.all([
                 (async () => {
-                    const videoMatch = text.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/))([a-zA-Z0-9_-]{11})/);
+                    const videoMatch = text.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/))([id=a-zA-Z0-9_-]{11})/);
                     if (videoMatch) return await yts({ videoId: videoMatch[1] });
                     const search = await yts(text);
                     return search.videos?.[0] || null;
@@ -76,7 +76,7 @@ const youtubeCommand = {
 
                 return await conn.sendMessage(m.chat, {
                     [isAudio ? 'audio' : 'video'] : { url: cacheData.raw.url },
-                    mimetype: isAudio ? "audio/mp4" : "video/mp4",
+                    mimetype: isAudio ? "audio/mpeg" : "video/mp4",
                     fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`,
                     ...cacheData.raw,
                     fileSha256: Buffer.from(cacheData.raw.fileSha256, 'base64'),
@@ -101,7 +101,7 @@ const youtubeCommand = {
 
             const sent = await conn.sendMessage(m.chat, { 
                 [isAudio ? 'audio' : 'video']: { url: downloadUrl }, 
-                mimetype: isAudio ? "audio/mp4" : "video/mp4",
+                mimetype: isAudio ? "audio/mpeg" : "video/mp4",
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
