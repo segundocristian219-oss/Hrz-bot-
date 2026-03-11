@@ -90,6 +90,14 @@ const threadsCommand = {
 
             description = description.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
 
+            const seen = new Set();
+            mediaItems = mediaItems.filter(item => {
+                const key = item.url.split('?')[0];
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+
             if (mediaItems.length === 0) {
                 return m.reply('❌ No se encontró contenido multimedia. El post puede ser privado, solo texto, o Threads bloqueó el acceso.');
             }
