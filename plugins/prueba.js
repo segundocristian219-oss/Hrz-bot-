@@ -164,13 +164,16 @@ function sleep(ms) {
 function extractMediaFromJson(obj, results = [], depth = 0) {
     if (depth > 15 || !obj || typeof obj !== 'object') return results;
 
-    if (Array.isArray(obj.video_versions)) {
-        const best = obj.video_versions[0];
+    const hasVideo = Array.isArray(obj.video_versions) && obj.video_versions.length > 0;
+    const hasImage = obj.image_versions2?.candidates?.length > 0;
+
+    if (hasVideo) {
+        const best = obj.video_versions.reduce((a, b) => ((b.width || 0) > (a.width || 0) ? b : a));
         if (best?.url) results.push({ type: 'video', url: cleanUrl(best.url) });
     }
 
-    if (obj.image_versions2?.candidates?.length) {
-        const best = obj.image_versions2.candidates[0];
+    if (hasImage && !hasVideo) {
+        const best = obj.image_versions2.candidates.reduce((a, b) => ((b.width || 0) > (a.width || 0) ? b : a));
         if (best?.url) results.push({ type: 'image', url: cleanUrl(best.url) });
     }
 
@@ -178,6 +181,7 @@ function extractMediaFromJson(obj, results = [], depth = 0) {
         for (const item of obj.carousel_media) {
             extractMediaFromJson(item, results, depth + 1);
         }
+        return results;
     }
 
     for (const val of Object.values(obj)) {
