@@ -134,17 +134,10 @@ global.reload = async function(restatConn) {
     global.conn = makeWASocket(connectionOptions);
   }
 
+ 
     global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
     if (!msg || (!msg.message && !msg.messageStubType)) return;
-
-    if (msg.key.fromMe) {
-        const mType = msg.message ? Object.keys(msg.message)[0] : null;
-        const text = msg.message?.[mType]?.conversation || msg.message?.[mType]?.text || msg.message?.[mType]?.caption || "";
-        const prefixes = ['#', '.', '/', '!'];
-        const isCommand = prefixes.some(p => text.trim().startsWith(p));
-        if (!isCommand) return;
-    }
 
     try {
         const m = await smsg(conn, msg);
@@ -153,6 +146,7 @@ global.reload = async function(restatConn) {
         if (!e.message?.includes('decrypt')) console.error(e); 
     }
 });
+
 
 
 
