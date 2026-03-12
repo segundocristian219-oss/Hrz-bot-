@@ -22,12 +22,13 @@ const autoSticker = {
             await this.sendMessage(m.chat, { 
                 sticker: { url: randomLink },
                 contextInfo: {
-                    externalAdReply: {
-                        title: 'VOKER VX AUTO-STICKER',
-                        body: 'Apocalypse System',
-                        previewType: 'PHOTO',
-                        thumbnailUrl: 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/voker.png',
-                        sourceUrl: 'https://dix.lat'
+                      externalAdReply: {
+                        title: name(),
+                        body: groupMetadata.subject,
+                        mediaType: 1,
+                        sourceUrl: mainLink,
+                        thumbnailUrl: img(),
+                        renderLargerThumbnail: false
                     }
                 }
             }, { quoted: m });
