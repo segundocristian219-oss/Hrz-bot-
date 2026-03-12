@@ -1,4 +1,4 @@
-import pino from 'pino'
+/*import pino from 'pino'
 import { Boom } from '@hapi/boom'
 import fs from 'fs'
 import path from 'path'
@@ -242,3 +242,4 @@ function deleteSessionFolder(folder) {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
+*/
