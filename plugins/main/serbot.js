@@ -343,10 +343,7 @@ function setupSubBotEvents(sock, authFolder) {
                 if (!msg.message || msg.key?.fromMe) continue
 
                 // Verificar que el JID no sea @lid antes de procesar
-                if (isLidJid(msg.key?.remoteJid)) {
-                    console.warn(chalk.yellow(`[SUB-BOT] JID @lid ignorado: ${msg.key.remoteJid}`))
-                    continue
-                }
+                
 
                 try {
                     const m = await smsg(sock, msg)
