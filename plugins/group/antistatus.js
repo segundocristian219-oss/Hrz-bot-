@@ -3,9 +3,11 @@ const antiStatus = {
     async before(m, { conn, isAdmin, isBotAdmin, isOwner, chat }) {
         if (!m.isGroup || !chat?.antiStatus || isOwner || isAdmin || m.fromMe) return false;
 
-        
-        const isStatusMention = !!m.message?.groupStatusMentionMessage || 
-                               m.message?.groupStatusMentionMessage?.message?.protocolMessage?.type === 'STATUS_MENTION_MESSAGE';
+        const isStatusMention = 
+            m.message?.groupStatusMentionMessage || 
+            m.msg?.groupStatusMentionMessage ||
+            m.message?.protocolMessage?.type === 'STATUS_MENTION_MESSAGE' ||
+            m.message?.extendedTextMessage?.contextInfo?.groupStatusMentionMessage;
 
         if (isStatusMention) {
             if (isBotAdmin) {
