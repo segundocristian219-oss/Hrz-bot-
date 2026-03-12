@@ -28,11 +28,25 @@ EventEmitter.defaultMaxListeners = 0;
 
 const mongoURI = process.env.MONGODB_URL;
 
+const logDB = (type, status) => {
+    console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
+    console.log(chalk.cyan('┃ ') + chalk.bold(`DATABASE: `) + (type === 'CLOUD' ? chalk.blueBright(type) : chalk.yellowBright(type)));
+    console.log(chalk.cyan('┃ ') + chalk.bold(`STATUS:   `) + (status === 'CONNECTED' ? chalk.greenBright(status) : chalk.redBright(status)));
+    console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
+};
+
 if (mongoURI && !process.argv.includes('--local')) {
     mongoose.connect(mongoURI, {
         serverSelectionTimeoutMS: 5000,
         family: 4
-    }).catch(e => console.error(e));
+    }).then(() => {
+        logDB('CLOUD', 'CONNECTED');
+    }).catch(e => {
+        logDB('CLOUD', 'ERROR');
+        console.error(e);
+        console.log(chalk.red('┃ ') + "Reintentando en modo Local...");
+        activateLocalDB();
+    });
 
     const userSchema = new mongoose.Schema({
         id: { type: String, unique: true },
@@ -46,10 +60,16 @@ if (mongoURI && !process.argv.includes('--local')) {
     }, { strict: false });
     global.Chat = mongoose.model('Chat', chatSchema);
 } else {
+    activateLocalDB();
+}
+
+function activateLocalDB() {
     if (!existsSync('./database')) mkdirSync('./database');
+    logDB('LOCAL', 'CONNECTED');
     global.User = LocalDB.model('User');
     global.Chat = LocalDB.model('Chat');
 }
+
 
 const { 
     makeWASocket, 
