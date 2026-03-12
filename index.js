@@ -1,7 +1,7 @@
+import 'dotenv/config';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 import './config.js';
-import 'dotenv/config';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
@@ -35,6 +35,13 @@ const logDB = (type, status) => {
     console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
 };
 
+function activateLocalDB() {
+    if (!existsSync('./database')) mkdirSync('./database');
+    logDB('LOCAL', 'CONNECTED');
+    global.User = LocalDB.model('User');
+    global.Chat = LocalDB.model('Chat');
+}
+
 if (mongoURI && !process.argv.includes('--local')) {
     mongoose.connect(mongoURI, {
         serverSelectionTimeoutMS: 5000,
@@ -43,8 +50,6 @@ if (mongoURI && !process.argv.includes('--local')) {
         logDB('CLOUD', 'CONNECTED');
     }).catch(e => {
         logDB('CLOUD', 'ERROR');
-        console.error(e);
-        console.log(chalk.red('┃ ') + "Reintentando en modo Local...");
         activateLocalDB();
     });
 
@@ -62,14 +67,6 @@ if (mongoURI && !process.argv.includes('--local')) {
 } else {
     activateLocalDB();
 }
-
-function activateLocalDB() {
-    if (!existsSync('./database')) mkdirSync('./database');
-    logDB('LOCAL', 'CONNECTED');
-    global.User = LocalDB.model('User');
-    global.Chat = LocalDB.model('Chat');
-}
-
 
 const { 
     makeWASocket, 
@@ -189,8 +186,6 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
-        
-        // Auto-reconexión de Sub-bots
         try {
             const { assistant_accessJadiBot } = await import('./plugins/main/serbot.js');
             const subbots = readdirSync('./jadibts').filter(file => statSync(join('./jadibts', file)).isDirectory());
@@ -199,8 +194,7 @@ global.reload = async function(restatConn) {
                     setTimeout(() => assistant_accessJadiBot({ phoneNumber: id, fromCommand: false }), 2000);
                 }
             }
-        } catch (e) { console.error('Error reconexión subbots:', e); }
-
+        } catch (e) {}
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
@@ -216,7 +210,6 @@ global.reload = async function(restatConn) {
         global.keepAlive = setInterval(updateStatus, 600000);
     }
   });
-
   global.conn.ev.on('creds.update', saveCreds);
 };
 
