@@ -37,10 +37,13 @@ const logDB = (type, status) => {
 
 function activateLocalDB() {
     if (!existsSync('./database')) mkdirSync('./database');
-    logDB('LOCAL', 'CONNECTED');
     global.User = LocalDB.model('User');
     global.Chat = LocalDB.model('Chat');
+    logDB('LOCAL', 'CONNECTED');
 }
+
+console.clear();
+cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
 if (mongoURI && !process.argv.includes('--local')) {
     mongoose.connect(mongoURI, {
@@ -79,9 +82,6 @@ const {
 
 if (!existsSync('./tmp')) mkdirSync('./tmp');
 if (!existsSync('./jadibts')) mkdirSync('./jadibts');
-
-console.clear();
-cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
