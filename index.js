@@ -185,24 +185,7 @@ global.reload = async function(restatConn) {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
-        
         await cleanSessions();
-
-        const eventsPath = join(process.cwd(), 'lib/event/archivos');
-        if (existsSync(eventsPath)) {
-            const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith('.js'));
-            for (const file of eventFiles) {
-                try {
-                    const eventModule = await import(`file://${join(eventsPath, file)}?update=${Date.now()}`);
-                    if (typeof eventModule.default === 'function') {
-                        eventModule.default(global.conn);
-                    }
-                } catch (e) {
-                    console.error(`Error cargando evento ${file}:`, e);
-                }
-            }
-        }
-
         try {
             const { assistant_accessJadiBot } = await import('./plugins/main/serbot.js');
             const subbots = readdirSync('./jadibts').filter(file => statSync(join('./jadibts', file)).isDirectory());
@@ -212,7 +195,6 @@ global.reload = async function(restatConn) {
                 }
             }
         } catch (e) {}
-
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
@@ -254,3 +236,4 @@ async function readRecursive(folder) {
   }
 }
 await readRecursive(join(process.cwd(), './plugins'));
+
