@@ -1,5 +1,5 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
-import { getRealJid } from '../identifier.js';
+import { getRealJid } from '../../identifier.js';
 
 export default function(conn) {
     conn.ev.on('messages.upsert', async (chatUpdate) => {
