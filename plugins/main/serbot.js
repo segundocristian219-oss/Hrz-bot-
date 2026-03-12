@@ -36,7 +36,7 @@ const serbot = {
                 `*4.* *Selecciona "Vincular con el número de teléfono"*\n\n` 
 
             await conn.sendMessage(m.chat, {
-                img: global.img?.(),
+                image: global.img?.(),
                 text: instruccion,
             }, { quoted: m })
 
