@@ -4,7 +4,7 @@ import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
-import fs, { existsSync, readdirSync, statSync, watch, mkdirSync } from 'fs';
+import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, unlinkSync } from 'fs';
 import { promises as fsP } from 'fs';
 import chalk from 'chalk';
 import pino from 'pino';
@@ -15,19 +15,36 @@ import readline from 'readline';
 import cfonts from 'cfonts';
 import mongoose from 'mongoose';
 import { smsg } from './lib/serializer.js';
+import { monitorBot } from './lib/telemetry.js';
+import { uploadCriticalError } from './lib/db_logs.js';
 import { EventEmitter } from 'events';
 
 const originalLog = console.log;
-console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
+console.log = function () {
+  const args = Array.from(arguments);
+  originalLog.apply(console, [chalk.cyan('┃'), ...args]);
+};
+
 const originalError = console.error;
-console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
+console.error = function () {
+  const args = Array.from(arguments);
+  originalError.apply(console, [chalk.red('┗'), ...args]);
+};
 
 EventEmitter.defaultMaxListeners = 0;
 
+process.on('uncaughtException', async (err) => {
+    try { await uploadCriticalError(err, 'Uncaught Exception Global'); } catch {}
+});
+
 mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority', {
+    tls: true,
+    tlsAllowInvalidCertificates: true, 
     serverSelectionTimeoutMS: 5000,    
     family: 4                          
-}).catch(e => console.error(e));
+}).catch(() => {
+    setTimeout(() => global.reload(true), 5000);
+});
 
 const userSchema = new mongoose.Schema({
     id: { type: String, unique: true },
@@ -54,6 +71,8 @@ if (!existsSync('./tmp')) mkdirSync('./tmp');
 
 console.clear();
 cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
+cfonts.say('ULTRA SPEED', { font: 'console', align: 'center', colors: ['white'], space: false });
+console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -68,22 +87,23 @@ global.prefix = new RegExp('^[#!./]');
 const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 const { version } = await fetchLatestBaileysVersion();
-const msgRetryCounterCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
+const msgRetryCounterCache = new NodeCache();
 global.groupCache = new Map();
 
 const connectionOptions = {
   version,
-  logger: pino({ level: 'fatal' }), 
+  logger: pino({ level: 'silent' }), 
   printQRInTerminal: false,
   browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })), 
+    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
   markOnlineOnConnect: true,
+  generateHighQualityLinkPreview: false,
   syncFullHistory: false,
   msgRetryCounterCache,
-  connectTimeoutMs: 60000,
+  connectTimeoutMs: 30000,
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
   getMessage: async () => ({ conversation: "" })
@@ -93,29 +113,42 @@ global.conn = makeWASocket(connectionOptions);
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const question = (t) => new Promise((r) => rl.question(t, r));
+    const question = (texto) => new Promise((resolver) => rl.question(texto, resolver));
     let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
     let addNumber = phoneNumber.replace(/\D/g, '');
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
             console.log(chalk.cyan('┃ ') + chalk.bgWhite.black.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
-        } catch (e) { console.error(e); }
-    }, 3000);
+        } catch {}
+    }, 2000);
 }
 
 const cleanSessions = async () => {
-    try {
-        const files = await fsP.readdir(sessionPath);
-        const limit = 3 * 24 * 60 * 60 * 1000;
-        await Promise.all(files.map(async (file) => {
-            if (file === 'creds.json') return;
-            const filePath = join(sessionPath, file);
+    if (!existsSync(sessionPath)) return;
+    const files = await fsP.readdir(sessionPath);
+    const now = Date.now();
+    const limit = 3 * 24 * 60 * 60 * 1000;
+    await Promise.all(files.map(async (file) => {
+        if (file === 'creds.json') return;
+        const filePath = join(sessionPath, file);
+        try {
             const st = await fsP.stat(filePath);
-            if (Date.now() - st.mtimeMs > limit) await fsP.unlink(filePath);
-        }));
-    } catch {}
+            if (now - st.mtimeMs > limit) await fsP.unlink(filePath);
+        } catch {}
+    }));
 };
+
+setInterval(async () => {
+    try {
+        const tresDiasAgo = new Date(Date.now() - 259200000);
+        await Promise.all([
+            global.User.deleteMany({ lastSeen: { $lt: tresDiasAgo } }),
+            global.Chat.deleteMany({ lastUpdate: { $lt: tresDiasAgo } }),
+            cleanSessions()
+        ]);
+    } catch {}
+}, 86400000);
 
 let messageHandler;
 const loadHandler = async () => {
@@ -123,44 +156,45 @@ const loadHandler = async () => {
         const Path = path.join(process.cwd(), 'lib/message.js');
         const module = await import(`file://${Path}?update=${Date.now()}`);
         messageHandler = module.message || module.default?.message || module.default;
-    } catch (e) { console.error(e); }
+    } catch {}
 };
 await loadHandler();
 watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
 
 global.reload = async function(restatConn) {
   if (restatConn) {
-    try { global.conn.ws.close(); } catch {}
+    msgRetryCounterCache.flushAll();
+    if (global.conn) {
+        global.conn.ev.removeAllListeners();
+        try { global.conn.ws.close(); } catch {}
+    }
+    await new Promise(r => setTimeout(r, 2000));
     global.conn = makeWASocket(connectionOptions);
   }
 
-    global.conn.ev.on('messages.upsert', async (chatUpdate) => {
+  global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
-
-
     if (!msg || (!msg.message && !msg.messageStubType)) return;
-
     try {
         const m = await smsg(conn, msg);
-        if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
-    } catch (e) { 
-        if (!e.message?.includes('decrypt')) console.error(e); 
+        if (messageHandler) messageHandler.call(conn, m, chatUpdate);
+    } catch (e) {
+        if (!e.message?.includes('decrypt')) uploadCriticalError(e, 'Message Upsert');
     }
   });
-
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        if (reason !== DisconnectReason.loggedOut) setTimeout(() => global.reload(true), 3000);
-        else process.exit(1);
+        if (reason === DisconnectReason.loggedOut) process.exit(1);
+        setTimeout(() => global.reload(true), 3000);
     }
     if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
-        await cleanSessions();
+
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
@@ -174,6 +208,7 @@ global.reload = async function(restatConn) {
         updateStatus();
         if (global.keepAlive) clearInterval(global.keepAlive);
         global.keepAlive = setInterval(updateStatus, 600000);
+        if (!global.subBotsStarted) { global.subBotsStarted = true; initSubBots(); }
     }
   });
 
@@ -187,7 +222,7 @@ global.aliases = new Map();
 
 async function readRecursive(folder) {
   const files = await fsP.readdir(folder);
-  for (let filename of files) {
+  await Promise.all(files.map(async (filename) => {
     const file = join(folder, filename);
     const st = await fsP.stat(file);
     if (st.isDirectory()) await readRecursive(file);
@@ -198,8 +233,21 @@ async function readRecursive(folder) {
         const name = plugin.name || basename(filename, '.js');
         global.plugins.set(name, plugin);
         if (plugin.alias) (Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias]).forEach(a => global.aliases.set(a, name));
-      } catch (e) { console.error(e); }
+      } catch {}
     }
-  }
+  }));
 }
 await readRecursive(join(process.cwd(), './plugins'));
+
+async function initSubBots() {
+    const dir = join(process.cwd(), 'jadibts');
+    if (!existsSync(dir)) return;
+    const folders = readdirSync(dir).filter(f => statSync(join(dir, f)).isDirectory() && existsSync(join(dir, f, 'creds.json')));
+    folders.forEach(async (folder) => {
+        try {
+            const { assistant_accessJadiBot } = await import(`./plugins/main/serbot.js?update=${Date.now()}`);
+            assistant_accessJadiBot({ phoneNumber: folder, fromCommand: false });
+        } catch {}
+    });
+}
+
