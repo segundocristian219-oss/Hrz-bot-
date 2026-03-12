@@ -26,7 +26,7 @@ const autoSticker = {
                         title: name(),
                         body: groupMetadata.subject,
                         mediaType: 1,
-                        sourceUrl: mainLink,
+                        sourceUrl: 'https://dix.lat',
                         thumbnailUrl: img(),
                         renderLargerThumbnail: false
                     }
