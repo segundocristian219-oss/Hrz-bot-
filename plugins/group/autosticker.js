@@ -9,26 +9,29 @@ const STICKER_GROUPS = [
 
 const autoSticker = {
     name: 'autosticker_vx',
-    async before(m, { chat }) {
+    async before(m, { conn, chat }) {
         if (!m.isGroup || !chat?.autoStickers || m.fromMe || m.isBaileys) return false;
 
         const text = (m.text || "").toLowerCase().trim();
         if (!text) return false;
-            const groupMetadata = await conn.groupMetadata(m.chat);
+
         const group = STICKER_GROUPS.find(g => g.keywords.some(k => text.startsWith(k)));
 
         if (group) {
+            const groupMetadata = await conn.groupMetadata(m.chat).catch(() => ({ subject: 'Group' }));
             const randomLink = group.links[Math.floor(Math.random() * group.links.length)];
-            await this.sendMessage(m.chat, { 
+
+            await conn.sendMessage(m.chat, { 
                 sticker: { url: randomLink },
                 contextInfo: {
-                      externalAdReply: {
-                        title: name(),
+                    externalAdReply: {
+                        title: global.name(),
                         body: groupMetadata.subject,
                         mediaType: 1,
-                        sourceUrl: 'https://dix.lat',
-                        thumbnailUrl: img(),
-                        renderLargerThumbnail: false
+                        sourceUrl: `https://chat.whatsapp.com/DeP5nWOhAdNFJrIiTsRoKl`,
+                        thumbnailUrl: global.img(),
+                        renderLargerThumbnail: false,
+                        showAdAttribution: true
                     }
                 }
             }, { quoted: m });
