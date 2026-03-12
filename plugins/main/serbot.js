@@ -36,16 +36,8 @@ const serbot = {
                 `*4.* *Selecciona "Vincular con el número de teléfono"*\n\n` 
 
             await conn.sendMessage(m.chat, {
+                img: global.img?.(),
                 text: instruccion,
-                contextInfo: {
-                    externalAdReply: {
-                        title: `${global.name?.() || 'SISTEMA JADIBOT'}`,
-                        thumbnailUrl: global.img?.() || '',
-                        mediaType: 1,
-                        showAdAttribution: true,
-                        renderLargerThumbnail: true
-                    }
-                }
             }, { quoted: m })
 
             let code = await assistant_accessJadiBot({ m, conn, phoneNumber, fromCommand: true })
