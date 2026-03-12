@@ -3,3 +3,7 @@
 <h1 align="center">
   <strong>GUILTY CROWN ♛</strong>
 </h1>
+
+<a href="https://github.com/BrunoSobrino/TheMystic-Bot-MD">
+<img src="https://gh-card.dev/repos/BrunoSobrino/TheMystic-Bot-MD.svg?fullname=&theme=cobalt" width="400" />
+</a>
