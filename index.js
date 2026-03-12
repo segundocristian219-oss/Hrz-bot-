@@ -1,4 +1,3 @@
-import 'dotenv/config';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 import './config.js';
@@ -17,7 +16,6 @@ import cfonts from 'cfonts';
 import mongoose from 'mongoose';
 import { smsg } from './lib/serializer.js';
 import { EventEmitter } from 'events';
-import { LocalDB } from './lib/localDB.js';
 
 const originalLog = console.log;
 console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
@@ -26,50 +24,22 @@ console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...
 
 EventEmitter.defaultMaxListeners = 0;
 
-const mongoURI = process.env.MONGODB_URL;
+mongoose.connect('mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority', {
+    serverSelectionTimeoutMS: 5000,    
+    family: 4                          
+}).catch(e => console.error(e));
 
-const logDB = (type, status) => {
-    console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
-    console.log(chalk.cyan('┃ ') + chalk.bold(`DATABASE: `) + (type === 'CLOUD' ? chalk.blueBright(type) : chalk.yellowBright(type)));
-    console.log(chalk.cyan('┃ ') + chalk.bold(`STATUS:   `) + (status === 'CONNECTED' ? chalk.greenBright(status) : chalk.redBright(status)));
-    console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
-};
+const userSchema = new mongoose.Schema({
+    id: { type: String, unique: true },
+    lastSeen: { type: Date, default: Date.now }
+}, { strict: false });
+global.User = mongoose.model('User', userSchema);
 
-function activateLocalDB() {
-    if (!existsSync('./database')) mkdirSync('./database');
-    global.User = LocalDB.model('User');
-    global.Chat = LocalDB.model('Chat');
-    logDB('LOCAL', 'CONNECTED');
-}
-
-console.clear();
-cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
-
-if (mongoURI && !process.argv.includes('--local')) {
-    mongoose.connect(mongoURI, {
-        serverSelectionTimeoutMS: 5000,
-        family: 4
-    }).then(() => {
-        logDB('CLOUD', 'CONNECTED');
-    }).catch(e => {
-        logDB('CLOUD', 'ERROR');
-        activateLocalDB();
-    });
-
-    const userSchema = new mongoose.Schema({
-        id: { type: String, unique: true },
-        lastSeen: { type: Date, default: Date.now }
-    }, { strict: false });
-    global.User = mongoose.model('User', userSchema);
-
-    const chatSchema = new mongoose.Schema({
-        id: { type: String, unique: true },
-        isBanned: { type: Boolean, default: false }
-    }, { strict: false });
-    global.Chat = mongoose.model('Chat', chatSchema);
-} else {
-    activateLocalDB();
-}
+const chatSchema = new mongoose.Schema({
+    id: { type: String, unique: true },
+    isBanned: { type: Boolean, default: false }
+}, { strict: false });
+global.Chat = mongoose.model('Chat', chatSchema);
 
 const { 
     makeWASocket, 
@@ -81,7 +51,9 @@ const {
 } = await import('@whiskeysockets/baileys');
 
 if (!existsSync('./tmp')) mkdirSync('./tmp');
-if (!existsSync('./jadibts')) mkdirSync('./jadibts');
+
+console.clear();
+cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -92,7 +64,6 @@ global.__dirname = function dirname(pathURL) {
 
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 global.prefix = new RegExp('^[#!./]');
-global.conns = [];
 
 const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
@@ -163,9 +134,12 @@ global.reload = async function(restatConn) {
     global.conn = makeWASocket(connectionOptions);
   }
 
-  global.conn.ev.on('messages.upsert', async (chatUpdate) => {
+    global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
+
+
     if (!msg || (!msg.message && !msg.messageStubType)) return;
+
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
@@ -173,6 +147,7 @@ global.reload = async function(restatConn) {
         if (!e.message?.includes('decrypt')) console.error(e); 
     }
   });
+
 
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
@@ -186,15 +161,6 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
-        try {
-            const { assistant_accessJadiBot } = await import('./plugins/main/serbot.js');
-            const subbots = readdirSync('./jadibts').filter(file => statSync(join('./jadibts', file)).isDirectory());
-            for (const id of subbots) {
-                if (existsSync(join('./jadibts', id, 'creds.json'))) {
-                    setTimeout(() => assistant_accessJadiBot({ phoneNumber: id, fromCommand: false }), 2000);
-                }
-            }
-        } catch (e) {}
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
@@ -210,6 +176,7 @@ global.reload = async function(restatConn) {
         global.keepAlive = setInterval(updateStatus, 600000);
     }
   });
+
   global.conn.ev.on('creds.update', saveCreds);
 };
 
