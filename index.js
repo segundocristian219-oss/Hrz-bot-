@@ -1,4 +1,4 @@
-Process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 import './config.js';
 import { platform } from 'process';
