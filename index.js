@@ -215,6 +215,8 @@ global.reload = async function(restatConn) {
 
 await global.reload();
 
+import('./lib/event/antiStatus.js').then(module => module.default(global.conn));
+
 global.plugins = new Map();
 global.aliases = new Map();
 
