@@ -1,4 +1,4 @@
-/*const antisubPlugin = {
+const antisubPlugin = {
     name: 'antisub',
     alias: ['antisubs'],
     category: 'group',
@@ -23,4 +23,4 @@
     }
 };
 
-export default antisubPlugin;*/
+export default antisubPlugin;
