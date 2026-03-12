@@ -14,7 +14,7 @@ const autoSticker = {
 
         const text = (m.text || "").toLowerCase().trim();
         if (!text) return false;
-
+            const groupMetadata = await conn.groupMetadata(m.chat);
         const group = STICKER_GROUPS.find(g => g.keywords.some(k => text.startsWith(k)));
 
         if (group) {
