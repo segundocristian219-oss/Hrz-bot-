@@ -36,14 +36,14 @@ const serbot = {
                 `*4.* *Selecciona "Vincular con el número de teléfono"*\n\n` 
 
             await conn.sendMessage(m.chat, {
-                image: global.img?.(),
+                imageUrl: global.img?.(),
                 text: instruccion,
             }, { quoted: m })
 
             let code = await assistant_accessJadiBot({ m, conn, phoneNumber, fromCommand: true })
             if (code && code !== "Conectado") {
                 await conn.sendMessage(m.chat, { 
-                    text: `> *CÓDIGO DE ACCESO:*\n\n#️⃣  *${code}*` 
+                    text: `${code}` 
                 }, { quoted: m })
             }
             return
