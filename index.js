@@ -25,7 +25,7 @@ console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...
 
 EventEmitter.defaultMaxListeners = 0;
 
-const mongoURI = process.env.MONGODB_URL || 'mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/catbot?retryWrites=true&w=majority';
+const mongoURI = process.env.MONGODB_URL;
 
 if (mongoURI && !process.argv.includes('--local')) {
     mongoose.connect(mongoURI, {
