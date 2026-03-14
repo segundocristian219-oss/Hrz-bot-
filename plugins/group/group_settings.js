@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 
 const groupConfig = {
     name: 'config_group',
-    alias: ['setwelcome', 'delwelcome', 'renombrar', 'setnombre', 'setname', 'desc', 'setdesc', 'setfoto', 'setpp', 'elimina', 'kick', 'ban', 'echar', 'sacar', 'tagall', 'todos', 'anuncio'],
+    alias: ['setwelcome', 'delwelcome', 'renombrar', 'setnombre', 'setname', 'desc', 'setdesc', 'setfoto', 'setpp', 'elimina', 'kick', 'ban', 'echar', 'sacar', 'tagall', 'todos', 'all', 'anuncio'],
     category: 'group',
     admin: true,
     group: true,
@@ -51,7 +51,7 @@ const groupConfig = {
             return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴀᴄᴄɪᴏɴ: ᴜsᴜᴀʀɪᴏs ᴇʟɪᴍɪɴᴀᴅᴏs\n> ┗━━━━━━━━━━━━━━━━━━┛`)
         }
 
-        if (/tagall|todos|anuncio/i.test(command)) {
+        if (/tagall|todos|all|anuncio/i.test(command)) {
             let txt = `> ┏━━━〔 ᴀɴᴜɴᴄɪᴏ ɢʀᴜᴘᴀʟ 〕━━━┓\n> ┃ ✎ ᴍsɢ: ${text || 'sɪɴ ᴍᴏᴛɪᴠᴏ'}\n> ┃\n`
             for (let mem of participants) {
                 txt += `> ┃ ✎ @${mem.id.split('@')[0]}\n`
