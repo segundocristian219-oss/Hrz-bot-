@@ -91,34 +91,33 @@ const youtubeCommand = {
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
             let downloadUrl;
-            
-            
             if (isAudio) {
                 const apiRes = await fetch(`https://sylphy.xyz/download/ytmp3?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
-                if (apiRes.status) {
-                    downloadUrl = apiRes.result.dl_url;
-                }
+                if (apiRes.status) downloadUrl = apiRes.result.dl_url;
             } else {
-                
                 const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
                 if (apiRes.status) {
                     downloadUrl = apiRes.result.dl_url;
                 } else {
-                    // Fallback a la anterior si falla la nueva para video
                     const fbRes = await fetch(`https://api-adonix.ultraplus.click/download/ytvideo?apikey=AdonixKeyvr85v01953&url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
                     downloadUrl = fbRes.data?.url;
                 }
             }
 
-            if (!downloadUrl) throw new Error("ERR_NO_URL: No se pudo obtener el enlace de descarga.");
+            if (!downloadUrl) throw new Error("ERR_NO_URL");
+
+            const response = await fetch(downloadUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
+            });
+            if (!response.ok) throw new Error(`HTTP_ERR_${response.status}`);
+            const buffer = await response.buffer();
 
             const sent = await conn.sendMessage(m.chat, { 
-                [isAudio ? 'audio' : 'video']: { url: downloadUrl }, 
+                [isAudio ? 'audio' : 'video']: buffer, 
                 mimetype: isAudio ? "audio/mpeg" : "video/mp4",
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
-            // Guardar en Cache si el envío fue exitoso
             (async () => {
                 const msg = sent.message[isAudio ? 'audioMessage' : 'videoMessage'];
                 if (msg) {
@@ -153,8 +152,7 @@ const youtubeCommand = {
 
             await m.react("✅");
         } catch (error) {
-            console.error(error);
-            conn.reply(m.chat, `*Ocurrió un error:* ${error.message || error}\n\nUsa el comando *#report* para reportar este error.`, m)
+            conn.reply(m.chat, `*Error:* ${error.message || error}`, m);
             await m.react("❌");
         }
     }
