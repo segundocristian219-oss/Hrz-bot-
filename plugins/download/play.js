@@ -8,6 +8,8 @@ const GITHUB_CONFIG = {
     file: "media_db.json"
 };
 
+const SYLPHY_API_KEY = "sylphy-jCQvxB8";
+
 const getGitToken = () => GITHUB_CONFIG.p.join('');
 
 let localDB = null;
@@ -89,15 +91,26 @@ const youtubeCommand = {
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
 
             let downloadUrl;
+            
+            
             if (isAudio) {
-                const apiRes = await fetch(`https://getmod-mediahub.vercel.app/api/ytdl?url=${encodeURIComponent(videoUrl)}&format=mp3&apikey=barboza`).then(res => res.json());
-                downloadUrl = apiRes.dl;
+                const apiRes = await fetch(`https://sylphy.xyz/download/ytmp3?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
+                if (apiRes.status) {
+                    downloadUrl = apiRes.result.dl_url;
+                }
             } else {
-                const apiRes = await fetch(`https://api-adonix.ultraplus.click/download/ytvideo?apikey=AdonixKeyvr85v01953&url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
-                downloadUrl = apiRes.data?.url;
+                
+                const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
+                if (apiRes.status) {
+                    downloadUrl = apiRes.result.dl_url;
+                } else {
+                    // Fallback a la anterior si falla la nueva para video
+                    const fbRes = await fetch(`https://api-adonix.ultraplus.click/download/ytvideo?apikey=AdonixKeyvr85v01953&url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
+                    downloadUrl = fbRes.data?.url;
+                }
             }
 
-            if (!downloadUrl) throw new Error("ERR_NO_URL");
+            if (!downloadUrl) throw new Error("ERR_NO_URL: No se pudo obtener el enlace de descarga.");
 
             const sent = await conn.sendMessage(m.chat, { 
                 [isAudio ? 'audio' : 'video']: { url: downloadUrl }, 
@@ -105,6 +118,7 @@ const youtubeCommand = {
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
+            // Guardar en Cache si el envío fue exitoso
             (async () => {
                 const msg = sent.message[isAudio ? 'audioMessage' : 'videoMessage'];
                 if (msg) {
@@ -139,7 +153,8 @@ const youtubeCommand = {
 
             await m.react("✅");
         } catch (error) {
-            conn.reply(m.chat, `${error}\n\nUsa el comando *#report* para reportar esté error.`, m)
+            console.error(error);
+            conn.reply(m.chat, `*Ocurrió un error:* ${error.message || error}\n\nUsa el comando *#report* para reportar este error.`, m)
             await m.react("❌");
         }
     }
