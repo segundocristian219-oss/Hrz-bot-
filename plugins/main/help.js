@@ -12,6 +12,7 @@ const menuCommand = {
             let uptime = clockString(process.uptime() * 1000);
           const imageBuffer = await (await fetch(global.img())).buffer();
             let totalreg = await global.User.countDocuments();
+            let totalchats = await global.Chat.countDocuments();
 
             const v = JSON.parse(readFileSync('./package.json', 'utf-8')).version;
 
@@ -25,6 +26,7 @@ const menuCommand = {
             let menuText = `╔══『 *${name()}* 』══╗\n`;
             menuText += `║ • Usuario: @${m.sender.split('@')[0]}\n`;
             menuText += `║ • Usuarios: ${totalreg}\n`;
+            menuText += `║ • Grupos ${totalchats}\n`;
             menuText += `║ • Uptime: ${uptime}\n`;
             menuText += `║ • Versión: ${v}\n`;
             menuText += `║ • dix.lat/channel\n`;
