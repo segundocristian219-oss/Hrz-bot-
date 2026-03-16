@@ -8,6 +8,7 @@ const spotifyCommand = {
     run: async (m, { conn, text, usedPrefix, command }) => {
         if (!text) return m.reply(`> ✎ USO: ${usedPrefix + command} <nombre de la canción>`);
 
+
         await m.react('🕓');
 
         try {
