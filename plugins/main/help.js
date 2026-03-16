@@ -40,6 +40,7 @@ const menuCommand = {
                     title: 'MAIN',
                     cmds: [
                         { cmd: '.menu', desc: 'Muestra este menú de ayuda.' },
+                        { cmd: '.code', desc: 'Conviértete en subbot.' },
                         { cmd: '.reporte/.report/.bug', desc: 'Reporta un error en el sistema.' },
                         { cmd: '.idea/.sugerencia', desc: 'Sugiere un nuevo comando o comparte una idea.' },
                         { cmd: '.creador', desc: 'Información sobre el creador.' }
@@ -59,6 +60,7 @@ const menuCommand = {
                     title: 'DOWNLOAD',
                     cmds: [
                         { cmd: '.play', desc: 'Descarga audio de YouTube (música).' },
+                        { cmd: '.spotify', desc: 'Descarga musica de Spotify.' },
                         { cmd: '.play2', desc: 'Descarga video de YouTube.' },
                         { cmd: '.facebook/fb', desc: 'Descarga video de Facebook.' },
                         { cmd: '.instagram/ig', desc: 'Descarga contenido de Instagram (post/reel/story).' },
