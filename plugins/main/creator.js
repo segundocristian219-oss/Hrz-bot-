@@ -3,9 +3,9 @@ const ownerCommand = {
     alias: ['creador', 'contacto', 'soporte'],
     category: 'main',
     run: async (m, { conn }) => {
-        const myNumber = '50432569059'
+        const myNumber = '50432955554'
         const myJid = myNumber + '@s.whatsapp.net'
-        const brandName = 'VOKER | Platform' 
+        const brandName = '𝑫𝒆𝒚𝒍𝒊𝒏 𝑬𝒍𝒊𝒂𝒄 ♛' 
 
         const vcard = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
@@ -26,7 +26,7 @@ const ownerCommand = {
             contextInfo: {
                 
                 externalAdReply: {
-                    title: 'VOKER™ OFFICIAL CONTACT',
+                    title: 'DEYLIN™ OFFICIAL CONTACT',
                     body: 'Advanced Automation Infrastructure',
                     thumbnailUrl: img(),
                     sourceUrl: `https://wa.me/${myNumber}`,
