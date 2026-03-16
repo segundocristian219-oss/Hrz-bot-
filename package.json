@@ -1,6 +1,6 @@
 {
   "name": "kirito-Bot-MD",
-  "version": "5.8.0",
+  "version": "5.9.8",
   "description": "High-performance WhatsApp Bot (Multi-Device) with Command-Map architecture and minimalist serialization.",
   "main": "index.js",
   "type": "module",
