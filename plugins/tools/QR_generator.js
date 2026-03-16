@@ -23,7 +23,7 @@ const qrCommand = {
     category: 'tools',
     run: async (m, { conn, text }) => {
         
-        const logoUrl = 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772601205024_catbot_icon_1772601174480_jTchrjntl.png';
+        const logoUrl = 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg';
 
         try {
             let q = m.quoted ? m.quoted : m;
