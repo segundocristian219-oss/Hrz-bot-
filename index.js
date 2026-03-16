@@ -43,7 +43,7 @@ function activateLocalDB() {
 }
 
 console.clear();
-cfonts.say('Guilty', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
+cfonts.say('KIRITO', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
 if (mongoURI && !process.argv.includes('--local')) {
     mongoose.connect(mongoURI, {
