@@ -28,6 +28,13 @@ global.botImages = [ 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg',
 'https://api.dix.lat/media2/1773637270663.jpg',
 'https://api.dix.lat/media2/1773637244306.jpg']
 
+global.botImages2 = [ 'https://api.dix.lat/media2/1773638458604.jpg',
+'https://api.dix.lat/media2/1773638453930.jpg',
+'https://api.dix.lat/media2/1773638443955.jpg',
+'https://api.dix.lat/media2/1773638448409.jpg',
+'https://api.dix.lat/media2/1773638462741.jpg',
+'https://api.dix.lat/media2/1773638468052.jpg']
+
 const conf = {
   utils: {
     cheerio,
