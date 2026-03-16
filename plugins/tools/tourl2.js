@@ -22,8 +22,8 @@ const uploadToDeylinApi = async (buffer, fileName, mime) => {
 };
 
 const gitUploadCommand = {
-    name: 'tourlgithub',
-    alias: ['togit', 'subirgit', 'tourl2', 'vokerdrive'],
+    name: 'dix',
+    alias: ['tourl2'],
     category: 'tools',
     run: async (m, { conn }) => {
         try {
