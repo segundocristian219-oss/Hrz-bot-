@@ -36,14 +36,15 @@ await conn.sendMessage(m.chat, {
             title: track.title,
             body: track.artist,
             mediaType: 2, 
-            thumbnailUrl: track.image,
-            mediaUrl: track.url,
+            thumbnailUrl: track.image, 
+            mediaUrl: track.url, 
             sourceUrl: track.url,
-            showAdAttribution: true,
+            showAdAttribution: false, 
             renderLargerThumbnail: true 
         }
     }
 }, { quoted: m });
+
 
 
             const downloadRes = await fetch(`https://api.delirius.store/download/spotifydl?url=${track.url}`);
