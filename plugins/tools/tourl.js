@@ -37,7 +37,7 @@ const uploadCommand = {
 
             if (json.status && json.data) {
                 let result = json.data;
-                let txt = `*── 「 VOKER DRIVE 」 ──*\n\n`;
+                let txt = `*── 「 DIX.LAT DRIVE 」 ──*\n\n`;
                 txt += `▢ *ID:* ${result.id}\n`;
                 txt += `▢ *NAME:* ${fileName}\n`;
                 txt += `▢ *URL:* ${result.url}\n`;
