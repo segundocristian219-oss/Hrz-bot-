@@ -186,7 +186,7 @@ const menuCommand = {
                             menuText += `> © Powered by VOKER Platform.`;
 
           
-            const { data: imgBuffer } = await conn.getFile(global.img());
+            const { data: imgBuffer } = await conn.getFile(global.img2());
 const url = 'https://dix.lat/channel';
 
             
