@@ -1,4 +1,4 @@
-<img src='https://api.dix.lat/media/1773117845191_PSVLejyGg.jpeg'>
+<img src='https://api.dix.lat/media2/1773640122670.jpg'>
 
 <h1 align="center">
   <strong>⧫ ᴋɪʀɪᴛᴏ - ᴋᴀᴢᴜᴛᴏ ᴋɪʀɪɢᴀʏ ♛</strong>
