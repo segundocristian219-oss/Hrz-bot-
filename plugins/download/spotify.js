@@ -1,5 +1,4 @@
 import fetch from 'node-fetch';
-import axios from 'axios';
 
 const spotifyCommand = {
     name: 'spotify',
@@ -7,7 +6,6 @@ const spotifyCommand = {
     category: 'download',
     run: async (m, { conn, text, usedPrefix, command }) => {
         if (!text) return m.reply(`> ✎ USO: ${usedPrefix + command} <nombre de la canción>`);
-
 
         await m.react('🕓');
 
@@ -30,35 +28,14 @@ const spotifyCommand = {
             txt += `> ▢ *PUBLICADO:* ${track.publish}\n\n`;
             txt += `> _Procesando audio, espere un momento..._`;
 
-            
-            let imageBuffer;
-            try {
-                const response = await axios.get(track.image, { responseType: 'arraybuffer' });
-                imageBuffer = Buffer.from(response.data, 'binary');
-            } catch {
-                imageBuffer = null;
-            }
-
             await conn.sendMessage(m.chat, { 
-                text: txt, 
-                contextInfo: { 
-                    externalAdReply: {
-                        title: track.title,
-                        body: track.artist,
-                        mediaType: 2, 
-                       
-                        jpegThumbnail: imageBuffer,
-                        mediaUrl: track.url, 
-                        sourceUrl: track.url,
-                        showAdAttribution: false, 
-                        renderLargerThumbnail: true 
-                    }
-                }
+                image: { url: track.image }, 
+                caption: txt 
             }, { quoted: m });
 
             const downloadRes = await fetch(`https://api.delirius.store/download/spotifydl?url=${track.url}`);
             const textResponse = await downloadRes.text();
-
+            
             let downloadData;
             try {
                 downloadData = JSON.parse(textResponse);
