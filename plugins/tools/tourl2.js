@@ -1,83 +1,64 @@
 import fetch from 'node-fetch';
+import { FormData, Blob } from 'formdata-node';
 import { fileTypeFromBuffer } from 'file-type';
 
-const GITHUB_CONFIG = {
-    p: ["ghp_hEOtKifE4Q", "xZEgkfVqCnV1", "v3e7qRhJ3Rk6", "hX"],
-    owner: "deylin-16",
-    repo: "database"
-};
-
-const uploadGithub = async (buffer) => {
+const uploadToDeylinApi = async (buffer, fileName, mime) => {
     try {
-        const tokenGit = GITHUB_CONFIG.p.join('');
-        const { ext } = await fileTypeFromBuffer(buffer) || { ext: 'bin' };
-        
-        
-        const fileName = `uploads/${Date.now()}.${ext}`;
-        const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`;
+        const formData = new FormData();
+        const blob = new Blob([buffer], { type: mime });
+        formData.append('file', blob, fileName);
 
-        const res = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${tokenGit}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Upload: ${fileName}`,
-                content: buffer.toString('base64')
-            })
+        const response = await fetch('https://api.dix.lat/upload2', {
+            method: 'POST',
+            body: formData,
+            headers: { 'User-Agent': 'Voker-Drive-Client' }
         });
 
-        const json = await res.json();
-        
-        if (json.content) {
-            
-            return `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/main/${fileName}`;
-        }
-        return null;
+        const json = await response.json();
+        return (json.status && json.data) ? json.data : null;
     } catch (e) {
-        console.error(e);
         return null;
     }
 };
 
 const gitUploadCommand = {
     name: 'tourlgithub',
-    alias: ['togit', 'subirgit', 'tourl2'],
+    alias: ['togit', 'subirgit', 'tourl2', 'vokerdrive'],
     category: 'tools',
     run: async (m, { conn }) => {
         try {
             let q = m.quoted ? m.quoted : m;
             let mime = (q.msg || q).mimetype || '';
 
-            if (!mime) return m.reply('> ✎ Responde a un archivo (Imagen, Video, Audio).');
+            if (!mime) return m.reply('> ✎ Responde a un archivo.');
 
             await m.react('🕓');
 
             let buffer = await q.download();
             if (!buffer) return m.reply('> ⚔ Error al obtener buffer.');
 
-            const linkGit = await uploadGithub(buffer);
+            const type = await fileTypeFromBuffer(buffer);
+            const fileName = `file_${Date.now()}.${type?.ext || 'bin'}`;
 
-            if (!linkGit) {
+            const result = await uploadToDeylinApi(buffer, fileName, mime);
+
+            if (!result || !result.url) {
                 await m.react('✖️');
-                return m.reply('> ⚔ Error al subir a GitHub. Verifica el Token.');
+                return m.reply('> ⚔ Error al subir a la API.');
             }
 
-            let size = (buffer.length / 1024 / 1024).toFixed(2);
-
-            let txt = `> 🚀 *SUBIDO A GIT*\n\n`;
-            txt += `> ⚖ *Peso:* ${size} MB\n`;
-            txt += `> ✧ *Mime:* ${mime}\n`;
-            txt += `> 🔗 *URL:* ${linkGit}\n\n`;
-            txt += `> _El archivo ahora es público en nuestra base._`;
+            let txt = `> 🚀 *DIX.LAT DRIVE UPLOAD*\n\n`;
+            txt += `> ⚖ *Peso:* ${result.size}\n`;
+            txt += `> ✧ *Mime:* ${result.mime || mime}\n`;
+            txt += `> 🔗 *URL:* ${result.url}\n\n`;
+            txt += `> _Archivo procesado correctamente._`;
 
             await m.reply(txt);
             await m.react('✅');
 
         } catch (e) {
             await m.react('✖️');
-            m.reply(`> ⚔ Error crítico: ${e.message}`);
+            m.reply(`> ⚔ Error: ${e.message}`);
         }
     }
 };
