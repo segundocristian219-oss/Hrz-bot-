@@ -1,7 +1,7 @@
 <img src='https://api.dix.lat/media/1773117845191_PSVLejyGg.jpeg'>
 
 <h1 align="center">
-  <strong>GUILTY CROWN ♛</strong>
+  <strong>⧫ ᴋɪʀɪᴛᴏ - ᴋᴀᴢᴜᴛᴏ ᴋɪʀɪɢᴀʏ ♛</strong>
 </h1>
 
 <a href="https://github.com/eliac-d/kirito-Bot-MD">
