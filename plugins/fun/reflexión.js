@@ -6,7 +6,7 @@ const reflexionCommand = {
     category: 'crecimiento',
     run: async (m, { conn, text }) => {
         
-        const urlRaw = 'https://raw.githubusercontent.com/deylin-16/database/main/src/reflexion.json';
+        const urlRaw = 'https://raw.githubusercontent.com/eliac-d/database/main/src/reflexion.json';
 
         try {
             const response = await axios.get(urlRaw);
