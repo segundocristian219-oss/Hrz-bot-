@@ -97,7 +97,7 @@ const stickerCommand = {
 
             let stikerBuffer = await sticker6(buffer);
             
-            let bot = typeof global.botNames === 'object' ? global.botNames[0];
+            let bot = name();
             let user = m.pushName || 'User';
             
             let [pack, auth] = txt.includes('|') ? txt.split('|').map(v => v.trim()) : [bot, user];
