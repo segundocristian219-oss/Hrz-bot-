@@ -1,10 +1,10 @@
 const STICKER_GROUPS = [
-    { keywords: ['xd'], links: ['https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772071735104.webp'] },
-    { keywords: ['jaja', 'jajaja'], links: ['https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772073234187.webp'] },
-    { keywords: ['mua', 'beso', '💋'], links: ['https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772658902972.webp', 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772659117883.webp'] },
-    { keywords: ['hola', 'hi', 'hello'], links: ['https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772077499099.webp', 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772077472503.webp'] },
-    { keywords: ['te amo', 'love you', 'amor'], links: ['https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772167016084.webp', 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772167006565.webp'] },
-    { keywords: ['pendejo', 'puto', 'rata'], links: ['https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772166977879.webp', 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772167220157.webp', 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1772167257254.webp'] }
+    { keywords: ['xd'], links: ['https://api.dix.lat/media2/1772071735104.webp'] },
+    { keywords: ['jaja', 'jajaja'], links: ['https://api.dix.lat/media2/1772073234187.webp'] },
+    { keywords: ['mua', 'beso', '💋'], links: ['https://api.dix.lat/media2/1772658902972.webp', 'https://api.dix.lat/media2/1772659117883.webp'] },
+    { keywords: ['hola', 'hi', 'hello'], links: ['https://api.dix.lat/media2/1772077499099.webp', 'https://api.dix.lat/media2/1772077472503.webp'] },
+    { keywords: ['te amo', 'love you', 'amor'], links: ['https://api.dix.lat/media2/1772167016084.webp', 'https://api.dix.lat/media2/1772167006565.webp'] },
+    { keywords: ['pendejo', 'puto', 'rata'], links: ['https://api.dix.lat/media2/1772166977879.webp', 'https://api.dix.lat/media2/1772167220157.webp', 'https://api.dix.lat/media2/1772167257254.webp'] }
 ];
 
 const autoSticker = {
