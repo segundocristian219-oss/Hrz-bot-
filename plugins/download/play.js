@@ -37,7 +37,7 @@ const youtubeCommand = {
     alias: ['play', 'audio', 'mp3', 'video', 'mp4', 'play2'],
     category: 'download',
     run: async (m, { conn, text, command, usedPrefix }) => {
-        if (!text?.trim()) return conn.reply(m.chat, `ᰔᩚ   *YOUTUBE DOWNLOAD* ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
+        if (!text?.trim()) return conn.reply(m.chat, `ᰔᩚ   *KIRITO DOWNLOAD* ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda>`, m);
 
         const isAudio = /play$|audio$|mp3|ytmp3/i.test(command);
         const mediaType = isAudio ? 'audio_data' : 'video_data';
@@ -70,7 +70,7 @@ const youtubeCommand = {
                 }
             }
 
-            const infoText = `\t\t\t\t*YOUTUBE DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *PUBLICADO:* ${videoInfo.ago || '---'}\n▢ *ID YT:* ${videoId}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n▢ *AVISO:* ${isAudio ? 'proceso lento 🦥' : 'proceso demasiado lento 🦥'}..._`;
+            const infoText = `\t\t\t\t*KIRITO DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n\n_⚡ SpeedCache: ${useCache ? 'Activo' : 'Generando...'}_`;
 
             if (useCache && cacheData) {
                 await m.react("⚡");
@@ -92,9 +92,11 @@ const youtubeCommand = {
 
             let downloadUrl;
             if (isAudio) {
-                const apiRes = await fetch(`https://sylphy.xyz/download/ytmp3?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
+                // Nuevo endpoint de audio solicitado
+                const apiRes = await fetch(`https://sylphy.xyz/download/ytdl?url=${encodeURIComponent(videoUrl)}&mode=audio&q=128&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
                 if (apiRes.status) downloadUrl = apiRes.result.dl_url;
             } else {
+                // Endpoint de video (se mantiene el anterior o se puede ajustar si sylphy actualiza el ytdl para video)
                 const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
                 if (apiRes.status) {
                     downloadUrl = apiRes.result.dl_url;
@@ -118,6 +120,7 @@ const youtubeCommand = {
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
+            // Segundo plano: Guardar en GitHub SpeedCache
             (async () => {
                 const msg = sent.message[isAudio ? 'audioMessage' : 'videoMessage'];
                 if (msg) {
@@ -141,7 +144,7 @@ const youtubeCommand = {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${getGitToken()}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            message: `SpeedCache: ${videoId}`,
+                            message: `Kirito SpeedCache: ${videoId}`,
                             content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
                             sha: sha
                         })
