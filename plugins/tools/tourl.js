@@ -1,55 +1,61 @@
-import ImageKit from "imagekit"
-import fetch from "node-fetch"
-
-const imagekit = new ImageKit({
-    publicKey: "public_UilqC3N3XUQp2rRJcGGhLhaXKSY=",
-    privateKey: "private_ojSXwbW+qGniUaMFMzzVNWhiuI8=",
-    urlEndpoint: "https://ik.imagekit.io/pm10ywrf6f"
-})
+import fetch from "node-fetch";
+import { FormData, Blob } from "formdata-node";
+import { fileTypeFromBuffer } from "file-type";
 
 const uploadCommand = {
     name: 'upload',
-    alias: ['tourl', 'ik'],
+    alias: ['tourl', 'img'],
     category: 'tools',
     run: async (m, { conn, command }) => {
-        let q = m.quoted ? m.quoted : m
-        let mime = (q.msg || q).mimetype || ''
-        if (!mime) return m.reply(`> ✰⋆͙̈ Responde a una imagen o video con el comando ➠ *${command}*`)
+        let q = m.quoted ? m.quoted : m;
+        let mime = (q.msg || q).mimetype || '';
+        
+        if (!mime || !/image/.test(mime)) {
+            return m.reply(`> ✰⋆͙̈ Responde a una imagen con el comando ➠ *${command}*`);
+        }
 
-        await m.react('🕒')
+        await m.react('🕒');
 
         try {
-            let media = await q.download()
-            let fileName = `${Date.now()}.${mime.split('/')[1]}`
+            let buffer = await q.download();
+            if (!buffer) return m.reply("> ⚔ Error al obtener el buffer.");
 
-            imagekit.upload({
-                file: media,
-                fileName: fileName,
-                folder: `/bot_by_voker`
-            }, async (err, result) => {
-                if (err) {
-                    await m.react('❌')
-                    return m.reply('*LOG:* ' + err.message)
-                }
+            const type = await fileTypeFromBuffer(buffer);
+            const fileName = `img_${Date.now()}.${type?.ext || 'jpg'}`;
 
-                const miDominio = "https://api.dix.lat"
-                const finalUrl = `${miDominio}/media/${result.name}`
+            const formData = new FormData();
+            const blob = new Blob([buffer], { type: mime });
+            formData.append('file', blob, fileName);
 
-                let txt = `*── 「 VOKER DRIVE 」 ──*\n\n`
-                txt += `▢ *ID:* ${result.fileId}\n`
-                txt += `▢ *NAME:* ${result.name}\n`
-                txt += `▢ *URL:* ${finalUrl}\n`
-                txt += `▢ *TIPO:* ${result.fileType}\n\n`
-                txt += `> *Powered by Voker Systems*`
+            const response = await fetch('https://api.dix.lat/upload', {
+                method: 'POST',
+                body: formData,
+                headers: { 'User-Agent': 'Voker-Drive-Client' }
+            });
 
-                await conn.sendMessage(m.chat, { text: txt }, { quoted: m })
-                await m.react('✅')
-            })
+            const json = await response.json();
+
+            if (json.status && json.data) {
+                let result = json.data;
+                let txt = `*── 「 VOKER DRIVE 」 ──*\n\n`;
+                txt += `▢ *ID:* ${result.id}\n`;
+                txt += `▢ *NAME:* ${fileName}\n`;
+                txt += `▢ *URL:* ${result.url}\n`;
+                txt += `▢ *PESO:* ${result.size}\n`;
+                txt += `▢ *MIME:* ${result.mime}\n\n`;
+                txt += `> *Powered by Voker Systems*`;
+
+                await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
+                await m.react('✅');
+            } else {
+                await m.react('❌');
+                m.reply("> ⚔ Error en la respuesta del servidor.");
+            }
         } catch (e) {
-            await m.react('❌')
-            m.reply("*ERROR:* No se pudo procesar el archivo.")
+            await m.react('❌');
+            m.reply(`> ⚔ Error: ${e.message}`);
         }
     }
-}
+};
 
-export default uploadCommand
+export default uploadCommand;
