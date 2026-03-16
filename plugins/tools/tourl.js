@@ -27,7 +27,7 @@ const uploadCommand = {
             const blob = new Blob([buffer], { type: mime });
             formData.append('file', blob, fileName);
 
-            const response = await fetch('https://api.dix.lat/upload', {
+            const response = await fetch('https://api.dix.lat/upload1', {
                 method: 'POST',
                 body: formData,
                 headers: { 'User-Agent': 'Voker-Drive-Client' }
