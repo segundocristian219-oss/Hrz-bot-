@@ -5,7 +5,7 @@ const poemaCommand = {
     alias: ['verso', 'poesia'],
     category: 'cultura',
     run: async (m, { conn, text }) => {
-        const urlRaw = 'https://raw.githubusercontent.com/deylin-16/database/main/src/poemas.json';
+        const urlRaw = 'https://raw.githubusercontent.com/eliac-d/database/main/src/poemas.json';
         
         try {
             const response = await axios.get(urlRaw);
