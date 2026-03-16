@@ -29,9 +29,23 @@ const spotifyCommand = {
             txt += `> _Procesando audio, espere un momento..._`;
 
             await conn.sendMessage(m.chat, { 
-                image: { url: track.image }, 
-                caption: txt 
-            }, { quoted: m });
+    image: { url: track.image }, 
+    caption: txt,
+    seconds: 60,
+    fileLength: 999999999,
+    contextInfo: { 
+        externalAdReply: {
+            showAdAttribution: true,
+            mediaType: 2,
+            mediaUrl: track.url,
+            sourceUrl: track.url,
+            title: track.title,
+            body: track.artist,
+            thumbnailUrl: track.image
+        }
+    }
+}, { quoted: m });
+
 
             const downloadRes = await fetch(`https://api.delirius.store/download/spotifydl?url=${track.url}`);
             const textResponse = await downloadRes.text();
