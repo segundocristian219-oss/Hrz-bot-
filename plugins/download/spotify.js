@@ -19,7 +19,7 @@ const spotifyCommand = {
             }
 
             const track = searchData.data[0];
-            const downloadRes = await fetch(`https://api.rapid.dlapi.app/download/spotify?url=${track.url}`); 
+            const downloadRes = await fetch(`https://api.delirius.store/download/spotifydl?url=${track.url}`); 
             
             const textResponse = await downloadRes.text();
             let downloadData;
