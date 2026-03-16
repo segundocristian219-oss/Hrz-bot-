@@ -5,7 +5,7 @@ const gayCommand = {
     alias: ['marica', 'trolo'],
     category: 'fun',
     run: async (m, { conn }) => {
-        const audioUrl = 'https://raw.githubusercontent.com/deylin-16/database/main/uploads/1770963376198.mp3';
+        const audioUrl = 'https://api.dix.lat/media2/1770963376198.mp3';
         const who = m.mentionedJid?.[0] || m.quoted?.sender || m.sender;
 
         try {
