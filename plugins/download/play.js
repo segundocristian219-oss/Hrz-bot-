@@ -70,7 +70,7 @@ const youtubeCommand = {
                 }
             }
 
-            const infoText = `\t\t\t\t*KIRITO DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n\n_⚡ SpeedCache: ${useCache ? 'Activo' : 'Generando...'}_`;
+            const infoText = `\t\t\t\t*YOUTUBE DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n\n_⚡ ESTADO: ${useCache ? 'Descargando...' : 'Descargando...'}_`;
 
             if (useCache && cacheData) {
                 await m.react("⚡");
