@@ -10,7 +10,7 @@ const lyricsCommand = {
         await m.react('🔍');
 
         const formatLyrics = (title, artist, lyrics) => {
-            return `*🎵 LETRA ENCONTRADA*\n\n` +
+            return `*𝄞    LETRA ENCONTRADA*\n\n` +
                    `> ▢ *TÍTULO:* ${title}\n` +
                    `> ▢ *ARTISTA:* ${artist}\n\n` +
                    `${lyrics}`;
@@ -18,23 +18,12 @@ const lyricsCommand = {
 
         try {
             try {
-                const res1 = await fetch(`https://api.delirius.store/search/lyrics?q=${encodeURIComponent(text)}`);
+                const res1 = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(text)}`);
                 const data1 = await res1.json();
-                
-                if (data1.status && data1.data) {
-                    const { title, artist, lyrics } = data1.data;
-                    await m.react('✅');
-                    return m.reply(formatLyrics(title, artist, lyrics));
-                }
-            } catch (err) {}
 
-            try {
-                const res2 = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(text)}`);
-                const data2 = await res2.json();
-
-                if (data2.length > 0) {
-                    const track = data2[0];
-                    const lyricsBody = track.plainLyrics || track.syncedLyrics || "Letra no disponible en formato texto.";
+                if (data1.length > 0) {
+                    const track = data1[0];
+                    const lyricsBody = track.plainLyrics || track.syncedLyrics || "Letra no disponible.";
                     await m.react('✅');
                     return m.reply(formatLyrics(track.trackName, track.artistName, lyricsBody));
                 }
@@ -47,17 +36,17 @@ const lyricsCommand = {
                     [artist, song] = text.split('-').map(str => str.trim());
                 }
 
-                const res3 = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`);
-                const data3 = await res3.json();
+                const res2 = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`);
+                const data2 = await res2.json();
 
-                if (data3.lyrics) {
+                if (data2.lyrics) {
                     await m.react('✅');
-                    return m.reply(formatLyrics(song.toUpperCase(), artist.toUpperCase(), data3.lyrics));
+                    return m.reply(formatLyrics(song.toUpperCase(), artist.toUpperCase(), data2.lyrics));
                 }
             } catch (err) {}
 
             await m.react('✖️');
-            m.reply('> ⚔ ERROR: No se pudo encontrar la letra en ninguna de las fuentes disponibles.');
+            m.reply('> ⚔ ERROR: No se pudo encontrar la letra en las fuentes configuradas.');
 
         } catch (e) {
             await m.react('✖️');
