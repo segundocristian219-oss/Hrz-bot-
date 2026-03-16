@@ -5,37 +5,44 @@ const spotifyCommand = {
     alias: ['spt', 'sp', 'music'],
     category: 'download',
     run: async (m, { conn, text, usedPrefix, command }) => {
-        if (!text) return m.reply(`> ✎ USO: ${usedPrefix + command} <nombre de la canción>`);
+        if (!text) return m.reply(`> ✎ USO: ${usedPrefix + command} <nombre de la canción o URL>`);
 
         await m.react('🕓');
 
         try {
-            const searchRes = await fetch(`https://api.delirius.store/search/spotify?q=${encodeURIComponent(text)}&limit=1`);
-            const searchData = await searchRes.json();
+            const isUrl = text.match(/^(https?:\/\/)?(www\.)?(open\.spotify\.com|spotify\.link)\/.+$/gi);
+            let track;
 
-            if (!searchData.status || !searchData.data.length) {
-                await m.react('✖️');
-                return m.reply('> ⚔ ERROR: No se encontraron resultados.');
+            if (isUrl) {
+                track = { url: text, title: 'Spotify Track' };
+            } else {
+                const searchRes = await fetch(`https://api.delirius.store/search/spotify?q=${encodeURIComponent(text)}&limit=1`);
+                const searchData = await searchRes.json();
+
+                if (!searchData.status || !searchData.data.length) {
+                    await m.react('✖️');
+                    return m.reply('> ⚔ ERROR: No se encontraron resultados.');
+                }
+
+                track = searchData.data[0];
+
+                let txt = `\t\t\t\t*SPOTIFY DOWNLOAD*\n\n`;
+                txt += `> ▢ *TÍTULO:* ${track.title}\n`;
+                txt += `> ▢ *ARTISTA:* ${track.artist}\n`;
+                txt += `> ▢ *ÁLBUM:* ${track.album}\n`;
+                txt += `> ▢ *DURACIÓN:* ${track.duration}\n`;
+                txt += `> ▢ *PUBLICADO:* ${track.publish}\n\n`;
+                txt += `> _Procesando audio, espere un momento..._`;
+
+                await conn.sendMessage(m.chat, { 
+                    image: { url: track.image }, 
+                    caption: txt 
+                }, { quoted: m });
             }
-
-            const track = searchData.data[0];
-
-            let txt = `\t\t\t\t*SPOTIFY DOWNLOAD*\n\n`;
-            txt += `> ▢ *TÍTULO:* ${track.title}\n`;
-            txt += `> ▢ *ARTISTA:* ${track.artist}\n`;
-            txt += `> ▢ *ÁLBUM:* ${track.album}\n`;
-            txt += `> ▢ *DURACIÓN:* ${track.duration}\n`;
-            txt += `> ▢ *PUBLICADO:* ${track.publish}\n\n`;
-            txt += `> _Procesando audio, espere un momento..._`;
-
-            await conn.sendMessage(m.chat, { 
-                image: { url: track.image }, 
-                caption: txt 
-            }, { quoted: m });
 
             const downloadRes = await fetch(`https://api.delirius.store/download/spotifydl?url=${track.url}`);
             const textResponse = await downloadRes.text();
-            
+
             let downloadData;
             try {
                 downloadData = JSON.parse(textResponse);
