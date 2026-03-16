@@ -1,5 +1,5 @@
 {
-  "name": "GUILTY CROWN",
+  "name": "kirito-Bot-MD",
   "version": "5.8.0",
   "description": "High-performance WhatsApp Bot (Multi-Device) with Command-Map architecture and minimalist serialization.",
   "main": "index.js",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deylin-16/guilty-crown.git"
+    "url": "git+https://github.com/eliac-d/kirito-Bot-MD.git"
   },
   "author": "Powered by VOKER Platform",
   "license": "MIT",
