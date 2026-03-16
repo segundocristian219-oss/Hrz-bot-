@@ -14,31 +14,18 @@ global.bots_free = ['50488198573']
 
 
 global.botNames = [
-  'sʜᴜ ᴏᴜᴍᴀ — ᴠx',       
-  'ɪɴᴏʀɪ ʏᴜᴢᴜʀɪʜᴀ — ᴠx', 
-  '𝖲𝖧𝖴 𝖮𝖴𝖬𝖳 — 𝖵𝖷',       
-  '𝖨𝖭𝖮𝖱𝖨 𝖸𝖴𝖹𝖴𝖱𝖨𝖧𝖠 — 𝖵𝖷', 
-  '𝐆𝐇𝐔 𝐎𝐔𝐌𝐀 𝐕𝐗',       
-  '𝐈𝐍𝐎𝐑𝐈 𝐘𝐔𝐙𝐔𝐑𝐈𝐇𝐀 𝐕𝐗', 
-  'ＧＨＵ ＯＵＭＡ ＶＸ',   
-  'ＩＮＯＲＩ ＹＵＺＵＲＩＨＡ ＶＸ', 
-  'ɢᴜɪʟᴛʏ ᴄʀᴏᴡɴ — ᴠx',      
-  '𝖦𝖴𝖨𝖫𝖳𝖸 𝖢𝖱𝖮𝖶𝖭 𝖵𝖷',      
-  '𝐆𝐔𝐈𝐋𝐓𝐘 𝐂𝐑𝐎𝐖𝐍 𝐕𝐗',      
-  'ＧＵＩＬＴＹ ＣＲＯＷＮ ＶＸ',  
-  '⧫ ᴠᴏɪᴅ ɢᴇɴᴏᴍᴇ ⧫',   
-  '⌬ ᴀᴘᴏᴄᴀʟʏᴘsᴇ ᴠx ⌬'       
+  '𝐊𝐈𝐑𝐈𝐓𝐎 ♛',       
+  '𝒌𝒂𝒛𝒖𝒕𝒐 𝒌𝒊𝒓𝒊𝒈𝒂𝒚 ✰', 
+  '⧫ ᴋɪʀɪᴛᴏ - ᴋᴀᴢᴜᴛᴏ ᴋɪʀɪɢᴀʏ ⧫',   
+  '⌬ 🄺🄸🅁🄸🅃🄾 ⌬'       
 ]
 
 
-global.botImages = [ 'https://api.dix.lat/media/1773118196179_-Ez182ooE.jpeg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482546371_5cb90b226cda01be4f9cd9dc0d1a2f54_98pFKQ1yF.jpg',
-'https://api.dix.lat/media/1773117845191_PSVLejyGg.jpeg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482549626_c94e03ca0366250b9cd992212ce2cd2a_NO0OlKGK1L.jpg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482551338_5baab5fe0420f3ef4e41ebf01d3f7c2c_HYkdcMVk2.jpg',
-'https://api.dix.lat/media/1773118212138_rYszV87cc.jpeg',
-'https://api.dix.lat/media/1773118203803_ibJ-QR5lf.jpeg',
-'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1772482556697_b7337a5a637b1e0865937d2dc3ca40ac_P39z6eYIA.jpg' ]
+global.botImages = [ 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg',
+'',
+'',
+'',
+'' ]
 
 const conf = {
   utils: {
