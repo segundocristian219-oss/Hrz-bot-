@@ -28,20 +28,19 @@ const spotifyCommand = {
             txt += `> ▢ *PUBLICADO:* ${track.publish}\n\n`;
             txt += `> _Procesando audio, espere un momento..._`;
 
-            await conn.sendMessage(m.chat, { 
-    image: { url: track.image }, 
-    caption: txt,
-    seconds: 60,
-    fileLength: 999999999,
+         
+await conn.sendMessage(m.chat, { 
+    text: txt, 
     contextInfo: { 
         externalAdReply: {
-            showAdAttribution: true,
-            mediaType: 2,
-            mediaUrl: track.url,
-            sourceUrl: track.url,
             title: track.title,
             body: track.artist,
-            thumbnailUrl: track.image
+            mediaType: 2, 
+            thumbnailUrl: track.image,
+            mediaUrl: track.url,
+            sourceUrl: track.url,
+            showAdAttribution: true,
+            renderLargerThumbnail: true 
         }
     }
 }, { quoted: m });
