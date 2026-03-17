@@ -1,43 +1,37 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { existsSync, unlinkSync, readFileSync } from 'fs';
-import { join } from 'path';
-import fetch from 'node-fetch';
-
-const execAsync = promisify(exec);
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  SPOTIFY DOWNLOADER — v4.0 (yt-dlp local, sin APIs externas)
+// ══════════════════════════════════════════════════════════════════
+//  SPOTIFY DOWNLOADER — v5.0 FINAL
 //
-//  Cómo funciona:
-//    1. Busca metadatos del track con la API pública de Spotify (sin auth)
-//       o parsea el nombre desde la búsqueda de texto
-//    2. Busca el audio en YouTube Music con yt-dlp
-//    3. Descarga y convierte a MP3 con ffmpeg (ya incluido en yt-dlp)
-//    4. Envía el archivo y lo borra del disco
+//  ✅ Sin ffmpeg   ✅ Sin yt-dlp   ✅ Sin Chrome
+//  ✅ Funciona en Render, VPS compartida, cualquier Node.js
+//  ✅ Solo HTTP puro — 100% npm
 //
-//  Requisitos en el servidor:
-//    npm install node-fetch
-//    pip install yt-dlp       (o: pip3 install -U yt-dlp)
-//    apt install ffmpeg        (o brew install ffmpeg en Mac)
+//  INSTALAR UNA SOLA VEZ:
+//    npm install spotifydl-core node-fetch
 //
-//  Para verificar que funciona:
-//    yt-dlp --version
-//    ffmpeg -version
-// ══════════════════════════════════════════════════════════════════════════════
+//  CREDENCIALES (gratis — 2 minutos):
+//    1. Ve a https://developer.spotify.com/dashboard
+//    2. Crea una app (nombre cualquiera, redirect: http://localhost)
+//    3. Copia el Client ID y Client Secret
+//    4. Ponlos en las variables de abajo o en un .env
+// ══════════════════════════════════════════════════════════════════
 
-const TMP_DIR    = '/tmp';
-const YTDLP_BIN  = 'yt-dlp';          // cambiar si está en otra ruta
-const FETCH_OPTS = { timeout: 15_000 };
+import Spotify from 'spotifydl-core';
+import fetch   from 'node-fetch';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Credenciales — pon las tuyas aquí o en variables de entorno ────────────
+const SPOTIFY_CLIENT_ID     = process.env.SPOTIFY_CLIENT_ID     || 'f28d9e320f584ac59d6b05e3146b193d';
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '9ed39f1423a748f0aa17c15a0af341de';
 
-const safeName   = (s = '') => s.replace(/[\\/*?:"<>|]/g, '').trim().slice(0, 80);
-const extractId  = (url = '') => {
-    const m = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/([A-Za-z0-9]+)/i);
-    return m ? m[1] : null;
-};
-const isSpotUrl  = (s = '') =>
+// ── Instancia reutilizable (no crear una por cada descarga) ────────────────
+const spotify = new Spotify({
+    clientId:     SPOTIFY_CLIENT_ID,
+    clientSecret: SPOTIFY_CLIENT_SECRET,
+});
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const safeName = (s = '') => s.replace(/[\\/*?:"<>|]/g, '').trim().slice(0, 80);
+
+const isSpotUrl = (s = '') =>
     /open\.spotify\.com\/(intl-[a-z]+\/)?track\/[A-Za-z0-9]+/i.test(s) ||
     /spotify\.link\//i.test(s);
 
@@ -47,114 +41,82 @@ const msToTime = (ms) => {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-// ── Spotify API pública (sin client_id — usa el token anónimo del web player) ─
+// ── Token anónimo de open.spotify.com (para búsqueda sin cuenta) ──────────
+let _anonToken   = null;
+let _tokenExpiry = 0;
 
-const getSpotifyToken = async () => {
-    // Token anónimo que usa open.spotify.com — no requiere cuenta
-    const res  = await fetch('https://open.spotify.com/get_access_token?reason=transport&productType=web_player', {
-        headers: { 'User-Agent': 'Mozilla/5.0 Chrome/124.0' },
-        ...FETCH_OPTS,
-    });
-    const data = await res.json();
-    return data?.accessToken || null;
+const getAnonToken = async () => {
+    if (_anonToken && Date.now() < _tokenExpiry) return _anonToken;
+    try {
+        const res  = await fetch(
+            'https://open.spotify.com/get_access_token?reason=transport&productType=web_player',
+            { headers: { 'User-Agent': 'Mozilla/5.0 Chrome/124.0' } }
+        );
+        const data = await res.json();
+        if (data?.accessToken) {
+            _anonToken   = data.accessToken;
+            _tokenExpiry = Date.now() + (data.accessTokenExpirationTimestampMs || 3_600_000) - 60_000;
+            return _anonToken;
+        }
+    } catch {}
+    return null;
 };
 
-const getSpotifyMeta = async (trackId) => {
+// ── Buscar track por nombre en Spotify ────────────────────────────────────
+const searchTrack = async (query) => {
+    const token = await getAnonToken();
+    if (!token) return null;
     try {
-        const token = await getSpotifyToken();
-        if (!token) return null;
-
-        const res  = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-            ...FETCH_OPTS,
-        });
-        if (!res.ok) return null;
-        const t = await res.json();
-
-        return {
-            title:       t.name,
-            artist:      t.artists?.map(a => a.name).join(', ') || '',
-            album:       t.album?.name || '',
-            releaseDate: t.album?.release_date || '',
-            duration_ms: t.duration_ms,
-            cover:       t.album?.images?.[0]?.url || '',
-            isrc:        t.external_ids?.isrc || '',
-            spotifyUrl:  t.external_urls?.spotify || `https://open.spotify.com/track/${trackId}`,
-        };
-    } catch {
-        return null;
-    }
-};
-
-// ── Buscar track en Spotify por nombre (web scrape simple) ────────────────────
-
-const searchSpotifyWeb = async (query) => {
-    try {
-        const token = await getSpotifyToken();
-        if (!token) return null;
-
         const res  = await fetch(
             `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
-            { headers: { Authorization: `Bearer ${token}` }, ...FETCH_OPTS }
+            { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (!res.ok) return null;
         const data = await res.json();
         const t    = data?.tracks?.items?.[0];
         if (!t) return null;
-
         return {
+            url:         t.external_urls.spotify,
             title:       t.name,
-            artist:      t.artists?.map(a => a.name).join(', ') || '',
-            album:       t.album?.name || '',
-            releaseDate: t.album?.release_date || '',
+            artist:      t.artists.map(a => a.name).join(', '),
+            album:       t.album.name,
+            cover:       t.album.images?.[0]?.url || '',
+            releaseDate: t.album.release_date || '',
             duration_ms: t.duration_ms,
-            cover:       t.album?.images?.[0]?.url || '',
             isrc:        t.external_ids?.isrc || '',
-            spotifyUrl:  t.external_urls?.spotify || '',
         };
     } catch {
         return null;
     }
 };
 
-// ── Descargar con yt-dlp (busca en YouTube Music por título + artista) ────────
-
-const downloadWithYtdlp = async (title, artist) => {
-    const query    = `${title} ${artist}`.trim();
-    const safeFile = safeName(`${title} - ${artist}`);
-    const outPath  = join(TMP_DIR, `${safeFile}_%(id)s.%(ext)s`);
-    const finalMp3 = join(TMP_DIR, `${safeFile}.mp3`);
-
-    // Comando yt-dlp:
-    //   - Busca en YouTube Music (ytmsearch:) — mejor coincidencia para canciones
-    //   - Extrae solo audio, convierte a MP3 128k con ffmpeg
-    //   - Sin miniaturas ni metadatos adicionales para mayor velocidad
-    const cmd = [
-        YTDLP_BIN,
-        `"ytmsearch1:${query.replace(/"/g, "'")}"`,   // 1 resultado de YT Music
-        '--extract-audio',
-        '--audio-format mp3',
-        '--audio-quality 0',           // mejor calidad disponible
-        '--no-playlist',
-        '--no-warnings',
-        '--quiet',
-        '--no-progress',
-        `--output "${outPath}"`,
-        '--max-filesize 50m',          // evitar descargas enormes accidentales
-    ].join(' ');
-
-    await execAsync(cmd, { timeout: 120_000 });   // 2 min máximo
-
-    // yt-dlp nombra el archivo con el ID de YouTube; buscarlo en /tmp
-    const { stdout } = await execAsync(`ls "${TMP_DIR}" | grep "${safeFile}"`);
-    const fileName   = stdout.trim().split('\n')[0];
-    if (!fileName) throw new Error('No se encontró el archivo descargado');
-
-    return join(TMP_DIR, fileName);
+// ── Obtener metadatos de una URL de Spotify ───────────────────────────────
+const getTrackMeta = async (spotifyUrl) => {
+    const token = await getAnonToken();
+    if (!token) return null;
+    try {
+        const idMatch = spotifyUrl.match(/track\/([A-Za-z0-9]+)/);
+        if (!idMatch) return null;
+        const res  = await fetch(
+            `https://api.spotify.com/v1/tracks/${idMatch[1]}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const t = await res.json();
+        return {
+            url:         t.external_urls.spotify,
+            title:       t.name,
+            artist:      t.artists.map(a => a.name).join(', '),
+            album:       t.album.name,
+            cover:       t.album.images?.[0]?.url || '',
+            releaseDate: t.album.release_date || '',
+            duration_ms: t.duration_ms,
+            isrc:        t.external_ids?.isrc || '',
+        };
+    } catch {
+        return null;
+    }
 };
 
-// ── Tarjeta de información ────────────────────────────────────────────────────
-
+// ── Tarjeta de información ─────────────────────────────────────────────────
 const buildCard = (meta) => {
     const lines = [
         `╔══════════════════════════╗`,
@@ -163,19 +125,18 @@ const buildCard = (meta) => {
     ];
     const add = (icon, label, val) => val && lines.push(`> ${icon} *${label}:* ${val}`);
     add('🎵', 'TÍTULO',   meta.title);
-    add('🎤', 'ARTISTA',  meta.artist || meta.artists);
+    add('🎤', 'ARTISTA',  meta.artist);
     add('💿', 'ÁLBUM',    meta.album);
-    add('⏱️', 'DURACIÓN', meta.duration_ms ? msToTime(meta.duration_ms) : meta.duration);
-    add('📅', 'FECHA',    meta.releaseDate || meta.publish);
+    add('⏱️', 'DURACIÓN', meta.duration_ms ? msToTime(meta.duration_ms) : '');
+    add('📅', 'FECHA',    meta.releaseDate);
     add('🔖', 'ISRC',     meta.isrc);
-    lines.push(`\n> _⏳ Buscando y descargando audio..._`);
+    lines.push(`\n> _⏳ Descargando audio..._`);
     return lines.join('\n');
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  COMANDO PRINCIPAL
-// ══════════════════════════════════════════════════════════════════════════════
-
+// ══════════════════════════════════════════════════════════════════
+//  COMANDO
+// ══════════════════════════════════════════════════════════════════
 const spotifyCommand = {
     name:     'spotify',
     alias:    ['spt', 'sp', 'music'],
@@ -192,57 +153,56 @@ const spotifyCommand = {
 
         await m.react('🔍');
 
-        let meta = null;
-        let audioPath = null;
-
         try {
-            // ── Paso 1: obtener metadatos ────────────────────────────────────
+            let meta;
+
+            // ── Paso 1: obtener metadatos ──────────────────────────────────
             if (isSpotUrl(text)) {
-                const id = extractId(text);
-                if (!id) {
-                    await m.react('❌');
-                    return m.reply('> ⚔ *ERROR:* No se pudo extraer el ID del enlace de Spotify.');
-                }
-                meta = await getSpotifyMeta(id);
+                meta = await getTrackMeta(text.trim());
                 if (!meta) {
-                    // Fallback mínimo si la API falla
-                    meta = { title: 'Track de Spotify', artist: '', spotifyUrl: text };
+                    // Si falla el token anónimo, usar spotifydl-core directamente
+                    meta = { url: text.trim(), title: 'Track de Spotify', artist: '', album: '' };
                 }
             } else {
-                // Búsqueda por nombre — usar Spotify API o simplemente el texto
-                meta = await searchSpotifyWeb(text);
+                meta = await searchTrack(text);
                 if (!meta) {
-                    // Sin API: separar "Artista Título" lo mejor posible
-                    const parts = text.split(' ');
-                    meta = {
-                        title:  text,
-                        artist: parts.length > 2 ? parts.slice(0, 2).join(' ') : '',
-                    };
+                    await m.react('❌');
+                    return m.reply(
+                        `> ⚔ *Sin resultados para:* _"${text}"_\n` +
+                        `Intenta con el enlace directo de Spotify.`
+                    );
                 }
             }
 
             await m.react('🕓');
 
-            // ── Paso 2: enviar tarjeta con portada ───────────────────────────
-            const cover = meta.cover || meta.image || null;
-            if (cover) {
+            // ── Paso 2: enviar tarjeta con portada ─────────────────────────
+            if (meta.cover) {
                 await conn.sendMessage(m.chat,
-                    { image: { url: cover }, caption: buildCard(meta) },
+                    { image: { url: meta.cover }, caption: buildCard(meta) },
                     { quoted: m }
                 );
             } else {
                 await m.reply(buildCard(meta));
             }
 
-            // ── Paso 3: descargar con yt-dlp ─────────────────────────────────
-            const title  = meta.title  || text;
-            const artist = meta.artist || meta.artists || '';
+            // ── Paso 3: descargar con spotifydl-core ──────────────────────
+            // Devuelve un Buffer directamente — sin archivos temporales
+            // Sin ffmpeg, sin binarios, solo HTTP puro con la API de Spotify
+            const audioBuffer = await spotify.downloadTrack(meta.url);
 
-            audioPath = await downloadWithYtdlp(title, artist);
+            if (!audioBuffer || audioBuffer.length < 8_000) {
+                await m.react('❌');
+                return conn.sendMessage(m.chat,
+                    { text: '> ⚔ *ERROR:* No se pudo descargar el audio. Intenta de nuevo.' },
+                    { quoted: m }
+                );
+            }
 
-            // ── Paso 4: leer el archivo y enviar ─────────────────────────────
-            const audioBuffer = readFileSync(audioPath);
-            const fileName    = safeName(`${title}${artist ? ' - ' + artist : ''}.mp3`);
+            // ── Paso 4: enviar audio ───────────────────────────────────────
+            const fileName = safeName(
+                `${meta.title}${meta.artist ? ' - ' + meta.artist : ''}`
+            );
 
             await conn.sendMessage(m.chat,
                 {
@@ -256,19 +216,17 @@ const spotifyCommand = {
             await m.react('✅');
 
         } catch (err) {
-            console.error('[SpotiDL]', err);
+            console.error('[SpotiDL v5]', err);
             await m.react('❌');
-            m.reply(
-                `> ⚔ *ERROR:* ${err.message}\n\n` +
-                `_Verifica que yt-dlp y ffmpeg estén instalados:_\n` +
-                `\`pip install -U yt-dlp\`\n` +
-                `\`apt install ffmpeg\``
-            );
-        } finally {
-            // ── Limpiar archivo temporal ─────────────────────────────────────
-            if (audioPath && existsSync(audioPath)) {
-                try { unlinkSync(audioPath); } catch {}
-            }
+
+            // Mensaje de error útil según el tipo de fallo
+            const msg = err.message?.includes('clientId')
+                ? `> ⚔ *ERROR:* Credenciales de Spotify inválidas.\nRevisa tu CLIENT_ID y CLIENT_SECRET en developer.spotify.com`
+                : err.message?.includes('401') || err.message?.includes('auth')
+                ? `> ⚔ *ERROR de autenticación:* Verifica tus credenciales de Spotify Developer.`
+                : `> ⚔ *ERROR:* ${err.message}`;
+
+            m.reply(msg);
         }
     }
 };
