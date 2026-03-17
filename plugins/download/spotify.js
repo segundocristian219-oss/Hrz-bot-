@@ -1,28 +1,31 @@
 import fetch from 'node-fetch';
 
 // ═══════════════════════════════════════════════════════════════
-//  SPOTIFY DOWNLOADER COMMAND
-//  Fuentes de descarga (fallback automático):
-//    1. api.spotifydown.com  — API pública, más confiable
-//    2. api.delirius.store   — Para búsqueda por nombre
+//  SPOTIFY DOWNLOADER COMMAND  — v2.1
+//  Fix: descarga el audio como buffer antes de enviarlo,
+//       resuelve el error "Failed to fetch stream from rapid.dlapi.app"
 // ═══════════════════════════════════════════════════════════════
 
-const TIMEOUT_MS = 20_000;
+const TIMEOUT_MS = 30_000;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-const fetchJSON = async (url, opts = {}) => {
+// ── fetch con timeout ─────────────────────────────────────────────────────────
+const fetchWithTimeout = async (url, opts = {}, ms = TIMEOUT_MS) => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), ms);
     try {
-        const res = await fetch(url, { signal: controller.signal, ...opts });
-        const text = await res.text();
-        return JSON.parse(text);
+        return await fetch(url, { signal: controller.signal, ...opts });
     } finally {
         clearTimeout(timer);
     }
 };
 
+const fetchJSON = async (url, opts = {}) => {
+    const res = await fetchWithTimeout(url, opts);
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return null; }
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const msToTime = (ms) => {
     if (!ms) return '0:00';
     const s = Math.floor(ms / 1000);
@@ -30,118 +33,112 @@ const msToTime = (ms) => {
 };
 
 const extractSpotifyId = (url) => {
-    const match = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(?:track|episode)\/([A-Za-z0-9]+)/);
-    return match ? match[1] : null;
+    const m = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(?:track|episode)\/([A-Za-z0-9]+)/);
+    return m ? m[1] : null;
 };
 
-// ── Fuente 1: spotifydown.com (API pública sin auth) ─────────────────────────
+const safeName = (str) => str.replace(/[\\/*?:"<>|]/g, '').trim();
+
+// ── Descargar audio como Buffer (resuelve el error de stream) ─────────────────
+const downloadAudioBuffer = async (audioUrl) => {
+    const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36',
+        'Accept': 'audio/mpeg, audio/*, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://spotifydown.com/',
+        'Origin': 'https://spotifydown.com',
+        'Connection': 'keep-alive',
+    };
+
+    const res = await fetchWithTimeout(audioUrl, { headers }, 40_000);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status} al descargar audio`);
+
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('text/html') || contentType.includes('application/json')) {
+        throw new Error(`Respuesta inesperada del servidor: ${contentType}`);
+    }
+
+    const buffer = await res.buffer();
+    if (buffer.length < 10_000) throw new Error('Audio demasiado pequeño (posible error del servidor)');
+
+    return buffer;
+};
+
+// ── Fuente 1: api.spotifydown.com ─────────────────────────────────────────────
+const SPDOWN_HEADERS = {
+    Origin: 'https://spotifydown.com',
+    Referer: 'https://spotifydown.com/',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36',
+};
 
 const getMetaSpotifydown = async (trackId) => {
-    try {
-        const data = await fetchJSON(
-            `https://api.spotifydown.com/metadata/track/${trackId}`,
-            { headers: { Origin: 'https://spotifydown.com', Referer: 'https://spotifydown.com/' } }
-        );
-        if (data?.success) return data;
-    } catch (_) {}
-    return null;
+    const data = await fetchJSON(
+        `https://api.spotifydown.com/metadata/track/${trackId}`,
+        { headers: SPDOWN_HEADERS }
+    );
+    return data?.success ? data : null;
 };
 
-const getDownloadSpotifydown = async (trackId) => {
-    try {
-        const data = await fetchJSON(
-            `https://api.spotifydown.com/download/${trackId}`,
-            { headers: { Origin: 'https://spotifydown.com', Referer: 'https://spotifydown.com/' } }
-        );
-        if (data?.success && data?.link) return data.link;
-    } catch (_) {}
-    return null;
+const getDownloadLinkSpotifydown = async (trackId) => {
+    const data = await fetchJSON(
+        `https://api.spotifydown.com/download/${trackId}`,
+        { headers: SPDOWN_HEADERS }
+    );
+    return data?.success && data?.link ? data.link : null;
 };
 
 // ── Fuente 2: api.delirius.store ──────────────────────────────────────────────
-
-const getDownloadDelirius = async (spotifyUrl) => {
-    try {
-        const data = await fetchJSON(
-            `https://api.delirius.store/download/spotifydl?url=${encodeURIComponent(spotifyUrl)}`
-        );
-        if (data?.status && data?.data?.download) return data.data.download;
-    } catch (_) {}
-    return null;
+const getDownloadLinkDelirius = async (spotifyUrl) => {
+    const data = await fetchJSON(
+        `https://api.delirius.store/download/spotifydl?url=${encodeURIComponent(spotifyUrl)}`
+    );
+    return data?.status && data?.data?.download ? data.data.download : null;
 };
 
 const searchDelirius = async (query) => {
-    try {
-        const data = await fetchJSON(
-            `https://api.delirius.store/search/spotify?q=${encodeURIComponent(query)}&limit=1`
-        );
-        if (data?.status && data?.data?.length) return data.data[0];
-    } catch (_) {}
-    return null;
+    const data = await fetchJSON(
+        `https://api.delirius.store/search/spotify?q=${encodeURIComponent(query)}&limit=1`
+    );
+    return data?.status && data?.data?.length ? data.data[0] : null;
 };
 
-// ── Fuente 3: Otro endpoint alternativo de descarga ───────────────────────────
-
-const getDownloadAlternative = async (trackId) => {
-    // Intenta spotifymate como último recurso
-    try {
-        const res = await fetch('https://spotifymate.com/action', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                Origin: 'https://spotifymate.com',
-                Referer: 'https://spotifymate.com/',
-            },
-            body: `url=https://open.spotify.com/track/${trackId}`,
-        });
-        const data = await res.json();
-        return data?.link || data?.url || data?.download || null;
-    } catch (_) {}
-    return null;
-};
-
-// ── Orquestador: obtiene enlace de descarga probando todas las fuentes ────────
-
+// ── Resolver URL de descarga (fuentes en paralelo) ────────────────────────────
 const resolveDownloadUrl = async (trackId, spotifyUrl) => {
-    // Intenta las fuentes en paralelo — usa la primera que responda
-    const results = await Promise.allSettled([
-        getDownloadSpotifydown(trackId),
-        getDownloadDelirius(spotifyUrl),
-        getDownloadAlternative(trackId),
+    const [r1, r2] = await Promise.allSettled([
+        getDownloadLinkSpotifydown(trackId),
+        getDownloadLinkDelirius(spotifyUrl),
     ]);
-
-    for (const r of results) {
-        if (r.status === 'fulfilled' && r.value) return r.value;
-    }
-    return null;
+    return (r1.status === 'fulfilled' && r1.value)
+        ? r1.value
+        : (r2.status === 'fulfilled' && r2.value)
+            ? r2.value
+            : null;
 };
 
-// ── Formatear la tarjeta de información ──────────────────────────────────────
-
-const buildInfoCard = (meta) => {
+// ── Tarjeta de información ────────────────────────────────────────────────────
+const buildCard = (meta) => {
     const lines = [
         `╔══════════════════════════╗`,
         `║   🎵  *SPOTIFY DOWNLOAD*  ║`,
         `╚══════════════════════════╝\n`,
     ];
+    const add = (icon, label, val) => val && lines.push(`> ${icon} *${label}:* ${val}`);
 
-    if (meta.title)       lines.push(`> 🎵 *TÍTULO:*    ${meta.title}`);
-    if (meta.artists)     lines.push(`> 🎤 *ARTISTA:*   ${meta.artists}`);
-    if (meta.artist)      lines.push(`> 🎤 *ARTISTA:*   ${meta.artist}`);
-    if (meta.album)       lines.push(`> 💿 *ÁLBUM:*     ${meta.album}`);
-    if (meta.duration_ms) lines.push(`> ⏱️ *DURACIÓN:*  ${msToTime(meta.duration_ms)}`);
-    if (meta.duration)    lines.push(`> ⏱️ *DURACIÓN:*  ${meta.duration}`);
-    if (meta.releaseDate) lines.push(`> 📅 *FECHA:*     ${meta.releaseDate}`);
-    if (meta.publish)     lines.push(`> 📅 *FECHA:*     ${meta.publish}`);
-    if (meta.isrc)        lines.push(`> 🔖 *ISRC:*      ${meta.isrc}`);
+    add('🎵', 'TÍTULO',   meta.title);
+    add('🎤', 'ARTISTA',  meta.artists || meta.artist);
+    add('💿', 'ÁLBUM',    meta.album);
+    add('⏱️', 'DURACIÓN', meta.duration_ms ? msToTime(meta.duration_ms) : meta.duration);
+    add('📅', 'FECHA',    meta.releaseDate || meta.publish);
+    add('🔖', 'ISRC',     meta.isrc);
 
     lines.push(`\n> _⏳ Descargando audio, espera..._`);
     return lines.join('\n');
 };
 
-// ── COMANDO PRINCIPAL ─────────────────────────────────────────────────────────
-
+// ═══════════════════════════════════════════════════════════════
+//  COMANDO
+// ═══════════════════════════════════════════════════════════════
 const spotifyCommand = {
     name: 'spotify',
     alias: ['spt', 'sp', 'music'],
@@ -149,13 +146,12 @@ const spotifyCommand = {
 
     run: async (m, { conn, text, usedPrefix, command }) => {
 
-        // ─── Validar entrada ────────────────────────────────────────────────
         if (!text) {
             return m.reply(
-                `> ✎ *USO:* ${usedPrefix + command} <nombre de canción o URL de Spotify>\n\n` +
+                `> ✎ *USO:* ${usedPrefix + command} <nombre o URL de Spotify>\n\n` +
                 `*Ejemplos:*\n` +
-                `• ${usedPrefix + command} Shape of You\n` +
-                `• ${usedPrefix + command} https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3`
+                `• ${usedPrefix + command} Adele Hello\n` +
+                `• ${usedPrefix + command} https://open.spotify.com/track/...`
             );
         }
 
@@ -167,82 +163,100 @@ const spotifyCommand = {
 
             let spotifyUrl, trackId, meta;
 
-            // ─── Rama A: URL directa ────────────────────────────────────────
+            // ── URL directa ──────────────────────────────────────────────────
             if (isUrl) {
                 spotifyUrl = text.trim();
                 trackId    = extractSpotifyId(spotifyUrl);
 
                 if (!trackId) {
                     await m.react('❌');
-                    return m.reply('> ⚔ *ERROR:* No se pudo extraer el ID del track. Verifica el enlace.');
+                    return m.reply('> ⚔ *ERROR:* No se pudo extraer el ID. Verifica el enlace.');
                 }
 
-                // Obtener metadatos desde spotifydown
-                const raw = await getMetaSpotifydown(trackId);
-                meta = raw || { title: 'Track de Spotify', artists: '', spotifyUrl };
+                await m.react('🕓');
+                meta = await getMetaSpotifydown(trackId) || { title: 'Track de Spotify' };
 
-            // ─── Rama B: Búsqueda por nombre ────────────────────────────────
+            // ── Búsqueda por nombre ──────────────────────────────────────────
             } else {
                 await m.react('🕓');
 
                 const searchResult = await searchDelirius(text);
-
                 if (!searchResult) {
                     await m.react('❌');
-                    return m.reply(`> ⚔ *ERROR:* No se encontraron resultados para *"${text}"*.\nIntenta con el enlace directo de Spotify.`);
+                    return m.reply(`> ⚔ *ERROR:* Sin resultados para *"${text}"*.\nIntenta con el enlace directo.`);
                 }
 
                 spotifyUrl = searchResult.url;
                 trackId    = extractSpotifyId(spotifyUrl) || searchResult.id;
                 meta       = searchResult;
 
-                // Enriquecer con spotifydown si tenemos el ID
+                // Enriquecer metadatos con spotifydown
                 if (trackId) {
                     const enriched = await getMetaSpotifydown(trackId);
                     if (enriched?.success) meta = { ...meta, ...enriched };
                 }
             }
 
-            // ─── Enviar imagen con info antes de descargar ──────────────────
+            // ── Enviar tarjeta de información ────────────────────────────────
             const coverUrl = meta.cover || meta.image || meta.artwork || null;
 
-            const infoText = buildInfoCard(meta);
-
             if (coverUrl) {
-                await conn.sendMessage(
-                    m.chat,
-                    { image: { url: coverUrl }, caption: infoText },
+                await conn.sendMessage(m.chat,
+                    { image: { url: coverUrl }, caption: buildCard(meta) },
                     { quoted: m }
                 );
             } else {
-                await m.reply(infoText);
+                await m.reply(buildCard(meta));
             }
 
-            // ─── Obtener URL de descarga (todas las fuentes en paralelo) ────
+            // ── Obtener link de descarga ─────────────────────────────────────
             const downloadUrl = await resolveDownloadUrl(trackId, spotifyUrl);
 
             if (!downloadUrl) {
                 await m.react('❌');
-                return conn.sendMessage(
-                    m.chat,
-                    { text: '> ⚔ *ERROR:* Todas las fuentes fallaron al obtener el audio.\nIntenta de nuevo en unos minutos.' },
+                return conn.sendMessage(m.chat,
+                    { text: '> ⚔ *ERROR:* No se pudo obtener enlace de descarga.\nIntenta de nuevo en un momento.' },
                     { quoted: m }
                 );
             }
 
-            // ─── Enviar audio ───────────────────────────────────────────────
-            const title   = meta.title  || 'Audio';
-            const artist  = meta.artists || meta.artist || '';
-            const fileName = `${title}${artist ? ' - ' + artist : ''}.mp3`
-                              .replace(/[\\/*?:"<>|]/g, '');
+            // ── Descargar como buffer y enviar ───────────────────────────────
+            // rapid.dlapi.app requiere descargar el stream con headers específicos.
+            // Si lo pasas como URL directa a WhatsApp, falla con "Failed to fetch stream".
+            let audioBuffer;
+            try {
+                audioBuffer = await downloadAudioBuffer(downloadUrl);
+            } catch (streamErr) {
+                console.error('[SpotiDL] Fallo descarga buffer, intentando URL directa:', streamErr.message);
+                // Fallback: intentar pasar la URL directamente
+                try {
+                    await conn.sendMessage(m.chat,
+                        {
+                            audio:    { url: downloadUrl },
+                            mimetype: 'audio/mpeg',
+                            fileName: safeName(`${meta.title || 'audio'}.mp3`),
+                        },
+                        { quoted: m }
+                    );
+                    return await m.react('✅');
+                } catch {
+                    await m.react('❌');
+                    return conn.sendMessage(m.chat,
+                        { text: `> ⚔ *ERROR al descargar audio:* ${streamErr.message}` },
+                        { quoted: m }
+                    );
+                }
+            }
 
-            await conn.sendMessage(
-                m.chat,
+            const title    = meta.title   || 'Audio';
+            const artist   = meta.artists || meta.artist || '';
+            const fileName = safeName(`${title}${artist ? ' - ' + artist : ''}.mp3`);
+
+            await conn.sendMessage(m.chat,
                 {
-                    audio:    { url: downloadUrl },
+                    audio:    audioBuffer,   // Buffer — evita el error de stream
                     mimetype: 'audio/mpeg',
                     fileName,
-                    // ptt: false  ←  true si quieres que aparezca como nota de voz
                 },
                 { quoted: m }
             );
