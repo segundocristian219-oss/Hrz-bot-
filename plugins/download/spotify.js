@@ -15,7 +15,8 @@
 //    4. Ponlos en las variables de abajo o en un .env
 // ══════════════════════════════════════════════════════════════════
 
-import Spotify from 'spotifydl-core';
+import { Spotify } from 'spotifydl-core';
+
 import fetch   from 'node-fetch';
 
 // ── Credenciales — pon las tuyas aquí o en variables de entorno ────────────
