@@ -61,7 +61,7 @@ const apkCommand = {
         } catch (e) {
             console.error(e)
             await m.react('❌')
-            return conn.sendMessage(m.chat, { text: '*[!] Error en el proceso de búsqueda o descarga.*' }, { quoted: m })
+            return conn.sendMessage(m.chat, { text: e.message }, { quoted: m })
         }
     }
 }
