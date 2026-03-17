@@ -30,7 +30,9 @@ const getCommand = {
            
             if (/json|javascript|text|html|css|xml/.test(mime) || !mime) {
                 let txt = buffer.toString('utf-8')
-                try { txt = format(JSON.parse(txt)) } catch {}
+                try {
+  txt = JSON.stringify(JSON.parse(txt), null, 2)
+} catch {}
                 
                 await conn.sendMessage(m.chat, { text: txt }, { quoted: m })
                 return m.react('✅')
