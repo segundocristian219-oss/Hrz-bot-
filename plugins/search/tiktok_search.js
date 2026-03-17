@@ -21,14 +21,10 @@ const tiktokCommand = {
             const videoUrl = `https://www.tiktok.com/@${video.author?.unique_id}/video/${video.video_id}`;
             const fmt = (num) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(num);
 
-            if (video.size > 70000000) {
-                 await m.react("⚠️");
-                 return conn.reply(m.chat, `*⚠️ ARCHIVO MUY PESADO*\n\nEl video pesa ${(video.size / (1024 * 1024)).toFixed(2)} MB. Supera el límite de envío de WhatsApp.`, m);
-            }
-
             const res = await axios.get(video.play, { 
                 responseType: 'arraybuffer',
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' },
+                timeout: 0 
             });
             const videoBuffer = Buffer.from(res.data);
 
@@ -36,6 +32,7 @@ const tiktokCommand = {
                             `▢ *TÍTULO:* ${video.title || 'Sin descripción'}\n` +
                             `▢ *AUTOR:* ${video.author?.nickname || 'Desconocido'}\n` +
                             `▢ *DURACIÓN:* ${video.duration}s\n` +
+                            `▢ *PESO:* ${(video.size / (1024 * 1024)).toFixed(2)} MB\n` +
                             `▢ *MÉTRICAS:* 👁️ ${fmt(video.play_count)} | ❤️ ${fmt(video.digg_count)}\n\n` +
                             `▢ *LINK:* ${videoUrl}`;
 
@@ -59,7 +56,7 @@ const tiktokCommand = {
 
         } catch (error) {
             await m.react("❌");
-            conn.reply(m.chat, `*── 「 FAILURE 」 ──*\n\n*LOG:* Error al procesar el contenido de TikTok.`, m);
+            conn.reply(m.chat, `*── 「 FAILURE 」 ──*\n\n*LOG:* Error al procesar o enviar el video completo.`, m);
         }
     }
 };
