@@ -142,7 +142,7 @@ async function fromLyricsOvh(query, artist, song) {
 
 
 async function fromHappi(query, artist, song) {
-  const apiKey = process.env.HAPPI_API_KEY;
+  const apiKey = 'hk846-IHQvYTRpBi3CgWdG2lP3A5igDUB5IVJXxK';
   if (!apiKey) return null;
 
   const attempts = [];
