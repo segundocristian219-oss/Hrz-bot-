@@ -25,7 +25,15 @@ const youtubeCommand = {
             if (!videoInfo) return conn.reply(m.chat, "No se hallaron resultados.", m);
             const videoId = videoInfo.videoId;
 
-            const infoText = `\t\t\t\t*YOUTUBE DOWNLOAD*\n\n▢ *TÍTULO:* ${videoInfo.title}\n▢ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *TIEMPO:* ${videoInfo.timestamp || '---'}\n▢ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *LINK:* https://youtube.com/watch?v=${videoId}\n\n_⚡ ESTADO: Descargando..._`;
+            const infoText = `
+\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*
+
+✰ *TÍTULO:* ${videoInfo.title}
+♛ *CANAL:* ${videoInfo.author?.name || '---'}
+✎ *TIEMPO:* ${videoInfo.timestamp || '---'}
+⌬ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}
+▢ *LINK:* https://youtube.com/watch?v=${videoId}
+`;
 
             const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
             await conn.sendMessage(m.chat, { image: { url: videoInfo.image || videoInfo.thumbnail }, caption: infoText }, { quoted: m });
