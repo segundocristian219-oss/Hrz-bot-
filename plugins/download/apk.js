@@ -1,9 +1,9 @@
-import { search, download } from 'aptoide-scraper'
+import axios from 'axios'
 import fetch from 'node-fetch'
 
 const apkCommand = {
     name: 'apk',
-    alias: ['modapk', 'aptoide'],
+    alias: ['modapk', 'fdroid'],
     category: 'descargas',
     run: async (m, { conn, args }) => {
         const text = args.join(' ')
@@ -12,41 +12,44 @@ const apkCommand = {
         try {
             await m.react('⏳')
 
-            let searchA = await search(text)
-            if (!searchA || !searchA.length) {
+            const searchRes = await axios.get(`https://sylphy.xyz/search/fdroid?q=${encodeURIComponent(text)}&api_key=sylphy-jCQvxB8`)
+            
+            if (!searchRes.data.status || !searchRes.data.result || searchRes.data.result.length === 0) {
                 await m.react('❌')
-                return conn.sendMessage(m.chat, { text: '*[!] No se encontraron resultados.*' }, { quoted: m })
+                return conn.sendMessage(m.chat, { text: '*[!] No se encontraron resultados en F-Droid.*' }, { quoted: m })
             }
 
-            let data5 = await download(searchA[0].id)
+            const targetUrl = searchRes.data.result[0].url
+            const downloadRes = await axios.get(`https://sylphy.xyz/download/fdroid?url=${encodeURIComponent(targetUrl)}&api_key=sylphy-jCQvxB8`)
 
-            if (data5.size.includes('GB') || parseFloat(data5.size.replace(/[^0-9.]/g, '')) > 999) {
+            if (!downloadRes.data.status || !downloadRes.data.result) {
                 await m.react('❌')
-                return conn.sendMessage(m.chat, { text: '*[!] El archivo es demasiado pesado.*' }, { quoted: m })
+                return conn.sendMessage(m.chat, { text: '*[!] Error al obtener los detalles de descarga.*' }, { quoted: m })
             }
 
-            const resThumb = await fetch(data5.icon)
+            const data = downloadRes.data.result
+            const resThumb = await fetch(data.icon)
             const thumbBuffer = Buffer.from(await resThumb.arrayBuffer())
 
             let txt = `┏━━━━━━━━━━━━━━━━☒\n`
-            txt += `┇➙ *❒ APTOIDE - DOWNLOADER*\n`
+            txt += `┇➙ *❒ F-DROID - DOWNLOADER*\n`
             txt += `┣━━━━━━━━━━━━━━━━⚄\n`
-            txt += `┋➙ *Nombre:* ${data5.name}\n`
-            txt += `┋➙ *Package:* ${data5.package}\n`
-            txt += `┋➙ *Peso:* ${data5.size}\n`
+            txt += `┋➙ *Nombre:* ${data.name}\n`
+            txt += `┋➙ *Versión:* ${data.version}\n`
+            txt += `┋➙ *Resumen:* ${data.summary}\n`
             txt += `┗━━━━━━━━━━━━━━━━⍰`
 
             await conn.sendMessage(m.chat, {
-                document: { url: data5.dllink },
+                document: { url: data.apkUrl },
                 mimetype: 'application/vnd.android.package-archive',
-                fileName: `${data5.name}.apk`,
+                fileName: `${data.name}.apk`,
                 caption: txt,
                 contextInfo: {
                     externalAdReply: {
-                        title: data5.name,
-                        body: 'Click para descargar',
+                        title: data.name,
+                        body: 'Click para instalar APK',
                         thumbnail: thumbBuffer,
-                        sourceUrl: data5.dllink,
+                        sourceUrl: data.apkUrl,
                         mediaType: 1,
                         renderLargerThumbnail: true
                     }
@@ -58,7 +61,7 @@ const apkCommand = {
         } catch (e) {
             console.error(e)
             await m.react('❌')
-            return conn.sendMessage(m.chat, { text: '*[!] Error en el proceso de descarga.*' }, { quoted: m })
+            return conn.sendMessage(m.chat, { text: '*[!] Error en el proceso de búsqueda o descarga.*' }, { quoted: m })
         }
     }
 }
