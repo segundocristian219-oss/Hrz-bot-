@@ -1,25 +1,109 @@
 import fetch from 'node-fetch';
 
 const HEADERS = {
-  'User-Agent': 'DeylinLyricsBot/1.0'
+  'User-Agent': 'DeylinLyricsBot/2.0'
 };
 
+const MIN_SCORE_WITH_ARTIST = 0.72;
+const MIN_SCORE_NO_ARTIST = 0.86;
+
 function normalizeText(text = '') {
+  return String(text)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[()[\]{}"'`´.,!¡?¿_/\\#+*~]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function displayText(text = '') {
   return String(text).replace(/\s+/g, ' ').trim();
 }
 
-function splitArtistSong(text = '') {
-  const clean = normalizeText(text);
+function removeFeaturing(text = '') {
+  return normalizeText(text)
+    .replace(/\b(feat|ft|featuring|con)\b.*$/i, '')
+    .trim();
+}
 
-  const separators = [' - ', ' – ', ' — ', '|', ':'];
+function tokenize(text = '') {
+  return normalizeText(text)
+    .split(' ')
+    .filter(Boolean);
+}
+
+function jaccard(aTokens, bTokens) {
+  const a = new Set(aTokens);
+  const b = new Set(bTokens);
+  if (!a.size || !b.size) return 0;
+
+  let inter = 0;
+  for (const t of a) {
+    if (b.has(t)) inter++;
+  }
+  const union = new Set([...a, ...b]).size;
+  return union ? inter / union : 0;
+}
+
+function containsLoose(a = '', b = '') {
+  const x = normalizeText(a);
+  const y = normalizeText(b);
+  if (!x || !y) return false;
+  return x.includes(y) || y.includes(x);
+}
+
+function similarityText(a = '', b = '') {
+  const na = normalizeText(a);
+  const nb = normalizeText(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+  if (containsLoose(na, nb)) return 0.92;
+
+  const aTokens = tokenize(na);
+  const bTokens = tokenize(nb);
+  return jaccard(aTokens, bTokens);
+}
+
+function artistSimilarity(foundArtist = '', expectedArtist = '') {
+  if (!expectedArtist) return 0.5;
+
+  const fa = removeFeaturing(foundArtist);
+  const ea = removeFeaturing(expectedArtist);
+
+  if (!fa || !ea) return 0;
+  if (fa === ea) return 1;
+  if (containsLoose(fa, ea)) return 0.9;
+
+  return jaccard(tokenize(fa), tokenize(ea));
+}
+
+function titleSimilarity(foundTitle = '', expectedTitle = '') {
+  return similarityText(foundTitle, expectedTitle);
+}
+
+function cleanLyrics(lyrics = '') {
+  return String(lyrics)
+    .replace(/\r/g, '')
+    .replace(/^\[\d{1,2}:\d{2}(?:[.:]\d{1,2})?\]\s*/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function splitArtistSong(raw = '') {
+  const text = displayText(raw);
+
+  const separators = [' | ', ' - ', ' – ', ' — ', ' : ', ': '];
   for (const sep of separators) {
-    if (clean.includes(sep)) {
-      const [artist, ...rest] = clean.split(sep);
-      const song = rest.join(sep).trim();
-      if (artist.trim() && song) {
+    if (text.includes(sep)) {
+      const [left, ...rest] = text.split(sep);
+      const right = rest.join(sep).trim();
+      if (left.trim() && right) {
         return {
-          artist: artist.trim(),
-          song: song.trim()
+          artist: displayText(left),
+          song: displayText(right),
+          structured: true,
+          original: text
         };
       }
     }
@@ -27,16 +111,58 @@ function splitArtistSong(text = '') {
 
   return {
     artist: null,
-    song: clean
+    song: text,
+    structured: false,
+    original: text
   };
 }
 
-function formatLyrics(title, artist, lyrics, source) {
+function alternateParses(raw = '') {
+  const base = splitArtistSong(raw);
+  const list = [base];
+
+  const text = displayText(raw);
+  if (!base.structured) {
+    const parts = text.split(' ').filter(Boolean);
+
+    if (parts.length >= 4) {
+      list.push({
+        artist: parts.slice(-2).join(' '),
+        song: parts.slice(0, -2).join(' '),
+        structured: true,
+        original: text
+      });
+
+      list.push({
+        artist: parts.slice(0, 2).join(' '),
+        song: parts.slice(2).join(' '),
+        structured: true,
+        original: text
+      });
+    }
+  }
+
+  const unique = [];
+  const seen = new Set();
+
+  for (const item of list) {
+    const key = `${normalizeText(item.artist || '')}__${normalizeText(item.song || '')}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(item);
+    }
+  }
+
+  return unique;
+}
+
+function formatLyrics(title, artist, lyrics, source, score) {
   return (
     `*𝄞    LETRA ENCONTRADA*\n\n` +
     `> ▢ *FUENTE:* ${source}\n` +
     `> ▢ *TÍTULO:* ${title || 'Desconocido'}\n` +
-    `> ▢ *ARTISTA:* ${artist || 'Desconocido'}\n\n` +
+    `> ▢ *ARTISTA:* ${artist || 'Desconocido'}\n` +
+    `> ▢ *COINCIDENCIA:* ${Math.round((score || 0) * 100)}%\n\n` +
     `${lyrics || 'Letra no disponible.'}`
   );
 }
@@ -55,12 +181,12 @@ async function fetchJson(url, options = {}, timeoutMs = 15000) {
       signal: controller.signal
     });
 
-    const contentType = res.headers.get('content-type') || '';
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} ${res.statusText}`);
     }
 
-    if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('json')) {
       const raw = await res.text();
       throw new Error(`Respuesta no JSON: ${raw.slice(0, 200)}`);
     }
@@ -71,151 +197,122 @@ async function fetchJson(url, options = {}, timeoutMs = 15000) {
   }
 }
 
-async function fromLRCLIB(query, artist, song) {
-  const attempts = [];
+function scoreCandidate(candidate, expectedSong, expectedArtist) {
+  const foundTitle = candidate.trackName || candidate.name || '';
+  const foundArtist = candidate.artistName || candidate.artist || '';
 
-  if (query) attempts.push(query);
-  if (artist && song) {
-    attempts.push(`${artist} ${song}`);
-    attempts.push(`${song} ${artist}`);
+  const tScore = titleSimilarity(foundTitle, expectedSong);
+  const aScore = expectedArtist ? artistSimilarity(foundArtist, expectedArtist) : 0.5;
+
+  const finalScore = expectedArtist
+    ? (tScore * 0.68) + (aScore * 0.32)
+    : tScore;
+
+  return {
+    finalScore,
+    tScore,
+    aScore,
+    foundTitle,
+    foundArtist
+  };
+}
+
+async function fromLRCLIB(song, artist = null) {
+  const queries = [];
+
+  if (artist) {
+    queries.push(`${artist} ${song}`);
+    queries.push(`${song} ${artist}`);
   }
-  if (song) attempts.push(song);
+  queries.push(song);
 
-  for (const q of [...new Set(attempts.map(normalizeText).filter(Boolean))]) {
+  const uniqueQueries = [...new Set(queries.map(displayText).filter(Boolean))];
+
+  let bestOverall = null;
+
+  for (const q of uniqueQueries) {
     try {
       const url = `https://lrclib.net/api/search?q=${encodeURIComponent(q)}`;
       const data = await fetchJson(url);
 
-      if (Array.isArray(data) && data.length > 0) {
-        const best =
-          data.find(x =>
-            x?.plainLyrics ||
-            x?.syncedLyrics
-          ) || data[0];
+      if (!Array.isArray(data) || !data.length) continue;
 
-        const lyrics = best?.plainLyrics || best?.syncedLyrics;
+      for (const item of data) {
+        const lyrics = item?.plainLyrics || item?.syncedLyrics;
         if (!lyrics) continue;
 
-        return {
+        const scored = scoreCandidate(item, song, artist);
+
+        const min = artist ? MIN_SCORE_WITH_ARTIST : MIN_SCORE_NO_ARTIST;
+        if (scored.finalScore < min) continue;
+
+        const current = {
           source: 'LRCLIB',
-          title: best.trackName || best.name || song || query,
-          artist: best.artistName || artist || 'Desconocido',
-          lyrics
+          title: item.trackName || song,
+          artist: item.artistName || artist || 'Desconocido',
+          lyrics: cleanLyrics(lyrics),
+          score: scored.finalScore
         };
-      }
-    } catch {}
-  }
 
-  return null;
-}
-
-
-async function fromLyricsOvh(query, artist, song) {
-  const tries = [];
-
-  if (artist && song) {
-    tries.push({ artist, song });
-  }
-
-  
-  tries.push({ artist: 'Desconocido', song: query });
-  tries.push({ artist: query, song: query });
-
-  for (const item of tries) {
-    try {
-      const url = `https://api.lyrics.ovh/v1/${encodeURIComponent(item.artist)}/${encodeURIComponent(item.song)}`;
-      const data = await fetchJson(url);
-
-      if (data?.lyrics && typeof data.lyrics === 'string' && data.lyrics.trim()) {
-        return {
-          source: 'Lyrics.ovh',
-          title: song || query,
-          artist: artist || 'Desconocido',
-          lyrics: data.lyrics.trim()
-        };
-      }
-    } catch {}
-  }
-
-  return null;
-}
-
-
-async function fromHappi(query, artist, song) {
-  const apiKey = 'hk846-IHQvYTRpBi3CgWdG2lP3A5igDUB5IVJXxK';
-  if (!apiKey) return null;
-
-  const attempts = [];
-  if (artist && song) attempts.push(`${artist} ${song}`);
-  if (query) attempts.push(query);
-  if (song) attempts.push(song);
-
-  for (const q of [...new Set(attempts.map(normalizeText).filter(Boolean))]) {
-    try {
-      const url = `https://api.happi.dev/v1/music?q=${encodeURIComponent(q)}&limit=5&type=track`;
-      const data = await fetchJson(url, {
-        headers: {
-          'x-happi-key': apiKey
-        }
-      });
-
-      const items = data?.result || data?.results || data?.data || [];
-      if (!Array.isArray(items) || !items.length) continue;
-
-      
-      const candidate = items.find(x => x?.lyrics || x?.plainLyrics || x?.syncedLyrics) || items[0];
-
-      if (candidate?.lyrics || candidate?.plainLyrics || candidate?.syncedLyrics) {
-        return {
-          source: 'Happi.dev',
-          title: candidate.track || candidate.trackName || song || query,
-          artist: candidate.artist || candidate.artistName || artist || 'Desconocido',
-          lyrics: candidate.lyrics || candidate.plainLyrics || candidate.syncedLyrics
-        };
-      }
-
-      const detailUrl =
-        candidate?.api_lyrics ||
-        candidate?.lyrics_url ||
-        candidate?.url ||
-        candidate?.api_track;
-
-      if (detailUrl) {
-        const detail = await fetchJson(detailUrl, {
-          headers: {
-            'x-happi-key': apiKey
-          }
-        });
-
-        const lyrics =
-          detail?.result?.lyrics ||
-          detail?.lyrics ||
-          detail?.plainLyrics ||
-          detail?.syncedLyrics;
-
-        if (lyrics) {
-          return {
-            source: 'Happi.dev',
-            title:
-              detail?.result?.track ||
-              detail?.track ||
-              candidate?.track ||
-              song ||
-              query,
-            artist:
-              detail?.result?.artist ||
-              detail?.artist ||
-              candidate?.artist ||
-              artist ||
-              'Desconocido',
-            lyrics
-          };
+        if (!bestOverall || current.score > bestOverall.score) {
+          bestOverall = current;
         }
       }
     } catch {}
   }
 
-  return null;
+  return bestOverall;
+}
+
+async function fromLyricsOvh(song, artist = null) {
+  if (!artist || !song) return null;
+
+  try {
+    const url = `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`;
+    const data = await fetchJson(url);
+
+    if (!data?.lyrics || typeof data.lyrics !== 'string') return null;
+
+    const lyrics = cleanLyrics(data.lyrics);
+    if (!lyrics) return null;
+
+    return {
+      source: 'Lyrics.ovh',
+      title: song,
+      artist,
+      lyrics,
+      score: 0.78
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function searchReliableLyrics(rawText) {
+  const parses = alternateParses(rawText);
+  let best = null;
+
+  for (const parsed of parses) {
+    const { artist, song, structured } = parsed;
+
+    const providers = [
+      () => fromLRCLIB(song, artist),
+      () => structured ? fromLyricsOvh(song, artist) : null
+    ];
+
+    for (const provider of providers) {
+      try {
+        const result = await provider();
+        if (!result?.lyrics) continue;
+
+        if (!best || result.score > best.score) {
+          best = result;
+        }
+      } catch {}
+    }
+  }
+
+  return best;
 }
 
 const lyricsCommand = {
@@ -224,43 +321,35 @@ const lyricsCommand = {
   category: 'tools',
   run: async (m, { text, usedPrefix, command }) => {
     if (!text) {
-      return m.reply(`> ✎ USO: ${usedPrefix + command} <artista - canción>\n> ✎ Ejemplo: ${usedPrefix + command} Adele - Hello`);
+      return m.reply(
+        `> ✎ USO: ${usedPrefix + command} <artista - canción>\n` +
+        `> ✎ Ejemplo: ${usedPrefix + command} Adele - Hello`
+      );
     }
 
     await m.react('🔍');
 
     try {
-      const query = normalizeText(text);
-      const { artist, song } = splitArtistSong(query);
+      const result = await searchReliableLyrics(text);
 
-      const providers = [
-        () => fromLRCLIB(query, artist, song),
-        () => fromLyricsOvh(query, artist, song),
-        () => fromHappi(query, artist, song)
-      ];
-
-      for (const provider of providers) {
-        try {
-          const result = await provider();
-          if (result?.lyrics) {
-            await m.react('✅');
-            return m.reply(
-              formatLyrics(
-                result.title,
-                result.artist,
-                result.lyrics,
-                result.source
-              )
-            );
-          }
-        } catch {}
+      if (!result) {
+        await m.react('✖️');
+        return m.reply(
+          '> ⚔ ERROR: No encontré una coincidencia confiable.\n' +
+          '> ✎ Usa el formato: artista - canción\n' +
+          '> ✎ Ejemplo: .letra Andrés Serrano - Hoy me levanté'
+        );
       }
 
-      await m.react('✖️');
+      await m.react('✅');
       return m.reply(
-        '> ⚔ ERROR: No se pudo encontrar la letra en las fuentes configuradas.\n' +
-        '> ✎ Fuentes probadas: LRCLIB, Lyrics.ovh' +
-        (process.env.HAPPI_API_KEY ? ', Happi.dev' : '')
+        formatLyrics(
+          result.title,
+          result.artist,
+          result.lyrics,
+          result.source,
+          result.score
+        )
       );
     } catch (e) {
       await m.react('✖️');
