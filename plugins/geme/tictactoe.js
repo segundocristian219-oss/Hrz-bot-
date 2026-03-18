@@ -1,3 +1,4 @@
+
 const clean = (str) => str.trim();
 
 const ticTacToeGame = {
@@ -43,7 +44,7 @@ const ticTacToeGame = {
         };
 
         const checkWin = (b) => {
-            const wins = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+            const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
             for (let w of wins) if (b[w[0]] !== ' ' && b[w[0]] === b[w[1]] && b[w[0]] === b[w[2]]) return b[w[0]];
             return b.includes(' ') ? null : 'tie';
         };
@@ -51,14 +52,13 @@ const ticTacToeGame = {
         const winner = checkWin(game.board);
         if (winner) {
             let finalMsg = `🎮 *TRES EN RAYA - FIN*\n\n${renderVisualBoard(game.board)}\n\n`;
-            let winnerJid = null;
             if (winner === 'tie') {
                 finalMsg += `⚖️ *¡Es un EMPATE!* Nadie gana esta vez.`;
             } else {
-                winnerJid = winner === 'X' ? game.playerX : game.playerO;
-                finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`;
+                const winnerJid = winner === 'X' ? game.playerX : game.playerO;
+                finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`, m, { mentions: [winnerJid] };
             }
-            await this.reply(m.chat, finalMsg, m, { mentions: winnerJid ? [winnerJid] : [] });
+            await this.reply(m.chat, finalMsg, m, { mentions: winner === 'tie' ? [] : [winner === 'X' ? game.playerX : game.playerO] });
             delete global.tttGames[m.chat];
             return true;
         }
@@ -78,7 +78,7 @@ const ticTacToeGame = {
         const opponent = m.mentionedJid[0];
         if (!opponent) return conn.reply(m.chat, `❌ Debes mencionar a alguien para jugar.\nEjemplo: *${usedPrefix}${command} @user*`, m);
         if (opponent === m.sender) return conn.reply(m.chat, `❌ No puedes jugar contra ti mismo.`, m);
-        if (opponent === (conn.user.jid || conn.user.id)) return conn.reply(m.chat, `❌ No puedes jugar contra mí.`, m);
+        if (opponent === conn.user.id) return conn.reply(m.chat, `❌ No puedes jugar contra mí, soy un bot muy ocupado.`, m);
 
         const board = Array(9).fill(' ');
 
