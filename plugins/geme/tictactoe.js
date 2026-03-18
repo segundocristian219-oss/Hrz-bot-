@@ -1,3 +1,5 @@
+const clean = (str) => str.trim();
+
 const ticTacToeGame = {
     name: 'tictactoe',
     alias: ['ttt', 'x0', 'tresenraya'],
@@ -29,6 +31,12 @@ const ticTacToeGame = {
         game.board[position] = game.turn;
         await m.react("✅");
 
+        // Helper para obtener nombre de la DB
+        const getName = async (jid) => {
+            const user = await global.User.findOne({ id: jid }).lean();
+            return user?.name || jid.split('@')[0];
+        };
+
         const renderVisualBoard = (board) => {
             const b = board.map(cell => cell === ' ' ? '⬜' : (cell === 'X' ? '❌' : '⭕'));
             return `╔═══╦═══╦═══╗
@@ -48,51 +56,51 @@ const ticTacToeGame = {
 
         const winner = checkWin(game.board);
         if (winner) {
-            const winnerName = winner === 'X' ? game.nameX : game.nameO;
-            const winnerJid = winner === 'X' ? game.playerX : game.playerO;
-            
+            const winnerName = await getName(winner === 'X' ? game.playerX : game.playerO);
             let finalMsg = `🎮 *TRES EN RAYA - FIN*\n\n${renderVisualBoard(game.board)}\n\n`;
+
             if (winner === 'tie') {
                 finalMsg += `⚖️ *¡Es un EMPATE!*`;
             } else {
-                finalMsg += `🏆 *¡${winnerName} (${winner}) HA GANADO EL JUEGO!*`;
+                finalMsg += `🏆 *¡${winnerName} (${winner}) HA GANADO!*`;
             }
             
-            await this.reply(m.chat, finalMsg, m, { mentions: [game.playerX, game.playerO] });
+            await this.reply(m.chat, finalMsg, m);
             delete global.tttGames[m.chat];
             return true;
         }
 
         game.turn = game.turn === 'X' ? 'O' : 'X';
-        const nextPlayerName = game.turn === 'X' ? game.nameX : game.nameO;
-        const nextPlayerJid = game.turn === 'X' ? game.playerX : game.playerO;
+        const nextPlayerName = await getName(game.turn === 'X' ? game.playerX : game.playerO);
 
-        await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: *${nextPlayerName}*\n_Escribe un número del 1 al 9._`, m, { mentions: [nextPlayerJid] });
+        await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nTurno de *${game.turn}*: ${nextPlayerName}\n_Escribe un número del 1 al 9._`, m);
         return true;
     },
     run: async (m, { conn, usedPrefix, command }) => {
         global.tttGames = global.tttGames || {};
-        if (global.tttGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una partida en curso en este grupo.`, m);
+        if (global.tttGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una partida en curso.`, m);
+        if (!m.isGroup) return conn.reply(m.chat, `❌ Solo en grupos.`, m);
 
-        if (!m.isGroup) return conn.reply(m.chat, `❌ Este juego solo se puede iniciar en grupos.`, m);
+        const opponent = m.mentionedJid[0];
+        if (!opponent) return conn.reply(m.chat, `❌ Menciona a alguien: *${usedPrefix}${command} @user*`, m);
+        if (opponent === m.sender) return conn.reply(m.chat, `❌ No puedes jugar solo.`, m);
 
-        const opponent = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
-        if (!opponent) return conn.reply(m.chat, `❌ Menciona a alguien o responde a su mensaje para jugar.\nEjemplo: *${usedPrefix}${command} @usuario*`, m);
-        if (opponent === m.sender) return conn.reply(m.chat, `❌ No puedes jugar contra ti mismo.`, m);
+        const getName = async (jid) => {
+            const user = await global.User.findOne({ id: jid }).lean();
+            return user?.name || jid.split('@')[0];
+        };
 
-        const nameX = m.pushName || "Jugador 1";
-        const nameO = conn.getName(opponent) || "Jugador 2";
+        const nameX = await getName(m.sender);
+        const nameO = await getName(opponent);
 
         global.tttGames[m.chat] = {
             board: Array(9).fill(' '),
             playerX: m.sender,
             playerO: opponent,
-            nameX,
-            nameO,
             turn: 'X'
         };
 
-        const boardStr = `╔═══╦═══╦═══╗
+        const initialBoard = `╔═══╦═══╦═══╗
 ║ ⬜ ║ ⬜ ║ ⬜ ║  (1-3)
 ╠═══╬═══╬═══╣
 ║ ⬜ ║ ⬜ ║ ⬜ ║  (4-6)
@@ -100,18 +108,7 @@ const ticTacToeGame = {
 ║ ⬜ ║ ⬜ ║ ⬜ ║  (7-9)
 ╚═══╩═══╩═══╝`;
 
-        const startMsg = `🎮 *TRES EN RAYA - INICIO*
-
-*❌ ${nameX}*
-   vs
-*⭕ ${nameO}*
-
-${boardStr}
-
-Turno de *❌*: *${nameX}*
-_Escribe un número del 1 al 9 para jugar._`;
-
-        return conn.reply(m.chat, startMsg, m, { mentions: [m.sender, opponent] });
+        return conn.reply(m.chat, `🎮 *TRES EN RAYA - INICIO*\n\n❌: ${nameX}\n⭕: ${nameO}\n\n${initialBoard}\n\nEmpieza *❌*: ${nameX}\n_Escribe un número del 1 al 9._`, m);
     }
 };
 
