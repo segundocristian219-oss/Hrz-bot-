@@ -49,19 +49,23 @@ const ticTacToeGame = {
             return b.includes(' ') ? null : 'tie';
         };
 
-        const winner = checkWin(game.board);
+                const winner = checkWin(game.board);
         if (winner) {
+            const winnerJid = winner === 'X' ? game.playerX : game.playerO;
             let finalMsg = `🎮 *TRES EN RAYA - FIN*\n\n${renderVisualBoard(game.board)}\n\n`;
+            
             if (winner === 'tie') {
                 finalMsg += `⚖️ *¡Es un EMPATE!* Nadie gana esta vez.`;
+                await this.reply(m.chat, finalMsg, m);
             } else {
-                const winnerJid = winner === 'X' ? game.playerX : game.playerO;
-                finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`, m, { mentions: [winnerJid] };
+                
+                finalMsg += `🏆 *¡@${winnerJid.replace(/@.+/, '')} (${winner}) ES EL GANADOR!*`;
+                await this.reply(m.chat, finalMsg, m, { mentions: [winnerJid] });
             }
-            await this.reply(m.chat, finalMsg, m, { mentions: winner === 'tie' ? [] : [winner === 'X' ? game.playerX : game.playerO] });
             delete global.tttGames[m.chat];
             return true;
         }
+
 
         game.turn = game.turn === 'X' ? 'O' : 'X';
         const nextPlayerJid = game.turn === 'X' ? game.playerX : game.playerO;
