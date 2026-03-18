@@ -2,7 +2,7 @@ const ticTacToeGame = {
     name: 'tictactoe',
     alias: ['ttt', 'x0', 'tresenraya'],
     category: 'game',
-    async before(m) {
+    async before(m, { conn }) {
         const txt = (m.text || "").trim();
         if (!/^[1-9]$/.test(txt) || m.isBaileys || m.fromMe) return false;
 
@@ -45,11 +45,13 @@ const ticTacToeGame = {
 
             if (winner === 'tie') {
                 finalMsg += `⚖️ *¡Es un EMPATE!*`;
-                await this.reply(m.chat, finalMsg, m);
+                await conn.sendMessage(m.chat, { text: finalMsg }, { quoted: m });
             } else {
-                // Se construye el texto con el número y se pasa el JID en el array de mentions
                 finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`;
-                await this.reply(m.chat, finalMsg, m, { mentions: [winnerJid] });
+                await conn.sendMessage(m.chat, { 
+                    text: finalMsg, 
+                    mentions: [winnerJid] 
+                }, { quoted: m });
             }
             delete global.tttGames[m.chat];
             return true;
@@ -57,18 +59,28 @@ const ticTacToeGame = {
 
         game.turn = game.turn === 'X' ? 'O' : 'X';
         const nextJid = game.turn === 'X' ? game.playerX : game.playerO;
+        const nextText = `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: @${nextJid.split('@')[0]}\n_Escribe un número del 1 al 9._`;
 
-        // Es fundamental pasar el array mentions para que el @número funcione
-        await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: @${nextJid.split('@')[0]}\n_Escribe un número del 1 al 9._`, m, { mentions: [nextJid] });
+        await conn.sendMessage(m.chat, { 
+            text: nextText, 
+            mentions: [nextJid] 
+        }, { quoted: m });
+        
         return true;
     },
     run: async (m, { conn, usedPrefix, command }) => {
         global.tttGames = global.tttGames || {};
-        if (global.tttGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una partida activa.`, m);
-        if (!m.isGroup) return conn.reply(m.chat, `❌ Solo en grupos.`, m);
+        if (global.tttGames[m.chat]) {
+            return conn.sendMessage(m.chat, { text: `⚠️ Ya hay una partida activa.` }, { quoted: m });
+        }
+        if (!m.isGroup) {
+            return conn.sendMessage(m.chat, { text: `❌ Solo en grupos.` }, { quoted: m });
+        }
 
         const opponent = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
-        if (!opponent) return conn.reply(m.chat, `❌ Menciona a alguien: *${usedPrefix}${command} @user*`, m);
+        if (!opponent) {
+            return conn.sendMessage(m.chat, { text: `❌ Menciona a alguien: *${usedPrefix}${command} @user*` }, { quoted: m });
+        }
 
         global.tttGames[m.chat] = {
             board: Array(9).fill(' '),
@@ -84,11 +96,10 @@ const ticTacToeGame = {
 
         const textoInicio = `🎮 *TRES EN RAYA - INICIO*\n\n@${p1} (❌) vs @${p2} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: @${p1}`;
 
-       
         return conn.sendMessage(m.chat, {
-    text: textoInicio,
-    mentions: [m.sender, opponent]
-}, { quoted: m });
+            text: textoInicio,
+            mentions: [m.sender, opponent]
+        }, { quoted: m });
     }
 };
 
