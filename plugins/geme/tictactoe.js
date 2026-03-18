@@ -85,7 +85,10 @@ const ticTacToeGame = {
         const textoInicio = `🎮 *TRES EN RAYA - INICIO*\n\n@${p1} (❌) vs @${p2} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: @${p1}`;
 
        
-        return conn.reply(m.chat, textoInicio, m, { mentions: [m.sender, opponent] });
+        return conn.sendMessage(m.chat, {
+    text: textoInicio,
+    mentions: [m.sender, opponent]
+}, { quoted: m });
     }
 };
 
