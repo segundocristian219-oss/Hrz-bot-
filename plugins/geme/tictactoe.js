@@ -43,7 +43,7 @@ const ticTacToeGame = {
         };
 
         const checkWin = (b) => {
-            const wins = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
+            const wins = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
             for (let w of wins) if (b[w[0]] !== ' ' && b[w[0]] === b[w[1]] && b[w[0]] === b[w[2]]) return b[w[0]];
             return b.includes(' ') ? null : 'tie';
         };
@@ -51,20 +51,22 @@ const ticTacToeGame = {
         const winner = checkWin(game.board);
         if (winner) {
             let finalMsg = `🎮 *TRES EN RAYA - FIN*\n\n${renderVisualBoard(game.board)}\n\n`;
+            let mentions = [];
             if (winner === 'tie') {
                 finalMsg += `⚖️ *¡Es un EMPATE!* Nadie gana esta vez.`;
             } else {
                 const winnerJid = winner === 'X' ? game.playerX : game.playerO;
-                finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`, m, { mentions: [winnerJid] };
+                finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`;
+                mentions = [winnerJid];
             }
-            await this.reply(m.chat, finalMsg, m, { mentions: winner === 'tie' ? [] : [winner === 'X' ? game.playerX : game.playerO] });
+            await this.reply(m.chat, finalMsg, m, { mentions });
             delete global.tttGames[m.chat];
             return true;
         }
 
         game.turn = game.turn === 'X' ? 'O' : 'X';
         const nextPlayerJid = game.turn === 'X' ? game.playerX : game.playerO;
-        
+
         await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: @${nextPlayerJid.split('@')[0]}\n_Escribe un número del 1 al 9._`, m, { mentions: [nextPlayerJid] });
         return true;
     },
@@ -73,14 +75,14 @@ const ticTacToeGame = {
         if (global.tttGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una partida en curso.`, m);
 
         if (!m.isGroup) return conn.reply(m.chat, `❌ Este juego solo se puede jugar en grupos.`, m);
-        
+
         const opponent = m.mentionedJid[0];
         if (!opponent) return conn.reply(m.chat, `❌ Debes mencionar a alguien para jugar.\nEjemplo: *${usedPrefix}${command} @user*`, m);
         if (opponent === m.sender) return conn.reply(m.chat, `❌ No puedes jugar contra ti mismo.`, m);
-        if (opponent === conn.user.id) return conn.reply(m.chat, `❌ No puedes jugar contra mí, soy un bot muy ocupado.`, m);
+        if (opponent === (conn.user.jid || conn.user.id)) return conn.reply(m.chat, `❌ No puedes jugar contra mí, soy un bot muy ocupado.`, m);
 
         const board = Array(9).fill(' ');
-        
+
         global.tttGames[m.chat] = {
             board,
             playerX: m.sender,
