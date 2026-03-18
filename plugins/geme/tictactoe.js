@@ -1,5 +1,3 @@
-const clean = (str) => str.trim();
-
 const ticTacToeGame = {
     name: 'tictactoe',
     alias: ['ttt', 'x0', 'tresenraya'],
@@ -12,12 +10,10 @@ const ticTacToeGame = {
         if (!global.tttGames[m.chat]) return false;
 
         const game = global.tttGames[m.chat];
-        const playerJid = m.sender;
-
-        if (playerJid !== game.playerX && playerJid !== game.playerO) return false;
+        if (m.sender !== game.playerX && m.sender !== game.playerO) return false;
 
         const currentTurnJid = game.turn === 'X' ? game.playerX : game.playerO;
-        if (playerJid !== currentTurnJid) {
+        if (m.sender !== currentTurnJid) {
             await m.react("⏳");
             return true;
         }
@@ -31,21 +27,16 @@ const ticTacToeGame = {
         game.board[position] = game.turn;
         await m.react("✅");
 
-        // Helper para obtener nombre de la DB
-        const getName = async (jid) => {
+        // Función para obtener el nombre de la DB y formatear la mención
+        const getMention = async (jid) => {
             const user = await global.User.findOne({ id: jid }).lean();
-            return user?.name || jid.split('@')[0];
+            const name = user?.name || jid.split('@')[0];
+            return `@${name}`;
         };
 
         const renderVisualBoard = (board) => {
             const b = board.map(cell => cell === ' ' ? '⬜' : (cell === 'X' ? '❌' : '⭕'));
-            return `╔═══╦═══╦═══╗
-║ ${b[0]} ║ ${b[1]} ║ ${b[2]} ║  (1-3)
-╠═══╬═══╬═══╣
-║ ${b[3]} ║ ${b[4]} ║ ${b[5]} ║  (4-6)
-╠═══╬═══╬═══╣
-║ ${b[6]} ║ ${b[7]} ║ ${b[8]} ║  (7-9)
-╚═══╩═══╩═══╝`;
+            return `╔═══╦═══╦═══╗\n║ ${b[0]} ║ ${b[1]} ║ ${b[2]} ║  (1-3)\n╠═══╬═══╬═══╣\n║ ${b[3]} ║ ${b[4]} ║ ${b[5]} ║  (4-6)\n╠═══╬═══╬═══╣\n║ ${b[6]} ║ ${b[7]} ║ ${b[8]} ║  (7-9)\n╚═══╩═══╩═══╝`;
         };
 
         const checkWin = (b) => {
@@ -56,42 +47,43 @@ const ticTacToeGame = {
 
         const winner = checkWin(game.board);
         if (winner) {
-            const winnerName = await getName(winner === 'X' ? game.playerX : game.playerO);
+            const winnerJid = winner === 'X' ? game.playerX : game.playerO;
+            const winnerTag = await getMention(winnerJid);
             let finalMsg = `🎮 *TRES EN RAYA - FIN*\n\n${renderVisualBoard(game.board)}\n\n`;
 
             if (winner === 'tie') {
                 finalMsg += `⚖️ *¡Es un EMPATE!*`;
+                await this.reply(m.chat, finalMsg, m);
             } else {
-                finalMsg += `🏆 *¡${winnerName} (${winner}) HA GANADO!*`;
+                finalMsg += `🏆 *¡${winnerTag} (${winner}) ES EL GANADOR!*`;
+                await this.reply(m.chat, finalMsg, m, { mentions: [winnerJid] });
             }
-            
-            await this.reply(m.chat, finalMsg, m);
             delete global.tttGames[m.chat];
             return true;
         }
 
         game.turn = game.turn === 'X' ? 'O' : 'X';
-        const nextPlayerName = await getName(game.turn === 'X' ? game.playerX : game.playerO);
+        const nextJid = game.turn === 'X' ? game.playerX : game.playerO;
+        const nextTag = await getMention(nextJid);
 
-        await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nTurno de *${game.turn}*: ${nextPlayerName}\n_Escribe un número del 1 al 9._`, m);
+        await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: ${nextTag}\n_Escribe un número del 1 al 9._`, m, { mentions: [nextJid] });
         return true;
     },
     run: async (m, { conn, usedPrefix, command }) => {
         global.tttGames = global.tttGames || {};
-        if (global.tttGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una partida en curso.`, m);
+        if (global.tttGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una partida activa.`, m);
         if (!m.isGroup) return conn.reply(m.chat, `❌ Solo en grupos.`, m);
 
         const opponent = m.mentionedJid[0];
         if (!opponent) return conn.reply(m.chat, `❌ Menciona a alguien: *${usedPrefix}${command} @user*`, m);
-        if (opponent === m.sender) return conn.reply(m.chat, `❌ No puedes jugar solo.`, m);
-
-        const getName = async (jid) => {
+        
+        const getMention = async (jid) => {
             const user = await global.User.findOne({ id: jid }).lean();
-            return user?.name || jid.split('@')[0];
+            return `@${user?.name || jid.split('@')[0]}`;
         };
 
-        const nameX = await getName(m.sender);
-        const nameO = await getName(opponent);
+        const p1Tag = await getMention(m.sender);
+        const p2Tag = await getMention(opponent);
 
         global.tttGames[m.chat] = {
             board: Array(9).fill(' '),
@@ -100,15 +92,9 @@ const ticTacToeGame = {
             turn: 'X'
         };
 
-        const initialBoard = `╔═══╦═══╦═══╗
-║ ⬜ ║ ⬜ ║ ⬜ ║  (1-3)
-╠═══╬═══╬═══╣
-║ ⬜ ║ ⬜ ║ ⬜ ║  (4-6)
-╠═══╬═══╬═══╣
-║ ⬜ ║ ⬜ ║ ⬜ ║  (7-9)
-╚═══╩═══╩═══╝`;
+        const boardStr = "╔═══╦═══╦═══╗\n║ ⬜ ║ ⬜ ║ ⬜ ║  (1-3)\n╠═══╬═══╬═══╣\n║ ⬜ ║ ⬜ ║ ⬜ ║  (4-6)\n╠═══╬═══╬═══╣\n║ ⬜ ║ ⬜ ║ ⬜ ║  (7-9)\n╚═══╩═══╩═══╝";
 
-        return conn.reply(m.chat, `🎮 *TRES EN RAYA - INICIO*\n\n❌: ${nameX}\n⭕: ${nameO}\n\n${initialBoard}\n\nEmpieza *❌*: ${nameX}\n_Escribe un número del 1 al 9._`, m);
+        return conn.reply(m.chat, `🎮 *TRES EN RAYA - INICIO*\n\n${p1Tag} (❌) vs ${p2Tag} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: ${p1Tag}`, m, { mentions: [m.sender, opponent] });
     }
 };
 
