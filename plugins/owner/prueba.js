@@ -8,13 +8,13 @@ const inspectAudio = {
         if (!quoted) return conn.reply(m.chat, '❌ Etiqueta un audio.', m);
 
         try {
-            // Extraemos el contenido crudo del mensaje citado
+            
             const rawData = quoted.msg || quoted;
             
-            // Convertimos todo el objeto a string, manejando los Buffers para que sean legibles
+            
             const jsonString = JSON.stringify(rawData, (key, value) => {
-                if (value && value.type === 'Buffer') return value.data; // Muestra el array del buffer
-                if (Buffer.isBuffer(value)) return value.toString('base64'); // Lo pasa a base64 para que sea legible
+                if (value && value.type === 'Buffer') return value.data; 
+                if (Buffer.isBuffer(value)) return value.toString('base64'); 
                 return value;
             }, 2);
 
