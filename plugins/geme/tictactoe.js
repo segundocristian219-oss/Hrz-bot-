@@ -47,6 +47,7 @@ const ticTacToeGame = {
                 finalMsg += `⚖️ *¡Es un EMPATE!*`;
                 await this.reply(m.chat, finalMsg, m);
             } else {
+                // Se construye el texto con el número y se pasa el JID en el array de mentions
                 finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`;
                 await this.reply(m.chat, finalMsg, m, { mentions: [winnerJid] });
             }
@@ -57,6 +58,7 @@ const ticTacToeGame = {
         game.turn = game.turn === 'X' ? 'O' : 'X';
         const nextJid = game.turn === 'X' ? game.playerX : game.playerO;
 
+        // Es fundamental pasar el array mentions para que el @número funcione
         await this.reply(m.chat, `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: @${nextJid.split('@')[0]}\n_Escribe un número del 1 al 9._`, m, { mentions: [nextJid] });
         return true;
     },
@@ -77,8 +79,12 @@ const ticTacToeGame = {
 
         const boardStr = "╔═══╦═══╦═══╗\n║ ⬜ ║ ⬜ ║ ⬜ ║  (1-3)\n╠═══╬═══╬═══╣\n║ ⬜ ║ ⬜ ║ ⬜ ║  (4-6)\n╠═══╬═══╬═══╣\n║ ⬜ ║ ⬜ ║ ⬜ ║  (7-9)\n╚═══╩═══╩═══╝";
 
-        const textoInicio = `🎮 *TRES EN RAYA - INICIO*\n\n@${m.sender.split('@')[0]} (❌) vs @${opponent.split('@')[0]} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: @${m.sender.split('@')[0]}`;
+        const p1 = m.sender.split('@')[0];
+        const p2 = opponent.split('@')[0];
 
+        const textoInicio = `🎮 *TRES EN RAYA - INICIO*\n\n@${p1} (❌) vs @${p2} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: @${p1}`;
+
+        // Aquí pasamos ambos jugadores en la lista de menciones para que se activen en el texto
         return conn.reply(m.chat, textoInicio, m, { mentions: [m.sender, opponent] });
     }
 };
