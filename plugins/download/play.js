@@ -1,7 +1,7 @@
 import yts from 'yt-search';
 import fetch from 'node-fetch';
 
-const SYLPHY_API_KEY = "sylphy-jCQvxB8";
+const SYLPHY_API_KEY = process.env.KEY;
 
 const youtubeCommand = {
     name: 'youtube_play',
@@ -46,10 +46,7 @@ const youtubeCommand = {
                 const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
                 if (apiRes.status) {
                     downloadUrl = apiRes.result.dl_url;
-                } else {
-                    const fbRes = await fetch(`https://api-adonix.ultraplus.click/download/ytvideo?apikey=AdonixKeyvr85v01953&url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
-                    downloadUrl = fbRes.data?.url;
-                }
+                } 
             }
 
             if (!downloadUrl) throw new Error("ERR_NO_URL");
