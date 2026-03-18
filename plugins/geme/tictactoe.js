@@ -1,3 +1,4 @@
+
 const ticTacToeGame = {
     name: 'tictactoe',
     alias: ['ttt', 'x0', 'tresenraya'],
