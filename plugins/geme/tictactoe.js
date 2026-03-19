@@ -50,7 +50,7 @@ const ticTacToeGame = {
                 finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`;
                 await conn.sendMessage(m.chat, { 
                     text: finalMsg, 
-                    mentions: [winnerJid] 
+                    contextInfo: { mentionedJid: [winnerJid] } 
                 }, { quoted: m });
             }
             delete global.tttGames[m.chat];
@@ -63,7 +63,7 @@ const ticTacToeGame = {
 
         await conn.sendMessage(m.chat, { 
             text: nextText, 
-            mentions: [nextJid] 
+            contextInfo: { mentionedJid: [nextJid] } 
         }, { quoted: m });
 
         return true;
@@ -98,7 +98,7 @@ const ticTacToeGame = {
 
         return conn.sendMessage(m.chat, {
             text: textoInicio,
-            mentions: [m.sender, opponent]
+            contextInfo: { mentionedJid: [m.sender, opponent] }
         }, { quoted: m });
     }
 };
