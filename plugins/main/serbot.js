@@ -1,4 +1,4 @@
-import pino from 'pino'
+/*import pino from 'pino'
 import { Boom } from '@hapi/boom'
 import fs from 'fs'
 import path from 'path'
@@ -163,4 +163,4 @@ function setupSubBotEvents(sock, authFolder) {
             }
         } catch (e) {}
     })
-}
+}*/
