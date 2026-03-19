@@ -121,9 +121,14 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions);
 
 const originalSendMessage = global.conn.sendMessage;
+
+
+
 global.conn.sendMessage = async (jid, content, options = {}) => {
     const isTextEmpty = content.text && content.text.trim().length === 0;
-    const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll;
+    
+    const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll && !content.react;
+    
     if (isTextEmpty || isContentEmpty) {
         const stack = new Error().stack;
         const report = `⚠️ *DEBUG: MENSAJE VACÍO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
@@ -131,6 +136,9 @@ global.conn.sendMessage = async (jid, content, options = {}) => {
     }
     return originalSendMessage.apply(global.conn, [jid, content, options]);
 };
+
+
+
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
