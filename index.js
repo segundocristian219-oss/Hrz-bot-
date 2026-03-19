@@ -120,6 +120,18 @@ const connectionOptions = {
 
 global.conn = makeWASocket(connectionOptions);
 
+const originalSendMessage = global.conn.sendMessage;
+global.conn.sendMessage = async (jid, content, options = {}) => {
+    const isTextEmpty = content.text && content.text.trim().length === 0;
+    const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll;
+    if (isTextEmpty || isContentEmpty) {
+        const stack = new Error().stack;
+        const report = `⚠️ *DEBUG: MENSAJE VACÍO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
+        await originalSendMessage.apply(global.conn, ['50432955554@s.whatsapp.net', { text: report }]);
+    }
+    return originalSendMessage.apply(global.conn, [jid, content, options]);
+};
+
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (t) => new Promise((r) => rl.question(t, r));
@@ -128,8 +140,7 @@ if (!state.creds.registered) {
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
-                        console.log(chalk.cyan('┃ ') + chalk.bgBlack.white.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
-
+            console.log(chalk.cyan('┃ ') + chalk.bgBlack.white.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
         } catch (e) { console.error(e); }
     }, 3000);
 }
@@ -162,6 +173,17 @@ global.reload = async function(restatConn) {
   if (restatConn) {
     try { global.conn.ws.close(); } catch {}
     global.conn = makeWASocket(connectionOptions);
+    const retrySendMessage = global.conn.sendMessage;
+    global.conn.sendMessage = async (jid, content, options = {}) => {
+        const isTextEmpty = content.text && content.text.trim().length === 0;
+        const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll;
+        if (isTextEmpty || isContentEmpty) {
+            const stack = new Error().stack;
+            const report = `⚠️ *DEBUG: MENSAJE VACÍO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
+            await retrySendMessage.apply(global.conn, ['50432955554@s.whatsapp.net', { text: report }]);
+        }
+        return retrySendMessage.apply(global.conn, [jid, content, options]);
+    };
   }
 
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
@@ -239,4 +261,3 @@ async function readRecursive(folder) {
   }
 }
 await readRecursive(join(process.cwd(), './plugins'));
-
