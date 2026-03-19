@@ -93,12 +93,12 @@ const ticTacToeGame = {
 
         const p1 = m.sender.split('@')[0];
         const p2 = opponent.split('@')[0];
-
+const nextJid = game.turn === 'X' ? game.playerX : game.playerO;
         const textoInicio = `🎮 *TRES EN RAYA - INICIO*\n\n@${p1} (❌) vs @${p2} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: @${p1}`;
 
         return conn.sendMessage(m.chat, {
             text: textoInicio,
-            mentions: [m.sender, opponent]
+            mentions: [nextJid]
         }, { quoted: m });
     }
 };
