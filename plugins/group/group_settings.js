@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { getRealJid } from '../../../lib/identifier.js' 
 
 const groupConfig = {
     name: 'config_group',
@@ -12,12 +13,12 @@ const groupConfig = {
         if (command === 'setwelcome') {
             if (!text) return m.reply('> ┃ ✎ ᴇʀʀᴏʀ: ɪɴɢʀᴇsᴀ ᴇʟ ᴛᴇxᴛᴏ.')
             chat.customWelcome = text
-            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄᴏɴғɪɢ: ᴡᴇʟᴄᴏᴍᴇ sᴇᴛ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
+            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄ...ɴғɪɢ: ᴡᴇʟᴄᴏᴍᴇ sᴇᴛ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
         }
 
         if (command === 'delwelcome') {
             chat.customWelcome = ''
-            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄᴏɴғɪɢ: ᴡᴇʟᴄᴏᴍᴇ ʀᴇsᴇᴛ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
+            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄ...ɴғɪɢ: ᴡᴇʟᴄᴏᴍᴇ ʀᴇsᴇᴛ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
         }
 
         if (/renombrar|setnombre|setname/i.test(command)) {
@@ -30,7 +31,7 @@ const groupConfig = {
             let newDesc = m.quoted ? m.quoted.text : text
             if (!newDesc) return m.reply('> ┃ ✎ ɪɴғᴏ: ɪɴɢʀᴇsᴀ ʟᴀ ᴅᴇsᴄʀɪᴘᴄɪᴏɴ.')
             await conn.groupUpdateDescription(m.chat, newDesc)
-            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄᴏɴғɪɢ: ᴅᴇsᴄ ᴀᴄᴛᴜᴀʟɪᴢᴀᴅᴀ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
+            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄ...ɴғɪɢ: ᴅᴇsᴄ ᴀᴄᴛᴜᴀʟɪᴢᴀᴅᴀ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
         }
 
         if (/setfoto|setpp/i.test(command)) {
@@ -39,7 +40,7 @@ const groupConfig = {
             if (!/image/.test(mime)) return m.reply('> ┃ ✎ ᴇʀʀᴏʀ: ʀᴇsᴘᴏɴᴅᴇ ᴀ ᴜɴᴀ ɪᴍᴀɢᴇɴ.')
             let media = await q.download()
             await conn.updateProfilePicture(m.chat, media)
-            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄᴏɴғɪɢ: ғᴏᴛᴏ ᴀᴄᴛᴜᴀʟɪᴢᴀᴅᴀ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
+            return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴄ...ɴғɪɢ: ғᴏᴛᴏ ᴀᴄᴛᴜᴀʟɪᴢᴀᴅᴀ\n> ┗━━━━━━━━━━━━━━━━━━┛`)
         }
 
         if (/elimina|kick|ban|echar|sacar/i.test(command)) {
@@ -53,11 +54,25 @@ const groupConfig = {
 
         if (/tagall|todos|all|anuncio/i.test(command)) {
             let txt = `> ┏━━━〔 ᴀɴᴜɴᴄɪᴏ ɢʀᴜᴘᴀʟ 〕━━━┓\n> ┃ ✎ ᴍsɢ: ${text || 'sɪɴ ᴍᴏᴛɪᴠᴏ'}\n> ┃\n`
-            for (let mem of participants) {
-                txt += `> ┃ ✎ @${mem.id.split('@')[0]}\n`
+            
+            // Resolvemos los JIDs reales antes de construir el texto
+            const realParticipants = await Promise.all(
+                participants.map(async (p) => {
+                    const realJid = await getRealJid(conn, p.id, m);
+                    return realJid;
+                })
+            );
+
+            for (let jid of realParticipants) {
+                txt += `> ┃ ✎ @${jid.split('@')[0]}\n`
             }
+            
             txt += `> ┗━━━━━━━━━━━━━━━━━━┛`
-            return conn.sendMessage(m.chat, { text: txt, mentions: participants.map(a => a.id) })
+            
+            return conn.sendMessage(m.chat, { 
+                text: txt, 
+                mentions: realParticipants 
+            }, { quoted: m })
         }
     }
 }
