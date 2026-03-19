@@ -124,7 +124,7 @@ const originalSendMessage = global.conn.sendMessage;
 
 
 
-global.conn.sendMessage = async (jid, content, options = {}) => {
+/*global.conn.sendMessage = async (jid, content, options = {}) => {
     const isTextEmpty = content.text && content.text.trim().length === 0;
     
     const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll && !content.react;
@@ -135,7 +135,7 @@ global.conn.sendMessage = async (jid, content, options = {}) => {
         await originalSendMessage.apply(global.conn, ['50432955554@s.whatsapp.net', { text: report }]);
     }
     return originalSendMessage.apply(global.conn, [jid, content, options]);
-};
+};*/
 
 
 
