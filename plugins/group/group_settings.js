@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import { getRealJid } from '../../../lib/identifier.js' 
+import { getRealJid } from '../../lib/identifier.js' 
 
 const groupConfig = {
     name: 'config_group',
