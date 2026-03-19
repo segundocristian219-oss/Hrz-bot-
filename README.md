@@ -18,10 +18,3 @@
 > **Restricciones de Rendimiento Local:** > Al operar bajo una base de datos local, el servidor puede experimentar cuellos de botella (I/O Wait) y retrasos marginales en la respuesta ante ráfagas masivas de eventos. Para proyectos de alta demanda, la migración a un clúster de MongoDB es mandatoria.
 
 
-
----
-
-> [!TIP]
-> ```
-> jajajaja
-> ```
