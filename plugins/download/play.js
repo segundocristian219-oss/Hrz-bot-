@@ -40,7 +40,7 @@ const youtubeCommand = {
 
             let downloadUrl;
             if (isAudio) {
-                const apiRes = await fetch(`https://sylphy.xyz/download/ytdl?url=${encodeURIComponent(videoUrl)}&mode=audio&q=128&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
+                const apiRes = await fetch(`https://sylphy.xyz/download/v2/ytmp3?url=${encodeURIComponent(videoUrl)}&mode=audio&q=128&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
                 if (apiRes.status) downloadUrl = apiRes.result.dl_url;
             } else {
                 const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
