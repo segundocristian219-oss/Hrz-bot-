@@ -52,27 +52,32 @@ const groupConfig = {
             return m.reply(`> ┏━━━〔 sɪsᴛᴇᴍᴀ 〕━━━┓\n> ┃ ✎ ᴀᴄᴄɪᴏɴ: ᴜsᴜᴀʀɪᴏs ᴇʟɪᴍɪɴᴀᴅᴏs\n> ┗━━━━━━━━━━━━━━━━━━┛`)
         }
 
-                if (/tagall|todos|all|anuncio/i.test(command)) {
-            let txt = `> ┏━━━〔 ᴀɴᴜɴᴄɪᴏ ɢʀᴜᴘᴀʟ 〕━━━┓\n> ┃ ✎ ᴍsɢ: ${text || 'sɪɴ ᴍᴏᴛɪᴠᴏ'}\n> ┃\n`
+            
+            if (/tagall|todos|all|anuncio/i.test(command)) {
+    let txt = `> ┏━━━〔 ᴀɴᴜɴᴄɪᴏ ɢʀᴜᴘᴀʟ 〕━━━┓\n> ┃ ✎ ᴍsɢ: ${text || 'sɪɴ ᴍᴏᴛɪᴠᴏ'}\n> ┃\n`
 
-            const realParticipants = await Promise.all(
-                participants.map(async (p) => {
-                    return await getRealJid(conn, p.id, m);
-                })
-            );
+    const realParticipants = await Promise.all(
+        participants.map(async (p) => {
+            return await getRealJid(conn, p.id, m);
+        })
+    );
 
-            // Construimos el cuerpo del texto usando solo el número para el @
-            for (let jid of realParticipants) {
-                txt += `> ┃ ✎ @${jid.split('@')[0]}\n`
-            }
+    for (let jid of realParticipants) {
+        txt += `> ┃ ✎ @${jid.split('@')[0]}\n`
+    }
 
-            txt += `> ┗━━━━━━━━━━━━━━━━━━┛`
+    txt += `> ┗━━━━━━━━━━━━━━━━━━┛`
 
-            return conn.sendMessage(m.chat, { 
-                text: txt, 
-                mentions: realParticipants // Esto es lo que activa el "enlace" azul
-            }, { quoted: m })
-        }
+    return conn.sendMessage(m.chat, { 
+        text: txt, 
+        contextInfo: { 
+            mentionedJid: realParticipants,
+            groupMentions: [],
+            remoteJidAlt: m.chat
+        } 
+    }, { quoted: m })
+}
+
     }
 }
 
