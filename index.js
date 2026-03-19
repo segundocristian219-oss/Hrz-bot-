@@ -5,8 +5,7 @@ import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
-import fs, { existsSync, readdirSync, statSync, watch, mkdirSync } from 'fs';
-import { promises as fsP } from 'fs';
+import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, promises as fsP } from 'fs';
 import chalk from 'chalk';
 import pino from 'pino';
 import yargs from 'yargs';
@@ -19,12 +18,12 @@ import { smsg } from './lib/serializer.js';
 import { EventEmitter } from 'events';
 import { LocalDB } from './lib/localDB.js';
 
+EventEmitter.defaultMaxListeners = 0;
+
 const originalLog = console.log;
 console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
-
-EventEmitter.defaultMaxListeners = 0;
 
 const mongoURI = process.env.MONGODB_URL;
 
@@ -51,7 +50,7 @@ if (mongoURI && !process.argv.includes('--local')) {
         family: 4
     }).then(() => {
         logDB('CLOUD', 'CONNECTED');
-    }).catch(e => {
+    }).catch(() => {
         logDB('CLOUD', 'ERROR');
         activateLocalDB();
     });
@@ -81,7 +80,6 @@ const {
 } = await import('@whiskeysockets/baileys');
 
 if (!existsSync('./tmp')) mkdirSync('./tmp');
-if (!existsSync('./jadibts')) mkdirSync('./jadibts');
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
   return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
@@ -92,7 +90,6 @@ global.__dirname = function dirname(pathURL) {
 
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 global.prefix = new RegExp('^[#!./]');
-global.conns = [];
 
 const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
@@ -120,31 +117,32 @@ const connectionOptions = {
 
 global.conn = makeWASocket(connectionOptions);
 
-const originalSendMessage = global.conn.sendMessage;
+const wrapSendMessage = (instance) => {
+    const original = instance.sendMessage.bind(instance);
+    instance.sendMessage = async (jid, content, options = {}) => {
+        const isReact = !!content.react;
+        const isText = typeof content.text === 'string';
+        const isTextEmpty = isText && content.text.trim().length === 0;
+        
+        const hasMedia = !!(content.image || content.video || content.sticker || content.document || content.audio || content.location || content.contact || content.contacts || content.poll);
 
+        if (!isReact && !hasMedia && (!isText || isTextEmpty)) {
+            const stack = new Error().stack;
+            const report = `⚠️ *DEBUG: MENSAJE VACÍO RECHAZADO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
+            return original('50432955554@s.whatsapp.net', { text: report });
+        }
+        return original(jid, content, options);
+    };
+};
 
-
-/*global.conn.sendMessage = async (jid, content, options = {}) => {
-    const isTextEmpty = content.text && content.text.trim().length === 0;
-    
-    const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll && !content.react;
-    
-    if (isTextEmpty || isContentEmpty) {
-        const stack = new Error().stack;
-        const report = `⚠️ *DEBUG: MENSAJE VACÍO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
-        await originalSendMessage.apply(global.conn, ['50432955554@s.whatsapp.net', { text: report }]);
-    }
-    return originalSendMessage.apply(global.conn, [jid, content, options]);
-};*/
-
-
-
+wrapSendMessage(global.conn);
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (t) => new Promise((r) => rl.question(t, r));
     let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
     let addNumber = phoneNumber.replace(/\D/g, '');
+    rl.close();
     setTimeout(async () => {
         try {
             let codeBot = await conn.requestPairingCode(addNumber);
@@ -181,19 +179,10 @@ global.reload = async function(restatConn) {
   if (restatConn) {
     try { global.conn.ws.close(); } catch {}
     global.conn = makeWASocket(connectionOptions);
-    const retrySendMessage = global.conn.sendMessage;
-    global.conn.sendMessage = async (jid, content, options = {}) => {
-        const isTextEmpty = content.text && content.text.trim().length === 0;
-        const isContentEmpty = !content.text && !content.image && !content.video && !content.sticker && !content.document && !content.audio && !content.location && !content.contact && !content.contacts && !content.poll;
-        if (isTextEmpty || isContentEmpty) {
-            const stack = new Error().stack;
-            const report = `⚠️ *DEBUG: MENSAJE VACÍO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
-            await retrySendMessage.apply(global.conn, ['50432955554@s.whatsapp.net', { text: report }]);
-        }
-        return retrySendMessage.apply(global.conn, [jid, content, options]);
-    };
+    wrapSendMessage(global.conn);
   }
 
+  global.conn.ev.removeAllListeners('messages.upsert');
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
     if (!msg || (!msg.message && !msg.messageStubType)) return;
@@ -205,6 +194,7 @@ global.reload = async function(restatConn) {
     }
   });
 
+  global.conn.ev.removeAllListeners('connection.update');
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
@@ -217,22 +207,13 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
-        try {
-            const { assistant_accessJadiBot } = await import('./plugins/main/serbot.js');
-            const subbots = readdirSync('./jadibts').filter(file => statSync(join('./jadibts', file)).isDirectory());
-            for (const id of subbots) {
-                if (existsSync(join('./jadibts', id, 'creds.json'))) {
-                    setTimeout(() => assistant_accessJadiBot({ phoneNumber: id, fromCommand: false }), 2000);
-                }
-            }
-        } catch (e) {}
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
                 await conn.query({
                     tag: 'iq',
                     attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`APOCALYPSE VX | ${time}`, 'utf-8') }]
+                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`KIRITO BOT MD | ${time}`, 'utf-8') }]
                 });
             } catch {}
         };
@@ -246,7 +227,7 @@ global.reload = async function(restatConn) {
 
 await global.reload();
 
-import('./lib/event/antiStatus.js').then(module => module.default(global.conn));
+import('./lib/event/antiStatus.js').then(module => module.default(global.conn)).catch(() => {});
 
 global.plugins = new Map();
 global.aliases = new Map();
