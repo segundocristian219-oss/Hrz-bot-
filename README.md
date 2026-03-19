@@ -9,11 +9,6 @@
 </a>
 
 
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=cobalt" width="400" />
-</a>
-
-
 > [!IMPORTANT]
 > **Arquitectura de Datos y Escalabilidad:** > Este sistema está optimizado para el uso de **MongoDB™**. Se recomienda su implementación en entornos de producción para garantizar una latencia mínima, gestión eficiente de hilos y persistencia de datos de alto rendimiento.
 
