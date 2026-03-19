@@ -9,6 +9,6 @@
 </a>
 
 > [!warning]
-> *ARCHIVOS QUE NECESITAN UNA CLAVE DE ACCESO ÚNICO.*
->
-> [play/play2](plugins/download/play.js)
+> *El código fuente de esté sistema está adaptado para usar [MONGODB](https://www.mongodb.com) para que el sistema tenga un mejor rendimiento si no sabes cómo configurar una base de datos en [MONGODB](https://www.mongodb.com) no te preocupes el sistema está configurado para usar una base de datos por si no se configura [MONGODB](https://www.mongodb.com) 
+> [!note]
+> al usar la base de datos local tu servidor va a presentar retrasos mínimos 
