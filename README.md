@@ -170,8 +170,8 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
   <a href="https://github.com/eliac-d/kirito-Bot-MD/issues">
     <img src="https://img.shields.io/badge/ABRIR_CONTRIBUTION_ISSUE-222222?style=for-the-badge&logo=github&logoColor=white" />
   </a>
-  &nbsp;&nbsp;
-  <a href="https://dix.lat/channel">
+  
+  <a href="https://wa.me/50432955554">
     <img src="https://img.shields.io/badge/CONTACTAR_VÍA_WHATSAPP-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
   </a>
 </div>
