@@ -33,46 +33,87 @@ El sistema **Kazuto Kirigay ✰** está diseñado bajo una arquitectura de **aut
 
 ---
 
-## 🛠️ Stack Tecnológico & Arquitectura
-Diseñado para la eficiencia. El núcleo de **Kazuto Kirigay ✰** separa la lógica de negocio de la capa de datos para permitir una escalabilidad horizontal sin fricciones.
+<h2 align="center">🛠️ Stack Tecnológico & Arquitectura</h2>
 
-| Componente | Tecnología | Propósito |
-| :--- | :--- | :--- |
-| **Runtime** | ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) | Entorno de ejecución v20+ (LTS) |
-| **Protocolo** | ![Baileys](https://img.shields.io/badge/Baileys-FF4B4B?style=flat-square&logo=whatsapp&logoColor=white) | Multi-Device Socket Connection |
-| **Database** | ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white) | Persistencia y Auth en tiempo real |
-| **Estructura** | ![ESM](https://img.shields.io/badge/ES_Modules-F7DF1E?style=flat-square&logo=javascript&logoColor=black) | Arquitectura modular de alta velocidad |
-| **CDN/Media** | ![DixLat](https://img.shields.io/badge/Dix.lat-000000?style=flat-square&logo=fastapi&logoColor=white) | Optimización de activos y acortado |
+<p align="center">
+  El núcleo de <strong>Kazuto Kirigay ✰</strong> implementa una capa de abstracción que separa la lógica de negocio de la persistencia de datos, permitiendo una escalabilidad horizontal eficiente y una latencia de respuesta ultra-baja.
+</p>
+
+<table align="center">
+  <tr>
+    <th>Componente</th>
+    <th>Tecnología</th>
+    <th>Propósito Operativo</th>
+  </tr>
+  <tr>
+    <td><b>Runtime</b></td>
+    <td><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" /></td>
+    <td>Entorno de ejecución v20+ (LTS) de alto rendimiento.</td>
+  </tr>
+  <tr>
+    <td><b>Protocolo</b></td>
+    <td><img src="https://img.shields.io/badge/Baileys-FF4B4B?style=for-the-badge&logo=whatsapp&logoColor=white" /></td>
+    <td>Multi-Device Socket Connection (v6.x.x).</td>
+  </tr>
+  <tr>
+    <td><b>Database</b></td>
+    <td><img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" /></td>
+    <td>Gestión de usuarios y persistencia en tiempo real.</td>
+  </tr>
+  <tr>
+    <td><b>Estructura</b></td>
+    <td><img src="https://img.shields.io/badge/ES_Modules-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" /></td>
+    <td>Arquitectura asíncrona modular de baja latencia.</td>
+  </tr>
+  <tr>
+    <td><b>Media CDN</b></td>
+    <td><img src="https://img.shields.io/badge/Dix.lat-000000?style=for-the-badge&logo=fastapi&logoColor=white" /></td>
+    <td>Optimización de activos y ruteo de enlaces.</td>
+  </tr>
+</table>
 
 ---
 
-## 🚀 Despliegue Estratégico
+<h2 align="center">🚀 Despliegue Estratégico</h2>
 
-El despliegue está optimizado para entornos **headless**. Compatible con arquitecturas x64 y ARMv8.
+<p align="center">
+  Infraestructura optimizada para entornos <b>Headless</b>. Compatible con arquitecturas x64 y ARMv8 (Android/VPS).
+</p>
 
 ### 📱 Terminal Emulation (Termux)
-Ideal para entornos de desarrollo ágil y hosting ligero. Utiliza el binario oficial para evitar errores de compilación en librerías nativas:
+Para un despliegue ágil en dispositivos móviles, se recomienda el uso del binario oficial para evitar conflictos en la compilación de librerías nativas de cifrado.
 
-<a href="https://github.com/termux/termux-app/releases/latest/download/termux-app_universal.apk">
-  <img src="https://img.shields.io/badge/DESCARGAR_APK_OFICIAL-TERMUX-171717?style=for-the-badge&logo=android&logoColor=A4C639" />
-</a>
+<p align="left">
+  <a href="https://github.com/termux/termux-app/releases/latest/download/termux-app_universal.apk">
+    <img src="https://img.shields.io/badge/ADQUIRIR_TERMUX_APK-222222?style=for-the-badge&logo=android&logoColor=white&border=true" />
+  </a>
+</p>
 
-#### ⚡ Setup de Inicialización
-Copia y pega el siguiente bloque para configurar el entorno completo de forma automática:
+#### ⚡ Setup de Inicialización Automática
+Haz clic en el desplegable para visualizar los comandos de configuración del entorno:
 
 <details>
-<summary>🌐 Sincronización de repositorios y entorno (click ñ)</summary>
-```
+<summary><b>📂 VER COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
+<br>
+
+**1. Sincronización de dependencias globales**
+```bash
 pkg update && pkg upgrade -y && \
 pkg install git nodejs-lts ffmpeg imagemagick -y
-```
-**Despliegue del núcleo**
-```
-git clone https://github.com/eliac-d/kirito-Bot-MD
-cd kirito-Bot-MD
+
 ```
 
-**Instalación de dependencias y arranque*"
+**2. Clonación y despliegue del núcleo**
+
+```
+
+git clone [https://github.com/eliac-d/kirito-Bot-MD](https://github.com/eliac-d/kirito-Bot-MD)
+cd kirito-Bot-MD
+
+```
+
+**3. Inyección de módulos y arranque**
+
 ```
 npm install && npm start
 
@@ -81,9 +122,8 @@ npm install && npm start
 </details>
 
 > [!NOTE]
-Monitoreo de Procesos: Para despliegues en VPS, se recomienda el uso de PM2 para gestionar el ciclo de vida del proceso y asegurar el auto-reinicio ante excepciones no controladas.
+> Gestión de Procesos: En entornos de producción (VPS), es mandatorio el uso de PM2 para el monitoreo del ciclo de vida del bot, asegurando la resiliencia ante excepciones críticas y reinicios automáticos.
 
-
-
-
-
+<p align="center">
+<b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
+</p>
