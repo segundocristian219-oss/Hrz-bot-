@@ -143,7 +143,7 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <h2 align="center">🤝 Programa de Colaboración Estratégica</h2>
 
 <p align="center">
-  Buscamos ingenieros de software y entusiastas de la automatización que deseen contribuir al desarrollo del ecosistema <strong>Kirito</strong>. No buscamos "ayudantes", buscamos <b>colaboradores técnicos</b> con visión de escalabilidad.
+  Buscamos ingenieros de software y entusiastas de la automatización que deseen contribuir al desarrollo del ecosistema <strong>kirito-Bot MD</strong>. No buscamos "ayudantes", buscamos <b>colaboradores técnicos</b> con visión de escalabilidad.
 </p>
 
 <table align="center">
@@ -192,7 +192,7 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <br>
 <hr style="border: 1px solid #333;">
 <p align="center">
-  <sub>Propiedad intelectual de <b>Deylin Eliac</b> & <b>VOKER Platform</b> © 2026</sub>
+  <sub>Propiedad intelectual de <b>Deylin Eliac</b> © 2026</sub>
 </p>
 
 
