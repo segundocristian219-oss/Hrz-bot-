@@ -114,3 +114,22 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <p align="center">
 <b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
 </p>
+
+
+> [!TIP]
+> **1. Sincronización de dependencias globales**
+> ```bash
+> pkg update && pkg upgrade -y && \ 
+> pkg install git nodejs-lts ffmpeg imagemagick -y
+> ```
+> 
+> **2. Clonación y despliegue del núcleo**
+> ```
+> git clone https://github.com/eliac-d/kirito-Bot-MD
+> cd kirito-Bot-MD
+> ```
+> 
+> **3. Inyección de módulos y arranque**
+> ```
+> npm install && npm start
+> ```
