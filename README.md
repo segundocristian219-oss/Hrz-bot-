@@ -118,37 +118,20 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 
 
 <div align="center">
-  <hr>
-  <h3>💎 Apoya el Desarrollo de Kazuto Kirigay</h3>
-  <p>Si este sistema de automatización te ha sido útil, considera realizar una contribución para expandir nuestra infraestructura.</p>
+  <hr style="border: 1px solid #333;">
+  <br>
+  <img src="https://img.shields.io/badge/SPONSORSHIP_PROGRAM-PLATINUM_LEVEL-FFD700?style=for-the-badge&logo=github-sponsors&logoColor=black&labelColor=171717" height="35" />
+  <br><br>
+  <h3>💎 Impulsa el Ecosistema de Kazuto Kirigay</h3>
+  <p style="width: 80%; text-align: center; color: #888;">
+    Si este sistema de automatización te ha aportado valor, considera realizar una contribución estratégica. Tu apoyo directo financia el mantenimiento de nuestros clústeres de <b>MongoDB™ Atlas</b>, servidores de media en <b>dix.lat</b> y el desarrollo de nuevas funciones de IA de baja latencia.
+  </p>
+  <br>
   <a href="TU_LINK_DE_PAYPAL">
-    <img src="https://img.shields.io/badge/DONATE_TO_PROJECT-00457C?style=for-the-badge&logo=paypal&logoColor=white&labelColor=000000" height="40" />
+    <img src="https://img.shields.io/badge/CONTRIBUTE_VIA-PAYPAL-00457C?style=for-the-badge&logo=paypal&logoColor=white&labelColor=000000" height="45" />
   </a>
   <br><br>
-  <hr>
+  <p style="font-size: 0.9em; color: #555;"><i>"Mantenemos la red en línea gracias a contribuidores como tú." - Team VOKER</i></p>
+  <br>
+  <hr style="border: 1px solid #333;">
 </div>
-
-
-
-<tr>
-  <td><b>Sponsorship</b></td>
-  <td>
-    <a href="TU_LINK_DE_PAYPAL">
-      <img src="https://img.shields.io/badge/PAYPAL-00457C?style=flat-square&logo=paypal&logoColor=white" />
-    </a>
-  </td>
-  <td>Apoya el mantenimiento de los servidores de <b>VOKER Platform</b> y el desarrollo de nuevas funciones.</td>
-</tr>
-
-
-<p align="center">
-  <a href="TU_LINK_DE_PAYPAL">
-    <img src="https://img.shields.io/badge/APOYAR_PROYECTO-PAYPAL-111111?style=for-the-badge&logo=paypal&logoColor=0070BA&border=true" />
-  </a>
-</p>
-
-
-
-[![Donar con PayPal](https://img.shields.io/badge/Donar_vía-PayPal-003087?style=for-the-badge&logo=paypal&logoColor=white)](TU_LINK_DE_PAYPAL)
-
-
