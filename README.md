@@ -127,11 +127,11 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
     Si este sistema de automatización te ha aportado valor, considera realizar una contribución estratégica. Tu apoyo directo financia el mantenimiento de nuestros clústeres de <b>MongoDB™ Atlas</b>, servidores de media en <b>dix.lat</b> y el desarrollo de nuevas funciones de IA de baja latencia.
   </p>
   <br>
-  <a href="TU_LINK_DE_PAYPAL">
+  <a href="https://www.paypal.me/DeylinB">
     <img src="https://img.shields.io/badge/CONTRIBUTE_VIA-PAYPAL-00457C?style=for-the-badge&logo=paypal&logoColor=white&labelColor=000000" height="45" />
   </a>
   <br><br>
-  <p style="font-size: 0.9em; color: #555;"><i>"Mantenemos la red en línea gracias a contribuidores como tú." - Team VOKER</i></p>
+  <p style="font-size: 0.9em; color: #555;"><i>"Mantenemos la red en línea gracias a contribuidores como tú."</i></p>
   <br>
   <hr style="border: 1px solid #333;">
 </div>
