@@ -190,8 +190,8 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 
 <br>
 <p align="center">
- <a href="api.Dix.lat">
-  <img src="https://img.shields.io/badge/DIX_LAT-000000?style=flat-square&logo=visualstudiocode&logoColor=white" />
+ <a href="https://api.Dix.lat">
+  <img src="https://img.shields.io/badge/API_DIX_LAT-000000?style=flat-square&logo=visualstudiocode&logoColor=white" />
   &nbsp;&nbsp;&nbsp;
 </a>
   <a href="https://dix.lat/channel">
