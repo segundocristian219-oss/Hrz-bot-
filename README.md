@@ -89,7 +89,6 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <br>
 
 > [!TIP]
->
 > **1. Sincronización de dependencias globales**
 > ```bash
 > pkg update && pkg upgrade -y && \
