@@ -5,7 +5,7 @@
 </h1>
 
 <a href="https://github.com/eliac-d/kirito-Bot-MD">
-<img src="https://readme-stats-nine-eta.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=cobalt&show_owner=true" width="400" />
+<img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=cobalt&show_owner=true" width="400" />
 </a>
 
 
