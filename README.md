@@ -31,39 +31,56 @@ El sistema **Kazuto Kirigay ✰** está diseñado bajo una arquitectura de **aut
 
 ---
 
-## 🚀 Despliegue y Ejecución
+---
 
-El sistema es compatible con despliegues en **VPS (Ubuntu/Debian)**, **Vercel** (para APIs) y dispositivos móviles mediante **Termux**.
+## 🛠️ Stack Tecnológico & Arquitectura
+Diseñado para la eficiencia. El núcleo de **Kazuto Kirigay ✰** separa la lógica de negocio de la capa de datos para permitir una escalabilidad horizontal sin fricciones.
 
-### 📱 Ejecución en Termux (Android)
-Para garantizar la compatibilidad con las librerías de cifrado de WhatsApp, se recomienda usar la versión más reciente de Termux. Haz clic en el botón de abajo para descargar el APK oficial (Universal) directamente desde GitHub:
+| Componente | Tecnología | Propósito |
+| :--- | :--- | :--- |
+| **Runtime** | ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) | Entorno de ejecución v20+ (LTS) |
+| **Protocolo** | ![Baileys](https://img.shields.io/badge/Baileys-FF4B4B?style=flat-square&logo=whatsapp&logoColor=white) | Multi-Device Socket Connection |
+| **Database** | ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white) | Persistencia y Auth en tiempo real |
+| **Estructura** | ![ESM](https://img.shields.io/badge/ES_Modules-F7DF1E?style=flat-square&logo=javascript&logoColor=black) | Arquitectura modular de alta velocidad |
+| **CDN/Media** | ![DixLat](https://img.shields.io/badge/Dix.lat-000000?style=flat-square&logo=fastapi&logoColor=white) | Optimización de activos y acortado |
 
-[![Descargar Termux](https://img.shields.io/badge/DESCARGAR-TERMUX_APK-222222?style=for-the-badge&logo=android&logoColor=white)](https://github.com/termux/termux-app/releases/latest/download/termux-app_universal.apk)
+---
 
-#### Instrucciones de Instalación Rápida:
-Una vez instalado Termux, ejecuta los siguientes comandos para configurar el entorno de **Kazuto Kirigay**:
+## 🚀 Despliegue Estratégico
 
-```bash
-# Actualizar paquetes del sistema
-pkg update && pkg upgrade -y
+El despliegue está optimizado para entornos **headless**. Compatible con arquitecturas x64 y ARMv8.
 
-# Instalar dependencias esenciales
+### 📱 Terminal Emulation (Termux)
+Ideal para entornos de desarrollo ágil y hosting ligero. Utiliza el binario oficial para evitar errores de compilación en librerías nativas:
+
+<a href="https://github.com/termux/termux-app/releases/latest/download/termux-app_universal.apk">
+  <img src="https://img.shields.io/badge/DESCARGAR_APK_OFICIAL-TERMUX-171717?style=for-the-badge&logo=android&logoColor=A4C639" />
+</a>
+
+#### ⚡ Setup de Inicialización
+Copia y pega el siguiente bloque para configurar el entorno completo de forma automática:
+
+
+# Sincronización de repositorios y entorno
+```
+pkg update && pkg upgrade -y && \
 pkg install git nodejs-lts ffmpeg imagemagick -y
+```
+# Despliegue del núcleo
+```
+git clone https://github.com/eliac-d/kirito-Bot-MD
+cd kirito-Bot-MD
+```
 
-# Clonar el repositorio y entrar a la carpeta
-git clone [URL_DE_TU_REPOSITORIO]
-cd [NOMBRE_CARPETA]
-
-# Instalar módulos de Node.js
-npm install
-
-# Iniciar el sistema
-npm start
+# Instalación de dependencias y arranque
+```
+npm install && npm start
 
 ```
 
-> [!TIP]
-> Si planeas colaborar o necesitas ayuda técnica, revisa la sección de Issues o únete a nuestro canal oficial en [WHATSAPP](dix.lat/channel).
+> [!NOTE]
+Monitoreo de Procesos: Para despliegues en VPS, se recomienda el uso de PM2 para gestionar el ciclo de vida del proceso y asegurar el auto-reinicio ante excepciones no controladas.
+
 
 
 
