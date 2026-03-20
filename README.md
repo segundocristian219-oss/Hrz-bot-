@@ -25,7 +25,7 @@
 <h2 align="center">🛠️ Stack Tecnológico & Arquitectura</h2>
 
 <p align="center">
-  El núcleo de <strong>Kazuto Kirigay ✰</strong> implementa una capa de abstracción que separa la lógica de negocio de la persistencia de datos, permitiendo una escalabilidad horizontal eficiente y una latencia de respuesta ultra-baja.
+  El núcleo de <strong>kirito-Bot MD✰</strong> implementa una capa de abstracción que separa la lógica de negocio de la persistencia de datos, permitiendo una escalabilidad horizontal eficiente y una latencia de respuesta ultra-baja.
 </p>
 
 <table align="center">
@@ -135,4 +135,64 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <p align="center">
 <b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
 </p>
+
+
+
+---
+
+<h2 align="center">🤝 Programa de Colaboración Estratégica</h2>
+
+<p align="center">
+  Buscamos ingenieros de software y entusiastas de la automatización que deseen contribuir al desarrollo del ecosistema <strong>Kirito</strong>. No buscamos "ayudantes", buscamos <b>colaboradores técnicos</b> con visión de escalabilidad.
+</p>
+
+<table align="center">
+  <tr>
+    <th>Rol</th>
+    <th>Stack Requerido</th>
+    <th>Objetivo</th>
+  </tr>
+  <tr>
+    <td><b>Core Developer</b></td>
+    <td>Node.js / Baileys / ESM</td>
+    <td>Optimización del kernel y gestión de WebSockets.</td>
+  </tr>
+  <tr>
+    <td><b>Data Engineer</b></td>
+    <td>MongoDB / Supabase</td>
+    <td>Arquitectura de esquemas y eficiencia en persistencia.</td>
+  </tr>
+  <tr>
+    <td><b>Cloud Architect</b></td>
+    <td>Docker / VPS / PM2</td>
+    <td>Despliegue distribuido y monitoreo de procesos.</td>
+  </tr>
+</table>
+
+<br>
+
+<div align="center">
+  <p><b>¿Cómo formar parte del equipo?</b></p>
+  <p style="color: #888;">Si tienes experiencia en el stack mencionado y quieres dejar tu huella en un sistema con tráfico real:</p>
+  
+  <a href="https://github.com/eliac-d/kirito-Bot-MD/issues">
+    <img src="https://img.shields.io/badge/ABRIR_CONTRIBUTION_ISSUE-222222?style=for-the-badge&logo=github&logoColor=white" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://dix.lat/channel">
+    <img src="https://img.shields.io/badge/CONTACTAR_VÍA_WHATSAPP-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
+  </a>
+</div>
+
+<br>
+
+> [!TIP]
+> **Open Source Mindset:** Todas las contribuciones aceptadas serán debidamente acreditadas en la sección de `Contributors`. Valoramos el código limpio, sin comentarios innecesarios y estructurado bajo los estándares de **ES Modules**.
+
+<br>
+<hr style="border: 1px solid #333;">
+<p align="center">
+  <sub>Propiedad intelectual de <b>Deylin Eliac</b> & <b>VOKER Platform</b> © 2026</sub>
+</p>
+
 
