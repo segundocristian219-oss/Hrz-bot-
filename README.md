@@ -84,8 +84,8 @@ Para un despliegue ágil en dispositivos móviles, se recomienda el uso del bina
 #### ⚡ Setup de Inicialización Automática
 Haz clic en el desplegable para visualizar los comandos de configuración del entorno:
 
-<summary><b>📂 VER COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
-
+<summary><b>📂 COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
+<br>
 > [!TIP]
 > **1. Sincronización de dependencias globales**
 > ```bash
