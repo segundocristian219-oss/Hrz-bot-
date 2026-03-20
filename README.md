@@ -45,9 +45,12 @@
     <td>Multi-Device Socket Connection (v6.x.x).</td>
   </tr>
   <tr>
-    <td><b>Database</b></td>
-    <td><img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" /></td>
-    <td>Gestión de usuarios y persistencia en tiempo real.</td>
+    <td><b>Database (Hybrid)</b></td>
+    <td>
+      <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
+      <img src="https://img.shields.io/badge/LocalDB-555555?style=for-the-badge&logo=sqlite&logoColor=white" />
+    </td>
+    <td>Arquitectura híbrida: Detecta automáticamente <b>MongoDB™ Atlas</b> o activa <b>LocalDB</b> como fallback persistente.</td>
   </tr>
   <tr>
     <td><b>Estructura</b></td>
