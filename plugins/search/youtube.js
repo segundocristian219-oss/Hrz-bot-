@@ -2,7 +2,7 @@ import yts from 'yt-search';
 
 const ytSearchCommand = {
     name: 'ytsearch',
-    alias: ['yts', 'buscar'],
+    alias: ['yts'],
     category: 'search',
     run: async (m, { conn, text, command }) => {
         if (!text) return m.reply(`❯❯ 𝗨𝗦𝗢 𝗜𝗡𝗖𝗢𝗥𝗥𝗘𝗖𝗧𝗢\n\n指令: .${command} [término]`);
