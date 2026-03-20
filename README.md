@@ -110,11 +110,6 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 > [!NOTE]
 > Gestión de Procesos: En entornos de producción (VPS), es mandatorio el uso de PM2 para el monitoreo del ciclo de vida del bot, asegurando la resiliencia ante excepciones críticas y reinicios automáticos.
 
----
-
-<p align="center">
-<b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
-</p>
 
 
 <div align="center">
@@ -135,3 +130,9 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
   <br>
   <hr style="border: 1px solid #333;">
 </div>
+
+
+<p align="center">
+<b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
+</p>
+
