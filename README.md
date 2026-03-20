@@ -190,8 +190,10 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 
 <br>
 <p align="center">
+ <a href="https://dix.lat/channel">
   <img src="https://img.shields.io/badge/VOKER_Platform-000000?style=flat-square&logo=visualstudiocode&logoColor=white" />
   &nbsp;&nbsp;&nbsp;
+</a>
   <a href="https://dix.lat/channel">
     <img src="https://img.shields.io/badge/Official_Channel-25D366?style=flat-square&logo=whatsapp&logoColor=white" />
   </a>
