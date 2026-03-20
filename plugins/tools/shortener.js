@@ -22,12 +22,12 @@ const shortCommand = {
 
             if (json.status) {
                 const shortUrl = `${json.url}`;
-                const shortstats = `${json.stats}`;
+                const shortqr = `${json.qr}`;
 
                 let txt = `> 🔗 *ᴇɴʟᴀᴄᴇ ᴀᴄᴏʀᴛᴀᴅᴏ*\n\n`;
                 txt += `> ✧ *ᴏʀɪɢɪɴᴀʟ:* ${text}\n`;
                 txt += `> ✧ *ᴄᴏʀᴛᴏ:* ${shortUrl}\n\n`;
-                txt += `> ✧ *sᴛᴀᴛs:* ${shortstats}\n\n`;
+                txt += `> ✧ *ǫʀ:* ${shortqr}\n\n`;
                 txt += `> ☁️ *ɪɴғᴏ:* Developed by Voker platform.`;
 
                 await m.reply(txt);
