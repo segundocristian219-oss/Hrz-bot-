@@ -86,7 +86,6 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 
 <details>
 <summary><b>📂 VER COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
-<br>
 
 > [!TIP]
 > **1. Sincronización de dependencias globales**
