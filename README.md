@@ -132,14 +132,6 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 </div>
 
 
-<p align="center">
-<b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
-</p>
-
-
-
----
-
 <h2 align="center">🤝 Programa de Colaboración Estratégica</h2>
 
 <p align="center">
@@ -196,3 +188,12 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 </p>
 
 
+<br>
+<p align="center">
+  <img src="https://img.shields.io/badge/VOKER_Platform-000000?style=flat-square&logo=visualstudiocode&logoColor=white" />
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://dix.lat/channel">
+    <img src="https://img.shields.io/badge/Official_Channel-25D366?style=flat-square&logo=whatsapp&logoColor=white" />
+  </a>
+</p>
+<br>
