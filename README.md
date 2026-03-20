@@ -87,6 +87,7 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <details>
 <summary><b>📂 VER COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
 
+<div>
 > [!TIP]
 > **1. Sincronización de dependencias globales**
 > ```bash
@@ -104,6 +105,8 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 > ```
 > npm install && npm start
 > ```
+
+</div>
 
 </details>
 
