@@ -105,12 +105,50 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 > npm install && npm start
 > ```
 
+---
 
 > [!NOTE]
 > Gestión de Procesos: En entornos de producción (VPS), es mandatorio el uso de PM2 para el monitoreo del ciclo de vida del bot, asegurando la resiliencia ante excepciones críticas y reinicios automáticos.
 
+---
+
 <p align="center">
 <b>© 2026 Deylin Elíac | <a href="https://www.google.com/search?q=https://dix.lat/channel">Official Channel</a></b>
 </p>
+
+
+<div align="center">
+  <hr>
+  <h3>💎 Apoya el Desarrollo de Kazuto Kirigay</h3>
+  <p>Si este sistema de automatización te ha sido útil, considera realizar una contribución para expandir nuestra infraestructura.</p>
+  <a href="TU_LINK_DE_PAYPAL">
+    <img src="https://img.shields.io/badge/DONATE_TO_PROJECT-00457C?style=for-the-badge&logo=paypal&logoColor=white&labelColor=000000" height="40" />
+  </a>
+  <br><br>
+  <hr>
+</div>
+
+
+
+<tr>
+  <td><b>Sponsorship</b></td>
+  <td>
+    <a href="TU_LINK_DE_PAYPAL">
+      <img src="https://img.shields.io/badge/PAYPAL-00457C?style=flat-square&logo=paypal&logoColor=white" />
+    </a>
+  </td>
+  <td>Apoya el mantenimiento de los servidores de <b>VOKER Platform</b> y el desarrollo de nuevas funciones.</td>
+</tr>
+
+
+<p align="center">
+  <a href="TU_LINK_DE_PAYPAL">
+    <img src="https://img.shields.io/badge/APOYAR_PROYECTO-PAYPAL-111111?style=for-the-badge&logo=paypal&logoColor=0070BA&border=true" />
+  </a>
+</p>
+
+
+
+[![Donar con PayPal](https://img.shields.io/badge/Donar_vía-PayPal-003087?style=for-the-badge&logo=paypal&logoColor=white)](TU_LINK_DE_PAYPAL)
 
 
