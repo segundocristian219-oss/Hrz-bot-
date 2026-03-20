@@ -88,28 +88,30 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 <summary><b>📂 VER COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
 <br>
 
-**1. Sincronización de dependencias globales**
-```bash
-pkg update && pkg upgrade -y && \
-pkg install git nodejs-lts ffmpeg imagemagick -y
-
-```
-
-**2. Clonación y despliegue del núcleo**
-
-```
-
-git clone [https://github.com/eliac-d/kirito-Bot-MD](https://github.com/eliac-d/kirito-Bot-MD)
-cd kirito-Bot-MD
-
-```
-
-**3. Inyección de módulos y arranque**
-
-```
-npm install && npm start
-
-```
+> [!TIP]
+>
+> **1. Sincronización de dependencias globales**
+> ```bash
+> pkg update && pkg upgrade -y && \
+> pkg install git nodejs-lts ffmpeg imagemagick -y
+>
+> ```
+> 
+> **2. Clonación y despliegue del núcleo**
+>
+> ```
+> 
+> git clone https://github.com/eliac-d/kirito-Bot-MD
+> cd kirito-Bot-MD
+> 
+> ```
+> 
+> **3. Inyección de módulos y arranque**
+>
+> ```
+> npm install && npm start
+>
+> ```
 
 </details>
 
