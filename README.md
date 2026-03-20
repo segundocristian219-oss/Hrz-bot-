@@ -84,10 +84,7 @@ Para un despliegue ágil en dispositivos móviles, se recomienda el uso del bina
 #### ⚡ Setup de Inicialización Automática
 Haz clic en el desplegable para visualizar los comandos de configuración del entorno:
 
-<details>
 <summary><b>📂 VER COMANDOS DE INSTALACIÓN (TERMUX/VPS)</b></summary>
-
-<div>
 
 > [!TIP]
 > **1. Sincronización de dependencias globales**
@@ -107,9 +104,6 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 > npm install && npm start
 > ```
 
-</div>
-
-</details>
 
 > [!NOTE]
 > Gestión de Procesos: En entornos de producción (VPS), es mandatorio el uso de PM2 para el monitoreo del ciclo de vida del bot, asegurando la resiliencia ante excepciones críticas y reinicios automáticos.
@@ -119,20 +113,3 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 </p>
 
 
-> [!TIP]
-> **1. Sincronización de dependencias globales**
-> ```bash
-> pkg update && pkg upgrade -y && \ 
-> pkg install git nodejs-lts ffmpeg imagemagick -y
-> ```
-> 
-> **2. Clonación y despliegue del núcleo**
-> ```
-> git clone https://github.com/eliac-d/kirito-Bot-MD
-> cd kirito-Bot-MD
-> ```
-> 
-> **3. Inyección de módulos y arranque**
-> ```
-> npm install && npm start
-> ```
