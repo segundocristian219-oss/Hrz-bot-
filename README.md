@@ -60,23 +60,25 @@ Ideal para entornos de desarrollo ágil y hosting ligero. Utiliza el binario ofi
 #### ⚡ Setup de Inicialización
 Copia y pega el siguiente bloque para configurar el entorno completo de forma automática:
 
-
-# Sincronización de repositorios y entorno
+<details>
+<summary>🌐 Sincronización de repositorios y entorno (click ñ)</summary>
 ```
 pkg update && pkg upgrade -y && \
 pkg install git nodejs-lts ffmpeg imagemagick -y
 ```
-# Despliegue del núcleo
+**Despliegue del núcleo**
 ```
 git clone https://github.com/eliac-d/kirito-Bot-MD
 cd kirito-Bot-MD
 ```
 
-# Instalación de dependencias y arranque
+**Instalación de dependencias y arranque*"
 ```
 npm install && npm start
 
 ```
+
+</details>
 
 > [!NOTE]
 Monitoreo de Procesos: Para despliegues en VPS, se recomienda el uso de PM2 para gestionar el ciclo de vida del proceso y asegurar el auto-reinicio ante excepciones no controladas.
