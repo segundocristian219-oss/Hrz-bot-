@@ -18,18 +18,7 @@
 > [!WARNING]
 > **Restricciones de Rendimiento Local:** > Al operar bajo una base de datos local, el servidor puede experimentar cuellos de botella (I/O Wait) y retrasos marginales en la respuesta ante ráfagas masivas de eventos. Para proyectos de alta demanda, la migración a un clúster de MongoDB es mandatoria.
 
----
 
-## 🛠️ Tecnologías y Stack
-El sistema **Kazuto Kirigay ✰** está diseñado bajo una arquitectura de **automatización modular**, priorizando la velocidad de respuesta y la estabilidad de la conexión en entornos de alta demanda.
-
-* **Runtime:** [Node.js](https://nodejs.org/) (v20+)
-* **Base de Datos:** [Supabase](https://supabase.com/) (Gestión de usuarios y persistencia en tiempo real).
-* **Librería Core:** [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys) (Protocolo Multi-Device).
-* **Arquitectura:** **ES Modules (ESM)** con sistema de **Command Map** para un ruteo de funciones de baja latencia.
-* **Servicios Externos:** Integración nativa con **[dix.lat](https://dix.lat)** para optimización de media y acortamiento de enlaces.
-
----
 
 ---
 
