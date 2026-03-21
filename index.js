@@ -21,6 +21,20 @@ import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
 
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+process.stdout.write = (chunk, encoding, callback) => {
+    const msg = typeof chunk === 'string' ? chunk : chunk.toString();
+    if (msg.includes('SessionEntry') || msg.includes('currentRatchet') || msg.includes('chainKey') || msg.includes('messageKeys')) return true;
+    return originalStdoutWrite(chunk, encoding, callback);
+};
+
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+process.stderr.write = (chunk, encoding, callback) => {
+    const msg = typeof chunk === 'string' ? chunk : chunk.toString();
+    if (msg.includes('SessionEntry') || msg.includes('currentRatchet') || msg.includes('chainKey') || msg.includes('messageKeys')) return true;
+    return originalStderrWrite(chunk, encoding, callback);
+};
+
 const silentLogger = pino({ 
     level: 'silent',
     base: null,
@@ -28,11 +42,7 @@ const silentLogger = pino({
 });
 
 const originalLog = console.log;
-console.log = (...args) => {
-    const msg = args.join(' ');
-    if (msg.includes('SessionEntry') || msg.includes('currentRatchet') || msg.includes('chainKey')) return;
-    originalLog.apply(console, [chalk.cyan('┃'), ...args]);
-};
+console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
 
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
