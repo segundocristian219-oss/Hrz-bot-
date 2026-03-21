@@ -17,6 +17,7 @@ import mongoose from 'mongoose';
 import { smsg } from './lib/serializer.js';
 import { EventEmitter } from 'events';
 import { LocalDB } from './lib/localDB.js';
+import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
 
@@ -99,12 +100,12 @@ global.groupCache = new Map();
 
 const connectionOptions = {
   version,
-  logger: pino({ level: 'fatal' }), 
+  logger: pino({ level: 'silent' }), 
   printQRInTerminal: false,
   browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" })), 
+    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
   },
   markOnlineOnConnect: true,
   syncFullHistory: false,
@@ -123,7 +124,6 @@ const wrapSendMessage = (instance) => {
         const isReact = !!content.react;
         const isText = typeof content.text === 'string';
         const isTextEmpty = isText && content.text.trim().length === 0;
-        
         const hasMedia = !!(content.image || content.video || content.sticker || content.document || content.audio || content.location || content.contact || content.contacts || content.poll);
 
         if (!isReact && !hasMedia && (!isText || isTextEmpty)) {
@@ -198,9 +198,16 @@ global.reload = async function(restatConn) {
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
-        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        if (reason !== DisconnectReason.loggedOut) setTimeout(() => global.reload(true), 3000);
-        else process.exit(1);
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
+        if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
+            setTimeout(() => global.reload(true), 3000);
+        } else if (reason === DisconnectReason.loggedOut || reason === DisconnectReason.forbidden) {
+            console.error(chalk.red(`┃ STATUS: LOGGED OUT - ELIMINANDO SESIÓN`));
+            exec(`rm -rf ${sessionPath}/*`);
+            process.exit(1);
+        } else {
+            setTimeout(() => global.reload(true), 5000);
+        }
     }
     if (connection === 'open') {
         global.botNumber = conn.user.id;
@@ -250,3 +257,15 @@ async function readRecursive(folder) {
   }
 }
 await readRecursive(join(process.cwd(), './plugins'));
+
+process.on('uncaughtException', (err) => {
+  const msg = err?.message || '';
+  if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
+  console.error(chalk.red('[uncaughtException]'), msg.slice(0, 120));
+});
+
+process.on('unhandledRejection', (reason) => {
+  const msg = String(reason?.message || reason || '');
+  if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
+  console.error(chalk.red('[unhandledRejection]'), msg.slice(0, 120));
+});
