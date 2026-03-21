@@ -61,7 +61,7 @@ global.url_api = conf.api.url
 global.key = conf.api.key
 global.sessions = conf.sessions.main
 global.jadi = conf.sessions.sub
-global.ch = { ch1: conf.social.channel }
+global.ch = conf.social.channel
 global.rmr = more.repeat(850)
 global.name = () => global.botNames[Math.floor(Math.random() * global.botNames.length)]
 global.img = () => global.botImages[Math.floor(Math.random() * global.botImages.length)]
