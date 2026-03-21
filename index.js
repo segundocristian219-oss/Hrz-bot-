@@ -1,6 +1,30 @@
 import 'dotenv/config';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
+
+const blockKeywords = [
+    'SessionEntry', 'ratchetKey', 'chainKey', 'senderKey', 
+    'aliceBaseKey', 'bobBaseKey', 'currentRatchet', 
+    'messageKeys', 'nextHeader', 'index', 'ratchet',
+    'closing session', 'Closing session'
+];
+
+const filterOutput = (chunk, originalWrite, encoding, callback) => {
+    try {
+        const msg = chunk.toString();
+        if (blockKeywords.some(k => msg.includes(k))) return true;
+        return originalWrite(chunk, encoding, callback);
+    } catch {
+        return originalWrite(chunk, encoding, callback);
+    }
+};
+
+const stdoutWrite = process.stdout.write.bind(process.stdout);
+process.stdout.write = (chunk, encoding, callback) => filterOutput(chunk, stdoutWrite, encoding, callback);
+
+const stderrWrite = process.stderr.write.bind(process.stderr);
+process.stderr.write = (chunk, encoding, callback) => filterOutput(chunk, stderrWrite, encoding, callback);
+
 import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -20,20 +44,6 @@ import { LocalDB } from './lib/localDB.js';
 import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
-
-const originalStdoutWrite = process.stdout.write.bind(process.stdout);
-process.stdout.write = (chunk, encoding, callback) => {
-    const msg = typeof chunk === 'string' ? chunk : chunk.toString();
-    if (msg.includes('SessionEntry') || msg.includes('currentRatchet') || msg.includes('chainKey') || msg.includes('messageKeys')) return true;
-    return originalStdoutWrite(chunk, encoding, callback);
-};
-
-const originalStderrWrite = process.stderr.write.bind(process.stderr);
-process.stderr.write = (chunk, encoding, callback) => {
-    const msg = typeof chunk === 'string' ? chunk : chunk.toString();
-    if (msg.includes('SessionEntry') || msg.includes('currentRatchet') || msg.includes('chainKey') || msg.includes('messageKeys')) return true;
-    return originalStderrWrite(chunk, encoding, callback);
-};
 
 const silentLogger = pino({ 
     level: 'silent',
