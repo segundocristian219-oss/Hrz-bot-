@@ -21,8 +21,19 @@ import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
 
+const silentLogger = pino({ 
+    level: 'silent',
+    base: null,
+    serializers: { err: () => {}, res: () => {}, req: () => {} }
+});
+
 const originalLog = console.log;
-console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
+console.log = (...args) => {
+    const msg = args.join(' ');
+    if (msg.includes('SessionEntry') || msg.includes('currentRatchet') || msg.includes('chainKey')) return;
+    originalLog.apply(console, [chalk.cyan('┃'), ...args]);
+};
+
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
 
@@ -100,12 +111,12 @@ global.groupCache = new Map();
 
 const connectionOptions = {
   version,
-  logger: pino({ level: 'silent' }), 
+  logger: silentLogger, 
   printQRInTerminal: false,
   browser: Browsers.ubuntu("Chrome"),
   auth: {
     creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })), 
+    keys: makeCacheableSignalKeyStore(state.keys, silentLogger), 
   },
   markOnlineOnConnect: true,
   syncFullHistory: false,
@@ -194,12 +205,12 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
-        
+
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
                 await loadSubBots(global.conn);
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }, 5000);
 
         const updateStatus = async () => {
@@ -263,11 +274,9 @@ await readRecursive(join(process.cwd(), './plugins'));
 process.on('uncaughtException', (err) => {
   const msg = err?.message || '';
   if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
-  console.error(chalk.red('[uncaughtException]'), msg.slice(0, 120));
 });
 
 process.on('unhandledRejection', (reason) => {
   const msg = String(reason?.message || reason || '');
   if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
-  console.error(chalk.red('[unhandledRejection]'), msg.slice(0, 120));
 });
