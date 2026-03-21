@@ -4,14 +4,15 @@ const treasureGame = {
     name: 'busqueda',
     alias: ['tesoro', 'excavar', 'mapa'],
     category: 'game',
-    async before(m) {
+    async before(m, { conn }) {
         const txt = (m.text || "").trim().toUpperCase();
         if (!/^[A-E][1-5]$/.test(txt) || m.isBaileys || m.fromMe) return false;
 
         global.treasureGames = global.treasureGames || {};
-        if (!global.treasureGames[m.chat]) return false;
+        const gameId = `${m.chat}-${m.sender}`;
+        if (!global.treasureGames[gameId]) return false;
 
-        const game = global.treasureGames[m.chat];
+        const game = global.treasureGames[gameId];
         if (game.explored.includes(txt)) {
             await m.react("❓");
             return true;
@@ -32,8 +33,11 @@ const treasureGame = {
         if (txt === game.target) {
             game.board[y][x] = '💎';
             await m.react("💰");
-            await this.reply(m.chat, `🎊 ¡@${m.sender.split('@')[0]} ENCONTRASTE EL TESORO EN *${game.target}*!\n\n${renderBoard(game.board)}`, m, { mentions: [m.sender] });
-            delete global.treasureGames[m.chat];
+            await conn.sendMessage(m.chat, {
+                text: `🎊 ¡@${m.sender.split('@')[0]} ENCONTRASTE EL TESORO EN *${game.target}*!\n\n${renderBoard(game.board)}`,
+                contextInfo: { mentionedJid: [m.sender] }
+            }, { quoted: m });
+            delete global.treasureGames[gameId];
             return true;
         } else {
             game.board[y][x] = '🕳️';
@@ -43,24 +47,35 @@ const treasureGame = {
                 const tx = game.target.charCodeAt(0) - 65;
                 const ty = parseInt(game.target[1]) - 1;
                 game.board[ty][tx] = '💎';
-                await this.reply(m.chat, `💀 *GAME OVER*\n\nSe agotaron los intentos. El tesoro estaba en *${game.target}*.\n\n${renderBoard(game.board)}`, m);
-                delete global.treasureGames[m.chat];
+                await conn.sendMessage(m.chat, {
+                    text: `💀 *GAME OVER*\n\nSe agotaron los intentos, @${m.sender.split('@')[0]}.\nEl tesoro estaba en *${game.target}*.\n\n${renderBoard(game.board)}`,
+                    contextInfo: { mentionedJid: [m.sender] }
+                }, { quoted: m });
+                delete global.treasureGames[gameId];
                 return true;
             }
 
-            await this.reply(m.chat, `🕳️ Nada por aquí... (Intento ${game.attempts}/5)\n\n${renderBoard(game.board)}\n\nSigue excavando, ejemplo: *C3*`, m);
+            await conn.sendMessage(m.chat, {
+                text: `🕳️ Nada por aquí, @${m.sender.split('@')[0]}... (Intento ${game.attempts}/5)\n\n${renderBoard(game.board)}\n\nSigue excavando, ejemplo: *C3*`,
+                contextInfo: { mentionedJid: [m.sender] }
+            }, { quoted: m });
             return true;
         }
     },
     run: async (m, { conn }) => {
         global.treasureGames = global.treasureGames || {};
-        if (global.treasureGames[m.chat]) return conn.reply(m.chat, `⚠️ Ya hay una búsqueda en curso.`, m);
+        const gameId = `${m.chat}-${m.sender}`;
+        
+        if (global.treasureGames[gameId]) return conn.sendMessage(m.chat, {
+            text: `⚠️ Ya tienes una búsqueda en curso, @${m.sender.split('@')[0]}.`,
+            contextInfo: { mentionedJid: [m.sender] }
+        }, { quoted: m });
 
         const letras = ['A', 'B', 'C', 'D', 'E'];
         const target = letras[Math.floor(Math.random() * 5)] + (Math.floor(Math.random() * 5) + 1);
         const board = Array(5).fill().map(() => Array(5).fill('🟩'));
 
-        global.treasureGames[m.chat] = {
+        global.treasureGames[gameId] = {
             target,
             board,
             explored: [],
@@ -69,7 +84,10 @@ const treasureGame = {
 
         const initialMap = "      A.    B.    C.     D.     E\n" + board.map((row, i) => `${i + 1}   ${row.join('  ')}`).join('\n');
 
-        return conn.reply(m.chat, `🗺️ *BÚSQUEDA DEL TESORO*\n\nHay un botín oculto en este mapa de 5x5.\n\n${initialMap}\n\nEscribe una coordenada para excavar:\n(De la *A1* a la *E5*)\n\n_Tienes 5 intentos entre todos._`, m);
+        return conn.sendMessage(m.chat, {
+            text: `🗺️ *BÚSQUEDA DEL TESORO PERSONAL*\n\nHola @${m.sender.split('@')[0]}, hay un botín oculto aquí:\n\n${initialMap}\n\nEscribe una coordenada (A1-E5):\n_Solo tú puedes excavar. Tienes 5 intentos._`,
+            contextInfo: { mentionedJid: [m.sender] }
+        }, { quoted: m });
     }
 };
 
