@@ -201,7 +201,7 @@ const url = 'https://dix.lat/channel';
                     forwardingScore: 1, 
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
-                        newsletterJid: channelid,
+                        newsletterJid: ch,
                         serverMessageId: 100,
                         newsletterName: name()
                     }
