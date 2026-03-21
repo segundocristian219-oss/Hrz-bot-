@@ -196,7 +196,16 @@ const url = 'https://dix.lat/channel';
             await conn.sendMessage(m.chat, {
                 image: imgBuffer,
                 caption: menuText,
-                mentions: [m.sender]
+                  contextInfo: {
+                    mentions: [m.sender],
+                    forwardingScore: 1, 
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: channelid,
+                        serverMessageId: 100,
+                        newsletterName: name()
+                    }
+                }
             }, { quoted: m });
 
             await m.react('🍃');
