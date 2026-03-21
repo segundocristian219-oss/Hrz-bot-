@@ -185,7 +185,7 @@ const menuCommand = {
                 menuText += `└───────────────\n\n`; 
             });
 
-                            menuText += `> © Powered by VOKER Platform.`;
+                            menuText += `> © Powered by ${developer}.`;
 
           
             const { data: imgBuffer } = await conn.getFile(global.img2());
@@ -193,20 +193,23 @@ const url = 'https://dix.lat/channel';
 
             
 
-            await conn.sendMessage(m.chat, {
-                image: imgBuffer,
-                caption: menuText,
-                  contextInfo: {
-                    mentions: [m.sender],
-                    forwardingScore: 1, 
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: ch,
-                        serverMessageId: 100,
-                        newsletterName: name()
-                    }
-                }
-            }, { quoted: m });
+            
+
+await conn.sendMessage(m.chat, {
+    image: imgBuffer,
+    caption: menuText,
+    contextInfo: {
+        mentions: [m.sender], 
+        forwardingScore: 1,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: ch,
+            serverMessageId: 100,
+            newsletterName: name()
+        }
+    }
+}, { quoted: m });
+
 
             await m.react('🍃');
 
