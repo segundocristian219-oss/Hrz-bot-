@@ -16,7 +16,12 @@ const mathGame = {
         
         if (parseInt(txt) === game.result) {
             await m.react("✅");
-            await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} eres un genio matemático!\n\nLa respuesta correcta era: *${game.result}*`, m, contextInfo: { mentions: [m.sender] });
+            await this.reply(m.chat, `🎉 ¡@${m.sender.split('@')[0]} eres un genio matemático!\n\nLa respuesta correcta era: *${game.result}*`, m, { 
+    contextInfo: { 
+        mentionedJid: [m.sender] 
+    } 
+});
+
             delete global.mathGames[m.chat];
             return true;
         } else {
