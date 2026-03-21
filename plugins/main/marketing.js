@@ -56,7 +56,7 @@ const promoSystem = {
             };
 
             await conn.sendMessage(m.chat, productMessage, { 
-                quoted: m,
+                quoted: m || null,
                 contextInfo: {
                     forwardingScore: 999,
                     isForwarded: true,
