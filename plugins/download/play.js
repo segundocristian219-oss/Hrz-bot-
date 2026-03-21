@@ -36,19 +36,20 @@ const youtubeCommand = {
 `;
 
             const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
-            await conn.sendMessage(m.chat, { 
-               imageUrl: videoInfo.image || videoInfo.thumbnail, 
-               caption: infoText,
-                contextInfo: {
-                   forwardingScore: 1,
-                   isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                      newsletterJid: ch,
-                      serverMessageId: 100,
-                      newsletterName: name()
-                     }
-                  }
-             }, { quoted: m });
+  await conn.sendMessage(m.chat, { 
+    image: { url: videoInfo.image || videoInfo.thumbnail }, 
+    caption: infoText,
+    contextInfo: {
+        forwardingScore: 1,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: ch,
+            serverMessageId: 100,
+            newsletterName: name()
+        }
+    }
+}, { quoted: m });
+
 
             let downloadUrl;
             if (isAudio) {
