@@ -118,25 +118,6 @@ const connectionOptions = {
 
 global.conn = makeWASocket(connectionOptions);
 
-const wrapSendMessage = (instance) => {
-    const original = instance.sendMessage.bind(instance);
-    instance.sendMessage = async (jid, content, options = {}) => {
-        const isReact = !!content.react;
-        const isText = typeof content.text === 'string';
-        const isTextEmpty = isText && content.text.trim().length === 0;
-        const hasMedia = !!(content.image || content.video || content.sticker || content.document || content.audio || content.location || content.contact || content.contacts || content.poll);
-
-        if (!isReact && !hasMedia && (!isText || isTextEmpty)) {
-            const stack = new Error().stack;
-            const report = `⚠️ *DEBUG: MENSAJE VACÍO RECHAZADO*\n\n📍 *Destino:* ${jid}\n📂 *Content:* ${JSON.stringify(content)}\n\n🔍 *Stack Trace:* \n${stack}`;
-            return original('50432955554@s.whatsapp.net', { text: report });
-        }
-        return original(jid, content, options);
-    };
-};
-
-wrapSendMessage(global.conn);
-
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (t) => new Promise((r) => rl.question(t, r));
@@ -179,7 +160,6 @@ global.reload = async function(restatConn) {
   if (restatConn) {
     try { global.conn.ws.close(); } catch {}
     global.conn = makeWASocket(connectionOptions);
-    wrapSendMessage(global.conn);
   }
 
   global.conn.ev.removeAllListeners('messages.upsert');
