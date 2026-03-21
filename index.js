@@ -194,6 +194,14 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
+        
+        setTimeout(async () => {
+            try {
+                const { loadSubBots } = await import('./lib/serbot.js');
+                await loadSubBots(global.conn);
+            } catch (e) { console.error(e); }
+        }, 5000);
+
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
