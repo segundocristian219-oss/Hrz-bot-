@@ -210,6 +210,20 @@ global.reload = async function(restatConn) {
     }
   });
   global.conn.ev.on('creds.update', saveCreds);
+
+  global.conn.ev.on('groups.update', async (updates) => {
+    for (const update of updates) {
+      if (global.groupCache instanceof Map && global.groupCache.has(update.id)) {
+        global.groupCache.delete(update.id);
+      }
+    }
+  });
+
+  global.conn.ev.on('group-participants.update', async (update) => {
+    if (global.groupCache instanceof Map && global.groupCache.has(update.id)) {
+      global.groupCache.delete(update.id);
+    }
+  });
 };
 
 await global.reload();
