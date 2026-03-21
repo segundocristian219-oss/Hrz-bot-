@@ -16,11 +16,12 @@ const reportSystem = {
             }
 
             try {
+                // Extracción de datos del cuerpo del reporte
                 const userJid = quotedContent.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
                 const chatId = quotedContent.split('⌬ Chat ID: ')[1]?.split('\n')[0];
                 const msgId = quotedContent.split('◈ MSG ID: ')[1]?.split('\n')[0];
 
-                if (!userJid || !chatId) return m.reply('⚠ ERROR\n\nDatos ilegibles.');
+                if (!userJid || !chatId || !msgId) return m.reply('⚠ ERROR\n\nDatos del mensaje original no encontrados.');
 
                 let q = m;
                 let mime = (q.msg || q).mimetype || '';
@@ -43,25 +44,38 @@ const reportSystem = {
                     content.text = header + body;
                 }
 
-                await conn.sendMessage(chatId, content, { quoted: { key: { remoteJid: chatId, fromMe: false, id: msgId }, message: { conversation: "Reporte Original" } } });
-                return await m.reply('✓ Enviado.');
+                // La clave aquí es el parámetro 'quoted', que vincula la respuesta al mensaje original del usuario
+                await conn.sendMessage(chatId, content, { 
+                    quoted: { 
+                        key: { 
+                            remoteJid: chatId, 
+                            fromMe: false, 
+                            id: msgId, 
+                            participant: userJid 
+                        }, 
+                        message: { conversation: "Reporte Original" } 
+                    } 
+                });
+                
+                return await m.reply('✓ Respuesta enviada y vinculada al reporte.');
             } catch (e) {
-                return m.reply('☒ Error: ' + e.message);
+                return m.reply('☒ Error al responder: ' + e.message);
             }
         }
 
-        if (!text) return m.reply('⚠ USO INCORRECTO\n\nEscribe el reporte despues del comando.');
+        if (!text) return m.reply('⚠ USO INCORRECTO\n\nEscribe el reporte después del comando.');
 
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
 
-        let reportMsg = `┏━━ 「 NUEVO REPORTE RECIBIDO 」 ━━┓\n` +
+        // Estilo visual del reporte con el MSG ID incluido para poder responder después
+        let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
                         `┃ ⊛ Usuario: @${m.sender.split('@')[0]}\n` +
                         `┃ ⊛ Tipo: ${command.toUpperCase()}\n` +
                         `┃ ⊛ Mensaje: ${text}\n` +
                         `┃ ⌬ Chat ID: ${m.chat}\n` +
-                        `┃ ◈ MSG ID: ${m.key.id}\n` +
-                        `┗━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+                        `┃ ◈ MSG ID: ${m.key.id}\n` + // Este ID es vital para etiquetar el mensaje luego
+                        `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
 
         try {
             let media = (mime && /image|video/.test(mime)) ? await q.download() : null;
@@ -72,9 +86,9 @@ const reportSystem = {
                         mentionedJid: [m.sender],
                         externalAdReply: {
                             title: `SISTEMA DE SOPORTE`,
-                            body: `Nuevo mensaje de: ${m.pushName || 'Usuario'}`,
+                            body: `De: ${m.pushName || 'Usuario'}`,
                             mediaType: 1,
-                            thumbnailUrl: 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg',
+                            thumbnailUrl: img,
                             renderLargerThumbnail: false,
                             sourceUrl: 'https://dix.lat'
                         }
@@ -83,9 +97,9 @@ const reportSystem = {
                 if (media) await conn.sendMessage(jid, { image: media, caption: reportMsg, ...opt });
                 else await conn.sendMessage(jid, { text: reportMsg, ...opt });
             }
-            await m.reply('✓ Reporte enviado.');
+            await m.reply('✓ Reporte enviado correctamente.');
         } catch (err) {
-            await m.reply('☒ Error interno.');
+            await m.reply('☒ Error al procesar el reporte.');
         }
     }
 };
