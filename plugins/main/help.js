@@ -199,7 +199,7 @@ await conn.sendMessage(m.chat, {
     image: imgBuffer,
     caption: menuText,
     contextInfo: {
-        mentions: [m.sender], 
+        mentionedJid: [m.sender],
         forwardingScore: 1,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
