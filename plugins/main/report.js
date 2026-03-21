@@ -24,7 +24,7 @@ const reportSystem = {
 
                 let q = m;
                 let mime = (q.msg || q).mimetype || '';
-                const header = `⌬ RESPUESTA DEL DESARROLLADOR\n\n@${userJid.split('@')[0]} `;
+                const header = `⌬ RESPUESTA DEL DESARROLLADOR\n\n`;
                 const body = text || '';
 
                 let content = { 
@@ -95,7 +95,7 @@ const reportSystem = {
                             title: `SISTEMA DE SOPORTE`,
                             body: `Nuevo mensaje de: ${m.pushName || 'Usuario'}`,
                             mediaType: 1,
-                            thumbnailUrl: 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg',
+                            thumbnailUrl: img,
                             renderLargerThumbnail: false,
                             sourceUrl: 'https://dix.lat'
                         }
