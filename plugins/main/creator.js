@@ -10,8 +10,8 @@ const ownerCommand = {
         const vcard = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
                       `FN:${brandName}\n` + 
-                      `N:;VOKER;Platform;;\n` +
-                      'ORG:VOKER Systems Inc.;\n' + 
+                      `N:;VGT;xh;;\n` +
+                      'ORG:VGT KTY CEL.;\n' + 
                       'TITLE:Chief Technical Officer;\n' + 
                       `TEL;type=CELL;type=VOICE;waid=${myNumber}:${myNumber}\n` +
                       'X-WA-BIZ-DESCRIPTION:Infraestructura digital y sistemas de automatización de alto rendimiento.\n' +
