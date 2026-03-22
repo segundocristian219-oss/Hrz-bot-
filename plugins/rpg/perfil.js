@@ -28,8 +28,7 @@ const profileCommand = {
 ✦  *EXPERIENCIA:* ${userData.exp || 0} EXP
 ◈  *ESTADO:* ${who === m.sender ? 'Administrador del Sistema' : 'Usuario Registrado'}
 
-\t\t\t\t  *DEYLIN ELÍAC - SYSTEM*
-`.trim()
+`
 
         try {
             await conn.sendMessage(m.chat, { 
