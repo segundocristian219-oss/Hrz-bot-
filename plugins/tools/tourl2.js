@@ -11,7 +11,7 @@ const uploadToDeylinApi = async (buffer, fileName, mime) => {
         const response = await fetch('https://api.dix.lat/upload2', {
             method: 'POST',
             body: formData,
-            headers: { 'User-Agent': 'Voker-Drive-Client' }
+            headers: { 'User-Agent': 'Drive-Client' }
         });
 
         const json = await response.json();
