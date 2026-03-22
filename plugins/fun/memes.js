@@ -19,7 +19,7 @@ const memesCommand = {
 
             await conn.sendMessage(m.chat, { 
                 image: { url: memeUrl }, 
-                caption: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Aquí tienes tu dosis de humor!\n\n*❯ Proveedor:* ${res.proveedor || 'Voker Systems'}`,
+                caption: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Aquí tienes tu dosis de humor!\n\n*❯`,
                 mentions: [m.sender]
             }, { quoted: m });
 
