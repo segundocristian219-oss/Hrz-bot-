@@ -3,8 +3,8 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys'
 const profileCommand = {
     name: 'perfil',
     alias: ['profile', 'p', 'whoami'],
-    category: 'user',
-    run: async (m, { conn, user }) => {
+    category: 'rpg',
+    run: async (m, { conn }) => {
         let who = m.quoted ? m.quoted.sender : m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender
         let userName = m.pushName || 'Jugador'
         
@@ -17,15 +17,19 @@ const profileCommand = {
             pp = global.img 
         }
 
-        const userData = (who === m.sender) ? user : (global.db.data.users[who] || { name: userName, exp: 0, col: 10 })
+        let user = await global.User.findOne({ id: who }).lean()
         
-        const infoText = `
-\t\t\t\t♛  *USER PROFILE* ♛
+        if (!user) {
+            user = { name: userName, exp: 0, col: 10 }
+        }
 
-✧  *NOMBRE:* ${userData.name || userName}
+        const infoText = `
+\t\t\t\t♛  *KIRITO USER PROFILE* ♛
+
+✧  *NOMBRE:* ${user.name || userName}
 ✧  *ID:* @${who.split('@')[0]}
-✦  *MONEDAS:* ${userData.col || 0} Col
-✦  *EXPERIENCIA:* ${userData.exp || 0} EXP
+✦  *MONEDAS:* ${user.col ?? 10} Col
+✦  *EXPERIENCIA:* ${user.exp ?? 0} EXP
 ◈  *ESTADO:* ${who === m.sender ? 'Administrador del Sistema' : 'Usuario Registrado'}
 
 `
@@ -54,4 +58,4 @@ const profileCommand = {
     }
 }
 
-export default profileCommand;
+export default profileCommand
