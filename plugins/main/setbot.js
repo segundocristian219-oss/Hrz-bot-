@@ -4,21 +4,27 @@ const antisubPlugin = {
     category: 'group',
     admin: true,
     group: true,
-    run: async (m, { text, chat, conn }) => {
+    run: async (m, { text, conn }) => {
         if (!text) return conn.reply(m.chat, `*¿Estado del filtro?*\nUso: .antisub on / off`, m);
 
         const input = text.toLowerCase();
-        if (input === 'on') {
-            chat.antisub = true;
-            await chat.save();
-            await conn.reply(m.chat, `*「 ANTISUB ACTIVADO 」*\n\nSolo el bot principal responderá en este grupo.`, m);
-        } else if (input === 'off') {
-            chat.antisub = false;
-            await chat.save();
-            await conn.reply(m.chat, `*「 ANTISUB DESACTIVADO 」*\n\nTodos los bots responderán en este grupo.`, m);
-        } else {
-            await conn.reply(m.chat, `*Opción no válida.*\nUse: .antisub on / off`, m);
-        }
+        let status;
+
+        if (input === 'on') status = true;
+        else if (input === 'off') status = false;
+        else return conn.reply(m.chat, `*Opción no válida.*\nUse: .antisub on / off`, m);
+
+        await global.Chat.findOneAndUpdate(
+            { id: m.chat },
+            { $set: { antisub: status } },
+            { upsert: true }
+        );
+
+        const message = status 
+            ? `*「 ANTISUB ACTIVADO 」*\n\nSolo el bot principal responderá en este grupo.`
+            : `*「 ANTISUB DESACTIVADO 」*\n\nTodos los bots responderán en este grupo.`;
+
+        await conn.reply(m.chat, message, m);
     }
 };
 
