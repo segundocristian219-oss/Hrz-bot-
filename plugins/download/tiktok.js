@@ -36,7 +36,7 @@ const tiktok = {
             await conn.sendMessage(m.chat, { 
                 video: { url: videoUrl },
                 caption: caption,
-                fileName: `tiktok_voker.mp4`,
+                fileName: `tiktok.mp4`,
                 mimetype: 'video/mp4'
             }, { quoted: m })
 
