@@ -3,49 +3,65 @@ import path from 'path'
 
 const dsCommand = {
     name: 'ds',
-    alias: ['cleansession', 'limpiar'],
+    alias: ['cleansession', 'limpiar', 'ds'],
     category: 'owner',
-    run: async (m, { conn, isMainBot, isROwner }) => {
-       /* if (!isMainBot) {
-            return m.reply('> *Este comando solo puede ser ejecutado por el bot principal.*')
-        }*/
+    run: async (m, { conn, isROwner }) => {
+        // Validación de Desarrollador
+        if (!isROwner) return m.reply('> *Acceso denegado: Solo desarrolladores.*')
 
-        if (!isROwner) {
-            return m.reply('> *Este comando solo puede ser ejecutado por los desarrolladores.*')
-        }
-
-        const sessionPath = `./${global.sessions || 'sessions'}/`
-        const tmpPath = './tmp/'
+        // Ajuste dinámico de rutas
+        const sessionPath = path.resolve(`./${global.authFolder || 'sessions'}/`)
+        const tmpPath = path.resolve('./tmp/')
         let filesDeleted = 0
 
         try {
+            await m.react('🧹')
+
+            // Limpieza de Sesiones (Protegiendo creds.json)
             if (existsSync(sessionPath)) {
                 const sessionFiles = await fs.readdir(sessionPath)
                 for (const file of sessionFiles) {
-                    if (file !== 'creds.json') {
-                        await fs.unlink(path.join(sessionPath, file))
-                        filesDeleted++
+                    if (file !== 'creds.json') { // Nunca borrar creds.json o el bot se apaga
+                        try {
+                            await fs.unlink(path.join(sessionPath, file))
+                            filesDeleted++
+                        } catch {
+                            continue // Si el archivo está en uso, saltar al siguiente
+                        }
                     }
                 }
             }
 
+            // Limpieza de Carpeta Temporal
             if (existsSync(tmpPath)) {
                 const tmpFiles = await fs.readdir(tmpPath)
                 for (const file of tmpFiles) {
-                    await fs.unlink(path.join(tmpPath, file))
-                    filesDeleted++
+                    try {
+                        await fs.unlink(path.join(tmpPath, file))
+                        filesDeleted++
+                    } catch {
+                        continue
+                    }
                 }
             }
 
             if (filesDeleted === 0) {
-                await m.reply('> *No se encontraron archivos prescindibles para eliminar.*')
+                await m.reply('> *Sistema limpio: No hay archivos residuales.*')
             } else {
-                await m.reply(`> *𝗟𝗜𝗠𝗣𝗜𝗘𝗭𝗔 𝗣𝗥𝗢𝗙𝗨𝗡𝗗𝗔 𝗙𝗜𝗡𝗔𝗟𝗜𝗭𝗔𝗗𝗔*\n\n*Archivos eliminados:* ${filesDeleted}\n*Estado:* Memoria optimizada y sesiones huérfanas purgadas.`)
+                const report = `> ♛  *PURGA DE SISTEMA FINALIZADA*\n\n` +
+                               `✦  *Archivos eliminados:* ${filesDeleted}\n` +
+                               `✧  *Estado:* Memoria optimizada\n` +
+                               `◈  *Origen:* ${global.authFolder || 'sessions'}\n\n` +
+                               `*DEYLIN ELÍAC - SYSTEM*`
+                await m.reply(report.trim())
             }
 
+            await m.react('✅')
+
         } catch (err) {
-            console.error(err)
-            await m.reply('> *Error crítico durante la purga de archivos.*')
+            console.error('Error en DS Command:', err)
+            await m.reply('> ✖ *Error crítico durante la purga.*')
+            await m.react('❌')
         }
     }
 }
