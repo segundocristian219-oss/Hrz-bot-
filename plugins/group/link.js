@@ -15,7 +15,7 @@ const linkCommand = {
             let shortLink;
             try {
                 
-                const { data } = await axios.post('https://dix.lat/v1/short.php', {
+                const { data } = await axios.post('https://dix.lat/short.php', {
                     url: mainLink
                 }, {
                     headers: { 'Content-Type': 'application/json' }
