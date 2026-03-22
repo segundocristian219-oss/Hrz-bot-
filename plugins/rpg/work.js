@@ -7,43 +7,43 @@ const workCommand = {
         if (!user) user = await global.User.create({ id: m.sender, col: 10, exp: 0 })
 
         const now = Date.now()
-        const cooldown = 5 * 60 * 1000 // 5 minutos de espera
+        const cooldown = 10 * 60 * 1000 
         const lastWork = user.lastWork || 0
 
         if (now - lastWork < cooldown) {
             const remaining = Math.ceil((cooldown - (now - lastWork)) / 1000)
             const mins = Math.floor(remaining / 60)
             const secs = remaining % 60
-            return conn.reply(m.chat, `⚠️ *ESTÁS AGOTADO*\n\nDebes descansar. Regresa en: *${mins}m ${secs}s*`, m)
+            return conn.reply(m.chat, `⌛ *DESCANSO NECESARIO*\n\nHas trabajado mucho. Regresa en: *${mins}m ${secs}s*`, m)
         }
 
-        await m.react("🛠️")
+        await m.react("💪")
 
-        // Lista de trabajos con pagos mínimos y realistas (entre 10 y 45 Col)
+        
         const empleos = [
-            { t: "Limpiaste la base de datos de VOKER VX", p: [15, 30] },
-            { t: "Reparaste un bug en el Handler", p: [20, 45] },
-            { t: "Configuraste un link en DIX.LAT", p: [10, 25] },
-            { t: "Moderaste el grupo oficial", p: [12, 28] },
-            { t: "Optimizaste el consumo de RAM del bot", p: [25, 40] },
-            { t: "Actualizaste los comandos de RPG", p: [18, 35] }
+            { t: "Ayudaste a un anciano a acomodar cajas en su tienda", p: [8, 13, 17] },
+            { t: "Cuidaste el huerto de un vecino durante la mañana", p: [6, 9] },
+            { t: "Repartiste volantes de la panadería local", p: [17, 20] },
+            { t: "Limpiaste los establos en la granja del pueblo", p: [22, 20] },
+            { t: "Recogiste leña seca en el campo para el invierno", p: [7, 9] },
+            { t: "Ayudaste a cargar bultos de café en el mercado", p: [29, 25] },
+            { t: "Limpiaste los vidrios de una oficina pequeña", p: [10, 15] }
         ]
 
         const job = empleos[Math.floor(Math.random() * empleos.length)]
         const pago = Math.floor(Math.random() * (job.p[1] - job.p[0] + 1)) + job.p[0]
 
         const newCol = (user.col ?? 0) + pago
-        
-        // Actualizamos las monedas y guardamos la hora del último trabajo
+
         await global.User.updateOne(
             { id: m.sender }, 
             { $set: { col: newCol, lastWork: now } }
         )
 
         const workText = `
-\t\t\t\t♛  *HAS TRABAJADO* ♛
+\t\t\t\t♛  *JORNADA LABORAL* ♛
 
-◈  *TRABAJO:* ${job.t}
+◈  *ACTIVIDAD:* ${job.t}
 ✦  *PAGO:* +${pago} Col
 ✧  *BALANCE:* ${newCol} Col
 
@@ -55,7 +55,7 @@ const workCommand = {
                 forwardingScore: 1,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: global.ch || "120363000000000000@newsletter", 
+                    newsletterJid: global.ch, 
                     serverMessageId: 101,
                     newsletterName: name()
                 }
