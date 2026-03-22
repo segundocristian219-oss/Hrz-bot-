@@ -148,7 +148,7 @@ const connectionOptions = {
 };
 
 global.conn = makeWASocket(connectionOptions);
-
+global.conn.isMain = true;
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (t) => new Promise((r) => rl.question(t, r));
