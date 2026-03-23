@@ -204,7 +204,6 @@ await conn.sendMessage(m.chat, {
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
             newsletterJid: ch,
-            serverMessageId: 100,
             newsletterName: name()
         }
     }
