@@ -8,7 +8,7 @@ category: 'y',
 let k = 'ggjj'
 
   await conn.sendMessage(m.chat, { 
-    caption: k,
+    text: k,
     contextInfo: {
         forwardingScore: 1,
         isForwarded: true,
