@@ -62,7 +62,7 @@ const slotCommand = {
                 forwardingScore: 1,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: global.ch || "120363000000000000@newsletter", 
+                    newsletterJid: global.ch, 
                     newsletterName: name()
                 }
             }
