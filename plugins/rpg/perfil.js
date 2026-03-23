@@ -24,7 +24,7 @@ const profileCommand = {
         }
 
         const infoText = `
-\t\t\t\t♛  *KIRITO USER PROFILE* ♛
+\t\t\t\t♛  *USER PROFILE* ♛
 
 ✧  *NOMBRE:* ${user.name || userName}
 ✧  *ID:* @${who.split('@')[0]}
