@@ -3,7 +3,7 @@
 const h {
 name: 'h',
 alias: ['k'],
-category: 'y'
+category: 'y',
     run: async (m, { conn, text  }) => {
 let k = 'ggjj'
 
