@@ -25,7 +25,7 @@ const bots = {
         await conn.sendMessage(m.chat, { 
             text: txt,
             contextInfo: { 
-            mentions: activeBots.map(sock => sock.user.id) 
+            mentionedJid: activeBots.map(sock => sock.user.id) 
            }
         }, { quoted: m });
     }
