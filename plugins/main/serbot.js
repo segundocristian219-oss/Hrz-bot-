@@ -1,6 +1,6 @@
 import { startSubBot } from '../../lib/serbot.js';
 
-const handler = {
+const serbot = {
     name: 'serbot',
     alias: ['code', 'subbot', 'jadibot'],
     category: 'main',
@@ -18,4 +18,4 @@ const handler = {
     }
 };
 
-export default handler;
+export default serbot;
