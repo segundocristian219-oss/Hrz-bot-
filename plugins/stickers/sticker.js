@@ -109,8 +109,7 @@ const stickerCommand = {
                     forwardingScore: 1, 
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363406846602793@newsletter',
-                        serverMessageId: 100,
+                        newsletterJid: ch,
                         newsletterName: name()
                     }
                 }
