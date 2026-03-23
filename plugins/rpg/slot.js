@@ -63,8 +63,7 @@ const slotCommand = {
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: global.ch || "120363000000000000@newsletter", 
-                    serverMessageId: 100,
-                    newsletterName: "Deylin Elíac - Casino"
+                    newsletterName: name()
                 }
             }
         }, { quoted: m })
