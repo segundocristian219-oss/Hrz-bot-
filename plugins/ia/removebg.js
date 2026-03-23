@@ -9,7 +9,7 @@ const deleteBgCommand = {
         let mime = (q.msg || q).mimetype || q.mediaType || ''
         
         if (!/image/.test(mime)) {
-            return conn.reply(m.chat, `> ★ Etiqueta una imagen con el comando #*${command}* para eliminar su fondo...`, m)
+            return conn.reply(m.chat, `> ★ Etiqueta una imagen con el comando #*${command}* para eliminar su fondo.`, m)
         }
 
         try {
