@@ -23,8 +23,10 @@ const bots = {
         });
 
         await conn.sendMessage(m.chat, { 
-            text: txt, 
+            text: txt,
+            contextInfo: { 
             mentions: activeBots.map(sock => sock.user.id) 
+           }
         }, { quoted: m });
     }
 };
