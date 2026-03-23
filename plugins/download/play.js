@@ -44,7 +44,6 @@ const youtubeCommand = {
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
             newsletterJid: ch,
-            serverMessageId: 100,
             newsletterName: name()
         }
     }
