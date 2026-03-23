@@ -1,6 +1,6 @@
 
 
-const h {
+const h = {
 name: 'h',
 alias: ['k'],
 category: 'y',
