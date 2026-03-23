@@ -2,7 +2,7 @@
 
 const h {
 name: 'h',
-alias: ['h'],
+alias: ['k'],
 category: 'y'
     run: async (m, { conn, text  }) => {
 let k = 'ggjj'
