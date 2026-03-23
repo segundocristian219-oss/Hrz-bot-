@@ -19,7 +19,12 @@ const bots = {
         activeBots.forEach((sock, i) => {
             const jid = sock.user.id.split(':')[0];
             const name = sock.user.name || 'Sub-Bot';
-            txt += `*${i + 1}.* @${jid} (${name})\n`;
+            
+            // Creamos el número enmascarado (Ej: 50499...12)
+            const maskedNumber = jid.slice(0, 5) + '...' + jid.slice(-2);
+            
+            // Usamos el número enmascarado en el texto, pero el JID completo va en mentionedJid
+            txt += `*${i + 1}.* @${maskedNumber} (${name})\n`;
         });
 
         await conn.sendMessage(m.chat, { 
