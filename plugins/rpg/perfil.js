@@ -44,8 +44,7 @@ const profileCommand = {
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: global.ch || "120363000000000000@newsletter", 
-                        serverMessageId: 100,
-                        newsletterName: "Deylin Elíac - Updates"
+                        newsletterName: name()
                     }
                 }
             }, { quoted: m })
