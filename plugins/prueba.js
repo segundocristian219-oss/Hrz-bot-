@@ -23,7 +23,7 @@ const bots = {
             
             const maskedNumber = jid.slice(0, 5) + '...' + jid.slice(-2);
 
-            txt += `*${i + 1}.* @${maskedNumber.split('@')[0]} (${name})\n`;
+            txt += `*${i + 1}.* ${maskedNumber} (${name})\n`;
         });
 
         await conn.sendMessage(m.chat, { 
