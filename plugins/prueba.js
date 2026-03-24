@@ -1,4 +1,4 @@
-Const bots = {
+const bots = {
     name: 'listasubbots',
     alias: ['subbots', 'bots', 'listasub'],
     category: 'main',
@@ -23,7 +23,7 @@ Const bots = {
             
             const maskedNumber = jid.slice(0, 5) + '...' + jid.slice(-2);
 
-            txt += `*${i + 1}.* @${maskedNumber} (${name})\n`;
+            txt += `*${i + 1}.* @${maskedNumber.split('@')[0]} (${name})\n`;
         });
 
         await conn.sendMessage(m.chat, { 
