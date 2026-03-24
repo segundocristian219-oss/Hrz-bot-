@@ -1,14 +1,14 @@
+import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
+
 const bots = {
     name: 'listasubbots',
     alias: ['subbots', 'bots', 'listasub'],
     category: 'main',
     run: async (m, { conn }) => {
-        // Usamos global.conns que es donde Baileys suele guardar las conexiones de sub-bots
         if (!global.conns || global.conns.length === 0) {
             return m.reply('❌ No hay sub-bots activos en este momento.');
         }
 
-        // Filtramos solo los que tienen una sesión válida
         const activeBots = global.conns.filter(sock => sock.user && sock.user.id);
 
         if (activeBots.length === 0) {
@@ -18,33 +18,58 @@ const bots = {
         let txt = `✨ *SUB-BOTS ACTIVOS* ✨\n\n`;
         txt += `Total: ${activeBots.length}\n\n`;
 
-        // Extraemos los JIDs para las menciones
-        const mentions = activeBots.map(sock => sock.user.id);
+        // Limpiamos los JIDs para que las menciones funcionen sí o sí
+        const mentions = activeBots.map(sock => {
+            const jid = sock.user.id.split(':')[0];
+            return `${jid}@s.whatsapp.net`;
+        });
 
         activeBots.forEach((sock, i) => {
-            const jid = sock.user.id.split(':')[0]; // El número puro
+            const jid = sock.user.id.split(':')[0];
             const name = sock.user.name || 'Sub-Bot';
-
-            // IMPORTANTE: Para que brille en azul, el texto DEBE ser el número completo
-            // Si quieres que se vea "limpio", lo mejor es poner el número tal cual
             txt += `*${i + 1}.* @${jid} (${name})\n`;
         });
 
-        txt += `\n_Voker Systems • Deylin_`;
-
-        await conn.sendMessage(m.chat, { 
-            text: txt,
-            contextInfo: { 
-                mentionedJid: mentions,
-                // Esto ayuda a que el mensaje se vea más "oficial"
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363305113111051@newsletter',
-                    newsletterName: 'Voker Updates',
-                    serverMessageId: -1
+        // Construimos el mensaje con el botón "Ver canal" como en tu captura
+        const messageContent = {
+            viewOnceMessage: {
+                message: {
+                    interactiveMessage: proto.Message.InteractiveMessage.create({
+                        body: proto.Message.InteractiveMessage.Body.create({ text: txt }),
+                        footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Voker Systems • Deylin' }),
+                        header: proto.Message.InteractiveMessage.Header.create({ hasMediaAttachment: false }),
+                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                            buttons: [
+                                {
+                                    name: "cta_url",
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: "Ver canal 📢",
+                                        url: "https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m",
+                                        merchant_url: "https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m"
+                                    })
+                                }
+                            ]
+                        }),
+                        contextInfo: {
+                            mentionedJid: mentions,
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363305113111051@newsletter',
+                                newsletterName: 'Voker Updates',
+                                serverMessageId: -1
+                            }
+                        }
+                    })
                 }
             }
-        }, { quoted: m });
+        };
+
+        const msg = generateWAMessageFromContent(m.chat, messageContent, {
+            userJid: conn.user.id,
+            quoted: m
+        });
+
+        await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
     }
 };
 
