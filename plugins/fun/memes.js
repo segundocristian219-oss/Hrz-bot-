@@ -1,75 +1,99 @@
-import axios from 'axios';
-import { generateWAMessageFromContent, prepareWAMessageMedia, proto } from '@whiskeysockets/baileys';
+import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
 
-const memesCommand = {
-    name: 'memes',
-    alias: ['meme'],
-    category: 'fun',
+const testTexto = {
+    name: 'testtexto',
+    alias: ['tt'],
+    category: 'debug',
     run: async (m, { conn }) => {
-        const url_api = global.url_api || 'https://api.dix.lat';
-
         try {
             await m.react('🕒');
 
-            // 1. Obtener el meme
-            const { data: res } = await axios.get(`${url_api}/api/search/memes?apikey=voker`);
-            const memesList = res.memes || res.result || (Array.isArray(res) ? res : null);
-            const rawMeme = memesList[Math.floor(Math.random() * memesList.length)];
-            let memeUrl = typeof rawMeme === 'string' ? rawMeme : (rawMeme.url || rawMeme.image || rawMeme.link);
-
-            // 2. Preparar el media (Es vital para el header del interactiveMessage)
-            const media = await prepareWAMessageMedia({ image: { url: memeUrl } }, { upload: conn.waUploadToServer });
-
-            // 3. Construir el mensaje con la estructura que me mandaste (Native Flow)
-            const messageContent = {
+            // --- MENSAJE 1: ESTRUCTURA NATIVE FLOW (QUICK REPLY) ---
+            const msg1 = generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
-                        messageContextInfo: {
-                            deviceListMetadata: {},
-                            deviceListMetadataVersion: 2
-                        },
                         interactiveMessage: proto.Message.InteractiveMessage.create({
                             body: proto.Message.InteractiveMessage.Body.create({ 
-                                text: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Tu dosis de humor diario!` 
+                                text: `*MENSAJE 1: BOTÓN DE RESPUESTA*\n\nEste es el formato más común para menús.` 
                             }),
-                            footer: proto.Message.InteractiveMessage.Footer.create({ 
-                                text: 'Voker Systems • Deylin' 
-                            }),
-                            header: proto.Message.InteractiveMessage.Header.create({ 
-                                hasMediaAttachment: true,
-                                imageMessage: media.imageMessage 
-                            }),
+                            footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Voker Systems' }),
                             nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
-                                buttons: [
-                                    {
-                                        name: 'quick_reply',
-                                        buttonParamsJson: JSON.stringify({
-                                            display_text: 'Siguiente Meme 🔄',
-                                            id: '.memes'
-                                        })
-                                    }
-                                ]
+                                buttons: [{
+                                    name: 'quick_reply',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: 'Click Aquí ⚡',
+                                        id: '.memes'
+                                    })
+                                }]
                             })
                         })
                     }
                 }
-            };
+            }, { userJid: conn.user.id, quoted: m });
+            await conn.relayMessage(m.chat, msg1.message, { messageId: msg1.key.id });
 
-            // 4. Generar y enviar el paquete
-            const msg = generateWAMessageFromContent(m.chat, messageContent, {
-                userJid: conn.user.id,
-                quoted: m
-            });
+            // --- MENSAJE 2: ESTRUCTURA URL (CTA URL) ---
+            const msg2 = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: {
+                    message: {
+                        interactiveMessage: proto.Message.InteractiveMessage.create({
+                            body: proto.Message.InteractiveMessage.Body.create({ 
+                                text: `*MENSAJE 2: BOTÓN DE ENLACE*\n\nEste botón te lleva a una web externa.` 
+                            }),
+                            footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Voker Systems' }),
+                            nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                                buttons: [{
+                                    name: 'cta_url',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: 'Ir a la Web 🌐',
+                                        url: 'https://dix.lat',
+                                        merchant_url: 'https://dix.lat'
+                                    })
+                                }]
+                            })
+                        })
+                    }
+                }
+            }, { userJid: conn.user.id, quoted: m });
+            await conn.relayMessage(m.chat, msg2.message, { messageId: msg2.key.id });
 
-            await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+            // --- MENSAJE 3: LISTA (SINGLE SELECT) ---
+            const msg3 = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: {
+                    message: {
+                        interactiveMessage: proto.Message.InteractiveMessage.create({
+                            body: proto.Message.InteractiveMessage.Body.create({ 
+                                text: `*MENSAJE 3: MENÚ DE LISTA*\n\nIdeal cuando tienes muchas opciones.` 
+                            }),
+                            footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Voker Systems' }),
+                            nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                                buttons: [{
+                                    name: 'single_select',
+                                    buttonParamsJson: JSON.stringify({
+                                        title: 'Ver Opciones 📂',
+                                        sections: [{
+                                            title: "CATEGORÍAS",
+                                            rows: [
+                                                { title: "Meme", rowId: ".meme", description: "Ver un meme" },
+                                                { title: "Menú", rowId: ".menu", description: "Ir al inicio" }
+                                            ]
+                                        }]
+                                    })
+                                }]
+                            })
+                        })
+                    }
+                }
+            }, { userJid: conn.user.id, quoted: m });
+            await conn.relayMessage(m.chat, msg3.message, { messageId: msg3.key.id });
+
             await m.react('✅');
 
         } catch (error) {
-            console.error('--- ERROR EN MEMES ---');
-            console.error(error);
+            console.error('Error en Test Texto:', error);
             await m.react('❌');
         }
     }
 };
 
-export default memesCommand;
+export default testTexto;
