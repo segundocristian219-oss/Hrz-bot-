@@ -38,7 +38,9 @@ const antiLinkPlugin = {
             } else {
                 await conn.sendMessage(m.chat, { 
                     text: `*「 ENLACE DETECTADO 」*\n\n@${m.sender.split('@')[0]} los enlaces no están permitidos. Necesito ser admin para aplicar la sanción.`, 
+                 contextInfo: {
                     mentions: [m.sender] 
+                   }
                 }, { quoted: m });
             }
             return true; 
