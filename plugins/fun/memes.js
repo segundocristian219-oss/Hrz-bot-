@@ -1,58 +1,71 @@
-import axios from 'axios';
 import { prepareWAMessageMedia, generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-const memesCommand = {
-    name: 'memes',
-    alias: ['meme'],
-    category: 'fun',
+const testBotones = {
+    name: 'testbotones',
+    alias: ['testb'],
+    category: 'debug',
     run: async (m, { conn }) => {
-        const url_api = global.url_api || 'https://api.dix.lat';
-
         try {
             await m.react('🕒');
+            const img = 'https://api.dix.lat/media/img_1774325670603_TYbdEngBM.jpg';
+            const media = await prepareWAMessageMedia({ image: { url: img } }, { upload: conn.waUploadToServer });
 
-            const { data: res } = await axios.get(`${url_api}/api/search/memes?apikey=voker`);
-            const memesList = res.memes || res.result || (Array.isArray(res) ? res : null);
-            const rawMeme = memesList[Math.floor(Math.random() * memesList.length)];
-            let memeUrl = typeof rawMeme === 'string' ? rawMeme : (rawMeme.url || rawMeme.image || rawMeme.link);
+            // --- ESTRUCTURA 1: BOTONES DE LISTA (LOS MÁS COMPATIBLES) ---
+            const listMsg = generateWAMessageFromContent(m.chat, {
+                listMessage: {
+                    title: "OPCIÓN 1: LISTA",
+                    description: "Haz clic abajo para ver el menú",
+                    buttonText: "Abrir Menú 📂",
+                    listType: 1,
+                    sections: [{
+                        title: "Selecciona una acción",
+                        rows: [{ title: "Siguiente Meme", rowId: ".memes" }]
+                    }],
+                    footerText: "Voker Systems"
+                }
+            }, { quoted: m });
+            await conn.relayMessage(m.chat, listMsg.message, { messageId: listMsg.key.id });
 
-            // Preparamos la imagen
-            const media = await prepareWAMessageMedia({ image: { url: memeUrl } }, { upload: conn.waUploadToServer });
+            // --- ESTRUCTURA 2: BOTONES DE TEXTO (LEGACY/VIEJOS) ---
+            // Nota: Estos a veces fallan en iOS pero son muy ligeros
+            const buttons = [
+                { buttonId: '.memes', buttonText: { displayText: 'Siguiente Meme 🔄' }, type: 1 }
+            ];
+            const buttonMsg = {
+                image: { url: img },
+                caption: "OPCIÓN 2: BOTONES CLÁSICOS",
+                footer: "Voker Systems",
+                buttons: buttons,
+                headerType: 4
+            };
+            await conn.sendMessage(m.chat, buttonMsg, { quoted: m });
 
-            const template = generateWAMessageFromContent(m.chat, {
-                templateMessage: {
-                    hydratedTemplate: {
-                        imageMessage: media.imageMessage,
-                        hydratedContentText: "*── 「 MEMES 」 ──*\n\n> 😂 ¡Tu dosis de humor diario!",
-                        hydratedFooterText: "Voker Systems • Deylin",
-                        hydratedButtons: [
-                            {
-                                urlButton: {
-                                    displayText: "Sitio Web 🌐",
-                                    url: "https://dix.lat"
-                                }
-                            },
-                            {
-                                quickReplyButton: {
-                                    displayText: "Siguiente Meme 🔄",
-                                    id: ".memes"
-                                }
+            // --- ESTRUCTURA 3: NATIVE FLOW SIMPLIFICADO (EL QUE INTENTÁBAMOS) ---
+            const nativeMsg = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: {
+                    message: {
+                        interactiveMessage: {
+                            header: { hasMediaAttachment: true, imageMessage: media.imageMessage },
+                            body: { text: "OPCIÓN 3: NATIVE FLOW (MODERNO)" },
+                            nativeFlowMessage: {
+                                buttons: [{
+                                    name: "quick_reply",
+                                    buttonParamsJson: JSON.stringify({ display_text: "Siguiente 🔄", id: ".memes" })
+                                }]
                             }
-                        ]
+                        }
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
+            await conn.relayMessage(m.chat, nativeMsg.message, { messageId: nativeMsg.key.id });
 
-            await conn.relayMessage(m.chat, template.message, { messageId: template.key.id });
             await m.react('✅');
-
-        } catch (error) {
-            console.error('Error con Template Buttons:', error);
-            // Si falla, enviamos el mensaje más básico posible (Imagen + Texto) para asegurar respuesta
-            await conn.sendMessage(m.chat, { image: { url: memeUrl }, caption: '> 😂 ¡Siguiente meme!\nEscribe *.memes* para otro.' }, { quoted: m });
-            await m.react('✅');
+        } catch (e) {
+            console.error(e);
+            await m.react('❌');
+            conn.reply(m.chat, `Error: ${e.message}`, m);
         }
     }
 };
 
-export default memesCommand;
+export default testBotones;
