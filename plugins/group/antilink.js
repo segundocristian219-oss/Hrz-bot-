@@ -33,13 +33,15 @@ const antiLinkPlugin = {
                 await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
                 await conn.sendMessage(m.chat, { 
                     text: `*「 ENLACE DETECTADO 」*\n\n@${m.sender.split('@')[0]} ha sido eliminado por enviar enlaces no permitidos.`, 
-                    mentions: [m.sender] 
+                   contextInfo: {
+                    mentionedJid: [m.sender] 
+                    }
                 });
             } else {
                 await conn.sendMessage(m.chat, { 
                     text: `*「 ENLACE DETECTADO 」*\n\n@${m.sender.split('@')[0]} los enlaces no están permitidos. Necesito ser admin para aplicar la sanción.`, 
                  contextInfo: {
-                    mentions: [m.sender] 
+                    mentionedJid: [m.sender] 
                    }
                 }, { quoted: m });
             }
