@@ -1,11 +1,13 @@
 import axios from 'axios';
+// Importamos la función directamente de la librería
+import { prepareWAMessageMedia } from '@whiskeysockets/baileys';
 
 const memesCommand = {
     name: 'memes',
     alias: ['meme'],
     category: 'fun',
     run: async (m, { conn }) => {
-        const url_api = global.url_api || 'https://api.dix.lat'; // Aseguramos que exista la base
+        const url_api = global.url_api || 'https://api.dix.lat';
 
         try {
             await m.react('🕒');
@@ -26,14 +28,11 @@ const memesCommand = {
                 return conn.reply(m.chat, `> ⍰ URL de imagen inválida.`, m);
             }
 
-            let media;
-            try {
-                media = await conn.prepareMessageMedia({ image: { url: memeUrl } }, { upload: conn.waUploadToServer });
-            } catch (e) {
-                console.error('Error preparando media:', e.message);
-                // Si falla prepareMedia, intentamos enviar como mensaje de texto con imagen normal
-                return conn.sendMessage(m.chat, { image: { url: memeUrl }, caption: '> 😂 ¡Aquí tienes tu meme!' }, { quoted: m });
-            }
+            // Usamos la función importada en lugar de conn.prepareMessageMedia
+            const media = await prepareWAMessageMedia(
+                { image: { url: memeUrl } }, 
+                { upload: conn.waUploadToServer }
+            );
 
             const messageContent = {
                 viewOnceMessage: {
@@ -69,10 +68,8 @@ const memesCommand = {
             await m.react('✅');
 
         } catch (error) {
-            // Esto hará que el error aparezca sí o sí en tu consola
             console.log('--- ERROR EN COMANDO MEMES ---');
             console.error(error);
-            console.log('-------------------------------');
             await m.react('❌');
         }
     }
