@@ -22,62 +22,43 @@ const memesCommand = {
             const rawMeme = memesList[Math.floor(Math.random() * memesList.length)];
             let memeUrl = typeof rawMeme === 'string' ? rawMeme : (rawMeme.url || rawMeme.image || rawMeme.link);
 
-            if (!memeUrl || !memeUrl.startsWith('http')) {
-                await m.react('❌');
-                return conn.reply(m.chat, `> ⍰ URL de imagen inválida.`, m);
-            }
+            const media = await prepareWAMessageMedia({ image: { url: memeUrl } }, { upload: conn.waUploadToServer });
 
-            const media = await prepareWAMessageMedia(
-                { image: { url: memeUrl } }, 
-                { upload: conn.waUploadToServer }
-            );
+            const interactiveMessage = {
+                body: { text: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Aquí tienes tu dosis de humor!` },
+                footer: { text: `Voker Systems • Deylin` },
+                header: {
+                    hasMediaAttachment: true,
+                    imageMessage: media.imageMessage
+                },
+                nativeFlowMessage: {
+                    buttons: [{
+                        name: "quick_reply",
+                        buttonParamsJson: JSON.stringify({
+                            display_text: "Siguiente Meme 🔄",
+                            id: ".memes"
+                        })
+                    }]
+                }
+            };
 
             const msg = generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
-                        interactiveMessage: {
-                            header: {
-                                hasMediaAttachment: true,
-                                imageMessage: media.imageMessage
-                            },
-                            body: {
-                                text: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Aquí tienes tu dosis de humor!`
-                            },
-                            footer: {
-                                text: `Voker Systems • Deylin`
-                            },
-                            nativeFlowMessage: {
-                                buttons: [
-                                    {
-                                        name: "quick_reply",
-                                        buttonParamsJson: JSON.stringify({
-                                            display_text: "Siguiente Meme 🔄",
-                                            id: ".memes"
-                                        })
-                                    }
-                                ]
-                            },
-                            contextInfo: {
-                                mentionedJid: [m.sender],
-                                forwardingScore: 999,
-                                isForwarded: true,
-                                quotedMessage: m.message
-                            }
-                        }
+                        interactiveMessage: interactiveMessage
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
 
-            await conn.relayMessage(m.chat, msg.message, { 
-                messageId: msg.key.id 
-            });
-
+            // CRÍTICO: Usamos directamente el contenido del mensaje generado
+            await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             await m.react('✅');
 
         } catch (error) {
-            console.error('--- ERROR CRÍTICO EN MEMES ---');
-            console.error(error);
-            await m.react('❌');
+            console.error('Error en memes:', error);
+            // Si el mensaje interactivo falla, enviamos imagen normal como respaldo para que no te quedes en blanco
+            await conn.sendMessage(m.chat, { image: { url: memeUrl }, caption: '> 😂 ¡Aquí tienes tu meme!' }, { quoted: m });
+            await m.react('✅'); 
         }
     }
 };
