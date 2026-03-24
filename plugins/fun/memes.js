@@ -10,14 +10,21 @@ const memesCommand = {
 
             const { data: res } = await axios.get(`${url_api}/api/search/memes?apikey=voker`);
 
-            if (!res || !res.status || !res.result || !res.result.length) {
+            const memesList = res.memes || res.result || (Array.isArray(res) ? res : null);
+
+            if (!memesList || !memesList.length) {
                 m.react('❌');
                 return conn.reply(m.chat, `> ⍰ No se encontraron memes en este momento.`, m);
             }
 
-            const memeUrl = res.result[Math.floor(Math.random() * res.result.length)];
+            const rawMeme = memesList[Math.floor(Math.random() * memesList.length)];
+            const memeUrl = typeof rawMeme === 'string' ? rawMeme : (rawMeme.url || rawMeme.image || rawMeme.link);
 
-            
+            if (!memeUrl) {
+                m.react('❌');
+                return conn.reply(m.chat, `> ⍰ Error al extraer la URL del meme.`, m);
+            }
+
             const messageContent = {
                 viewOnceMessage: {
                     message: {
@@ -30,7 +37,7 @@ const memesCommand = {
                                 text: `*── 「 MEMES 」 ──*\n\n> 😂 ¡Aquí tienes tu dosis de humor!`
                             },
                             footer: {
-                                text: `Presiona el botón para ver más.`
+                                text: `Voker Systems • Deylin`
                             },
                             nativeFlowMessage: {
                                 buttons: [
@@ -38,7 +45,7 @@ const memesCommand = {
                                         name: "quick_reply",
                                         buttonParamsJson: JSON.stringify({
                                             display_text: "Siguiente Meme 🔄",
-                                            id: ".memes" 
+                                            id: ".memes"
                                         })
                                     }
                                 ]
@@ -49,13 +56,11 @@ const memesCommand = {
             };
 
             await conn.relayMessage(m.chat, messageContent, { messageId: conn.generateMessageTag(), quoted: m });
-            
             m.react('✅');
 
         } catch (error) {
             console.error(`> [ERROR]: ${error.message}`);
             m.react('❌');
-            conn.reply(m.chat, `> ⚠️ Ocurrió un error al obtener el meme.`, m);
         }
     }
 };
