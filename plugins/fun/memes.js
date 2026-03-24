@@ -16,56 +16,40 @@ const memesCommand = {
             const rawMeme = memesList[Math.floor(Math.random() * memesList.length)];
             let memeUrl = typeof rawMeme === 'string' ? rawMeme : (rawMeme.url || rawMeme.image || rawMeme.link);
 
+            // Preparamos la imagen
             const media = await prepareWAMessageMedia({ image: { url: memeUrl } }, { upload: conn.waUploadToServer });
 
-            // Esta estructura es la que mejor aceptan las CUENTAS NORMALES
-            const msg = generateWAMessageFromContent(m.chat, {
-                viewOnceMessage: {
-                    message: {
-                        interactiveMessage: {
-                            header: {
-                                hasMediaAttachment: true,
-                                imageMessage: media.imageMessage
+            const template = generateWAMessageFromContent(m.chat, {
+                templateMessage: {
+                    hydratedTemplate: {
+                        imageMessage: media.imageMessage,
+                        hydratedContentText: "*── 「 MEMES 」 ──*\n\n> 😂 ¡Tu dosis de humor diario!",
+                        hydratedFooterText: "Voker Systems • Deylin",
+                        hydratedButtons: [
+                            {
+                                urlButton: {
+                                    displayText: "Sitio Web 🌐",
+                                    url: "https://dix.lat"
+                                }
                             },
-                            body: { text: "*── 「 MEMES 」 ──*\n\n> 😂 ¡Ríete un poco!" },
-                            footer: { text: "Voker Systems • Deylin" },
-                            nativeFlowMessage: {
-                                buttons: [
-                                    {
-                                        // "quick_reply" es el más compatible con cuentas personales
-                                        name: "quick_reply",
-                                        buttonParamsJson: JSON.stringify({
-                                            display_text: "Siguiente Meme 🔄",
-                                            id: ".memes"
-                                        })
-                                    }
-                                ]
-                            },
-                            contextInfo: {
-                                // Forzamos metadatos de visualización para saltar bloqueos
-                                deviceListMetadata: {},
-                                deviceListMetadataVersion: 2,
-                                externalAdReply: {
-                                    title: 'Voker Systems',
-                                    body: 'Comando de Humor',
-                                    thumbnailUrl: memeUrl,
-                                    sourceUrl: 'https://dix.lat',
-                                    mediaType: 1,
-                                    renderLargerThumbnail: false
+                            {
+                                quickReplyButton: {
+                                    displayText: "Siguiente Meme 🔄",
+                                    id: ".memes"
                                 }
                             }
-                        }
+                        ]
                     }
                 }
             }, { userJid: conn.user.id, quoted: m });
 
-            await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+            await conn.relayMessage(m.chat, template.message, { messageId: template.key.id });
             await m.react('✅');
 
         } catch (error) {
-            console.error('Error en memes:', error);
-            // Backup: Si falla el interactivo, enviamos normal para no dejar al usuario esperando
-            await conn.sendMessage(m.chat, { image: { url: memeUrl }, caption: '> 😂 ¡Siguiente meme!' }, { quoted: m });
+            console.error('Error con Template Buttons:', error);
+            // Si falla, enviamos el mensaje más básico posible (Imagen + Texto) para asegurar respuesta
+            await conn.sendMessage(m.chat, { image: { url: memeUrl }, caption: '> 😂 ¡Siguiente meme!\nEscribe *.memes* para otro.' }, { quoted: m });
             await m.react('✅');
         }
     }
