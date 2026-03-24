@@ -1,6 +1,5 @@
 import axios from 'axios';
-// Importamos la función directamente de la librería
-import { prepareWAMessageMedia } from '@whiskeysockets/baileys';
+import { prepareWAMessageMedia, generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
 const memesCommand = {
     name: 'memes',
@@ -28,13 +27,12 @@ const memesCommand = {
                 return conn.reply(m.chat, `> ⍰ URL de imagen inválida.`, m);
             }
 
-            // Usamos la función importada en lugar de conn.prepareMessageMedia
             const media = await prepareWAMessageMedia(
                 { image: { url: memeUrl } }, 
                 { upload: conn.waUploadToServer }
             );
 
-            const messageContent = {
+            const msg = generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
                         interactiveMessage: {
@@ -58,17 +56,26 @@ const memesCommand = {
                                         })
                                     }
                                 ]
+                            },
+                            contextInfo: {
+                                mentionedJid: [m.sender],
+                                forwardingScore: 999,
+                                isForwarded: true,
+                                quotedMessage: m.message
                             }
                         }
                     }
                 }
-            };
+            }, { userJid: conn.user.id, quoted: m });
 
-            await conn.relayMessage(m.chat, messageContent, { messageId: conn.generateMessageTag(), quoted: m });
+            await conn.relayMessage(m.chat, msg.message, { 
+                messageId: msg.key.id 
+            });
+
             await m.react('✅');
 
         } catch (error) {
-            console.log('--- ERROR EN COMANDO MEMES ---');
+            console.error('--- ERROR CRÍTICO EN MEMES ---');
             console.error(error);
             await m.react('❌');
         }
