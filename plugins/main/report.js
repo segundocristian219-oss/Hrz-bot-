@@ -12,7 +12,7 @@ const reportSystem = {
 
             const quotedContent = m.quoted.text || m.quoted.caption || '';
             if (!quotedContent.includes('「 NUEVO REPORTE RECIBIDO 」')) {
-                return m.reply('⚠ ERROR\n\nEl mensaje no es un reporte.');
+                return m.reply('⚠ ERROR\n\nEl mensaje no es un reporte válido.');
             }
 
             try {
@@ -20,7 +20,7 @@ const reportSystem = {
                 const chatId = quotedContent.split('⌬ Chat ID: ')[1]?.split('\n')[0];
                 const msgId = quotedContent.split('◈ MSG ID: ')[1]?.split('\n')[0];
 
-                if (!userJid || !chatId) return m.reply('⚠ ERROR\n\nDatos ilegibles.');
+                if (!userJid || !chatId) return m.reply('⚠ ERROR\n\nDatos de destino ilegibles.');
 
                 let q = m;
                 let mime = (q.msg || q).mimetype || '';
@@ -65,48 +65,60 @@ const reportSystem = {
                     } 
                 });
 
-                return await m.reply('✓ Enviado.');
+                return await m.reply('✓ Respuesta enviada con éxito.');
             } catch (e) {
-                return m.reply('☒ Error: ' + e.message);
+                return m.reply('☒ Error al responder: ' + e.message);
             }
         }
 
-        if (!text) return m.reply('⚠ USO INCORRECTO\n\nEscribe el reporte despues del comando.');
-
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
+        let reportText = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
+
+        if (!reportText && !/image|video/.test(mime)) {
+            return m.reply(`⚠ USO INCORRECTO\n\nEscribe el reporte o etiqueta un mensaje/imagen con texto.`);
+        }
 
         let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
                         `┃ ⊛ Usuario: @${m.sender.split('@')[0]}\n` +
                         `┃ ⊛ Tipo: ${command.toUpperCase()}\n` +
-                        `┃ ⊛ Mensaje: ${text}\n` +
+                        `┃ ⊛ Mensaje: ${reportText || '(Sin descripción)'}\n` +
                         `┃ ⌬ Chat ID: ${m.chat}\n` +
                         `┃ ◈ MSG ID: ${m.key.id}\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
 
         try {
             let media = (mime && /image|video/.test(mime)) ? await q.download() : null;
+            
             for (const jid of owners) {
                 const opt = { 
                     mentions: [m.sender],
                     contextInfo: {
                         mentionedJid: [m.sender],
                         externalAdReply: {
-                            title: `SISTEMA DE SOPORTE`,
-                            body: `Nuevo mensaje de: ${m.pushName || 'Usuario'}`,
+                            title: `REPORTE`,
+                            body: `Reporte de: ${m.pushName || 'Usuario'}`,
                             mediaType: 1,
-                            thumbnailUrl: img,
+                            thumbnailUrl: img(),
                             renderLargerThumbnail: false,
                             sourceUrl: 'https://dix.lat'
                         }
                     }
                 };
-                if (media) await conn.sendMessage(jid, { image: media, caption: reportMsg, ...opt });
-                else await conn.sendMessage(jid, { text: reportMsg, ...opt });
+
+                if (media) {
+                    await conn.sendMessage(jid, { 
+                        [/image/.test(mime) ? 'image' : 'video']: media, 
+                        caption: reportMsg, 
+                        ...opt 
+                    });
+                } else {
+                    await conn.sendMessage(jid, { text: reportMsg, ...opt });
+                }
             }
-            await m.reply('✓ Reporte enviado.');
+            await m.reply('✓ Su reporte ha sido enviado a los desarrolladores.');
         } catch (err) {
-            await m.reply('☒ Error interno.');
+            await m.reply('☒ Fallo al procesar el envío del reporte.');
         }
     }
 };
