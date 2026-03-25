@@ -21,15 +21,16 @@ const shortCommand = {
             const json = await res.json();
 
             if (json.status) {
-                const shortUrl = `${json.url}`;
-                const del = `${res-del-url}`;
-                const shortqr = `${json.qr}`;
+                const shortUrl = json.url;
+                const del = json.delete; 
+                const shortqr = json.qr;
+
 
                 let txt = `> 🔗 *ᴇɴʟᴀᴄᴇ ᴀᴄᴏʀᴛᴀᴅᴏ*\n\n`;
                 txt += `> ✧ *ᴏʀɪɢɪɴᴀʟ:* ${text}\n`;
-                txt += `> ✧ *ᴄᴏʀᴛᴏ:* ${shortUrl}\n\n`;
-                txt += `> ✧ *ǫʀ:* ${shortqr}\n\n`;
-                txt += `> ✧ *ᴅᴇʟᴀᴛᴇ:* ${del}\n\n`;
+                txt += `> ✧ *ᴄᴏʀᴛᴏ:* ${shortUrl}\n`;
+                txt += `> ✧ *ǫʀ:* ${shortqr}\n`;
+                txt += `> ✧ *ᴅᴇʟᴀᴛᴇ:* ${del}\n`;
                 txt += `> ☁️ *ɪɴғᴏ:* Developed by dix.lat.`;
 
                 await m.reply(txt);
