@@ -200,15 +200,3 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
   </a>
 </p>
 <br>
-
-
-
-
-<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=eliac-d&layout=compact&theme=transparent&hide_border=true&title_color=58a6ff&text_color=c9d1d9" alt="Lenguajes de Deylin" />
-
-
-
-<img src="https://github-readme-stats.vercel.app/api?username=eliac-d&show_icons=true&theme=nord&border_radius=20&title_color=88c0d0&icon_color=88c0d0" alt="Estadísticas de Deylin" />
-
-
-<img src="https://github-readme-stats.vercel.app/api?username=eliac-d&show_icons=true&theme=transparent&hide_border=true&title_color=58a6ff&text_color=c9d1d9&icon_color=58a6ff&hide_rank=true" alt="Estadísticas de Deylin" />
