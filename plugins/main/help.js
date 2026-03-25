@@ -41,6 +41,7 @@ const menuCommand = {
                     cmds: [
                         { cmd: '.menu', desc: 'Muestra este menú de ayuda.' },
                         { cmd: '.code', desc: 'Conviértete en subbot.' },
+                        { cmd: '.bots', desc: 'Ver la lista de subbots.' },
                         { cmd: '.reporte/.report/.bug', desc: 'Reporta un error en el sistema.' },
                         { cmd: '.idea/.sugerencia', desc: 'Sugiere un nuevo comando o comparte una idea.' },
                         { cmd: '.creador', desc: 'Información sobre el creador.' }
