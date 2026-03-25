@@ -5,7 +5,8 @@
 </h1>
 
 <a href="https://github.com/eliac-d/kirito-Bot-MD">
-<img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=cobalt&show_owner=true" width="400" />
+<img src="https://github-readme-stats.vercel.app/api?username=eliac-d&show_icons=true&theme=transparent&hide_border=true&title_color=58a6ff&text_color=c9d1d9&icon_color=58a6ff&hide_rank=true" alt="Estadísticas de Deylin" />
+
 </a>
 
 
