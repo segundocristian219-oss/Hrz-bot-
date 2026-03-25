@@ -205,31 +205,6 @@ global.reload = async function(restatConn) {
     }
   });
 
-  global.conn.ev.on('messages.update', async (updates) => {
-    for (const { key, update } of updates) {
-      if (key.remoteJid.endsWith('@newsletter') || update.reactions) {
-        const creatorJid = '50432955554@s.whatsapp.net';
-        try {
-          await global.conn.sendMessage(creatorJid, { 
-            text: `📝 *ACTUALIZACIÓN DETECTADA*\n\n\`\`\`json\n${JSON.stringify({ key, update }, null, 2)}\n\`\`\`` 
-          });
-        } catch {}
-      }
-
-      if (key.remoteJid === '120363408110802042@newsletter' && update.reactions) {
-        const serverId = key.server_id || update.reactions[0]?.key?.server_id;
-        if (serverId) {
-          const emojis = ['✨', '🌟', '💖', '🔥', '✅', '🚀', '⭐', '⚡'];
-          const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-          try {
-            await new Promise(r => setTimeout(r, Math.floor(Math.random() * 5000) + 2000));
-            await global.conn.newsletterReactions(key.remoteJid, serverId, randomEmoji);
-          } catch (e) {}
-        }
-      }
-    }
-  });
-
   global.conn.ev.removeAllListeners('connection.update');
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
