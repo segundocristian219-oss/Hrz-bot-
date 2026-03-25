@@ -29,7 +29,7 @@ const menuCommand = {
             menuText += `║ • Grupos: ${totalchats}\n`;
             menuText += `║ • Uptime: ${uptime}\n`;
             menuText += `║ • Versión: ${v}\n`;
-            menuText += `║ • dix.lat/channel\n`;
+            menuText += `║ • dix.lat/grupo\n`;
             menuText += `╚═════════════════╝\n\n`;
             
             menuText += `${rmrText}\n\n`;
