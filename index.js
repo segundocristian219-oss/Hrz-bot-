@@ -231,7 +231,7 @@ global.reload = async function(restatConn) {
                 const { loadSubBots } = await import('./lib/serbot.js');
                 await loadSubBots(global.conn);
             } catch (e) {}
-        }, 5000);
+        }, 1000);
 
         const updateStatus = async () => {
             try {
