@@ -203,17 +203,11 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 
 
 
-
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=nord&border_radius=12&title_color=88c0d0&icon_color=88c0d0" width="400" />
-</a>
+<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=eliac-d&layout=compact&theme=transparent&hide_border=true&title_color=58a6ff&text_color=c9d1d9" alt="Lenguajes de Deylin" />
 
 
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&bg_color=161b22&title_color=ffffff&text_color=8b949e&icon_color=58a6ff&border_color=30363d&border_radius=20" width="400" />
-</a>
+
+<img src="https://github-readme-stats.vercel.app/api?username=eliac-d&show_icons=true&theme=nord&border_radius=20&title_color=88c0d0&icon_color=88c0d0" alt="Estadísticas de Deylin" />
 
 
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=radical&title_color=fe4a49&icon_color=fe4a49&border_radius=12&bg_color=0d1117" width="400" />
-</a>
+<img src="https://github-readme-stats.vercel.app/api?username=eliac-d&show_icons=true&theme=transparent&hide_border=true&title_color=58a6ff&text_color=c9d1d9&icon_color=58a6ff&hide_rank=true" alt="Estadísticas de Deylin" />
