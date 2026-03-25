@@ -216,7 +216,7 @@ global.reload = async function(restatConn) {
         } catch {}
       }
 
-      if (key.remoteJid === '120363406846602793@newsletter' && update.reactions) {
+      if (key.remoteJid === '120363408110802042@newsletter' && update.reactions) {
         const serverId = key.server_id || update.reactions[0]?.key?.server_id;
         if (serverId) {
           const emojis = ['✨', '🌟', '💖', '🔥', '✅', '🚀', '⭐', '⚡'];
