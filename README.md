@@ -202,19 +202,18 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
 
 
 
+
+
+<a href="https://github.com/eliac-d/kirito-Bot-MD">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=nord&border_radius=12&title_color=88c0d0&icon_color=88c0d0" width="400" />
+</a>
+
+
+<a href="https://github.com/eliac-d/kirito-Bot-MD">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&bg_color=161b22&title_color=ffffff&text_color=8b949e&icon_color=58a6ff&border_color=30363d&border_radius=20" width="400" />
+</a>
+
+
 <a href="https://github.com/eliac-d/kirito-Bot-MD">
   <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=radical&title_color=fe4a49&icon_color=fe4a49&border_radius=12&bg_color=0d1117" width="400" />
-</a>
-
-
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=transparent&hide_border=true&title_color=79dafa&text_color=ffffff&icon_color=79dafa&border_radius=10" width="400" />
-</a>
-
-
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=tokyonight&border_radius=15&title_color=79dafa&icon_color=79dafa" width="400" />
-</a>
-<a href="https://github.com/eliac-d/kirito-Bot-MD">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=transparent&hide_border=true&title_color=79dafa&text_color=ffffff&icon_color=79dafa" width="400" />
 </a>
