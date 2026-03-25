@@ -22,7 +22,7 @@ const shortCommand = {
 
             if (json.status) {
                 const shortUrl = `${json.url}`;
-                const del = `${json.delate}`;
+                const del = `${res-del-url}`;
                 const shortqr = `${json.qr}`;
 
                 let txt = `> 🔗 *ᴇɴʟᴀᴄᴇ ᴀᴄᴏʀᴛᴀᴅᴏ*\n\n`;
