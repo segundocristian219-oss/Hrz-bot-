@@ -22,13 +22,15 @@ const shortCommand = {
 
             if (json.status) {
                 const shortUrl = `${json.url}`;
+                const del = `${json.delate}`;
                 const shortqr = `${json.qr}`;
 
                 let txt = `> 🔗 *ᴇɴʟᴀᴄᴇ ᴀᴄᴏʀᴛᴀᴅᴏ*\n\n`;
                 txt += `> ✧ *ᴏʀɪɢɪɴᴀʟ:* ${text}\n`;
                 txt += `> ✧ *ᴄᴏʀᴛᴏ:* ${shortUrl}\n\n`;
                 txt += `> ✧ *ǫʀ:* ${shortqr}\n\n`;
-                txt += `> ☁️ *ɪɴғᴏ:* Developed by Voker platform.`;
+                txt += `> ✧ *ᴅᴇʟᴀᴛᴇ:* ${del}\n\n`;
+                txt += `> ☁️ *ɪɴғᴏ:* Developed by dix.lat.`;
 
                 await m.reply(txt);
                 await m.react('✅');
