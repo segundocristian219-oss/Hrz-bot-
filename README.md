@@ -199,3 +199,24 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
   </a>
 </p>
 <br>
+
+
+
+<a href="https://github.com/eliac-d/kirito-Bot-MD">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=transparent&hide_border=true&title_color=79dafa&text_color=ffffff&icon_color=79dafa" width="400" />
+</a>
+
+
+
+<a href="https://github.com/eliac-d/kirito-Bot-MD">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=radical&title_color=fe4a49&icon_color=fe4a49&border_radius=20" width="400" />
+</a>
+
+
+<a href="https://github.com/eliac-d/kirito-Bot-MD">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=tokyonight&border_radius=10&show_owner=true" width="400" />
+</a>
+
+<a href="https://github.com/eliac-d/kirito-Bot-MD">
+<img src="https://github-readme-stats.vercel.app/api/pin/?username=eliac-d&repo=kirito-Bot-MD&theme=cobalt&show_owner=true" width="400" />
+</a>
