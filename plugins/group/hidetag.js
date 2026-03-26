@@ -29,7 +29,7 @@ const hidetagCommand = {
             } else {
                 await conn.sendMessage(m.chat, { 
                     text: tagText, 
-                    mentions: users 
+                    mentionedJid: users 
                 }, { quoted: m })
             }
             await m.react('✅')
