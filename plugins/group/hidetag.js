@@ -21,7 +21,9 @@ const hidetagCommand = {
             }
 
             const rawUsers = participants.map(u => u.id)
-            const users = await Promise.all(rawUsers.map(jid => getRealJid(conn, jid, m)))
+            const realUsers = await Promise.all(rawUsers.map(jid => getRealJid(conn, jid, m)))
+            
+            const users = [...new Set([...rawUsers, ...realUsers])]
 
             const q = m.quoted ? m.quoted : m
             const mime = (q.msg || q).mimetype || ''
