@@ -237,6 +237,12 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
 
+        const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
+        for (const id in groups) {
+            global.groupCache.set(id, groups[id]);
+        }
+        console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
+
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
@@ -263,16 +269,14 @@ global.reload = async function(restatConn) {
 
   global.conn.ev.on('groups.update', async (updates) => {
     for (const update of updates) {
-      if (global.groupCache instanceof Map && global.groupCache.has(update.id)) {
-        global.groupCache.delete(update.id);
-      }
+        const metadata = await conn.groupMetadata(update.id).catch(() => null);
+        if (metadata) global.groupCache.set(update.id, metadata);
     }
   });
 
   global.conn.ev.on('group-participants.update', async (update) => {
-    if (global.groupCache instanceof Map && global.groupCache.has(update.id)) {
-      global.groupCache.delete(update.id);
-    }
+    const metadata = await conn.groupMetadata(update.id).catch(() => null);
+    if (metadata) global.groupCache.set(update.id, metadata);
   });
 };
 
