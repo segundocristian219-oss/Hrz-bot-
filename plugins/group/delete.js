@@ -18,10 +18,12 @@ const deleteCommand = {
 
             const count = parseInt(text);
             if (!isNaN(count) && count > 0) {
-                const limit = Math.min(count, 20);
-                const messages = await conn.store?.messages[m.chat]?.array?.slice(-limit) || [];
+                const limit = Math.min(count, 25);
+                const fetch = await conn.fetchMessagesFromWA(m.chat, limit);
                 
-                for (const msg of messages.reverse()) {
+                if (!fetch || fetch.length === 0) return await m.react('empty');
+
+                for (const msg of fetch.reverse()) {
                     await conn.sendMessage(m.chat, { delete: msg.key }).catch(() => null);
                 }
                 return await m.react('🗑️');
