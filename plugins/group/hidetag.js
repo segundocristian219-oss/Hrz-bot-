@@ -23,7 +23,7 @@ const hidetagCommand = {
             const mentions = [...new Set(users)];
             const q = m.quoted ? m.quoted : m;
             const mime = (q.msg || q).mimetype || '';
-            const tagText = text || (m.quoted && m.quoted.text) || "";
+            const tagText = text || (m.quoted && m.quoted.text) || "Nᴏᴛɪғɪᴄᴀᴄɪóɴ Gᴇɴᴇʀᴀʟ";
 
             if (mime) {
                 const media = await q.download();
@@ -40,8 +40,12 @@ const hidetagCommand = {
                 }
             } else {
                 await conn.sendMessage(m.chat, { 
-                    text: tagText || "Nᴏᴛɪғɪᴄᴀᴄɪóɴ Gᴇɴᴇʀᴀʟ", 
-                    mentions 
+                    text: tagText,
+                    contextInfo: { 
+                        mentionedJid: mentions,
+                        groupMentions: [],
+                        isForwarded: false
+                    }
                 }, { quoted: m });
             }
 
