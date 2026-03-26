@@ -31,10 +31,10 @@ const h = {
                         text: text,
                         contextInfo: {
                             externalAdReply: {
-                                title: '📢 VOKER SYSTEMS INFO',
+                                title: name(),
                                 body: 'Comunicado Global',
                                 mediaType: 1,
-                                thumbnailUrl: 'https://dix.lat/favicon.ico',
+                                thumbnailUrl: img(),
                                 sourceUrl: 'https://dix.lat',
                                 renderLargerThumbnail: false
                             }
