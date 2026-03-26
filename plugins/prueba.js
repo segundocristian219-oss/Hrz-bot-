@@ -1,55 +1,42 @@
-const h = {
-    name: 'broadcast',
-    alias: ['bc', 'bcgc'],
-    category: 'owner',
-    run: async (m, { conn, text, isROwner }) => {
-        if (!isROwner) return m.reply('solo desarrolladores');
-        
-        const content = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
-        if (!content && !m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEscribe el mensaje o etiqueta contenido.');
+export default {
+    name: 'stats',
+    alias: ['topcmd', 'uso'],
+    category: 'main',
+    run: async (m, { conn }) => {
+        try {
+            const allStats = await global.Stats.find().lean();
+            if (!allStats.length) return m.reply("> ╰❒ Sin datos registrados.");
 
-        const dbChats = await global.Chat.find().lean();
-        const getGroups = await conn.groupFetchAllParticipating();
-        const groups = Object.values(getGroups);
-        const activeJids = groups.map(v => v.id);
+            const topGlobal = [...allStats]
+                .sort((a, b) => b.globalUsage - a.globalUsage)
+                .slice(0, 5);
 
-        const validChats = dbChats.filter(c => activeJids.includes(c.id) && !c.isBanned);
+            const groupKey = m.chat.replace(/\./g, '_');
+            const topLocal = [...allStats]
+                .filter(s => s.groups && s.groups[groupKey])
+                .sort((a, b) => b.groups[groupKey] - a.groups[groupKey])
+                .slice(0, 5);
 
-        if (validChats.length === 0) return m.reply('❌ No hay grupos activos en común con la base de datos.');
+            let txt = `📊 *MÉTRICAS DE SISTEMA*\n\n`;
+            txt += `🌎 *TOP GLOBAL:*\n`;
+            topGlobal.forEach((s, i) => {
+                txt += `${i + 1}. ${s.command} → ${s.globalUsage}\n`;
+            });
 
-        await m.reply(`🚀 Enviando a ${validChats.length} grupos...`);
-
-        let success = 0;
-        let errors = 0;
-
-        for (const chat of validChats) {
-            try {
-                if (m.quoted) {
-                    await conn.copyNForward(chat.id, m.quoted.fakeObj, true);
-                } else {
-                    await conn.sendMessage(chat.id, { 
-                        text: text,
-                        contextInfo: {
-                            externalAdReply: {
-                                title: name(),
-                                body: 'Comunicado Global',
-                                mediaType: 1,
-                                thumbnailUrl: img(),
-                                sourceUrl: 'https://dix.lat',
-                                renderLargerThumbnail: false
-                            }
-                        }
+            if (m.isGroup) {
+                txt += `\n📍 *TOP GRUPO:*\n`;
+                if (topLocal.length > 0) {
+                    topLocal.forEach((s, i) => {
+                        txt += `${i + 1}. ${s.command} → ${s.groups[groupKey]}\n`;
                     });
+                } else {
+                    txt += `_Sin actividad registrada._\n`;
                 }
-                success++;
-                await new Promise(res => setTimeout(res, 2000));
-            } catch (e) {
-                errors++;
             }
-        }
 
-        await m.reply(`✅ Finalizado\n\n✨ Éxito: ${success}\n❌ Error: ${errors}`);
+            await conn.reply(m.chat, txt, m);
+        } catch (e) {
+            console.error(e);
+        }
     }
 };
-
-export default h;
