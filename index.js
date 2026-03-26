@@ -209,6 +209,12 @@ global.reload = async function(restatConn) {
     } catch (e) { 
         if (!e.message?.includes('decrypt')) console.error(e); 
     }
+
+if (m.isGroup && !global.groupCache.has(m.chat)) {
+    const metadata = await conn.groupMetadata(m.chat).catch(() => null);
+    if (metadata) global.groupCache.set(m.chat, metadata);
+}
+
   });
 
   global.conn.ev.removeAllListeners('connection.update');
