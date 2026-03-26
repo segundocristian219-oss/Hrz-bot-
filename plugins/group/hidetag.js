@@ -16,13 +16,13 @@ const hidetagCommand = {
                 if (/webp/g.test(mime)) {
                     await conn.sendMessage(m.chat, { 
                         sticker: media, 
-                        mentions: users 
+                        mentionedJid: users 
                     }, { quoted: m })
                 } else {
                     const type = mime.split('/')[0]
                     await conn.sendMessage(m.chat, {
                         [type]: media,
-                        caption: tagText,
+                        mentionedJid: tagText,
                         mentions: users
                     }, { quoted: m })
                 }
@@ -34,7 +34,7 @@ const hidetagCommand = {
             }
             await m.react('✅')
         } catch (e) {
-            await conn.sendMessage(m.chat, { text: tagText, mentions: users })
+            await conn.sendMessage(m.chat, { text: tagText, mentionedJid: users })
         }
     }
 }
