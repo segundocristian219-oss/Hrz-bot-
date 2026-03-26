@@ -70,6 +70,7 @@ function activateLocalDB() {
     if (!existsSync('./database')) mkdirSync('./database');
     global.User = LocalDB.model('User');
     global.Chat = LocalDB.model('Chat');
+    global.Stats = LocalDB.model('Stats'); 
     logDB('LOCAL', 'CONNECTED');
 }
 
@@ -98,6 +99,11 @@ if (mongoURI && !process.argv.includes('--local')) {
         isBanned: { type: Boolean, default: false }
     }, { strict: false });
     global.Chat = mongoose.model('Chat', chatSchema);
+
+   const statsSchema = new mongoose.Schema({
+        command: { type: String, unique: true }
+    }, { strict: false });
+    global.Stats = mongoose.model('Stats', statsSchema);
 } else {
     activateLocalDB();
 }
