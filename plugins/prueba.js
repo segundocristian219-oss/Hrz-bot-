@@ -9,10 +9,13 @@ const h = {
         if (!content && !m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEscribe el mensaje o etiqueta contenido.');
 
         const dbChats = await global.Chat.find().lean();
-        const activeGroups = Object.keys(conn.chats || {}).filter(jid => jid.endsWith('@g.us'));
-        const validChats = dbChats.filter(c => activeGroups.includes(c.id) && !c.isBanned);
+        const getGroups = await conn.groupFetchAllParticipating();
+        const groups = Object.values(getGroups);
+        const activeJids = groups.map(v => v.id);
 
-        if (validChats.length === 0) return m.reply('❌ No hay grupos activos registrados.');
+        const validChats = dbChats.filter(c => activeJids.includes(c.id) && !c.isBanned);
+
+        if (validChats.length === 0) return m.reply('❌ No hay grupos activos en común con la base de datos.');
 
         await m.reply(`🚀 Enviando a ${validChats.length} grupos...`);
 
@@ -31,7 +34,7 @@ const h = {
                                 title: '📢 VOKER SYSTEMS INFO',
                                 body: 'Comunicado Global',
                                 mediaType: 1,
-                                thumbnailUrl: img,
+                                thumbnailUrl: 'https://dix.lat/favicon.ico',
                                 sourceUrl: 'https://dix.lat',
                                 renderLargerThumbnail: false
                             }
