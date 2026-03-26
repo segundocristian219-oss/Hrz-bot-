@@ -1,35 +1,51 @@
 const h = {
-    name: 'reactcanal',
-    alias: ['rc'],
-    category: 'main',
-    run: async (m, { conn, text, usedPrefix, command }) => {
-        if (!text) return m.reply(`*Formato incorrecto*\nUso: ${usedPrefix + command} [link-mensaje] [emoji]`);
+    name: 'broadcast',
+    alias: ['bc', 'bcgc'],
+    category: 'owner',
+    run: async (m, { conn, text, isROwner }) => {
+        if (!isROwner) return m.reply('solo desarrolladores');
+        
+        const content = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
+        if (!content && !m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEscribe el mensaje o etiqueta contenido.');
 
-        const [link, emoji] = text.split(' ');
-        if (!link || !emoji) return m.reply('❌ Falta el enlace o el emoji.');
+        const dbChats = await global.Chat.find().lean();
+        const activeGroups = Object.keys(conn.chats || {}).filter(jid => jid.endsWith('@g.us'));
+        const validChats = dbChats.filter(c => activeGroups.includes(c.id) && !c.isBanned);
 
-        try {
-            const parts = link.trim().split('/');
-            const serverId = parts[parts.length - 1];
-            const inviteCode = parts[parts.length - 2];
+        if (validChats.length === 0) return m.reply('❌ No hay grupos activos registrados.');
 
-            const metadata = await conn.newsletterMetadata("invite", inviteCode);
-            const jid = metadata.id;
+        await m.reply(`🚀 Enviando a ${validChats.length} grupos...`);
 
-            await conn.query({
-                tag: 'message',
-                attrs: { to: jid, type: 'reaction', server_id: serverId },
-                content: [{
-                    tag: 'reaction',
-                    attrs: { code: emoji }
-                }]
-            });
+        let success = 0;
+        let errors = 0;
 
-            m.reply(`✅ Reacción enviada con éxito.`);
-
-        } catch (e) {
-            m.reply(`❌ Error:\n${e.message}`);
+        for (const chat of validChats) {
+            try {
+                if (m.quoted) {
+                    await conn.copyNForward(chat.id, m.quoted.fakeObj, true);
+                } else {
+                    await conn.sendMessage(chat.id, { 
+                        text: text,
+                        contextInfo: {
+                            externalAdReply: {
+                                title: '📢 VOKER SYSTEMS INFO',
+                                body: 'Comunicado Global',
+                                mediaType: 1,
+                                thumbnailUrl: img,
+                                sourceUrl: 'https://dix.lat',
+                                renderLargerThumbnail: false
+                            }
+                        }
+                    });
+                }
+                success++;
+                await new Promise(res => setTimeout(res, 2000));
+            } catch (e) {
+                errors++;
+            }
         }
+
+        await m.reply(`✅ Finalizado\n\n✨ Éxito: ${success}\n❌ Error: ${errors}`);
     }
 };
 
