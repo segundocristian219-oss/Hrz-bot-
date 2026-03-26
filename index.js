@@ -200,19 +200,17 @@ global.reload = async function(restatConn) {
   }
 
   global.conn.ev.removeAllListeners('messages.upsert');
-    global.conn.ev.on('messages.upsert', async (chatUpdate) => {
+  global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
     if (!msg || (!msg.message && !msg.messageStubType)) return;
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
 
-        
         if (m.isGroup && !global.groupCache.has(m.chat)) {
             const metadata = await conn.groupMetadata(m.chat).catch(() => null);
             if (metadata) global.groupCache.set(m.chat, metadata);
         }
-        
     } catch (e) { 
         if (!e.message?.includes('decrypt')) console.error(e); 
     }
