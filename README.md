@@ -200,3 +200,6 @@ Haz clic en el desplegable para visualizar los comandos de configuración del en
   </a>
 </p>
 <br>
+
+
+[![GitHub Streak](https://streak-stats.demolab.com?user=eliac-d%20&theme=merko&hide_border=&locale=es&short_numbers=&date_format=j%2Fn%5B%2FY%5D&mode=weekly)](https://git.io/streak-stats)
