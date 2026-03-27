@@ -7,10 +7,6 @@ const serbot = {
     run: async (m, { conn, usedPrefix, command }) => {
         const id = m.sender.split('@')[0];
 
-        if (global.conns.some(c => c.user && c.user.id.split(':')[0] === id)) {
-            return m.reply(`⚠️ *@${id}*, ya tienes una sesión activa en este momento.`);
-        }
-
         const info = `┏━━━━ 「 **INSTRUCCIONES** 」 ━━━━┓\n` +
                      `┃\n` +
                      `┃ 1. Ve a **Dispositivos vinculados**.\n` +
