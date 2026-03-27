@@ -9,31 +9,15 @@ const blockKeywords = [
     'closing session', 'Closing session', 'Bad MAC', 'decryption failed'
 ];
 
-const cleanSessions = async () => {
+const filterOutput = (chunk, originalWrite, encoding, callback) => {
     try {
-        const rootPath = './sessions';
-        if (!existsSync(rootPath)) return;
-        
-        const removeOldFiles = async (dir) => {
-            const items = await fsP.readdir(dir);
-            for (const item of items) {
-                const fullPath = join(dir, item);
-                const stat = await fsP.stat(fullPath);
-                
-                if (stat.isDirectory()) {
-                    await removeOldFiles(fullPath);
-                } else {
-                    
-                    if (item !== 'creds.json' && (Date.now() - stat.mtimeMs > 2 * 24 * 60 * 60 * 1000)) {
-                        await fsP.unlink(fullPath).catch(() => null);
-                    }
-                }
-            }
-        };
-        await removeOldFiles(rootPath);
-    } catch (e) {}
+        const msg = chunk.toString();
+        if (blockKeywords.some(k => msg.includes(k))) return true;
+        return originalWrite(chunk, encoding, callback);
+    } catch {
+        return originalWrite(chunk, encoding, callback);
+    }
 };
-
 
 const stdoutWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = (chunk, encoding, callback) => filterOutput(chunk, stdoutWrite, encoding, callback);
@@ -187,15 +171,26 @@ if (!state.creds.registered) {
 
 const cleanSessions = async () => {
     try {
-        const files = await fsP.readdir(sessionPath);
-        const limit = 3 * 24 * 60 * 60 * 1000;
-        await Promise.all(files.map(async (file) => {
-            if (file === 'creds.json') return;
-            const filePath = join(sessionPath, file);
-            const st = await fsP.stat(filePath);
-            if (Date.now() - st.mtimeMs > limit) await fsP.unlink(filePath);
-        }));
-    } catch {}
+        const rootPath = './sessions';
+        if (!existsSync(rootPath)) return;
+        
+        const removeOldFiles = async (dir) => {
+            const items = await fsP.readdir(dir);
+            for (const item of items) {
+                const fullPath = join(dir, item);
+                const stat = await fsP.stat(fullPath);
+                
+                if (stat.isDirectory()) {
+                    await removeOldFiles(fullPath);
+                } else {
+                    if (item !== 'creds.json' && (Date.now() - stat.mtimeMs > 2 * 24 * 60 * 60 * 1000)) {
+                        await fsP.unlink(fullPath).catch(() => null);
+                    }
+                }
+            }
+        };
+        await removeOldFiles(rootPath);
+    } catch (e) {}
 };
 
 let messageHandler;
