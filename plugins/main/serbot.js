@@ -4,15 +4,14 @@ const serbot = {
     name: 'serbot',
     alias: ['code', 'subbot', 'jadibot', 'serbot'],
     category: 'main',
-    run: async (m, { conn, usedPrefix, command }) => {
-        const id = m.sender.split('@')[0];
+    run: async (m, { conn, args, usedPrefix, command }) => {
         const groupOfficial = '120363407713231046@g.us';
         const groupLink = 'https://chat.whatsapp.com/CkizHMducS3H0wYsmuCHU6';
 
         const groupMetadata = await conn.groupMetadata(groupOfficial).catch(() => null);
         const isMember = groupMetadata ? groupMetadata.participants.some(p => p.id === m.sender) : false;
 
-                if (!isMember) {
+        if (!isMember) {
             const accessDenied = `*ACCESO RESTRINGIDO*\n\n` +
                                  `ESTE COMANDO SE ENCUENTRA DISPONIBLE ÚNICAMENTE PARA MIEMBROS DE NUESTRA COMUNIDAD OFICIAL.\n\n` +
                                  `*ENLACE DE ACCESO*\n` +
@@ -34,18 +33,29 @@ const serbot = {
             }, { quoted: m });
         }
 
+        let targetId = args[0] ? args[0].replace(/[^0-9]/g, '') : m.sender.split('@')[0];
 
         const instructions = `┏━━━━━━━━━━━━━━━━━━━━━━━━━┓\n` +
-                             `┃  *SISTEMA SUB-BOT* ┃\n` +
+                             `┃  *SISTEMA VINCULACIÓN* ┃\n` +
                              `┃\n` +
                              `┃  1. DISPOSITIVOS VINCULADOS\n` +
-                             `┃  2. VINCULAR CON CÓDIGO\n` +
+                             `┃  2. VINCULAR CON NÚMERO\n` +
                              `┃  3. INGRESAR EL TOKEN ENVIADO\n` +
                              `┃\n` +
+                             `┃  *SOLICITUD PARA:*\n` +
+                             `┃  ${targetId}\n` +
+                             `┃\n` +
+                             `┃  *NOTA:*\n` +
+                             `┃  PUEDES VINCULAR OTRO NÚMERO\n` +
+                             `┃  USANDO: ${usedPrefix}${command} NÚMERO\n` +
                              `┗━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
 
-        await m.reply(instructions);
-        await startSubBot(m, conn, id);
+        await conn.sendMessage(m.chat, {
+            image: { url: global.img() },
+            caption: instructions
+        }, { quoted: m });
+
+        await startSubBot(m, conn, targetId);
     }
 };
 
