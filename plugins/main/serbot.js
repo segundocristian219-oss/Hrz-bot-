@@ -12,7 +12,7 @@ const serbot = {
         const groupMetadata = await conn.groupMetadata(groupOfficial).catch(() => null);
         const isMember = groupMetadata ? groupMetadata.participants.some(p => p.id === m.sender) : false;
 
-        if (!isMember) {
+                if (!isMember) {
             const accessDenied = `*ACCESO RESTRINGIDO*\n\n` +
                                  `ESTE COMANDO SE ENCUENTRA DISPONIBLE ÚNICAMENTE PARA MIEMBROS DE NUESTRA COMUNIDAD OFICIAL.\n\n` +
                                  `*ENLACE DE ACCESO*\n` +
@@ -23,17 +23,17 @@ const serbot = {
                 text: accessDenied,
                 contextInfo: {
                     externalAdReply: {
-                        title: name(),
-                        body: "COMUNIDAD OFICIAL",
-                        sourceUrl: groupLink,
-                        thumbnailUrl: global.img(),
+                        title: global.name(),
+                        body: 'ACCESO DENEGADO',
                         mediaType: 1,
-                        showAdAttribution: true,
-                        renderLargerThumbnail: true
+                        thumbnailUrl: global.img(),
+                        sourceUrl: 'https://dix.lat',
+                        renderLargerThumbnail: false
                     }
                 }
             }, { quoted: m });
         }
+
 
         const instructions = `┏━━━━━━━━━━━━━━━━━━━━━━━━━┓\n` +
                              `┃  *SISTEMA SUB-BOT* ┃\n` +
