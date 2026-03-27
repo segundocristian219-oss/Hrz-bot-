@@ -7,26 +7,40 @@ const deleteCommand = {
     run: async (m, { conn, text }) => {
         try {
             if (m.quoted) {
-                const key = {
-                    remoteJid: m.chat,
-                    fromMe: m.quoted.fromMe,
-                    id: m.quoted.id,
-                    participant: m.quoted.sender
-                };
-                return await conn.sendMessage(m.chat, { delete: key });
+                const participant = m.message?.extendedTextMessage?.contextInfo?.participant || m.quoted.sender;
+                const stanzaId = m.message?.extendedTextMessage?.contextInfo?.stanzaId || m.quoted.id;
+
+                await conn.sendMessage(m.chat, { 
+                    delete: { 
+                        remoteJid: m.chat, 
+                        fromMe: m.quoted.fromMe, 
+                        id: stanzaId, 
+                        participant: participant 
+                    } 
+                });
+
+                const count = parseInt(text);
+                if (!isNaN(count) && count > 1) {
+                    const limit = Math.min(count - 1, 20);
+                    const fetch = await conn.fetchMessagesFromWA(m.chat, 50);
+                    const userMessages = fetch
+                        .filter(v => (v.key.participant || v.participant) === participant)
+                        .slice(-limit);
+
+                    for (const msg of userMessages) {
+                        await conn.sendMessage(m.chat, { delete: msg.key }).catch(() => null);
+                    }
+                }
+                return;
             }
 
-            const count = parseInt(text);
-            if (!isNaN(count) && count > 0) {
-                const limit = Math.min(count, 25);
-                const fetch = await conn.fetchMessagesFromWA(m.chat, limit);
-                
-                if (!fetch || fetch.length === 0) return await m.react('empty');
-
-                for (const msg of fetch.reverse()) {
+            if (text && !isNaN(text)) {
+                const count = Math.min(parseInt(text), 20);
+                const fetch = await conn.fetchMessagesFromWA(m.chat, count);
+                for (const msg of fetch) {
                     await conn.sendMessage(m.chat, { delete: msg.key }).catch(() => null);
                 }
-                return await m.react('🗑️');
+                return;
             }
 
             await m.react('❓');
