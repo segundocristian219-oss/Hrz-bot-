@@ -22,25 +22,28 @@ const deleteCommand = {
                 const count = parseInt(text);
                 if (!isNaN(count) && count > 1) {
                     const limit = Math.min(count - 1, 20);
-                    const fetch = await conn.fetchMessagesFromWA(m.chat, 50);
-                    const userMessages = fetch
+                    const messages = conn.store?.messages[m.chat]?.array || [];
+                    const userMessages = messages
                         .filter(v => (v.key.participant || v.participant) === participant)
                         .slice(-limit);
 
-                    for (const msg of userMessages) {
+                    for (const msg of userMessages.reverse()) {
                         await conn.sendMessage(m.chat, { delete: msg.key }).catch(() => null);
                     }
                 }
                 return;
             }
 
-            if (text && !isNaN(text)) {
-                const count = Math.min(parseInt(text), 20);
-                const fetch = await conn.fetchMessagesFromWA(m.chat, count);
-                for (const msg of fetch) {
+            const count = parseInt(text);
+            if (!isNaN(count) && count > 0) {
+                const limit = Math.min(count, 20);
+                const messages = conn.store?.messages[m.chat]?.array || [];
+                const toDelete = messages.slice(-limit);
+
+                for (const msg of toDelete.reverse()) {
                     await conn.sendMessage(m.chat, { delete: msg.key }).catch(() => null);
                 }
-                return;
+                return await m.react('🗑️');
             }
 
             await m.react('❓');
