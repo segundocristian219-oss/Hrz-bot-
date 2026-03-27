@@ -7,16 +7,17 @@ const serbot = {
     run: async (m, { conn, usedPrefix, command }) => {
         const id = m.sender.split('@')[0];
 
-        const info = `┏━━━━ 「 **INSTRUCCIONES** 」 ━━━━┓\n` +
+        const info = `┏━━━━━━━━━━━━━━━━━━━━━━━━━┓\n` +
+                     `┃  ♛ *MODO SUB-BOT* ♛\n` +
                      `┃\n` +
-                     `┃ 1. Ve a **Dispositivos vinculados**.\n` +
-                     `┃ 2. Selecciona **Vincular con número**.\n` +
-                     `┃ 3. Ingresa el código que te enviaré.\n` +
+                     `┃ ➠  Ve a **Dispositivos vinculados**.\n` +
+                     `┃ ➠  Selecciona **Vincular con código**.\n` +
+                     `┃ ➠  Ingresa el código que te enviaré.\n` +
                      `┃\n` +
+                     `┃ ⍰ *Usa el código rápido.*\n` +
                      `┗━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
 
         await m.reply(info);
-        
         await startSubBot(m, conn, id);
     }
 };
