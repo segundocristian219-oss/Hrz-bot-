@@ -1,5 +1,6 @@
 const STICKER_GROUPS = [
     { keywords: ['xd'], links: ['https://api.dix.lat/media2/1772071735104.webp'] },
+    { keywords: ['que', 'como', 'a'], links: ['https://api.dix.lat/media2/1774670739905.webp', 'https://api.dix.lat/media2/1774670806828.webp', 'https://api.dix.lat/media2/1774670799889.webp'] },
     { keywords: ['jaja', 'jajaja'], links: ['https://api.dix.lat/media2/1772073234187.webp'] },
     { keywords: ['mua', 'beso', '💋'], links: ['https://api.dix.lat/media2/1772658902972.webp', 'https://api.dix.lat/media2/1772659117883.webp'] },
     { keywords: ['hola', 'hi', 'hello'], links: ['https://api.dix.lat/media2/1772077499099.webp', 'https://api.dix.lat/media2/1772077472503.webp'] },
