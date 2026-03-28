@@ -158,7 +158,7 @@ function alternateParses(raw = '') {
 
 function formatLyrics(title, artist, lyrics, source, score) {
   return (
-    `*𝄞    LETRA ENCONTRADA*\n\n` +
+    `*走    LETRA ENCONTRADA*\n\n` +
     `> ▢ *FUENTE:* ${source}\n` +
     `> ▢ *TÍTULO:* ${title || 'Desconocido'}\n` +
     `> ▢ *ARTISTA:* ${artist || 'Desconocido'}\n` +
@@ -198,8 +198,8 @@ async function fetchJson(url, options = {}, timeoutMs = 15000) {
 }
 
 function scoreCandidate(candidate, expectedSong, expectedArtist) {
-  const foundTitle = candidate.trackName || candidate.name || '';
-  const foundArtist = candidate.artistName || candidate.artist || '';
+  const foundTitle = candidate.trackName || candidate.name || candidate.título || '';
+  const foundArtist = candidate.artistName || candidate.artist || candidate.artistas || '';
 
   const tScore = titleSimilarity(foundTitle, expectedSong);
   const aScore = expectedArtist ? artistSimilarity(foundArtist, expectedArtist) : 0.5;
@@ -264,6 +264,26 @@ async function fromLRCLIB(song, artist = null) {
   return bestOverall;
 }
 
+async function fromDelirius(rawText) {
+  try {
+    const url = `https://api.delirius.store/search/lyrics?q=${encodeURIComponent(rawText)}`;
+    const data = await fetchJson(url);
+
+    if (!data?.status || !data?.data?.letra) return null;
+
+    const result = data.data;
+    return {
+      source: 'Delirius API',
+      title: result.título || 'Desconocido',
+      artist: result.artistas || 'Desconocido',
+      lyrics: cleanLyrics(result.letra),
+      score: 0.90
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fromLyricsOvh(song, artist = null) {
   if (!artist || !song) return null;
 
@@ -297,6 +317,7 @@ async function searchReliableLyrics(rawText) {
 
     const providers = [
       () => fromLRCLIB(song, artist),
+      () => fromDelirius(rawText),
       () => structured ? fromLyricsOvh(song, artist) : null
     ];
 
@@ -308,8 +329,10 @@ async function searchReliableLyrics(rawText) {
         if (!best || result.score > best.score) {
           best = result;
         }
+        if (best && best.score >= 0.95) break;
       } catch {}
     }
+    if (best && best.score >= 0.95) break;
   }
 
   return best;
@@ -337,7 +360,7 @@ const lyricsCommand = {
         return m.reply(
           '> ⚔ ERROR: No encontré una coincidencia confiable.\n' +
           '> ✎ Usa el formato: artista - canción\n' +
-          '> ✎ Ejemplo: .letra Andrés Serrano - Hoy me levanté'
+          '> ✎ Ejemplo: .letra Adele - Hello'
         );
       }
 
