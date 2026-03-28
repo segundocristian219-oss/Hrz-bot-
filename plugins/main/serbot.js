@@ -1,15 +1,23 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
 import { startSubBot } from '../../lib/serbot.js';
 
 const serbot = {
     name: 'serbot',
-    alias: ['code', 'subbot', 'jadibot', 'serbot'],
+    alias: ['code', 'subbot', 'jadibot'],
     category: 'main',
     run: async (m, { conn, args, usedPrefix, command }) => {
         const groupOfficial = '120363407713231046@g.us';
         const groupLink = 'https://chat.whatsapp.com/CkizHMducS3H0wYsmuCHU6';
 
-        const groupMetadata = await conn.groupMetadata(groupOfficial).catch(() => null);
-        const isMember = groupMetadata ? groupMetadata.participants.some(p => p.id === m.sender) : false;
+        let groupMetadata;
+        try {
+            groupMetadata = await conn.groupMetadata(groupOfficial);
+        } catch {
+            groupMetadata = null;
+        }
+
+        const senderId = jidNormalizedUser(m.sender);
+        const isMember = groupMetadata ? groupMetadata.participants.some(p => jidNormalizedUser(p.id) === senderId) : false;
 
         if (!isMember) {
             const accessDenied = `*ACCESO RESTRINGIDO*\n\n` +
@@ -33,7 +41,7 @@ const serbot = {
             }, { quoted: m });
         }
 
-        let targetId = args[0] ? args[0].replace(/[^0-9]/g, '') : m.sender.split('@')[0];
+        let targetId = args[0] ? args[0].replace(/[^0-9]/g, '') : senderId.split('@')[0];
 
         const instructions = `┏━━━━━━━━━━━━━━━━━━━━━━━━━┓\n` +
                              `┃  *SISTEMA VINCULACIÓN* ┃\n` +
