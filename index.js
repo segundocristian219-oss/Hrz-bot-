@@ -57,7 +57,7 @@ console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...arg
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
 
-const mongoURI = "mongodb+srv://voker:voker@cluster0.dsle1da.mongodb.net/bot?retryWrites=true&w=majority";
+const mongoURI = process.env.MONGODB_URL;
 
 const logDB = (type, status) => {
     console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
@@ -153,15 +153,33 @@ const connectionOptions = {
   getMessage: async () => ({ conversation: "" })
 };
 
+global.conn = makeWASocket(connectionOptions);
+global.conn.isMain = true;
+if (!state.creds.registered) {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const question = (t) => new Promise((r) => rl.question(t, r));
+    let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
+    let addNumber = phoneNumber.replace(/\D/g, '');
+    rl.close();
+    setTimeout(async () => {
+        try {
+            let codeBot = await conn.requestPairingCode(addNumber);
+            console.log(chalk.cyan('┃ ') + chalk.bgBlack.white.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
+        } catch (e) { console.error(e); }
+    }, 3000);
+}
+
 const cleanSessions = async () => {
     try {
         const rootPath = './sessions';
         if (!existsSync(rootPath)) return;
+
         const removeOldFiles = async (dir) => {
             const items = await fsP.readdir(dir);
             for (const item of items) {
                 const fullPath = join(dir, item);
                 const stat = await fsP.stat(fullPath);
+
                 if (stat.isDirectory()) {
                     await removeOldFiles(fullPath);
                 } else {
@@ -186,20 +204,20 @@ const loadHandler = async () => {
 await loadHandler();
 watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
 
-global.reload = async function(restartConn) {
-  if (restartConn || !global.conn) {
-    try { global.conn?.ws?.close(); } catch {}
+global.reload = async function(restatConn) {
+  if (restatConn) {
+    try { global.conn.ws.close(); } catch {}
     global.conn = makeWASocket(connectionOptions);
   }
 
-  global.conn.ev.on('creds.update', saveCreds);
-
+  global.conn.ev.removeAllListeners('messages.upsert');
   global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     const msg = chatUpdate.messages[0];
     if (!msg || (!msg.message && !msg.messageStubType)) return;
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
+
         if (m.isGroup && !global.groupCache.has(m.chat)) {
             const metadata = await conn.groupMetadata(m.chat).catch(() => null);
             if (metadata) global.groupCache.set(m.chat, metadata);
@@ -209,12 +227,14 @@ global.reload = async function(restartConn) {
     }
   });
 
+  global.conn.ev.removeAllListeners('connection.update');
   global.conn.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect, qr } = update;
-    
+    const { connection, lastDisconnect } = update;
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-        if (reason === DisconnectReason.loggedOut || reason === DisconnectReason.forbidden) {
+        if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
+            setTimeout(() => global.reload(true), 3000);
+        } else if (reason === DisconnectReason.loggedOut || reason === DisconnectReason.forbidden) {
             console.error(chalk.red(`┃ STATUS: LOGGED OUT - ELIMINANDO SESIÓN`));
             exec(`rm -rf ${sessionPath}/*`);
             process.exit(1);
@@ -222,21 +242,24 @@ global.reload = async function(restartConn) {
             setTimeout(() => global.reload(true), 5000);
         }
     }
-    
     if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
+
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
-        for (const id in groups) global.groupCache.set(id, groups[id]);
-        
+        for (const id in groups) {
+            global.groupCache.set(id, groups[id]);
+        }
+        console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
+
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
                 await loadSubBots(global.conn);
             } catch (e) {}
-        }, 2000);
+        }, 1000);
 
         const updateStatus = async () => {
             try {
@@ -253,6 +276,7 @@ global.reload = async function(restartConn) {
         global.keepAlive = setInterval(updateStatus, 600000);
     }
   });
+  global.conn.ev.on('creds.update', saveCreds);
 
   global.conn.ev.on('groups.update', async (updates) => {
     for (const update of updates) {
@@ -265,23 +289,6 @@ global.reload = async function(restartConn) {
     const metadata = await conn.groupMetadata(update.id).catch(() => null);
     if (metadata) global.groupCache.set(update.id, metadata);
   });
-
-  if (!state.creds.registered) {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const question = (t) => new Promise((r) => rl.question(t, r));
-    let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
-    let addNumber = phoneNumber.replace(/\D/g, '');
-    rl.close();
-    
-    setTimeout(async () => {
-        try {
-            let codeBot = await conn.requestPairingCode(addNumber);
-            console.log(chalk.cyan('┃ ') + chalk.bgBlack.white.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
-        } catch (e) { 
-            console.error(chalk.red('┃ ERROR AL GENERAR CÓDIGO:'), e); 
-        }
-    }, 3000);
-  }
 };
 
 await global.reload();
