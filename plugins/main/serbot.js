@@ -9,29 +9,18 @@ const serbot = {
         const groupOfficial = '120363407713231046@g.us';
         const groupLink = 'https://chat.whatsapp.com/CkizHMducS3H0wYsmuCHU6';
 
-        let groupMetadata;
-        try {
-            groupMetadata = await conn.groupMetadata(groupOfficial);
-        } catch {
-            groupMetadata = null;
-        }
-
-        const senderId = jidNormalizedUser(m.sender);
-        const isMember = groupMetadata ? groupMetadata.participants.some(p => jidNormalizedUser(p.id) === senderId) : false;
-
-        if (!isMember) {
-            const accessDenied = `*ACCESO RESTRINGIDO*\n\n` +
-                                 `ESTE COMANDO SE ENCUENTRA DISPONIBLE ÚNICAMENTE PARA MIEMBROS DE NUESTRA COMUNIDAD OFICIAL.\n\n` +
-                                 `*ENLACE DE ACCESO*\n` +
-                                 `${groupLink}\n\n` +
-                                 `EL USO DE ESTE SISTEMA REQUIERE PERTENECER AL GRUPO PARA EVITAR SATURACIÓN POR SOLICITUDES NO AUTORIZADAS.`;
+        if (m.chat !== groupOfficial) {
+            const onlyInGroup = `*COMANDO RESTRINGIDO*\n\n` +
+                                 `ESTE COMANDO SOLO PUEDE SER EJECUTADO DENTRO DEL GRUPO OFICIAL.\n\n` +
+                                 `*UNIRSE AQUÍ:*\n` +
+                                 `${groupLink}`;
 
             return await conn.sendMessage(m.chat, {
-                text: accessDenied,
+                text: onlyInGroup,
                 contextInfo: {
                     externalAdReply: {
                         title: global.name(),
-                        body: 'ACCESO DENEGADO',
+                        body: 'OPERACIÓN DENEGADA',
                         mediaType: 1,
                         thumbnailUrl: global.img(),
                         sourceUrl: 'https://dix.lat',
@@ -41,6 +30,7 @@ const serbot = {
             }, { quoted: m });
         }
 
+        const senderId = jidNormalizedUser(m.sender);
         let targetId = args[0] ? args[0].replace(/[^0-9]/g, '') : senderId.split('@')[0];
 
         const instructions = `┏━━━━━━━━━━━━━━━━━━━━━━━━━┓\n` +
@@ -54,8 +44,7 @@ const serbot = {
                              `┃  ${targetId}\n` +
                              `┃\n` +
                              `┃  *NOTA:*\n` +
-                             `┃  PUEDES VINCULAR OTRO NÚMERO\n` +
-                             `┃  USANDO: ${usedPrefix}${command} NÚMERO\n` +
+                             `┃  SOLO VÁLIDO EN ESTE GRUPO\n` +
                              `┗━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
 
         await conn.sendMessage(m.chat, {
