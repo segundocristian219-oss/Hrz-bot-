@@ -4,72 +4,88 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const inspect = {
     name: 'inspect',
-    alias: ['urlinfo', 'analizar', 'infra'],
+    alias: ['analizar', 'investigar', 'trace'],
     category: 'tools',
     run: async (m, { conn, args }) => {
         
-        if (!args[0]) return m.reply('*[!] INGRESA UNA URL*');
+        if (!args[0]) return m.reply('*[!] INGRESA LA URL A INVESTIGAR*');
 
         try {
             const queryUrl = args[0].startsWith('http') ? args[0] : `https://${args[0]}`;
-            
-            const response = await axios.get(queryUrl, {
-                timeout: 12000,
-                maxRedirects: 5,
-                headers: { 
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+            const startTime = Date.now();
+
+            const res = await axios.get(queryUrl, {
+                timeout: 15000,
+                maxRedirects: 10,
+                validateStatus: () => true,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+                    'Accept': '*/*',
+                    'Cache-Control': 'no-cache'
                 }
             });
 
-            const $ = cheerio.load(response.data);
-            const finalUrl = response.request?.res?.responseUrl || queryUrl;
+            const $ = cheerio.load(res.data || '');
+            const headers = res.headers;
+            const socket = res.request?.res?.socket || res.request?.socket || {};
             
-            const socket = response.request?.res?.socket || response.request?.socket || {};
-            const ip = socket.remoteAddress || 'No accesible';
-
-            const scripts = [];
-            $('script[src]').each((_, el) => {
-                const src = $(el).attr('src');
-                if (src) scripts.push(src.split('?')[0]);
-            });
-
-            const detectCloud = (s) => {
-                if (s.includes('cloudflare')) return 'Cloudflare';
-                if (s.includes('cloudfront')) return 'AWS CloudFront';
-                if (s.includes('akamai')) return 'Akamai';
-                if (s.includes('vercel')) return 'Vercel Edge';
-                return null;
+            const infra = {
+                ip: socket.remoteAddress || 'Oculta/Proxy',
+                port: socket.remotePort || 'N/A',
+                protocol: socket.alpnProtocol || 'HTTP/1.1',
+                server: headers['server'] || 'No detectado',
+                cdn: headers['cf-ray'] ? 'Cloudflare' : headers['x-vercel-id'] ? 'Vercel Edge' : headers['x-amz-cf-id'] ? 'AWS CloudFront' : 'Directo',
+                cache: headers['cf-cache-status'] || headers['x-vercel-cache'] || headers['x-cache'] || 'MISS',
+                provider: headers['x-powered-by'] || 'Protegido',
+                location: headers['x-vercel-ip-country'] || headers['cf-ipcountry'] || 'Desconocida'
             };
 
-            const proxyFound = [...new Set(scripts.map(detectCloud).filter(Boolean))].join(', ') || 'Directo / Desconocido';
-
-            const info = {
-                title: ($('title').text() || $('meta[property="og:title"]').attr('content') || 'Sin título').trim(),
-                server: response.headers['server'] || 'Oculto',
-                poweredBy: response.headers['x-powered-by'] || 'No declarado',
-                type: response.headers['content-type']?.split(';')[0] || 'Desconocido',
-                cache: response.headers['cf-cache-status'] || response.headers['x-cache'] || 'N/A'
+            const security = {
+                hsts: headers['strict-transport-security'] ? 'Activo' : 'Inactivo',
+                cors: headers['access-control-allow-origin'] || 'Restringido',
+                csp: headers['content-security-policy'] ? 'Configurado' : 'Abierto',
+                frame: headers['x-frame-options'] || 'No definido'
             };
 
-            let report = `┏━━━━━━━━━━━━━━━━━━━━━━━━━┓\n`;
-            report += `┃  *REPORTE DE INFRAESTRUCTURA* ┃\n`;
+            const meta = {
+                title: ($('title').text() || $('meta[property="og:title"]').attr('content') || 'N/A').trim(),
+                type: headers['content-type']?.split(';')[0] || 'Desconocido',
+                size: headers['content-length'] ? `${(headers['content-length'] / 1024).toFixed(2)} KB` : 'Indeterminado'
+            };
+
+            let report = `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n`;
+            report += `┃  *INVESTIGADOR DE INFRAESTRUCTURA* ┃\n`;
+            report += `┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n`;
             report += `┃\n`;
-            report += `┃  *WEB:* ${info.title.slice(0, 30)}\n`;
-            report += `┃  *IP:* ${ip}\n`;
-            report += `┃  *PROXY/CDN:* ${proxyFound}\n`;
-            report += `┃  *SERVER:* ${info.server}\n`;
-            report += `┃  *ENGINE:* ${info.poweredBy}\n`;
-            report += `┃  *CACHE:* ${info.cache}\n`;
-            report += `┃  *URL:* ${finalUrl.slice(0, 35)}...\n`;
+            report += `┃  *── [ NODO DE RED ] ──*\n`;
+            report += `┃  *IP:* ${infra.ip}\n`;
+            report += `┃  *PUERTO:* ${infra.port} | *PROT:* ${infra.protocol}\n`;
+            report += `┃  *REGIÓN:* ${infra.location}\n`;
             report += `┃\n`;
-            report += `┃  *SCRIPTS DETECTADOS:* ${scripts.length}\n`;
-            report += `┗━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+            report += `┃  *── [ CAPA DE SERVICIO ] ──*\n`;
+            report += `┃  *CDN/WAF:* ${infra.cdn}\n`;
+            report += `┃  *SERVER:* ${infra.server}\n`;
+            report += `┃  *TECNOLOGÍA:* ${infra.provider}\n`;
+            report += `┃  *ESTADO CACHÉ:* ${infra.cache}\n`;
+            report += `┃\n`;
+            report += `┃  *── [ SEGURIDAD & CORS ] ──*\n`;
+            report += `┃  *CORS POLICY:* ${security.cors}\n`;
+            report += `┃  *HSTS:* ${security.hsts}\n`;
+            report += `┃  *X-FRAME:* ${security.frame}\n`;
+            report += `┃\n`;
+            report += `┃  *── [ DATOS DEL RECURSO ] ──*\n`;
+            report += `┃  *TIPO:* ${meta.type}\n`;
+            report += `┃  *PESO:* ${meta.size}\n`;
+            report += `┃  *LATENCIA:* ${Date.now() - startTime}ms\n`;
+            report += `┃\n`;
+            report += `┃  *URL ANALIZADA:*\n`;
+            report += `┃  ${queryUrl.slice(0, 45)}...\n`;
+            report += `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
 
             await conn.sendMessage(m.chat, { text: report }, { quoted: m });
 
         } catch (e) {
-            await m.reply(`*ERROR DE ANÁLISIS:*\n${e.message}`);
+            await m.reply(`*FALLO CRÍTICO EN INVESTIGACIÓN:*\n${e.message}`);
         }
     }
 };
