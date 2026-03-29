@@ -1,7 +1,4 @@
-
-
 import yts from 'yt-search';
-
 import fetch from 'node-fetch';
 
 const youtubeCommand = {
@@ -55,8 +52,8 @@ const youtubeCommand = {
                 const apiRes = await fetch(`https://api.dix.lat/mp3?url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
                 if (apiRes.status) downloadUrl = apiRes.data.dl;
             } else {
-                const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${process.env.KEY}`).then(res => res.json());
-                if (apiRes.status) downloadUrl = apiRes.result.dl_url;
+                const apiRes = await fetch(`https://api.dix.lat/mp4?url=${encodeURIComponent(videoUrl)}&quality=360`).then(res => res.json());
+                if (apiRes.status) downloadUrl = apiRes.data.dl;
             }
 
             if (!downloadUrl) throw new Error("ERR_NO_URL");
