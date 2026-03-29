@@ -21,8 +21,7 @@ global.botNames = [
 ]
 
 
-global.botImages = [ 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg',
-'https://api.dix.lat/media2/1773637281084.jpg',
+global.botImages = [ 'https://api.dix.lat/media2/1773637281084.jpg',
 'https://api.dix.lat/media2/1773637276760.jpg',
 'https://api.dix.lat/media2/1773637265253.jpg',
 'https://api.dix.lat/media2/1773637270663.jpg',
