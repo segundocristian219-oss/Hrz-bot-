@@ -1,7 +1,4 @@
-import yts from 'yt-search';
 import fetch from 'node-fetch';
-
-const SYLPHY_API_KEY = process.env.KEY;
 
 const youtubeCommand = {
     name: 'youtube_play',
@@ -24,6 +21,7 @@ const youtubeCommand = {
             const videoInfo = videoSearchResult;
             if (!videoInfo) return conn.reply(m.chat, "No se hallaron resultados.", m);
             const videoId = videoInfo.videoId;
+            const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
 
             const infoText = `
 \t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*
@@ -32,42 +30,35 @@ const youtubeCommand = {
 ♛ *CANAL:* ${videoInfo.author?.name || '---'}
 ✎ *TIEMPO:* ${videoInfo.timestamp || '---'}
 ⌬ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}
-▢ *LINK:* https://youtube.com/watch?v=${videoId}
+▢ *LINK:* ${videoUrl}
 `;
 
-            const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
-  await conn.sendMessage(m.chat, { 
-    image: { url: videoInfo.image || videoInfo.thumbnail }, 
-    caption: infoText,
-    contextInfo: {
-        forwardingScore: 1,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-            newsletterJid: ch,
-            newsletterName: name()
-        }
-    }
-}, { quoted: m });
-
+            await conn.sendMessage(m.chat, { 
+                image: { url: videoInfo.image || videoInfo.thumbnail }, 
+                caption: infoText
+            }, { quoted: m });
 
             let downloadUrl;
             if (isAudio) {
-                const apiRes = await fetch(`https://sylphy.xyz/download/v2/ytmp3?url=${encodeURIComponent(videoUrl)}&mode=audio&q=128&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
-                if (apiRes.status) downloadUrl = apiRes.result.dl_url;
+                const res = await fetch(`https://api.dix.lat/mp3?url=${encodeURIComponent(videoUrl)}`);
+                const json = await res.json();
+                if (json.status) {
+                    downloadUrl = json.data.dl;
+                }
             } else {
-                const apiRes = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`).then(res => res.json());
-                if (apiRes.status) {
-                    downloadUrl = apiRes.result.dl_url;
-                } 
+                const SYLPHY_API_KEY = process.env.KEY;
+                const res = await fetch(`https://sylphy.xyz/download/ytmp4?url=${encodeURIComponent(videoUrl)}&api_key=${SYLPHY_API_KEY}`);
+                const json = await res.json();
+                if (json.status) {
+                    downloadUrl = json.result.dl_url;
+                }
             }
 
-            if (!downloadUrl) throw new Error("ERR_NO_URL");
+            if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga.");
 
-            const response = await fetch(downloadUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
-            });
-            if (!response.ok) throw new Error(`HTTP_ERR_${response.status}`);
-            const buffer = await response.buffer();
+            const fileRes = await fetch(downloadUrl);
+            if (!fileRes.ok) throw new Error(`Error al obtener archivo: ${fileRes.status}`);
+            const buffer = await fileRes.buffer();
 
             await conn.sendMessage(m.chat, { 
                 [isAudio ? 'audio' : 'video']: buffer, 
