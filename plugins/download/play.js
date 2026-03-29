@@ -1,3 +1,7 @@
+
+
+import yts from 'yt-search';
+
 import fetch from 'node-fetch';
 
 const youtubeCommand = {
