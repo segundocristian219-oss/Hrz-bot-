@@ -23,7 +23,7 @@ const qrCommand = {
     category: 'tools',
     run: async (m, { conn, text }) => {
         
-        const logoUrl = 'https://api.dix.lat/media/1773635411398_f9REwtsTW.jpeg';
+        const logoUrl = img();
 
         try {
             let q = m.quoted ? m.quoted : m;
