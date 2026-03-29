@@ -52,7 +52,7 @@ const youtubeCommand = {
                 const apiRes = await fetch(`https://api.dix.lat/mp3?url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
                 if (apiRes.status) downloadUrl = apiRes.data.dl;
             } else {
-                const apiRes = await fetch(`https://api.dix.lat/mp4?url=${encodeURIComponent(videoUrl)}&quality=360`).then(res => res.json());
+                const apiRes = await fetch(`https://api.dix.lat/mp4?url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
                 if (apiRes.status) downloadUrl = apiRes.data.dl;
             }
 
