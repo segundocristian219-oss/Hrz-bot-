@@ -1,5 +1,4 @@
 import axios from 'axios'
-import fetch from 'node-fetch'
 
 const mediafireCommand = {
     name: 'mediafire',
@@ -13,15 +12,16 @@ const mediafireCommand = {
         try {
             await m.react('⏳')
 
-            const response = await axios.get(`https://api.dix.lat/mediafire?url=${encodeURIComponent(text)}`)
+            const response = await axios.get(`https://api.dix.lat/mediafire?url=${encodeURIComponent(text)}`).catch(() => null)
 
-            if (!response.data.status || !response.data.result) {
+            if (!response || !response.data || !response.data.status) {
                 await m.react('❌')
-                return conn.sendMessage(m.chat, { text: '*[!] No se pudo obtener el archivo del enlace proporcionado.*' }, { quoted: m })
+                return conn.sendMessage(m.chat, { text: '*[!] No se pudo obtener el archivo. La API no respondió correctamente.*' }, { quoted: m })
             }
 
             const data = response.data.result
-            const isTooLarge = parseFloat(data.filesize) > 300 && data.filesize.includes('MB') || data.filesize.includes('GB')
+            const sizeInMB = parseFloat(data.filesize.replace(/[^0-9.]/g, ''))
+            const isGB = data.filesize.includes('GB')
 
             let txt = `┏━━━━━━━━━━━━━━━━☒\n`
             txt += `┇➙ *❒ MEDIAFIRE - DOWNLOADER*\n`
@@ -29,24 +29,26 @@ const mediafireCommand = {
             txt += `┋➙ *Nombre:* ${data.filename}\n`
             txt += `┋➙ *Peso:* ${data.filesize}\n`
             txt += `┋➙ *Tipo:* ${data.filetype}\n`
-            txt += `┋➙ *Subido:* ${data.uploaded}\n`
             txt += `┗━━━━━━━━━━━━━━━━⍰`
 
-            if (isTooLarge) {
+            if (isGB || sizeInMB > 900) {
                 await m.react('⚠️')
-                return conn.sendMessage(m.chat, { text: `${txt}\n\n*El archivo es demasiado pesado para enviarlo por WhatsApp.*` }, { quoted: m })
+                return conn.sendMessage(m.chat, { text: `${txt}\n\n*El archivo supera el límite de envío (900MB).*` }, { quoted: m })
             }
+
+            const bName = await global.name(conn)
+            const bImg = await global.img(conn)
 
             await conn.sendMessage(m.chat, {
                 document: { url: data.download },
                 mimetype: 'application/octet-stream',
-                fileName: data.filename,
+                fileName: data.filename.endsWith('.7z') || data.filename.endsWith('.zip') ? data.filename : `${data.filename}.zip`,
                 caption: txt,
                 contextInfo: {
                     externalAdReply: {
-                        title: await global.name(conn),
-                        body: `Archivo: ${data.filename}`,
-                        thumbnailUrl: await global.img(conn),
+                        title: bName,
+                        body: `Descargando: ${data.filename}`,
+                        thumbnailUrl: bImg,
                         sourceUrl: text,
                         mediaType: 1,
                         renderLargerThumbnail: true
@@ -57,9 +59,8 @@ const mediafireCommand = {
             await m.react('✅')
 
         } catch (e) {
-            console.error(e)
             await m.react('❌')
-            return conn.sendMessage(m.chat, { text: '*[!] Ocurrió un error interno al procesar la descarga.*' }, { quoted: m })
+            return conn.sendMessage(m.chat, { text: `*[!] Error:* ${e.message}` }, { quoted: m })
         }
     }
 }
