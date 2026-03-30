@@ -30,22 +30,18 @@ const mediafireCommand = {
             txt += `┋➙ *Peso:* ${filesize}\n`
             txt += `┗━━━━━━━━━━━━━━━━⍰`
 
-            await conn.sendMessage(m.chat, {
-                document: { url: download },
-                mimetype: 'application/vnd.android.package-archive',
-                fileName: filename.toLowerCase().endsWith('.apk') ? filename : `${filename}.apk`,
-                caption: txt,
-                contextInfo: {
-                    externalAdReply: {
-                        title: bName,
-                        body: `Descarga de MediaFire (${filesize})`,
-                        thumbnailUrl: bImg,
-                        sourceUrl: url,
-                        mediaType: 1,
-                        renderLargerThumbnail: false
-                    }
-                }
-            }, { quoted: m })
+            
+await conn.sendMessage(m.chat, {
+    document: { url: download }, 
+    mimetype: 'application/vnd.android.package-archive',
+    fileName: filename,
+    caption: txt
+}, { 
+    quoted: m,
+    
+    uploadWithSpaces: true 
+})
+
 
             await m.react('✅')
 
