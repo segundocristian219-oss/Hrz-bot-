@@ -53,7 +53,7 @@ const tourl3Command = {
                 return m.reply(`> ⚔ *Error:* ${result?.error || 'Fallo en la API'}`);
             }
 
-            let txt = `> ☁️ *VOKER TEMPORARY STORAGE*\n\n`;
+            let txt = `> ☁️ *DIX.LAT/TMP TEMPORARY STORAGE*\n\n`;
             txt += `> 🔗 *URL:* ${result.url}\n`;
             txt += `> ⚖ *Peso:* ${result.size}\n`;
             txt += `> 📄 *Tipo:* ${result.format?.toUpperCase() || 'DAT'}\n`;
