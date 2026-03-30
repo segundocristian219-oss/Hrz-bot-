@@ -26,25 +26,26 @@ const mediafireCommand = {
             txt += `┣━━━━━━━━━━━━━━━━⚄\n`
             txt += `┋➙ *Archivo:* ${filename}\n`
             txt += `┋➙ *Subido:* ${uploaded}\n`
-            txt += `┋➙ *tipo de archivo:* ${filetype}\n`
+            txt += `┋➙ *Tipo:* ${filetype}\n`
             txt += `┋➙ *Peso:* ${filesize}\n`
             txt += `┗━━━━━━━━━━━━━━━━⍰`
 
             
-            if (['mp4', 'mkv', 'mov', 'avi'].includes(ext)) {
-                
+            const isVideo = ['mp4', 'mkv', 'mov', 'avi', '3gp'].includes(ext)
+            const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(ext)
+
+            if (isVideo) {
                 await conn.sendMessage(m.chat, { 
                     video: { url: download }, 
-                    caption: txt, 
-                    fileName: filename, 
-                    mimetype: `video/${ext == 'mkv' ? 'x-matroska' : 'mp4'}` 
-                }, { quoted: m, stream: true })
-            } else if (['jpg', 'jpeg', 'png'].includes(ext)) {
-                
+                    caption: txt,
+                    mimetype: 'video/mp4',
+                    fileName: filename
+                }, { quoted: m })
+            } else if (isImage) {
                 await conn.sendMessage(m.chat, { 
                     image: { url: download }, 
                     caption: txt 
-                }, { quoted: m, stream: true })
+                }, { quoted: m })
             } else {
                 
                 await conn.sendMessage(m.chat, {
@@ -52,7 +53,7 @@ const mediafireCommand = {
                     mimetype: ext === 'apk' ? 'application/vnd.android.package-archive' : 'application/octet-stream',
                     fileName: filename,
                     caption: txt
-                }, { quoted: m, uploadWithSpaces: true, stream: true })
+                }, { quoted: m, uploadWithSpaces: true })
             }
 
             await m.react('✅')
