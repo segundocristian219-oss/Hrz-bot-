@@ -19,7 +19,8 @@ const mediafireCommand = {
             }
 
             const { filename, filesize, download } = res.result
-            
+            const ext = filename.split('.').pop().toLowerCase()
+
             let txt = `┏━━━━━━━━━━━━━━━━☒\n`
             txt += `┇➙ *❒ MEDIAFIRE - DOWNLOADER*\n`
             txt += `┣━━━━━━━━━━━━━━━━⚄\n`
@@ -27,14 +28,28 @@ const mediafireCommand = {
             txt += `┋➙ *Peso:* ${filesize}\n`
             txt += `┗━━━━━━━━━━━━━━━━⍰`
 
-            await conn.sendMessage(m.chat, {
-                document: { url: download }, 
-                mimetype: 'application/octet-stream', 
-                fileName: filename,
-                caption: txt
-            }, { 
-                quoted: m,
-                uploadWithSpaces: true,
+            let messageOptions = {}
+
+            
+            if (['mp4', 'mkv', 'mov', 'avi'].includes(ext)) {
+                messageOptions = { video: { url: download }, caption: txt, fileName: filename }
+            } else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                messageOptions = { image: { url: download }, caption: txt }
+            } else if (['mp3', 'ogg', 'wav', 'm4a'].includes(ext)) {
+                messageOptions = { audio: { url: download }, mimetype: 'audio/mpeg', fileName: filename }
+            } else {
+                
+                messageOptions = { 
+                    document: { url: download }, 
+                    mimetype: ext === 'apk' ? 'application/vnd.android.package-archive' : 'application/octet-stream', 
+                    fileName: filename, 
+                    caption: txt 
+                }
+            }
+
+            await conn.sendMessage(m.chat, messageOptions, { 
+                quoted: m, 
+                uploadWithSpaces: true, 
                 stream: true 
             })
 
@@ -43,7 +58,7 @@ const mediafireCommand = {
         } catch (e) {
             console.error(e)
             await m.react('❌')
-            return conn.sendMessage(m.chat, { text: `*[!] Error al procesar el archivo:* ${e.message}` }, { quoted: m })
+            return conn.sendMessage(m.chat, { text: `*[!] Error al procesar:* ${e.message}` }, { quoted: m })
         }
     }
 }
