@@ -1,33 +1,28 @@
 import fetch from 'node-fetch';
-import { FormData, Blob } from 'formdata-node';
 import { fileTypeFromBuffer } from 'file-type';
 
 const uploadToVokerApi = async (input) => {
     try {
         const isUrl = typeof input === 'string' && input.startsWith('http');
-        const endpoint = 'https://api.dix.lat/upload/tmp';
+        const endpoint = 'https://voker.dix.lat/api/tmp';
 
-        
         if (isUrl) {
             const res = await fetch(`${endpoint}?url=${encodeURIComponent(input)}`);
             return await res.json();
         }
 
+       
         const type = await fileTypeFromBuffer(input);
-        const formData = new FormData();
-        const blob = new Blob([input], { type: type?.mime || 'application/octet-stream' });
-        
-        formData.append('file', blob, `voker_${Date.now()}.${type?.ext || 'bin'}`);
+        const base64 = `data:${type?.mime || 'application/octet-stream'};base64,${input.toString('base64')}`;
 
         const response = await fetch(endpoint, {
             method: 'POST',
-            body: formData,
-            headers: { 'User-Agent': 'Voker-Client/1.0' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: base64 }) 
         });
 
         return await response.json();
     } catch (e) {
-        console.error('Upload Error:', e);
         return { status: false, error: e.message };
     }
 };
@@ -42,31 +37,26 @@ const tourl3Command = {
             let mime = (q.msg || q).mimetype || '';
             let target = null;
 
-            
-            if (text && text.match(/https?:\/\/[^\s]+/gi)) {
+            if (text && /https?:\/\/[^\s]+/gi.test(text)) {
                 target = text.trim();
-            } 
-            
-            else if (mime) {
+            } else if (mime) {
                 target = await q.download();
-            } 
-            else {
-                return m.reply('> ✎ Responde a un archivo o pega una URL directa.');
+            } else {
+                return m.reply('> ✎ Responde a un archivo o pega una URL.');
             }
 
             await m.react('🕓');
-
             const result = await uploadToVokerApi(target);
 
             if (!result || !result.status) {
                 await m.react('✖️');
-                return m.reply(`> ⚔ *Error:* ${result?.error || 'No se pudo procesar el archivo.'}`);
+                return m.reply(`> ⚔ *Error:* ${result?.error || 'Fallo en la API'}`);
             }
 
             let txt = `> ☁️ *VOKER TEMPORARY STORAGE*\n\n`;
             txt += `> 🔗 *URL:* ${result.url}\n`;
             txt += `> ⚖ *Peso:* ${result.size}\n`;
-            txt += `> 📄 *Tipo:* ${result.format.toUpperCase()}\n`;
+            txt += `> 📄 *Tipo:* ${result.format?.toUpperCase() || 'DAT'}\n`;
             txt += `> 🆔 *ID:* \`${result.id}\`\n\n`;
             txt += `> _Expira en 24 horas automáticamente._`;
 
@@ -75,7 +65,7 @@ const tourl3Command = {
 
         } catch (e) {
             await m.react('✖️');
-            m.reply(`> ☣️ *Critical Error:* ${e.message}`);
+            m.reply(`> ☣️ *Error Crítico:* ${e.message}`);
         }
     }
 };
