@@ -1,5 +1,5 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys'
-import { getRealJid } from '../identifier.js'
+import { getRealJid } from './identifier.js'
 import util from 'util'
 
 export async function events(conn, m, participants) {
