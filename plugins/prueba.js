@@ -1,27 +1,41 @@
-import chalk from 'chalk'
+import { jidNormalizedUser } from '@whiskeysockets/baileys'
+import { getRealJid } from '../identifier.js'
+import util from 'util'
 
-let handler = m => m
+export async function events(conn, m, participants) {
+    if (!m.messageStubType && !m.message?.pollCreationMessage && !m.message?.pollUpdateMessage) return true
 
-handler.before = async function (m, { conn }) {
-    if (m.pollUpdates || m.message?.pollCreationMessage || m.message?.pollCreationMessageV2 || m.message?.pollCreationMessageV3 || m.message?.pollUpdateMessage) {
+    const st = m.messageStubType
+    const isPollCreation = m.message?.pollCreationMessage
+    const isPollUpdate = m.message?.pollUpdateMessage
+
+    if (isPollCreation || isPollUpdate || st === 141) {
+        console.log('┏━━━━━━━━ DEBUG POLL/EVENT ━━━━━━━━┓')
+        console.log('┃ TIPO STUB:', st)
+        console.log('┃ CHAT:', m.chat)
+        console.log('┃ SENDER:', m.sender)
         
-        console.log(chalk.bgMagenta.white(' [DEBUG POLL EVENT] '))
-        
-        console.log(chalk.cyan('─'.repeat(30)))
-        console.log(chalk.yellow('ESTRUCTURA DEL MENSAJE (m):'))
-        console.log(JSON.stringify(m, null, 2))
-        
-        if (m.pollUpdates) {
-            console.log(chalk.green('\nDETALLE DE POLL UPDATES:'))
-            console.log(JSON.stringify(m.pollUpdates, null, 2))
+        if (isPollCreation) {
+            console.log('┃ ESTRUCTURA CREACION:', util.inspect(m.message.pollCreationMessage, { depth: null, colors: true }))
         }
 
-        if (m.message?.pollUpdateMessage) {
-            console.log(chalk.red('\nDETALLE DE POLL UPDATE MESSAGE:'))
-            console.log(JSON.stringify(m.message.pollUpdateMessage, null, 2))
+        if (isPollUpdate) {
+            console.log('┃ ESTRUCTURA VOTO (UPDATE):', util.inspect(m.message.pollUpdateMessage, { depth: null, colors: true }))
+            console.log('┃ POLL KEY:', util.inspect(m.message.pollUpdateMessage.pollCreationMessageKey, { depth: null, colors: true }))
         }
-        console.log(chalk.cyan('─'.repeat(30)))
+
+        if (m.messageStubParameters) {
+            console.log('┃ PARAMS:', util.inspect(m.messageStubParameters, { depth: null, colors: true }))
+        }
+        console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛')
+
+        if (global.owner.some(([num]) => num.replace(/\D/g, '') === (m.sender || '').split('@')[0])) {
+            const report = `*DEBUG EVENT*\n*Stub:* ${st}\n*PollUpdate:* ${!!isPollUpdate}\n*PollCreation:* ${!!isPollCreation}\n\n*Full Raw:*`
+            await conn.sendMessage(m.chat, { 
+                text: report + '\n' + util.inspect(m, { depth: 2 }).slice(0, 3000) 
+            })
+        }
     }
-}
 
-export default handler
+    return true
+}
