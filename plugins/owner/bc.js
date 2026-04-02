@@ -4,22 +4,21 @@ const bc = {
     category: 'owner',
     run: async (m, { conn, text, isROwner }) => {
         if (!isROwner) return m.reply('solo desarrolladores');
-        
+
         const content = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
-        if (!content && !m.quoted) return m.reply('⚠ USO INCORRECTO\n\nEscribe el mensaje o etiqueta contenido.');
+        
+        if (!content) return m.reply('⚠ USO INCORRECTO\n\nEscribe el mensaje o etiqueta contenido.');
 
         const dbChats = await global.Chat.find().lean();
         const getGroups = await conn.groupFetchAllParticipating();
         const groups = Object.values(getGroups);
         const activeJids = groups.map(v => v.id);
-            const txt = (m.quoted && m.quoted.text);
 
         const validChats = dbChats.filter(c => activeJids.includes(c.id) && !c.isBanned);
 
         if (validChats.length === 0) return m.reply('❌ No hay grupos activos en común con la base de datos.');
 
         await m.reply(`🚀 Enviando a ${validChats.length} grupos...`);
-
 
         let success = 0;
         let errors = 0;
@@ -30,10 +29,10 @@ const bc = {
                     await conn.copyNForward(chat.id, m.quoted.fakeObj, true);
                 } else {
                     await conn.sendMessage(chat.id, { 
-                        text: txt,
+                        text: content, 
                         contextInfo: {
                             externalAdReply: {
-                                title: name(),
+                                title: 'KIRITO ♕',
                                 body: 'Comunicado Global',
                                 mediaType: 1,
                                 thumbnailUrl: img(),
