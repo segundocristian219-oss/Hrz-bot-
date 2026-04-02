@@ -12,12 +12,14 @@ const bc = {
         const getGroups = await conn.groupFetchAllParticipating();
         const groups = Object.values(getGroups);
         const activeJids = groups.map(v => v.id);
+            const txt = (m.quoted && m.quoted.text);
 
         const validChats = dbChats.filter(c => activeJids.includes(c.id) && !c.isBanned);
 
         if (validChats.length === 0) return m.reply('❌ No hay grupos activos en común con la base de datos.');
 
         await m.reply(`🚀 Enviando a ${validChats.length} grupos...`);
+
 
         let success = 0;
         let errors = 0;
@@ -28,7 +30,7 @@ const bc = {
                     await conn.copyNForward(chat.id, m.quoted.fakeObj, true);
                 } else {
                     await conn.sendMessage(chat.id, { 
-                        text: text,
+                        text: txt,
                         contextInfo: {
                             externalAdReply: {
                                 title: name(),
