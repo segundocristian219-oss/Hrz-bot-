@@ -16,7 +16,7 @@ const reaction = {
 
 const laugh = {
     name: 'laugh',
-    alias: ['reir', 'laugh'],
+    alias: ['reir', 'laugh', 'jaja'],
     category: 'interacciones',
     run: async (m, { conn }) => {
         if (!reaction.links.length) return
