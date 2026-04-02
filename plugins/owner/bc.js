@@ -2,10 +2,14 @@ const bc = {
     name: 'broadcast',
     alias: ['bc', 'bcgc'],
     category: 'owner',
-    run: async (m, { conn, text, isROwner }) => {
+    run: async (m, { conn, isROwner }) => {
         if (!isROwner) return m.reply('solo desarrolladores');
 
-        const content = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
+        const rawText = m.text || m.body || '';
+        const commandMatch = rawText.match(/^\.\w+\s+(.*)/s);
+        const cleanText = commandMatch ? commandMatch[1] : '';
+
+        const content = cleanText || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
         
         if (!content) return m.reply('⚠ USO INCORRECTO\n\nEscribe el mensaje o etiqueta contenido.');
 
