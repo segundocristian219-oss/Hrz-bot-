@@ -19,16 +19,16 @@ const muteCommand = {
 
         const isMuting = ['mute', 'mutar', 'silenciar'].includes(command);
         
-        // Usamos findOneAndUpdate para asegurar que el cambio se guarde físicamente
+        
         if (isMuting) {
             await global.Chat.findOneAndUpdate(
                 { id: m.chat },
-                { $addToSet: { mutos: who } } // $addToSet evita duplicados automáticamente
+                { $addToSet: { mutos: who } } 
             );
         } else {
             await global.Chat.findOneAndUpdate(
                 { id: m.chat },
-                { $pull: { mutos: who } } // $pull elimina el ID del array
+                { $pull: { mutos: who } } 
             );
         }
 
