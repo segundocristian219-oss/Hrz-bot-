@@ -11,31 +11,34 @@ const muteCommand = {
         if (!who || who === '@s.whatsapp.net') return m.reply(`*👑 Menciona o responde a alguien*`);
 
         const ownerBot = global.owner[0][0] + '@s.whatsapp.net';
-        const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+        const botId = jidNormalizedUser(conn.user.id);
 
         if (who === ownerBot || who === botId) {
             return m.reply('🔥 *No puedes realizar esta acción con el staff del bot*');
         }
 
         const isMuting = ['mute', 'mutar', 'silenciar'].includes(command);
-        
-        if (!Array.isArray(chat.mutos)) chat.mutos = [];
+        let mutos = Array.isArray(chat.mutos) ? chat.mutos : [];
 
         if (isMuting) {
-            if (chat.mutos.includes(who)) return m.reply('*Este usuario ya está silenciado en este grupo.*');
-            chat.mutos.push(who);
+            if (mutos.includes(who)) return m.reply('*Este usuario ya está silenciado en este grupo.*');
+            mutos.push(who);
         } else {
-            if (!chat.mutos.includes(who)) return m.reply('*Este usuario no está en la lista de silencios.*');
-            chat.mutos = chat.mutos.filter(id => id !== who);
+            if (!mutos.includes(who)) return m.reply('*Este usuario no está en la lista de silencios.*');
+            mutos = mutos.filter(id => id !== who);
         }
 
-        await chat.save();
+        
+        await global.Chat.findOneAndUpdate(
+            { id: m.chat },
+            { $set: { mutos: mutos } }
+        );
+
+        
+        chat.mutos = mutos;
 
         const status = isMuting ? 'silenciado' : 'desmutado';
-        await conn.sendMessage(m.chat, { 
-            text: `✅ *Usuario ${status} correctamente.*`, 
-            mentions: [who] 
-        }, { quoted: m });
+        return m.reply(`✅ *Usuario ${status} correctamente.*`, null, { mentions: [who] });
     }
 }
 
