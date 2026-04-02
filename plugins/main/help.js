@@ -75,7 +75,7 @@ const menuCommand = {
                         { cmd: '.tesoro/.mapa', desc: 'Encuentra el tesoro oculto.' },
                         { cmd: '.mate/.math', desc: 'Resuelve una suma matemática.' },
                         { cmd: '.tresenraya/.x0', desc: 'Juega tresenraya con tu amigo.' },
-                        { cmd: '.palabra', desc: 'Adivina la palabra.' },            { cmd: '.perfil', desc: 'Muestra tu oerfil.' },             { cmd: '.apostar', desc: 'Apuesta en el casino.' },          { cmd: '.trabajar', desc: 'Trabaja para ganar $col.' },
+                        { cmd: '.palabra', desc: 'Adivina la palabra.' },            { cmd: '.perfil', desc: 'Muestra tu perfil.' },             { cmd: '.apostar', desc: 'Apuesta en el casino.' },          { cmd: '.trabajar', desc: 'Trabaja para ganar $col.' },
                     ]
                 },
                 {
