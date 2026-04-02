@@ -1,6 +1,6 @@
 const enable = {
     name: 'enable',
-    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'autosticker', 'autostickers'],
+    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'modoadmin'], 
     category: 'config',
     admin: true,
     group: true,
@@ -9,32 +9,24 @@ const enable = {
         const featureMap = {
             'welcome': 'welcome',
             'bv': 'welcome',
-            'bienvenida': 'welcome',
             'detect': 'detect',
-            'configuraciones': 'detect',
-            'avisodegp': 'detect',
             'gacha': 'gacha',
             'antisub': 'antisub',
             'antilink': 'antiLink',
             'antistatus': 'antiStatus',
-            'antiestados': 'antiStatus',
+            'modoadmin': 'modoadmin', 
             'autosticker': 'autoStickers',
-            'autostickers': 'autoStickers'
         };
 
         const type = command.toLowerCase();
 
         if (type === 'enable' || !featureMap[type]) {
             let menu = `❯❯ 𝗦𝗬𝗦𝗧𝗘𝗠 𝗖𝗢𝗡𝗙𝗜𝗚𝗨𝗥𝗔𝗧𝗜𝗢𝗡\n\n`;
-            menu += `Estado actual de las funciones en este grupo:\n\n`;
-
             const options = [
                 { name: 'Bienvenida', key: 'welcome' },
                 { name: 'Detección', key: 'detect' },
-                { name: 'Gacha System', key: 'gacha' },
-                { name: 'Anti-SubBots', key: 'antisub' },
                 { name: 'Anti-Links', key: 'antiLink' },
-                { name: 'Anti-Status', key: 'antiStatus' },
+                { name: 'Modo Admin', key: 'modoadmin' }, 
                 { name: 'Auto-Stickers', key: 'autoStickers' }
             ];
 
@@ -42,9 +34,6 @@ const enable = {
                 const status = chat[opt.key] ? '✅ ᴀᴄᴛɪᴠᴀᴅᴏ' : '❌ ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
                 menu += `❖ *${opt.name}:* ${status}\n`;
             });
-
-            menu += `\n> Para cambiar un estado usa el nombre de la función.\n> Ejemplo: *${usedPrefix}antilink*`;
-
             return m.reply(menu.trim());
         }
 
@@ -58,12 +47,8 @@ const enable = {
         );
 
         chat[dbKey] = newValue;
-
         let statusText = newValue ? 'ᴀᴄᴛɪᴠᴀᴅᴏ' : 'ᴅᴇsᴀᴄᴛɪᴠᴀᴅᴏ';
-        let icon = newValue ? '✰' : '✧';
-
-        return m.reply(`> ${icon} ʟᴀ ғᴜɴᴄɪᴏɴ *${type.toUpperCase()}* sᴇ ʜᴀ ${statusText} ᴘᴀʀᴀ ᴇsᴛᴇ ᴄʜᴀᴛ.`);
+        return m.reply(`> ʟᴀ ғᴜɴᴄɪᴏɴ *${type.toUpperCase()}* sᴇ ʜᴀ ${statusText}.`);
     }
 }
-
 export default enable;
