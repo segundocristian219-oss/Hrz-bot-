@@ -8,7 +8,7 @@ import axios from 'axios'
 import moment from 'moment-timezone'
 import path from 'path'
 
-global.owner = [['50432955554'], ['157449910792287@lid'], ['155968113483985@lid'], ['50432569059'], ['58042228583']]
+global.owner = [['50432955554'], ['157449910792287@lid'], ['155968113483985@lid'], ['50432569059'], ['50582908110'], ['58042228583']]
 
 global.bots_free = ['50488198573']
 
