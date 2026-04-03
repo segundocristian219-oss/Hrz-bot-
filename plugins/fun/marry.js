@@ -17,7 +17,7 @@ const matrimonio = {
             const idJuego = `${llaveChat}-${emisorReal}`
             const juego = global.weddingGames[idJuego]
 
-            if (!juego) return m.reply('*♛ AVISO ✧*\n\n╰❒ No tienes peticiones pendientes.')
+            if (!juego) return m.reply('*♛ AVISO ✧*\n\n╰❒ No tienes peticiones pendientes o el tiempo expiró.')
 
             if (cmd === 'aceptar') {
                 clearTimeout(juego.timeout)
@@ -59,17 +59,22 @@ const matrimonio = {
             const idPareja = user.marry
             const idJuegoDiv = `${llaveChat}-${idPareja}`
 
+            if (global.weddingGames[idJuegoDiv]) clearTimeout(global.weddingGames[idJuegoDiv].timeout)
+
             global.weddingGames[idJuegoDiv] = {
                 tipo: 'divorcio',
                 solicitante: emisorReal,
                 receptor: idPareja,
                 timeout: setTimeout(() => {
-                    delete global.weddingGames[idJuegoDiv]
-                }, 15000)
+                    if (global.weddingGames[idJuegoDiv]) {
+                        delete global.weddingGames[idJuegoDiv]
+                        conn.reply(m.chat, `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ @${idPareja.split('@')[0]} no respondió al divorcio.`, null, { mentions: [idPareja] })
+                    }
+                }, 20000)
             }
 
             return conn.sendMessage(m.chat, {
-                text: `*♛ SOLICITUD DE DIVORCIO ✧*\n\n╰❒ @${emisorReal.split('@')[0]} pide divorcio a @${idPareja.split('@')[0]}.\n\n> Escribe ${usedPrefix}aceptar`,
+                text: `*♛ SOLICITUD DE DIVORCIO ✧*\n\n╰❒ @${emisorReal.split('@')[0]} pide divorcio a @${idPareja.split('@')[0]}.\n\n> Tienes 20 segundos.\n> Escribe ${usedPrefix}aceptar`,
                 contextInfo: { mentionedJid: [emisorReal, idPareja] }
             }, { quoted: m })
         }
@@ -87,17 +92,22 @@ const matrimonio = {
         const idObjetivo = objetivo.lid || objetivo.id
         const idJuegoBoda = `${llaveChat}-${idObjetivo}`
 
+        if (global.weddingGames[idJuegoBoda]) clearTimeout(global.weddingGames[idJuegoBoda].timeout)
+
         global.weddingGames[idJuegoBoda] = {
             tipo: 'boda',
             solicitante: emisorReal,
             receptor: idObjetivo,
             timeout: setTimeout(() => {
-                delete global.weddingGames[idJuegoBoda]
-            }, 15000)
+                if (global.weddingGames[idJuegoBoda]) {
+                    delete global.weddingGames[idJuegoBoda]
+                    conn.reply(m.chat, `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ La propuesta para @${idObjetivo.split('@')[0]} expiró.`, null, { mentions: [idObjetivo] })
+                }
+            }, 20000)
         }
 
         return conn.sendMessage(m.chat, {
-            text: `*♛ PROPUESTA DE MATRIMONIO ✧*\n\n╰❒ @${emisorReal.split('@')[0]} le pide matrimonio a @${idObjetivo.split('@')[0]}.\n\n*Opciones:* \n> ${usedPrefix}aceptar\n> ${usedPrefix}rechazar`,
+            text: `*♛ PROPUESTA DE MATRIMONIO ✧*\n\n╰❒ @${emisorReal.split('@')[0]} le pide matrimonio a @${idObjetivo.split('@')[0]}.\n\n> Tienes 20 segundos.\n\n*Opciones:* \n> ${usedPrefix}aceptar\n> ${usedPrefix}rechazar`,
             contextInfo: { mentionedJid: [emisorReal, idObjetivo] }
         }, { quoted: m })
     }
