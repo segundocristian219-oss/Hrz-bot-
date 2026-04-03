@@ -10,7 +10,7 @@ const warnCommand = {
             let command = m.text.split(' ')[0].toLowerCase().replace(usedPrefix, '')
 
             let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false
-            if (!who) return conn.reply(m.chat, `*⚠️ USO CORRECTO*\n\nEtiqueta o responde a alguien:\n*${usedPrefix + command}* @user [motivo]`, m)
+            if (!who) return conn.reply(m.chat, `> *♛ USO CORRECTO*\n\nEtiqueta o responde a alguien:\n*${usedPrefix + command}* @user [motivo]`, m)
 
             let reason = text ? text.replace(/@(\d+)/g, '').trim() : 'Sin motivo'
             
@@ -29,18 +29,18 @@ const warnCommand = {
                 await warnDoc.save()
 
                 if (warnDoc.warnCount < 3) {
-                    let txt = `*─── [ ⚠️ ADVERTENCIA ] ───*\n\n`
-                    txt += `*👤 Usuario:* @${who.split`@`[0]}\n`
-                    txt += `*📉 Advertencias:* ${warnDoc.warnCount}/3\n`
-                    txt += `*📝 Motivo:* ${reason}\n`
-                    txt += `*📅 Fecha:* ${date} | ${time}\n\n`
+                    let txt = `*─── [ ▶ ADVERTENCIA ] ───*\n\n`
+                    txt += `*♛ Usuario:* @${who.split`@`[0]}\n`
+                    txt += `*✰ Advertencias:* ${warnDoc.warnCount}/3\n`
+                    txt += `*⍰ Motivo:* ${reason}\n`
+                    txt += `*➠ Fecha:* ${date} | ${time}\n\n`
                     txt += `_Al llegar a 3 advertencias serás expulsado._`
                     await conn.reply(m.chat, txt, m, { mentions: [who] })
                 } else {
                     await global.Warns.deleteOne({ userId: who, groupId: m.chat })
-                    let txt = `*─── [ 🚫 EXPULSADO ] ───*\n\n`
-                    txt += `*👤 Usuario:* @${who.split`@`[0]}\n`
-                    txt += `*📝 Motivo final:* ${reason}\n\n`
+                    let txt = `*─── [ ×᷼× EXPULSADO ] ───*\n\n`
+                    txt += `*♛ Usuario:* @${who.split`@`[0]}\n`
+                    txt += `*✰ Motivo final:* ${reason}\n\n`
                     txt += `_Superó el límite de advertencias._`
                     await conn.reply(m.chat, txt, m, { mentions: [who] })
                     await conn.groupParticipantsUpdate(m.chat, [who], 'remove')
@@ -51,17 +51,17 @@ const warnCommand = {
                 if (warnDoc.warnCount > 0) {
                     warnDoc.warnCount -= 1
                     await warnDoc.save()
-                    await conn.reply(m.chat, `*✅ Advertencia removida.*\n*Estado:* ${warnDoc.warnCount}/3`, m)
+                    await conn.reply(m.chat, `*♛ Advertencia removida.*\n*Estado:* ${warnDoc.warnCount}/3`, m)
                 } else {
                     await conn.reply(m.chat, `*El usuario no tiene advertencias en este grupo.*`, m)
                 }
             }
 
             if (/warns|advertencias/.test(command)) {
-                let txt = `*─── [ 📊 ESTADO ] ───*\n\n`
-                txt += `*👤 Usuario:* @${who.split`@`[0]}\n`
-                txt += `*📉 Warns:* ${warnDoc.warnCount}/3\n`
-                txt += `*📝 Último motivo:* ${warnDoc.reason}`
+                let txt = `*─── [ ⍰ ESTADO ] ───*\n\n`
+                txt += `*♛ Usuario:* @${who.split`@`[0]}\n`
+                txt += `*⌬ Warns:* ${warnDoc.warnCount}/3\n`
+                txt += `*᳀ Último motivo:* ${warnDoc.reason}`
                 await conn.reply(m.chat, txt, m, { mentions: [who] })
             }
 
