@@ -23,11 +23,11 @@ const comandoPerfil = {
             datos = { name: nombreUsuario, exp: 0, col: 10, marry: '' }
         }
 
-        let infoPareja = 'Soltero/a'
+        let infoPareja = '*ESTADO CIVIL:* Soltero/a'
         let menciones = [quien]
 
         if (datos.marry && datos.marry !== "") {
-            infoPareja = `@${datos.marry.split('@')[0]}`
+            infoPareja = `*CASADO/A CON:* @${datos.marry.split('@')[0]}`
             menciones.push(datos.marry)
         }
 
@@ -48,7 +48,7 @@ const comandoPerfil = {
 ✧  *ID:* @${quien.split('@')[0]}
 ✦  *MONEDAS:* ${datos.col ?? 10} Col
 ✦  *EXPERIENCIA:* ${datos.exp ?? 0} EXP
-✦  *ESTADO CIVIL:* ${infoPareja}
+✦  ${infoPareja}
 ◈  *RANGO:* ${rango}
 
 `
