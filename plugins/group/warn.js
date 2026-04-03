@@ -6,66 +6,62 @@ const warnCommand = {
     group: true,
     run: async (m, { conn, text }) => {
         try {
-            // Extraer el prefijo y el comando manualmente para evitar errores de estructura
             let usedPrefix = /^[./!#]/.test(m.text) ? m.text.match(/^[./!#]/)[0] : '.'
             let command = m.text.split(' ')[0].toLowerCase().replace(usedPrefix, '')
-            
-            let who
-            if (m.isGroup) who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : false
-            else who = m.chat
 
-            if (!who) return conn.reply(m.chat, `*⚠️ USO DEL COMANDO*\n\nEtiqueta a alguien o responde a un mensaje:\n*${usedPrefix + command}* @user`, m)
+            let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false
+            if (!who) return conn.reply(m.chat, `*⚠️ USO CORRECTO*\n\nEtiqueta o responde a alguien:\n*${usedPrefix + command}* @user [motivo]`, m)
 
-            // Verificar o crear usuario en la base de datos
-            if (!global.db.data.users[who]) global.db.data.users[who] = { warn: 0 }
-            let user = global.db.data.users[who]
+            let reason = text ? text.replace(/@(\d+)/g, '').trim() : 'Sin motivo'
             
-            // Obtener fecha y hora actual para el diseño
+            let warnDoc = await global.Warns.findOne({ userId: who, groupId: m.chat })
+            if (!warnDoc) {
+                warnDoc = new global.Warns({ userId: who, groupId: m.chat, warnCount: 0 })
+            }
+
             let d = new Date()
-            let time = d.toLocaleTimeString('es-ES', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true })
-            let date = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric' })
+            let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true })
+            let date = d.toLocaleDateString('es-HN')
 
-            // Lógica: ADVERTIR / WARN
             if (/warn|advertir/.test(command)) {
-                user.warn += 1
-                if (user.warn < 3) {
+                warnDoc.warnCount += 1
+                warnDoc.reason = reason
+                await warnDoc.save()
+
+                if (warnDoc.warnCount < 3) {
                     let txt = `*─── [ ⚠️ ADVERTENCIA ] ───*\n\n`
                     txt += `*👤 Usuario:* @${who.split`@`[0]}\n`
-                    txt += `*📈 Advertencias:* ${user.warn}/3\n`
-                    txt += `*📅 Fecha:* ${date}\n`
-                    txt += `*⏰ Hora:* ${time}\n\n`
-                    txt += `_Si llegas a 3 advertencias, serás eliminado del grupo._`
+                    txt += `*📉 Advertencias:* ${warnDoc.warnCount}/3\n`
+                    txt += `*📝 Motivo:* ${reason}\n`
+                    txt += `*📅 Fecha:* ${date} | ${time}\n\n`
+                    txt += `_Al llegar a 3 advertencias serás expulsado._`
                     await conn.reply(m.chat, txt, m, { mentions: [who] })
                 } else {
-                    user.warn = 0 
+                    await global.Warns.deleteOne({ userId: who, groupId: m.chat })
                     let txt = `*─── [ 🚫 EXPULSADO ] ───*\n\n`
                     txt += `*👤 Usuario:* @${who.split`@`[0]}\n`
-                    txt += `*📅 Fecha:* ${date}\n`
-                    txt += `*⏰ Hora:* ${time}\n\n`
-                    txt += `_El usuario ha superado el límite de advertencias y ha sido eliminado._`
+                    txt += `*📝 Motivo final:* ${reason}\n\n`
+                    txt += `_Superó el límite de advertencias._`
                     await conn.reply(m.chat, txt, m, { mentions: [who] })
                     await conn.groupParticipantsUpdate(m.chat, [who], 'remove')
                 }
             }
 
-            // Lógica: QUITAR ADVERTENCIA / DELWARN
             if (/delwarn|quitarwarn/.test(command)) {
-                if (user.warn > 0) {
-                    user.warn -= 1
-                    let txt = `*─── [ ✅ INFO ] ───*\n\n`
-                    txt += `*Se ha removido una advertencia a:* @${who.split`@`[0]}\n`
-                    txt += `*Estado actual:* ${user.warn}/3`
-                    await conn.reply(m.chat, txt, m, { mentions: [who] })
+                if (warnDoc.warnCount > 0) {
+                    warnDoc.warnCount -= 1
+                    await warnDoc.save()
+                    await conn.reply(m.chat, `*✅ Advertencia removida.*\n*Estado:* ${warnDoc.warnCount}/3`, m)
                 } else {
-                    await conn.reply(m.chat, `*El usuario no tiene advertencias acumuladas.*`, m)
+                    await conn.reply(m.chat, `*El usuario no tiene advertencias en este grupo.*`, m)
                 }
             }
 
-            // Lógica: VER ADVERTENCIAS / WARNS
             if (/warns|advertencias/.test(command)) {
                 let txt = `*─── [ 📊 ESTADO ] ───*\n\n`
                 txt += `*👤 Usuario:* @${who.split`@`[0]}\n`
-                txt += `*📉 Total acumulado:* ${user.warn}/3`
+                txt += `*📉 Warns:* ${warnDoc.warnCount}/3\n`
+                txt += `*📝 Último motivo:* ${warnDoc.reason}`
                 await conn.reply(m.chat, txt, m, { mentions: [who] })
             }
 
@@ -76,4 +72,3 @@ const warnCommand = {
 }
 
 export default warnCommand
-                                                      
