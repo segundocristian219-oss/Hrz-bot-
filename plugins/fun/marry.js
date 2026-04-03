@@ -101,7 +101,7 @@ const matrimonio = {
             timeout: setTimeout(() => {
                 if (global.weddingGames[idJuegoBoda]) {
                     delete global.weddingGames[idJuegoBoda]
-                    conn.reply(m.chat, `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ La propuesta para @${idObjetivo.split('@')[0]} expiró.`, null, { mentions: [idObjetivo] })
+                    conn.reply(m.chat, `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ La propuesta para @${idObjetivo.split('@')[0]} expiró.`, null, { mentionedJid: [idObjetivo] })
                 }
             }, 20000)
         }
