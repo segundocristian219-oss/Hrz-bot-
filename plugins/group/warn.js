@@ -1,157 +1,89 @@
-export default {
-    // Todos los comandos relacionados al sistema de advertencias
-    command: ['warn', 'delwarn', 'warns', 'resetwarn', 'setwarnlimit'],
-    category: 'group',
-    run: async (client, m, { args, text, participants, isGroup }) => {
-        
-        // Verificación inicial de grupo
-        if (!m.isGroup) return m.reply('🚫 Este comando solo se puede usar en grupos.');
+let handler = async (m, { conn, Array, text, usedPrefix, command, args }) => {
+    // Inicializar base de datos
+    let db = global.db.data
+    let chat = db.chats[m.chat] || {}
+    if (!chat.warnings) chat.warnings = {}
+    if (chat.warnLimit === undefined) chat.warnLimit = 3 // Límite por defecto
 
-        // Inicializar la base de datos de manera segura
-        const db = globalThis.db?.data || global.db?.data;
-        const chat = db.chats[m.chat] || (db.chats[m.chat] = {});
-        
-        // Estructuras por defecto si el grupo es nuevo en el sistema
-        if (!chat.warnings) chat.warnings = {};
-        if (chat.warnLimit === undefined) chat.warnLimit = 0; // 0 significa desactivado
+    // Identificar usuario
+    let who = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : text ? text.replace(/[^\d]/g, '') + '@s.whatsapp.net' : null
+    
+    // Verificación de Admins
+    let groupMetadata = await conn.groupMetadata(m.chat)
+    let admins = groupMetadata.participants.filter(p => p.admin).map(p => p.id)
+    let isAdmin = admins.includes(m.sender)
+    let isBotAdmin = admins.includes(conn.user.jid || conn.user.id.split(':')[0] + '@s.whatsapp.net')
 
-        const cmd = m.command;
-        const prefix = m.prefix || '#';
+    // Fecha formateada
+    let date = new Intl.DateTimeFormat('es-VE', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    }).format(new Date())
 
-        // Identificar al usuario afectado (citado o mencionado)
-        const who = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : null;
+    switch (command) {
+        case 'setwarnlimit':
+            if (!isAdmin) return m.reply('🚫 *Este comando es para Administradores.*')
+            let limit = parseInt(args[0])
+            if (isNaN(limit) || limit < 0) return m.reply(`《✧》 Uso: ${usedPrefix + command} <número>`)
+            chat.warnLimit = limit
+            return m.reply(`⛊ Límite de advertencias establecido en: *${limit}*`)
 
-        // Comprobación interna de Administradores (evita errores si el framework no lo pasa)
-        const groupMetadata = await client.groupMetadata(m.chat);
-        const admins = groupMetadata.participants.filter(p => p.admin !== null).map(p => p.id);
-        const isAdmin = admins.includes(m.sender);
-        const isBotAdmin = admins.includes(client.user.id.split(':')[0] + '@s.whatsapp.net');
+        case 'warns':
+            if (!who) return m.reply(`《✧》 Etiqueta a alguien para ver sus warns.`)
+            let list = chat.warnings[who] || []
+            if (list.length === 0) return m.reply(`✿ @${who.split('@')[0]} está limpio de advertencias.`, null, { mentions: [who] })
+            let txt = `✿ *Advertencias de* @${who.split('@')[0]}:\n\n`
+            list.forEach(w => txt += `*ID:* #${w.id}\n*Razón:* ${w.reason}\n*Fecha:* ${w.date}\n\n`)
+            return conn.reply(m.chat, txt.trim(), m, { mentions: [who] })
 
-        // Formateador de fechas exacto al de tus imágenes
-        const getFormattedDate = () => {
-            return new Intl.DateTimeFormat('es-VE', {
-                day: 'numeric', month: 'long', year: 'numeric',
-                hour: '2-digit', minute: '2-digit', hour12: true,
-                timeZone: 'America/Caracas' 
-            }).format(new Date());
-        };
-
-        // --- SISTEMA DE COMANDOS --- //
-        switch (cmd) {
+        case 'warn':
+            if (!isAdmin) return m.reply('🚫 *Solo administradores.*')
+            if (!who) return m.reply(`《✧》 Etiqueta o responde a alguien.\nUso: ${usedPrefix + command} @user <razón>`)
             
-            case 'setwarnlimit':
-                if (!isAdmin) return m.reply('🚫 *Comando exclusivo para administradores del grupo.*');
-                
-                const limit = parseInt(args[0]);
-                if (isNaN(limit) || limit < 0) {
-                    return m.reply(`《✧》 Uso incorrecto. Ingresa un número válido.\nEjemplo: *${prefix}setwarnlimit 5*`);
-                }
+            let reason = text ? text.replace(/@\d+/g, '').trim() : 'Sin razón especificada'
+            let userWarns = chat.warnings[who] || []
+            let id = userWarns.length > 0 ? Math.max(...userWarns.map(w => w.id)) + 1 : 1
+            
+            userWarns.unshift({ id, reason, date })
+            chat.warnings[who] = userWarns
 
-                chat.warnLimit = limit;
-                if (limit === 0) {
-                    return m.reply('⛊ Has desactivado la función de eliminar usuarios al alcanzar el límite de advertencias.');
-                } else {
-                    let limitMsg = `⛊ Límite de advertencias establecido en ${limit} para este grupo.\n`;
-                    limitMsg += `❖ Los usuarios serán eliminados automáticamente al alcanzar este límite.`;
-                    return m.reply(limitMsg);
-                }
+            let msg = `⛊ @${who.split('@')[0]} ha sido advertido.\n`
+            msg += `✿ *Total:* ${userWarns.length}/${chat.warnLimit}\n\n`
+            userWarns.forEach(w => msg += `*#${w.id}* - ${w.reason}\n`)
 
-            case 'warns':
-                if (!who) return m.reply('《✧》 Menciona o responde a un usuario válido para ver sus advertencias.');
-                
-                const userWarns = chat.warnings[who] || [];
-                if (userWarns.length === 0) {
-                    return m.reply(`✿ El usuario @${who.split('@')[0]} no tiene advertencias registradas.`, null, { mentions: [who] });
-                }
+            await conn.reply(m.chat, msg.trim(), m, { mentions: [who] })
 
-                let warnsVisual = `✿ *Advertencias totales (${userWarns.length}):*\n\n`;
-                userWarns.forEach(w => {
-                    warnsVisual += `#${w.id} » ${w.reason}\n`;
-                    warnsVisual += `| » Fecha: ${w.date}\n\n`;
-                });
-                
-                return m.reply(warnsVisual.trim(), null, { mentions: [who] });
+            if (chat.warnLimit > 0 && userWarns.length >= chat.warnLimit) {
+                if (!isBotAdmin) return m.reply('⚠️ El usuario llegó al límite pero no soy admin para eliminarlo.')
+                await conn.groupParticipantsUpdate(m.chat, [who], 'remove')
+                chat.warnings[who] = []
+            }
+            break
 
-            case 'warn':
-                if (!isAdmin) return m.reply('🚫 *Comando exclusivo para administradores del grupo.*');
-                if (!who) return m.reply('《✧》 Debes mencionar o responder al usuario que deseas advertir.');
+        case 'delwarn':
+            if (!isAdmin) return m.reply('🚫 *Solo administradores.*')
+            if (!who) return m.reply(`《✧》 Indica el usuario y el ID.\nEjemplo: ${usedPrefix + command} @user 1`)
+            let warnId = parseInt(args.find(a => !a.includes('@')))
+            if (!warnId) return m.reply(`《✧》 Debes poner el número de ID.`)
+            
+            let userW = chat.warnings[who] || []
+            let index = userW.findIndex(w => w.id === warnId)
+            if (index === -1) return m.reply(`❌ No existe el warn #${warnId}`)
+            
+            userW.splice(index, 1)
+            chat.warnings[who] = userW
+            return m.reply(`❀ Advertencia #${warnId} eliminada para @${who.split('@')[0]}`, null, { mentions: [who] })
 
-                // Extraer la razón de la advertencia limpiando el texto de menciones
-                let cleanReason = text.replace(/@\d+/g, '').trim();
-                let reason = cleanReason !== '' ? cleanReason : 'Sin razón.';
-                
-                if (!chat.warnings[who]) chat.warnings[who] = [];
-                
-                // Generar el siguiente ID buscando el número más alto y sumando 1
-                const nextId = chat.warnings[who].length > 0 ? Math.max(...chat.warnings[who].map(w => w.id)) + 1 : 1;
-                
-                // .unshift() coloca la advertencia más reciente al inicio de la lista
-                chat.warnings[who].unshift({
-                    id: nextId,
-                    reason: reason,
-                    date: getFormattedDate()
-                });
-
-                const currentWarns = chat.warnings[who];
-                
-                let visualAdd = `⛊ Se ha añadido una advertencia a @${who.split('@')[0]}.\n`;
-                visualAdd += `✿ *Advertencias totales (${currentWarns.length}):*\n\n`;
-                
-                currentWarns.forEach(w => {
-                    visualAdd += `#${w.id} » ${w.reason}\n`;
-                    visualAdd += `| » Fecha: ${w.date}\n`;
-                });
-
-                await client.sendMessage(m.chat, { text: visualAdd.trim(), mentions: [who] }, { quoted: m });
-
-                // Lógica de auto-expulsión (Kick)
-                if (chat.warnLimit > 0 && currentWarns.length >= chat.warnLimit) {
-                    if (!isBotAdmin) {
-                        return m.reply('⚠️ El usuario alcanzó el límite de advertencias, pero no puedo eliminarlo porque *el bot no es administrador*.');
-                    }
-                    await m.reply(`🚨 @${who.split('@')[0]} ha superado el límite de advertencias (${chat.warnLimit}) y será eliminado.`, null, { mentions: [who] });
-                    await client.groupParticipantsUpdate(m.chat, [who], 'remove');
-                    // Reiniciar advertencias una vez expulsado (opcional, pero buena práctica)
-                    chat.warnings[who] = []; 
-                }
-                return;
-
-            case 'delwarn':
-                if (!isAdmin) return m.reply('🚫 *Comando exclusivo para administradores del grupo.*');
-                if (!who) return m.reply('《✧》 Debes mencionar o responder al usuario cuya advertencia deseas eliminar.');
-
-                // Extraer el número de ID que el administrador escribió
-                const textWithoutMention = text.replace(/@\d+/g, '').trim();
-                const warnId = parseInt(textWithoutMention.split(' ')[0]);
-
-                if (isNaN(warnId)) {
-                    return m.reply(`《✧》 Debes especificar el número (#ID) de la advertencia.\nEjemplo: *${prefix}delwarn @usuario 1*`);
-                }
-
-                if (!chat.warnings[who] || chat.warnings[who].length === 0) {
-                    return m.reply(`El usuario @${who.split('@')[0]} no tiene advertencias para borrar.`, null, { mentions: [who] });
-                }
-
-                const warnIndex = chat.warnings[who].findIndex(w => w.id === warnId);
-                if (warnIndex === -1) {
-                    return m.reply(`❌ No se encontró ninguna advertencia con el ID #${warnId}. Verifica usando ${prefix}warns.`);
-                }
-
-                // Borrar la advertencia específica
-                chat.warnings[who].splice(warnIndex, 1);
-                
-                // Intento seguro de obtener el nombre del usuario desde la DB, si no existe usa su número
-                const userName = db.users[who]?.name || who.split('@')[0];
-
-                return m.reply(`❀ Se ha eliminado la advertencia #${warnId} del usuario @${who.split('@')[0]} (${userName}).`, null, { mentions: [who] });
-
-            case 'resetwarn':
-                if (!isAdmin) return m.reply('🚫 *Comando exclusivo para administradores del grupo.*');
-                if (!who) return m.reply('《✧》 Menciona o responde a un usuario válido para restablecer sus advertencias.');
-
-                chat.warnings[who] = []; 
-                return m.reply(`⛊ Se han eliminado todas las advertencias del usuario @${who.split('@')[0]}.`, null, { mentions: [who] });
-        }
+        case 'resetwarn':
+            if (!isAdmin) return m.reply('🚫 *Solo administradores.*')
+            if (!who) return m.reply(`《✧》 Menciona a alguien para resetear sus warns.`)
+            chat.warnings[who] = []
+            return m.reply(`⛊ Advertencias restablecidas para @${who.split('@')[0]}`, null, { mentions: [who] })
     }
-          }
-                    
+}
+
+handler.command = ['warn', 'delwarn', 'warns', 'resetwarn', 'setwarnlimit']
+handler.group = true // Solo funciona en grupos
+handler.admin = false // No lo pongas en true aquí para que el comando cargue y maneje sus propios mensajes de error
+
+export default handler
