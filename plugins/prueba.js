@@ -1,51 +1,45 @@
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 
-const newspaperCommand = {
-    name: 'periodico',
-    alias: ['noticia', 'fodey', 'prensa'],
+const animeVisualsCommand = {
+    name: 'anime',
+    alias: ['waifu', 'neko', 'shinobu'],
     category: 'fun',
+    nsfw: true,
     run: async (m, { conn, text, usedPrefix, command }) => {
-        if (!text.includes('|')) return m.reply(`> *✎ Crea tu propia noticia.*\n\n*Uso:* ${usedPrefix + command} Nombre del Diario | Titular | Tu noticia aqui`);
+        const categories = ['waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'slap', 'kill', 'happy', 'wink', 'poke', 'dance', 'cringe'];
+        
+        let type = text.toLowerCase().trim();
+        if (!categories.includes(type)) {
+            return m.reply(`> *✎ Selecciona una categoría válida.*\n\n*Categorías disponibles:* \n${categories.join(', ')}\n\n*Ejemplo:* ${usedPrefix + command} waifu`);
+        }
 
-        let [name, title, content] = text.split('|').map(v => v.trim());
-        if (!name || !title || !content) return m.reply(`*⚠️ Falta información. Usa el separador |*`);
-
-        await m.react('🗞️');
+        await m.react('⏳');
 
         try {
-            const baseUrl = 'https://www.fodey.com/generators/newspaper/snippet.asp';
-            const params = new URLSearchParams({
-                name: name,
-                date: new Date().toLocaleDateString('es-HN'),
-                headline: title,
-                text: content
+            const { data } = await axios.get(`https://api.waifu.pics/sfw/${type}`, {
+                timeout: 10000
             });
 
-            const { data } = await axios.get(`${baseUrl}?${params.toString()}`, {
-                timeout: 15000
-            });
+            if (!data.url) throw new Error('No image found');
 
-            const $ = cheerio.load(data);
-            const imageUrl = $('img').attr('src');
+            await m.react('✨');
 
-            if (!imageUrl) throw new Error('No image found');
-
-            const fullImageUrl = `https://www.fodey.com${imageUrl}`;
-
-            await m.react('📸');
+            let caption = `✨ *ANIME VISUAL* ✨\n\n` +
+                          `🎞️ *Categoría:* ${type.toUpperCase()}\n` +
+                          `🔗 *URL:* ${data.url}\n\n` +
+                          `> _Cargado desde Waifu.pics Engine_`;
 
             await conn.sendMessage(m.chat, { 
-                image: { url: fullImageUrl }, 
-                caption: `📰 *¡ÚLTIMA HORA!* 📰\n\n> _Noticia generada por: ${name}_` 
+                image: { url: data.url }, 
+                caption 
             }, { quoted: m });
 
         } catch (err) {
             await m.react('🚫');
             console.error(err);
-            m.reply(`*⚠️ ERROR AL GENERAR LA NOTICIA*`);
+            m.reply(`*⚠️ ERROR AL OBTENER EL CONTENIDO*`);
         }
     }
 };
 
-export default newspaperCommand;
+export default animeVisualsCommand;
