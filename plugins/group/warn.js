@@ -3,7 +3,7 @@ const warnCommand = {
     alias: ['advertir', 'delwarn', 'quitarwarn', 'warns', 'advertencias'],
     category: 'group',
     group: true,
-    run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin, participants }) => {
+    run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
         try {
             if (/warns|advertencias/.test(command)) {
                 let allWarns = await global.Warns.find({ groupId: m.chat });
@@ -13,7 +13,7 @@ const warnCommand = {
                 allWarns.forEach((w, i) => {
                     list += `*${i + 1}.* @${w.userId.split('@')[0]}\n`;
                     list += `*⌬ Warns:* ${w.warnCount}/3\n`;
-                    list += `*᳀ Motivo:* ${w.reason}\n\n`;
+                    list += `*᳀ Motivos:* ${w.reasons.join(' | ') || 'Sin especificar'}\n\n`;
                 });
                 return conn.reply(m.chat, list, m, { mentions: allWarns.map(w => w.userId) });
             }
@@ -30,7 +30,7 @@ const warnCommand = {
             let warnDoc = await global.Warns.findOne({ userId: who, groupId: m.chat });
             
             if (!warnDoc) {
-                warnDoc = new global.Warns({ userId: who, groupId: m.chat, warnCount: 0 });
+                warnDoc = new global.Warns({ userId: who, groupId: m.chat, warnCount: 0, reasons: [] });
             }
 
             let d = new Date();
@@ -44,14 +44,14 @@ const warnCommand = {
                 }
                 
                 warnDoc.warnCount += 1;
-                warnDoc.reason = reason;
+                warnDoc.reasons.push(reason); 
                 await warnDoc.save();
 
                 if (warnDoc.warnCount < 3) {
                     let txt = `*─── [ ▶ ADVERTENCIA ] ───*\n\n`;
                     txt += `*♛ Usuario:* @${who.split`@`[0]}\n`;
                     txt += `*✰ Advertencias:* ${warnDoc.warnCount}/3\n`;
-                    txt += `*⍰ Motivo:* ${reason}\n`;
+                    txt += `*⍰ Motivos acumulados:* \n- ${warnDoc.reasons.join('\n- ')}\n`;
                     txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
                     txt += `_Al llegar a 3 advertencias serás expulsado._`;
                     await conn.reply(m.chat, txt, m, { mentions: [who] });
@@ -60,7 +60,7 @@ const warnCommand = {
                     let txt = `*─── [ ×᷼× EXPULSADO ] ───*\n\n`;
                     txt += `*♛ Usuario:* @${who.split`@`[0]}\n`;
                     txt += `*✰ Motivo final:* ${reason}\n\n`;
-                    txt += `_Superó el límite y el registro fue purgado._`;
+                    txt += `_Superó el límite de 3 advertencias y el registro fue purgado._`;
                     await conn.reply(m.chat, txt, m, { mentions: [who] });
                     await conn.groupParticipantsUpdate(m.chat, [who], 'remove');
                 }
@@ -69,6 +69,7 @@ const warnCommand = {
             if (/delwarn|quitarwarn/.test(command)) {
                 if (warnDoc.warnCount > 0) {
                     warnDoc.warnCount -= 1;
+                    warnDoc.reasons.pop(); 
                     if (warnDoc.warnCount === 0) await global.Warns.deleteOne({ userId: who, groupId: m.chat });
                     else await warnDoc.save();
                     await conn.reply(m.chat, `*♛ Advertencia removida.*\n*Estado:* ${warnDoc.warnCount}/3`, m);
