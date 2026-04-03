@@ -24,7 +24,7 @@ const warnCommand = {
                 return conn.reply(m.chat, list, m, { mentions: allWarns.map(w => w.userId) })
             }
 
-            if (!isAdmin) return conn.reply(m.chat, `> *🚫 ACCESO DENEGADO*\n\n_Solo administradores pueden usar este comando._`, m)
+            if (!admin) return conn.reply(m.chat, `> *🚫 ACCESO DENEGADO*\n\n_Solo administradores pueden usar este comando._`, m)
 
             let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false
             if (!who) return conn.reply(m.chat, `> *♛ USO CORRECTO*\n\nEtiqueta o responde a alguien:\n*${usedPrefix + command}* @user [motivo]`, m)
