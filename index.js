@@ -103,13 +103,14 @@ if (mongoURI && !process.argv.includes('--local')) {
 const warnSchema = new mongoose.Schema({
     userId: { type: String, required: true },
     groupId: { type: String, required: true },
-    reason: { type: String, default: 'Sin motivo especificado' },
+    reasons: { type: [String], default: [] },
     warnCount: { type: Number, default: 0 },
     date: { type: Date, default: Date.now }
 });
 
 warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
 global.Warns = mongoose.model('Warns', warnSchema);
+
 
 
    const statsSchema = new mongoose.Schema({
