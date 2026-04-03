@@ -1,54 +1,51 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-const movieClipsCommand = {
-    name: 'clip',
-    alias: ['movieclip', 'escena', 'yarn'],
-    category: 'search',
+const newspaperCommand = {
+    name: 'periodico',
+    alias: ['noticia', 'fodey', 'prensa'],
+    category: 'fun',
     run: async (m, { conn, text, usedPrefix, command }) => {
-        if (!text) return m.reply(`> *✎ Ingresa una palabra o frase para buscar el clip.*\n\n*Ejemplo:* ${usedPrefix + command} I'll be back`);
+        if (!text.includes('|')) return m.reply(`> *✎ Crea tu propia noticia.*\n\n*Uso:* ${usedPrefix + command} Nombre del Diario | Titular | Tu noticia aqui`);
 
-        await m.react('🔍');
+        let [name, title, content] = text.split('|').map(v => v.trim());
+        if (!name || !title || !content) return m.reply(`*⚠️ Falta información. Usa el separador |*`);
+
+        await m.react('🗞️');
 
         try {
-            const searchUrl = `https://getyarn.io/yarn-find?text=${encodeURIComponent(text)}`;
-            const { data } = await axios.get(searchUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0' },
-                timeout: 10000
+            const baseUrl = 'https://www.fodey.com/generators/newspaper/snippet.asp';
+            const params = new URLSearchParams({
+                name: name,
+                date: new Date().toLocaleDateString('es-HN'),
+                headline: title,
+                text: content
+            });
+
+            const { data } = await axios.get(`${baseUrl}?${params.toString()}`, {
+                timeout: 15000
             });
 
             const $ = cheerio.load(data);
-            const clipPath = $('.clip-card .clip-link').first().attr('href');
+            const imageUrl = $('img').attr('src');
 
-            if (!clipPath) {
-                await m.react('🚫');
-                return m.reply(`*⚠️ No se encontraron clips para:* "${text}"`);
-            }
+            if (!imageUrl) throw new Error('No image found');
 
-            const idClip = clipPath.split('/').pop();
-            const videoUrl = `https://y.yarn.co/${idClip}.mp4`;
-            const title = $('.clip-card .title').first().text().trim() || 'Película desconocida';
-            const dialogue = $('.clip-card .transcript').first().text().trim() || text;
+            const fullImageUrl = `https://www.fodey.com${imageUrl}`;
 
-            await m.react('🎬');
-
-            let caption = `🎬 *CLIP DE PELÍCULA* 🎬\n\n` +
-                          `🎥 *Origen:* ${title}\n` +
-                          `💬 *Diálogo:* "${dialogue}"\n\n` +
-                          `> _Cargado desde Yarn Engine_`;
+            await m.react('📸');
 
             await conn.sendMessage(m.chat, { 
-                video: { url: videoUrl }, 
-                caption: caption,
-                mimetype: 'video/mp4'
+                image: { url: fullImageUrl }, 
+                caption: `📰 *¡ÚLTIMA HORA!* 📰\n\n> _Noticia generada por: ${name}_` 
             }, { quoted: m });
 
         } catch (err) {
             await m.react('🚫');
             console.error(err);
-            m.reply(`*⚠️ ERROR AL BUSCAR EL CLIP*`);
+            m.reply(`*⚠️ ERROR AL GENERAR LA NOTICIA*`);
         }
     }
 };
 
-export default movieClipsCommand;
+export default newspaperCommand;
