@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const memeApiCommand = {
     name: 'memevid',
-    alias: ['meme', 'dixmeme'],
+    alias: ['meme2', 'dixmeme'],
     category: 'fun',
     run: async (m, { conn }) => {
         await m.react('⏳');
