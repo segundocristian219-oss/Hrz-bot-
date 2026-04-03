@@ -1,6 +1,6 @@
 const enable = {
     name: 'enable',
-    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'modoadmin'], 
+    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'modoadmin', 'nsfw'0], 
     category: 'config',
     admin: true,
     group: true,
@@ -13,6 +13,7 @@ const enable = {
             'gacha': 'gacha',
             'antisub': 'antisub',
             'antilink': 'antiLink',
+            'nsfw': 'nsfw',
             'antistatus': 'antiStatus',
             'modoadmin': 'modoadmin', 
             'autosticker': 'autoStickers',
@@ -27,6 +28,7 @@ const enable = {
                 { name: 'Detección', key: 'detect' },
                 { name: 'Anti-Links', key: 'antiLink' },
                 { name: 'Modo Admin', key: 'modoadmin' }, 
+                { name: 'Nsfw', key: 'nsfw' }, 
                 { name: 'Auto-Stickers', key: 'autoStickers' }
             ];
 
