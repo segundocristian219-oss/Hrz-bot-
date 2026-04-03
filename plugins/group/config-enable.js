@@ -1,6 +1,6 @@
 const enable = {
     name: 'enable',
-    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'modoadmin', 'nsfw'0], 
+    alias: ['welcome', 'bv', 'detect', 'gacha', 'antisub', 'antilink', 'antistatus', 'modoadmin', 'nsfw'], 
     category: 'config',
     admin: true,
     group: true,
