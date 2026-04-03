@@ -84,7 +84,7 @@ const matrimonio = {
         if (!quien || quien === m.sender || quien === conn.user.jid) return m.reply(`*♛ ERROR ✧*\n\n╰❒ Menciona o responde a alguien para casarte.`)
 
         let objetivo = await global.User.findOne({ $or: [{ id: quien }, { lid: quien }] })
-        if (!objetivo) return m.reply(`*♛ ERROR ✧*\n\n╰❒ El usuario no está registrado.`)
+        if (!objetivo) return m.reply(`*♛ ERROR ✧*\n\n╰❒ El usuario no está registrado en la base de datos tiene que usar el comando *(#menu)* para iniciar el registro automático.`)
 
         if (user.marry) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Ya estás casado.`)
         if (objetivo.marry) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Esa persona ya está casada.`)
