@@ -4,7 +4,7 @@ import { fileTypeFromBuffer } from 'file-type';
 const uploadToVokerApi = async (input) => {
     try {
         const isUrl = typeof input === 'string' && input.startsWith('http');
-        const endpoint = 'https://voker.dix.lat/api/tmp';
+        const endpoint = 'https://api.dix.lat/upload3';
 
         if (isUrl) {
             const res = await fetch(`${endpoint}?url=${encodeURIComponent(input)}`);
