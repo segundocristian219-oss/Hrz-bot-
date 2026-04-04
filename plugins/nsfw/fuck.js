@@ -5,12 +5,7 @@ const reaction = {
     txt_solo: '> ❒ @user1 quiere leche 🍆💦',
     txt_mencion: '> ❏ @user1 le está dando leche a @user2 🍆💦',
     links: [
-'https://media.tenor.com/WU4sP7m_FD8AAAPo/anime.mp4',
-'https://media.tenor.com/Ce8ZMfAcjdoAAAPo/anime.mp4',
-'https://media.tenor.com/KfyGv-4RtGYAAAPo/anime-reality.mp4',
-'https://media.tenor.com/cc1EzfBVr4oAAAPo/yandere-tagged.mp4',
-'https://media.tenor.com/adQHri2oFZ8AAAPo/mitsuha-miyamizu-sayaka-natori.mp4',
-'https://media.tenor.com/5seqBijq-pUAAAPo/kill-la-kill-sakuga.mp4'
+'https://qu.ax/mrnVR.mp4'
 ]
 }
 
