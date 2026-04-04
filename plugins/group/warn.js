@@ -69,8 +69,8 @@ const warnCommand = {
                 let reasonRaw = text ? text.replace(/@(\d+)/g, '').trim() : 'Sin motivo';
                 if (reasonRaw === '') reasonRaw = 'Sin motivo';
                 
-                // Formateamos el motivo para incluir fecha y hora internamente
-                let reasonWithMeta = `${reasonRaw} \n      *└ 📅 Fecha:* _${date}_ | *🕒 Hora:* _${time}_`;
+                // Formateamos el motivo para incluir SOLO la fecha internamente
+                let reasonWithMeta = `${reasonRaw} \n      *└ 📅 Fecha:* _${date}_`;
 
                 warnDoc.warnCount += 1;
                 warnDoc.reasons.push(reasonWithMeta); 
@@ -81,7 +81,7 @@ const warnCommand = {
                     txt += `*♛ Usuario:* @${who.split`@`[0]}\n`;
                     txt += `*✰ Advertencias:* ${warnDoc.warnCount}/3\n`;
                     txt += `*⍰ Motivo actual:* ${reasonRaw}\n`;
-                    txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
+                    txt += `*➠ Fecha:* ${date} | ${time}\n\n`; // Aquí mantenemos la hora para el aviso inmediato
                     txt += `_Al llegar a 3 advertencias serás expulsado._`;
                     await conn.reply(m.chat, txt, m, { mentions: [who] });
                 } else {
@@ -144,4 +144,4 @@ const warnCommand = {
 };
 
 export default warnCommand;
-                
+                    
