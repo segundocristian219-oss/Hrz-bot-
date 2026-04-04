@@ -47,25 +47,21 @@ const name2 = 'AlexDev09 ♛'
 const vcard1 = 'BEGIN:VCARD\n' +
               'VERSION:3.0\n' +
               `FN:${name1}\n` +
-              'ORG:KiritoBot-MD Team;\n' +
-              'TITLE:Desarrollador Principal & Founder;\n' + 
+              `ORG:KiritoBot-MD Team;\n` +
+              `TITLE:Desarrollador Principal;\n' + 
               `TEL;type=CELL;type=VOICE;waid=${num1}:${num1}\n` +
-              'EMAIL;type=INTERNET:soporte@kiritobot.com\n' +
-              'URL:https://github.com/SebastianHerrera\n' + 
-              'X-WA-BIZ-DESCRIPTION:Programación de sistemas y arquitectura de bots.\n' +
-              `X-WA-BIZ-NAME:${name1}\n` +
+              `EMAIL;type=INTERNET:soporte@kiritobot.com\n' + 
+              `URL:https://github.com/SebastianHerrera\n` +
               'END:VCARD'
 
 const vcard2 = 'BEGIN:VCARD\n' +
               'VERSION:3.0\n' +
               `FN:${name2}\n` +
-              'ORG:KiritoBot-MD Team;\n' +
-              'TITLE:Administrador de Sistemas & Scrapers;\n' + 
+              `ORG:KiritoBot-MD Team;\n' +
+              `TITLE:SysAdmin & Scrapers;\n` +
               `TEL;type=CELL;type=VOICE;waid=${num2}:${num2}\n` +
-              'EMAIL;type=INTERNET:dev@alex09.com\n' + 
-              'URL:https://dix.lat\n' + 
-              'X-WA-BIZ-DESCRIPTION:Especialista en extracción de datos y APIs.\n' +
-              `X-WA-BIZ-NAME:${name2}\n` +
+              `EMAIL;type=INTERNET:dev@alex09.com\n` +
+              `URL:https://dix.lat\n` +
               'END:VCARD'
 
 await conn.sendMessage(m.chat, {
@@ -74,9 +70,18 @@ await conn.sendMessage(m.chat, {
         contacts: [{ vcard: vcard1 }, { vcard: vcard2 }]
     },
     contextInfo: {
-        businessOwnerJid: num1 + '@s.whatsapp.net'
+        externalAdReply: {
+            title: 'KiritoBot-MD™ OFFICIAL CONTACTS',
+            body: 'Desarrollo y Soporte Técnico',
+            thumbnailUrl: img(),
+            sourceUrl: `https://wa.me/${num1}`,
+            mediaType: 1,
+            showAdAttribution: false,
+            renderLargerThumbnail: true
+        }
     }
 }, { quoted: m })
+
 
 
             await m.react('👑')
