@@ -54,11 +54,7 @@ const workCommand = {
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: global.ch, 
-                    serverMessageId: 101,
-                    newsletterName: name()
-                }
+                ...channelInfo
             }
         }, { quoted: m })
 
