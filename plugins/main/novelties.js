@@ -12,7 +12,7 @@ const news = {
                 return await conn.sendMessage(m.chat, { text: '➠ *NOVEDADES*\n\n⍰ No hay actualizaciones registradas actualmente.' }, { quoted: m });
             }
 
-            let report = `https://dix.lat\n\n➠ _Últimas mejoras y correcciones_\n\n`;
+            let report = `➠ _Últimas mejoras y correcciones_\n\n`;
 
             data.forEach((n, i) => {
                 const date = new Date(n.date).toLocaleDateString('es-HN');
