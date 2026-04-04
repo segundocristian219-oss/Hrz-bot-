@@ -64,8 +64,11 @@ const handler = {
                           `X-WA-BIZ-NAME:${name2}\n` +
                           'END:VCARD'
 
-            await conn.sendMessage(m.chat, {
-    text: 'Equipo de Desarrollo KiritoBot',
+    await conn.sendMessage(m.chat, {
+    contacts: {
+        displayName: 'Equipo de Desarrollo KiritoBot',
+        contacts: [{ vcard: vcard1 }, { vcard: vcard2 }]
+    },
     contextInfo: {
         externalAdReply: {
             title: 'KiritoBot-MD™ OFFICIAL CONTACTS',
@@ -76,13 +79,10 @@ const handler = {
             showAdAttribution: false,
             renderLargerThumbnail: true
         },
-        contacts: {
-            displayName: 'Equipo de Desarrollo KiritoBot',
-            contacts: [{ vcard: vcard1 }, { vcard: vcard2 }]
-        },
         businessOwnerJid: num1 + '@s.whatsapp.net'
     }
 }, { quoted: m })
+
 
             await m.react('👑')
         }
