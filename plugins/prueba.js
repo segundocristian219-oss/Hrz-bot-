@@ -3,15 +3,13 @@ import * as cheerio from 'cheerio'
 
 const handler = {
     name: 'hgif',
-    alias: ['hentaigif', 'hvideo'],
+    alias: ['hentaigif'],
     category: 'nsfw',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply('Ingresa el estilo o categoría (ej: fuck, solo, creampie).')
-
         try {
-            await m.react('🔘')
+            const query = text ? encodeURIComponent(text) : 'fuck+anime'
+            const searchUrl = `https://hentaigifz.com/?s=${query}`
             
-            const searchUrl = `https://hentaigifz.com/tag/${text.toLowerCase().replace(/\s+/g, '-')}/`
             const { data } = await axios.get(searchUrl, {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
@@ -21,35 +19,33 @@ const handler = {
             const $ = cheerio.load(data)
             const results = []
 
-            $('article.post').each((i, el) => {
-                const title = $(el).find('h2.entry-title a').text().trim()
-                const url = $(el).find('h2.entry-title a').attr('href')
-                const thumbnail = $(el).find('img').attr('src') || $(el).find('img').attr('data-src')
-
-                if (url && thumbnail) {
-                    results.push({ title, url, thumbnail })
-                }
+            $('article.post-item').each((i, el) => {
+                const url = $(el).find('a.exopop').attr('href')
+                const title = $(el).find('.post-title span').text().trim()
+                const thumb = $(el).find('img').attr('src')
+                if (url) results.push({ title, url, thumb })
             })
 
-            if (results.length === 0) return m.reply('No se encontraron resultados para ese estilo.')
+            if (results.length === 0) return m.reply('No results.')
 
             const random = results[Math.floor(Math.random() * results.length)]
 
             const { data: pageData } = await axios.get(random.url)
             const $$ = cheerio.load(pageData)
-            const gifUrl = $$('div.entry-content img').attr('src') || $$('div.entry-content video source').attr('src')
+            
+            const gifUrl = $$('.single-post-media img').attr('src')
 
-            if (!gifUrl) return m.reply('Error al extraer el archivo multimedia.')
+            if (!gifUrl) return m.reply('GIF not found.')
 
             await conn.sendMessage(m.chat, {
                 video: { url: gifUrl },
-                caption: `*HGIF ANALYST*\n\n*Título:* ${random.title}\n*Estilo:* ${text}\n*Origen:* HentaiGifz`,
+                caption: `*HGIF*\n*Title:* ${random.title}`,
                 gifPlayback: true,
                 contextInfo: {
                     externalAdReply: {
-                        title: 'NSFW CONTENT SYSTEM',
-                        body: 'HentaiGifz Scraper',
-                        thumbnailUrl: random.thumbnail,
+                        title: 'Hentai GIF System',
+                        body: random.title,
+                        thumbnailUrl: random.thumb,
                         sourceUrl: random.url,
                         mediaType: 1,
                         renderLargerThumbnail: true
@@ -57,11 +53,8 @@ const handler = {
                 }
             }, { quoted: m })
 
-            await m.react('✅')
-
         } catch (e) {
-            await m.react('❌')
-            m.reply('Error: Categoría no encontrada o falla en el servidor.')
+            m.reply('Error occurred.')
         }
     }
 }
