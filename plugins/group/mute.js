@@ -10,16 +10,14 @@ const muteCommand = {
 
         if (!who || who === '@s.whatsapp.net') return m.reply(`*♛ Menciona o responde a alguien*`);
 
-        const ownerBot = global.owner[0][0] + '@s.whatsapp.net';
+        const ownersJids = global.owner.map(([num]) => num.replace(/\D/g, '') + '@s.whatsapp.net');
         const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
 
-        if (who === ownerBot || who === botId) {
-            return m.reply('♛ *No puedes realizar esta acción con el staff del bot*');
-        }
+        if (ownersJids.includes(who)) return m.reply('> ╰❒ No puedo mutear a mi creador.');
+        if (who === botId) return m.reply('> ╰❒ No puedo mutearme a mí mismo.');
 
         const isMuting = ['mute', 'mutar', 'silenciar'].includes(command);
-        
-        
+
         if (isMuting) {
             await global.Chat.findOneAndUpdate(
                 { id: m.chat },
