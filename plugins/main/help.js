@@ -125,7 +125,8 @@ const menuCommand = {
                         { cmd: '.kick', desc: 'Expulsa a un miembro del grupo (requiere ser admin).' },
                         { cmd: '.link', desc: 'Obtiene el enlace de invitación del grupo.' },
                         { cmd: '.open/close', desc: 'Abre o cierra el grupo (solo admins pueden enviar mensajes).' },
-                        { cmd: '.mute/unmute', desc: 'Silencia los mensajes de un usuario.' }
+                        { cmd: '.mute/unmute', desc: 'Silencia los mensajes de un usuario.' },
+                        { cmd: '.warn/delwarn', desc: 'Advierte a un usuario/a.' } 
                     ]
                 },
                 {
