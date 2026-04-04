@@ -94,7 +94,7 @@ const devsCommand = {
                       `X-WA-BIZ-NAME:${brandName6}\n` +
                       'END:VCARD'
 
-        // --- 7. DESARROLLADOR 7 (H u̖̖̖̗̗̗̠̠̠̱̱̱̩̩ s̖̗k̖y)---
+        // --- 7. DESARROLLADOR 7 (H u̖̖̖̗̗̗̠̠̠̱̱̱̩̩ s̖̗k̖y) ---
         const myNumber7 = '6283191473712'
         const myJid7 = myNumber7 + '@s.whatsapp.net'
         const brandName7 = 'H u̖̖̖̗̗̗̠̠̠̱̱̱̩̩ s̖̗k̖y ♛' 
@@ -109,10 +109,10 @@ const devsCommand = {
                       `X-WA-BIZ-NAME:${brandName7}\n` +
                       'END:VCARD'
 
-        // --- 8. DESARROLLADOR 8 ---
-        const myNumber8 = '584228028583'
+        // --- 8. DESARROLLADOR 8 (TH PRODUCCIONES) ---
+        const myNumber8 = '59598455685'
         const myJid8 = myNumber8 + '@s.whatsapp.net'
-        const brandName8 = 'ϛαριϛυγ ♛' 
+        const brandName8 = 'TH PRODUCCIONES ♛' 
         const vcard8 = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
                       `FN:${brandName8}\n` + 
@@ -120,7 +120,7 @@ const devsCommand = {
                       'ORG:KiritoBot-MD Developer;\n' + 
                       'TITLE:Chief Executive Officer;\n' + 
                       `TEL;type=CELL;type=VOICE;waid=${myNumber8}:${myNumber8}\n` +
-                      'X-WA-BIZ-DESCRIPTION:programador, owner y desarrollador principal del bot.\n' +
+                      'X-WA-BIZ-DESCRIPTION:Ventas de cuentas\n' +
                       `X-WA-BIZ-NAME:${brandName8}\n` +
                       'END:VCARD'
 
