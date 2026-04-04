@@ -5,29 +5,17 @@ const warnCommand = {
     group: true,
     run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
         try {
-            // 0. CONFIGURACIÓN DEL LÍMITE (Estructura dinámica)
-            if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {};
-            if (!global.db.data.chats[m.chat].warnLimit) global.db.data.chats[m.chat].warnLimit = 3;
-            let limit = global.db.data.chats[m.chat].warnLimit;
+            // 1. CONFIGURACIÓN DEL LÍMITE (Por defecto 3)
+            // Nota: Aquí podrías usar un modelo de 'Groups', pero para mantenerlo simple 
+            // y funcional con tu estructura actual, definimos el límite estándar.
+            let limit = 3; 
 
-            // 1. LÓGICA: CAMBIAR LÍMITE (.warnlimit)
-            if (command === 'warnlimit') {
-                if (!isAdmin) return global.dfail('admin', m, conn);
-                let newLimit = parseInt(text.trim());
-                if (isNaN(newLimit) || newLimit < 1 || newLimit > 5) {
-                    return conn.reply(m.chat, `*─── [ ⚙️ CONFIG ] ───*\n\n*Límite actual:* ${limit}\n\n> *♛ USO CORRECTO*\n*${usedPrefix + command}* [1-5]\n\n_Elige un número del 1 al 5 para establecer el tope de advertencias._`, m);
-                }
-                global.db.data.chats[m.chat].warnLimit = newLimit;
-                return conn.reply(m.chat, `*─── [ ✅ AJUSTE ] ───*\n\n*Nuevo límite establecido en:* ${newLimit}\n\n_Los usuarios serán expulsados automáticamente al llegar a ${newLimit} advertencias._`, m);
-            }
-
-            // 2. IDENTIFICAR AL USUARIO
-            let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
-            let warnDoc = who ? await global.Warns.findOne({ userId: who, groupId: m.chat }) : null;
-
-            // 3. LÓGICA: CONSULTAR LISTA (.warnlist / .advertencias)
+            // 2. LÓGICA: CONSULTAR LISTA (.warnlist / .advertencias)
             if (['warnlist', 'advertencias'].includes(command)) {
+                let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
+                
                 if (who) {
+                    let warnDoc = await global.Warns.findOne({ userId: who, groupId: m.chat });
                     if (!warnDoc || warnDoc.warnCount === 0) {
                         return conn.reply(m.chat, `*─── [ ⚖ REGISTRO ] ───*\n\n_El usuario @${who.split`@`[0]} está limpio. No tiene advertencias._`, m, { mentions: [who] });
                     }
@@ -41,7 +29,7 @@ const warnCommand = {
                         detail += `\n*${i + 1}.* ${reason}`;
                     });
 
-                    detail += `\n\n*⚠️ Nota:* _Al llegar a ${limit} advertencias, será expulsado._`;
+                    detail += `\n\n*⚠️ Nota:* _Al llegar a ${limit} advertencias, el sistema procederá con la expulsión automática._`;
                     return conn.reply(m.chat, detail, m, { mentions: [who] });
                 }
 
@@ -52,18 +40,26 @@ const warnCommand = {
                 allWarns.forEach((w, i) => {
                     list += `*${i + 1}.* @${w.userId.split('@')[0]} ( ${w.warnCount}/${limit} )\n`;
                 });
-                list += `\n_Usa *${usedPrefix + command} @user* para ver el expediente._`;
+                list += `\n_Usa *${usedPrefix + command} @user* para ver los motivos detallados._`;
                 return conn.reply(m.chat, list, m, { mentions: allWarns.map(w => w.userId) });
             }
 
-            // 4. VERIFICAR PERMISOS DE ADMIN PARA ACCIONES
+            // 3. VERIFICAR PERMISOS DE ADMIN PARA ACCIONES
             if (!isAdmin) {
                 global.dfail('admin', m, conn);
                 return;
             }
 
+            // COMANDO WARNLIMIT (Ajuste rápido)
+            if (command === 'warnlimit') {
+                return conn.reply(m.chat, `*─── [ ⚙️ INFO ] ───*\n\n_El límite de advertencias actual es de *${limit}*._\n\n*Nota:* Para cambiarlo permanentemente, solicita la actualización del esquema de base de datos del grupo.`, m);
+            }
+
+            // 4. IDENTIFICAR AL USUARIO PARA ACCIONES (Warn / Delwarn)
+            let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
             if (!who) return conn.reply(m.chat, `> *♛ USO CORRECTO*\n\nEtiqueta o responde a alguien:\n*${usedPrefix + command}* @user [motivo / número / all]`, m);
 
+            let warnDoc = await global.Warns.findOne({ userId: who, groupId: m.chat });
             let d = new Date();
             let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
             let date = d.toLocaleDateString('es-HN');
@@ -123,19 +119,28 @@ const warnCommand = {
                 let num = parseInt(arg);
                 if (!isNaN(num)) {
                     if (num > 0 && num <= warnDoc.warnCount) {
-                        warnDoc.reasons.splice(num - 1, 1);
+                        let removedReason = warnDoc.reasons.splice(num - 1, 1)[0];
                         warnDoc.warnCount -= 1;
-                        if (warnDoc.warnCount === 0) await global.Warns.deleteOne({ userId: who, groupId: m.chat });
-                        else await warnDoc.save();
+                        
+                        if (warnDoc.warnCount === 0) {
+                            await global.Warns.deleteOne({ userId: who, groupId: m.chat });
+                        } else {
+                            await warnDoc.save();
+                        }
+                        
                         return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Advertencia #${num} removida.*\n\n*Estado actual:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
                     } else {
-                        return conn.reply(m.chat, `*❌ Número inválido.*`, m);
+                        return conn.reply(m.chat, `*❌ Número inválido.*\nEl usuario tiene ${warnDoc.warnCount} advertencias.`, m);
                     }
                 } else {
                     warnDoc.warnCount -= 1;
                     warnDoc.reasons.pop();
-                    if (warnDoc.warnCount === 0) await global.Warns.deleteOne({ userId: who, groupId: m.chat });
-                    else await warnDoc.save();
+                    
+                    if (warnDoc.warnCount === 0) {
+                        await global.Warns.deleteOne({ userId: who, groupId: m.chat });
+                    } else {
+                        await warnDoc.save();
+                    }
                     return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Última advertencia removida.*\n\n*Estado actual:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
                 }
             }
@@ -147,4 +152,3 @@ const warnCommand = {
 };
 
 export default warnCommand;
-                            
