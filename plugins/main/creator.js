@@ -51,7 +51,7 @@ const handler = {
                           `FN:${name1}\n` +
                           'ORG:KiritoBot-MD Team;\n' +
                           'TITLE:Desarrollador Principal;\n' +
-                          `TEL;type=CELL;type=VOICE;waid=${num1}:${num1}\n' +
+                          `TEL;type=CELL;type=VOICE;waid=${num1}:${num1}\n` +
                           'EMAIL;type=INTERNET:soporte@kiritobot.com\n' +
                           'URL:https://github.com/SebastianHerrera\n' +
                           'END:VCARD'
@@ -61,7 +61,7 @@ const handler = {
                           `FN:${name2}\n` +
                           'ORG:KiritoBot-MD Team;\n' +
                           'TITLE:SysAdmin & Scrapers;\n' +
-                          `TEL;type=CELL;type=VOICE;waid=${num2}:${num2}\n' +
+                          `TEL;type=CELL;type=VOICE;waid=${num2}:${num2}\n` +
                           'EMAIL;type=INTERNET:dev@alex09.com\n' +
                           'URL:https://dix.lat\n' +
                           'END:VCARD'
