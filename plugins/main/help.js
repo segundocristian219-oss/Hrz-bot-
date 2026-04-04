@@ -55,6 +55,8 @@ const menuCommand = {
                         { cmd: '.poema', desc: 'Poemas Aleatorios.' },
                         { cmd: '.reflexión', desc: 'Una reflexión aleatoria.' },
                         { cmd: '.consejo', desc: 'Consejos aleatorios.' },
+                        { cmd: '.meme2', desc: 'Envía un vídeo meme aleatorio para reír.' },
+                        { cmd: '.marry', desc: 'Casate con alguien.' },
                         { cmd: '.meme', desc: 'Envía un meme aleatorio para reír.' }
                     ]
                 },
@@ -111,6 +113,7 @@ const menuCommand = {
                     cmds: [
                        // { cmd: '.antisub', desc: 'Activa/desactiva anti-sub (evita que se unan números sospechosos).' },
                         { cmd: '.antilink', desc: 'Activa/desactiva anti-enlaces en el grupo.' },
+                        { cmd: '.modoadmin', desc: ' Activa/desactiva las respuestas solo para administradores.' },
                         { cmd: '.antiestados', desc: 'Activa/desactiva anti-estados (Mención en Estados.).' },
                         { cmd: '.config_group', desc: 'Muestra la configuración actual del grupo.' },
                         { cmd: '.hidetag', desc: 'Menciona a todos los miembros silenciosamente.' },
@@ -154,7 +157,9 @@ const menuCommand = {
                     title: 'TOOLS',
                     cmds: [
                         { cmd: '.get', desc: 'Obtiene información de un enlace (metadata, headers).' },
-                        { cmd: '.upload', desc: 'Sube un archivo a servicios de alojamiento temporal.' },
+                        { cmd: '.wwic', desc: 'Busca información de tu fecha de nacimiento.' },
+                        { cmd: '.tourl', desc: 'Sube un archivo a servicios de alojamiento (solo imágenes).' },
+                        { cmd: '.tourl2/.tourl3', desc: 'Sube un archivo a servicios de alojamiento (vide/imagen/audio).' },
                         { cmd: '.read/ver', desc: 'Extraer archivos de una sola visualización.' },
                         { cmd: '.whatmusic', desc: 'Reconoce música a partir de un audio (Shazam).' },
                         { cmd: '.traducir', desc: 'Traduce texto a otro idioma.' },
