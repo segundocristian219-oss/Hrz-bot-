@@ -31,6 +31,8 @@ const menuCommand = {
             menuText += `║ • Versión: ${v}\n`;
             menuText += `║ • dix.lat/grupo\n`;
             menuText += `╚═════════════════╝\n\n`;
+            menuText += `> Muy pronto nueva versión con más funciones.\n`;
+            menuText += `> Usa *#novedades* para descubrir lo nuevo del sistema.\n`;
             
             menuText += `${rmrText}\n\n`;
 
