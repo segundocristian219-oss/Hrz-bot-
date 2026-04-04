@@ -3,7 +3,7 @@ const devsCommand = {
     alias: ['developer', 'desarrolladores', 'soporte'],
     category: 'main',
     run: async (m, { conn }) => {
-        const myNumber = '58 422-8028583'
+        const myNumber = '58 4228028583'
         const myJid = myNumber + '@s.whatsapp.net'
         const brandName = 'ϛαριϛυγ ♛' 
 
