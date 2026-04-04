@@ -133,7 +133,7 @@ const menuCommand = {
                         { cmd: '.mute/unmute', desc: 'Silencia los mensajes de un usuario.' },
                         { cmd: '.warn/delwarn', desc: 'Advierte a un usuario/a ```(solo admin)```.' },
                         { cmd: '.warnlist', desc: 'Lista de usuarios Advertidos.' },
-                        { cmd: '.warnlimit [`min`< 1,2,3,4,5 >`max`]', desc: 'Establece el limite de advertencias ```(solo admin)```.' }
+                        { cmd: '.warnlimit', desc: 'Establece el limite de advertencias ```(solo admin)```.' }
                     ]
                 },
                 {
