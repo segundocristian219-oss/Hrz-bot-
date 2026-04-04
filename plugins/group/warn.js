@@ -18,7 +18,7 @@ const warnCommand = {
                     return conn.reply(m.chat, `*─── [ ⚙ CONFIG ] ───*\n\n*Límite actual:* ${limit}\n\n> *♛ USO CORRECTO*\n*${usedPrefix + command}* [1-10]\n\n_Establece el tope de advertencias para este grupo._`, m);
                 }
                 chat.warnLimit = newLimit;
-                return conn.reply(m.chat, `*─── [ ✅ AJUSTE ] ───*\n\n*Nuevo límite establecido en:* ${newLimit}\n\n_Los usuarios serán expulsados al llegar a ${newLimit} advertencias._`, m);
+                return conn.reply(m.chat, `*─── [ ♛ AJUSTE ] ───*\n\n*Nuevo límite establecido en:* ${newLimit}\n\n_Los usuarios serán expulsados al llegar a ${newLimit} advertencias._`, m);
             }
 
             let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
@@ -31,13 +31,13 @@ const warnCommand = {
                     }
 
                     let detail = `*─── [ ⚖ EXPEDIENTE ] ───*\n\n`;
-                    detail += `*👤 Usuario:* @${who.split`@`[0]}\n`;
-                    detail += `*🛡 Estado:* ${warnDoc.warnCount}/${limit}\n\n`;
+                    detail += `*✰ Usuario:* @${who.split`@`[0]}\n`;
+                    detail += `*❑ Estado:* ${warnDoc.warnCount}/${limit}\n\n`;
                     detail += `*◈ HISTORIAL:* \n`;
                     warnDoc.reasons.forEach((reason, i) => {
                         detail += `\n*${i + 1}.* ${reason}`;
                     });
-                    detail += `\n\n*⚠️ Nota:* _Al llegar a ${limit} será expulsado._`;
+                    detail += `\n\n*⍰ Nota:* _Al llegar a ${limit} será expulsado._`;
                     return conn.reply(m.chat, detail, m, { mentions: [who] });
                 }
 
@@ -102,14 +102,14 @@ const warnCommand = {
 
             else if (['delwarn', 'quitarwarn'].includes(command)) {
                 if (!warnDoc || warnDoc.warnCount === 0) {
-                    return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\nEl usuario @${who.split`@`[0]} no tiene advertencias.`, m, { mentions: [who] });
+                    return conn.reply(m.chat, `*─── [ ♛ INFO ] ───*\n\nEl usuario @${who.split`@`[0]} no tiene advertencias.`, m, { mentions: [who] });
                 }
 
                 let arg = text.replace(/@(\d+)/g, '').trim().toLowerCase();
 
                 if (arg === 'all' || arg === 'todos') {
                     await global.Warns.deleteOne({ userId: who, groupId: m.chat });
-                    return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Se han borrado TODAS las advertencias de:* @${who.split`@`[0]}`, m, { mentions: [who] });
+                    return conn.reply(m.chat, `*─── [ ♛ INFO ] ───*\n\n*Se han borrado TODAS las advertencias de:* @${who.split`@`[0]}`, m, { mentions: [who] });
                 }
 
                 let num = parseInt(arg);
@@ -119,16 +119,16 @@ const warnCommand = {
                         warnDoc.warnCount -= 1;
                         if (warnDoc.warnCount === 0) await global.Warns.deleteOne({ userId: who, groupId: m.chat });
                         else await warnDoc.save();
-                        return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Advertencia #${num} removida.*\n*Estado:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
+                        return conn.reply(m.chat, `*─── [ ♛ INFO ] ───*\n\n*Advertencia #${num} removida.*\n*Estado:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
                     } else {
-                        return conn.reply(m.chat, `*❌ Número fuera de rango.*`, m);
+                        return conn.reply(m.chat, `*⍰ Número fuera de rango.*`, m);
                     }
                 } else {
                     warnDoc.warnCount -= 1;
                     warnDoc.reasons.pop();
                     if (warnDoc.warnCount === 0) await global.Warns.deleteOne({ userId: who, groupId: m.chat });
                     else await warnDoc.save();
-                    return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Última advertencia removida.*\n*Estado:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
+                    return conn.reply(m.chat, `*─── [ ♛ INFO ] ───*\n\n*Última advertencia removida.*\n*Estado:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
                 }
             }
 
