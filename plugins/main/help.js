@@ -131,7 +131,9 @@ const menuCommand = {
                         { cmd: '.link', desc: 'Obtiene el enlace de invitación del grupo.' },
                         { cmd: '.open/close', desc: 'Abre o cierra el grupo (solo admins pueden enviar mensajes).' },
                         { cmd: '.mute/unmute', desc: 'Silencia los mensajes de un usuario.' },
-                        { cmd: '.warn/delwarn', desc: 'Advierte a un usuario/a.' } 
+                        { cmd: '.warn/delwarn', desc: 'Advierte a un usuario/a ```(solo admin)```.' },
+                        { cmd: '.warnlist', desc: 'Lista de usuarios con advertencia.' },
+                        { cmd: '.warnlimit'. desc: 'Establece un limite de advertencias ```(solo admin)```.' }
                     ]
                 },
                 {
