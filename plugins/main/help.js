@@ -203,12 +203,7 @@ await conn.sendMessage(m.chat, {
     caption: menuText,
     contextInfo: {
         mentionedJid: [m.sender],
-        forwardingScore: 1,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-            newsletterJid: ch,
-            newsletterName: name()
-        }
+        channelInfo
     }
 }, { quoted: m });
 
