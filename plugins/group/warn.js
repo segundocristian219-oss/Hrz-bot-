@@ -6,7 +6,7 @@ const warnCommand = {
     run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
         try {
             // 1. VER ADVERTENCIAS GLOBALES DEL GRUPO (.warns)
-            if (/warns|advertencias/.test(command)) {
+            if (['warns', 'advertencias'].includes(command)) {
                 let allWarns = await global.Warns.find({ groupId: m.chat });
                 if (allWarns.length === 0) return conn.reply(m.chat, `*─── [ ⍰ ESTADO ] ───*\n\n_No hay usuarios advertidos en este grupo._`, m);
                 
@@ -36,14 +36,14 @@ const warnCommand = {
             let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
             let date = d.toLocaleDateString('es-HN');
 
-            // 4. LÓGICA: DAR ADVERTENCIA (.warn)
-            if (/warn|advertir/.test(command)) {
+            // 4. LÓGICA: DAR ADVERTENCIA (.warn / .advertir)
+            // Usamos .includes para evitar que coincida con "delwarn"
+            if (['warn', 'advertir'].includes(command)) {
                 if (!isBotAdmin) {
                     global.dfail('botAdmin', m, conn);
                     return;
                 }
                 
-                // Solo crear el documento si de verdad le vamos a dar un warn
                 if (!warnDoc) {
                     warnDoc = new global.Warns({ userId: who, groupId: m.chat, warnCount: 0, reasons: [] });
                 }
@@ -74,31 +74,25 @@ const warnCommand = {
                 }
             }
 
-            // 5. LÓGICA: QUITAR ADVERTENCIA (.delwarn)
-            if (/delwarn|quitarwarn/.test(command)) {
-                // Comprobar que realmente tiene advertencias para quitar
+            // 5. LÓGICA: QUITAR ADVERTENCIA (.delwarn / .quitarwarn)
+            else if (['delwarn', 'quitarwarn'].includes(command)) {
                 if (!warnDoc || warnDoc.warnCount === 0) {
-                    return conn.reply(m.chat, `*El usuario @${who.split`@`[0]} no tiene advertencias en este grupo.*`, m, { mentions: [who] });
+                    return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\nEl usuario @${who.split`@`[0]} no tiene advertencias en este grupo.`, m, { mentions: [who] });
                 }
 
-                // Extraemos lo que pusiste después del @usuario (ej: "1", "2", "all")
                 let arg = text.replace(/@(\d+)/g, '').trim().toLowerCase();
 
-                // Caso A: Borrar todas (all o todos)
                 if (arg === 'all' || arg === 'todos') {
                     await global.Warns.deleteOne({ userId: who, groupId: m.chat });
                     return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Se han borrado TODAS las advertencias de:* @${who.split`@`[0]}`, m, { mentions: [who] });
                 }
 
-                // Caso B: Borrar por número específico (1, 2, 3)
                 let num = parseInt(arg);
                 if (!isNaN(num)) {
                     if (num > 0 && num <= warnDoc.warnCount) {
-                        // Quitamos el motivo exacto de la lista usando "splice"
                         let removedReason = warnDoc.reasons.splice(num - 1, 1)[0];
                         warnDoc.warnCount -= 1;
                         
-                        // Si se quedó en 0 warns, borramos el documento limpio
                         if (warnDoc.warnCount === 0) {
                             await global.Warns.deleteOne({ userId: who, groupId: m.chat });
                         } else {
@@ -110,8 +104,6 @@ const warnCommand = {
                         return conn.reply(m.chat, `*❌ Número inválido.*\nEl usuario tiene ${warnDoc.warnCount} advertencias.\nPara borrar una, usa un número del 1 al ${warnDoc.warnCount}.\nEjemplo: *${usedPrefix + command} @user 1*`, m);
                     }
                 } else {
-                    // Caso C: No pusiste ni número ni "all" (comportamiento por defecto)
-                    // Le quitamos la última que recibió
                     warnDoc.warnCount -= 1;
                     let removedReason = warnDoc.reasons.pop();
                     
