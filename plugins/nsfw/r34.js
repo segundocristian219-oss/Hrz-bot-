@@ -29,7 +29,7 @@ const r34 = {
       if (media.endsWith('.mp4')) {
         await conn.sendMessage(m.chat, { video: { url: media }, caption, mentions: [m.sender] })
       } else {
-        await conm.sendMessage(m.chat, { image: { url: media }, caption, mentions: [m.sender] })
+        await conn.sendMessage(m.chat, { image: { url: media }, caption, mentions: [m.sender] })
       }
       await m.react('✔️')
     } catch (e) {
