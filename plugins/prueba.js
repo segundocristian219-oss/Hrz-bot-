@@ -1,66 +1,56 @@
 import axios from 'axios'
+import * as cheerio from 'cheerio'
 
-const gitinfo = {
-    name: 'github',
-    alias: ['git', 'repo', 'infogit'],
-    category: 'main',
-    run: async (m, { conn, args }) => {
-        if (!args[0]) return m.reply('Ingresa la URL o el usuario/repositorio de GitHub.')
-
-        const regex = /github\.com\/([^/]+)\/([^/]+)/
-        const match = args[0].match(regex)
-        const repoPath = match ? `${match[1]}/${match[2]}` : args[0]
+const handler = {
+    name: 'hgif',
+    alias: ['hentaigif', 'hvideo'],
+    category: 'nsfw',
+    run: async (m, { conn, text }) => {
+        if (!text) return m.reply('Ingresa el estilo o categoría (ej: fuck, solo, creampie).')
 
         try {
             await m.react('🔘')
-
-            const { data: repo } = await axios.get(`https://api.github.com/repos/${repoPath}`)
-            const { data: lastCommits } = await axios.get(`https://api.github.com/repos/${repoPath}/commits?per_page=1`)
-            const lastCommit = lastCommits[0]
-
-            const commitsUrl = `https://api.github.com/repos/${repoPath}/commits?per_page=1`
-            const firstCommitRes = await axios.get(commitsUrl)
-            const linkHeader = firstCommitRes.headers.link
-            let firstCommit = null
             
-            if (linkHeader) {
-                const lastPageUrl = linkHeader.split(',').find(s => s.includes('rel="last"'))?.match(/<(.*)>/)?.[1]
-                if (lastPageUrl) {
-                    const { data: firstCommits } = await axios.get(lastPageUrl)
-                    firstCommit = firstCommits[0]
-                } else {
-                    firstCommit = lastCommit
+            const searchUrl = `https://hentaigifz.com/tag/${text.toLowerCase().replace(/\s+/g, '-')}/`
+            const { data } = await axios.get(searchUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
                 }
-            } else {
-                firstCommit = lastCommit
-            }
+            })
 
-            const txt = `*GITHUB REPOSITORY DATA*\n\n` +
-                `*Nombre:* ${repo.full_name}\n` +
-                `*Descripción:* ${repo.description || 'N/A'}\n` +
-                `*Estrellas:* ${repo.stargazers_count}\n` +
-                `*Forks:* ${repo.forks_count}\n` +
-                `*Issues:* ${repo.open_issues_count}\n` +
-                `*Lenguaje:* ${repo.language || 'N/A'}\n` +
-                `*Creado:* ${new Date(repo.created_at).toLocaleDateString('es-ES')}\n\n` +
-                `*ULTIMO COMMIT*\n` +
-                `*Fecha:* ${new Date(lastCommit.commit.committer.date).toLocaleString()}\n` +
-                `*Mensaje:* ${lastCommit.commit.message}\n` +
-                `*Autor:* ${lastCommit.commit.author.name}\n\n` +
-                `*PRIMER COMMIT*\n` +
-                `*Fecha:* ${new Date(firstCommit.commit.committer.date).toLocaleString()}\n` +
-                `*Mensaje:* ${firstCommit.commit.message}\n` +
-                `*Autor:* ${firstCommit.commit.author.name}\n\n` +
-                `*Link:* ${repo.html_url}`
+            const $ = cheerio.load(data)
+            const results = []
+
+            $('article.post').each((i, el) => {
+                const title = $(el).find('h2.entry-title a').text().trim()
+                const url = $(el).find('h2.entry-title a').attr('href')
+                const thumbnail = $(el).find('img').attr('src') || $(el).find('img').attr('data-src')
+
+                if (url && thumbnail) {
+                    results.push({ title, url, thumbnail })
+                }
+            })
+
+            if (results.length === 0) return m.reply('No se encontraron resultados para ese estilo.')
+
+            const random = results[Math.floor(Math.random() * results.length)]
+
+            const { data: pageData } = await axios.get(random.url)
+            const $$ = cheerio.load(pageData)
+            const gifUrl = $$('div.entry-content img').attr('src') || $$('div.entry-content video source').attr('src')
+
+            if (!gifUrl) return m.reply('Error al extraer el archivo multimedia.')
 
             await conn.sendMessage(m.chat, {
-                text: txt,
+                video: { url: gifUrl },
+                caption: `*HGIF ANALYST*\n\n*Título:* ${random.title}\n*Estilo:* ${text}\n*Origen:* HentaiGifz`,
+                gifPlayback: true,
                 contextInfo: {
                     externalAdReply: {
-                        title: 'GITHUB ANALYST SYSTEM',
-                        body: repo.owner.login,
-                        thumbnailUrl: repo.owner.avatar_url,
-                        sourceUrl: repo.html_url,
+                        title: 'NSFW CONTENT SYSTEM',
+                        body: 'HentaiGifz Scraper',
+                        thumbnailUrl: random.thumbnail,
+                        sourceUrl: random.url,
                         mediaType: 1,
                         renderLargerThumbnail: true
                     }
@@ -71,9 +61,9 @@ const gitinfo = {
 
         } catch (e) {
             await m.react('❌')
-            m.reply('Error: Repositorio no encontrado o límite de API excedido.')
+            m.reply('Error: Categoría no encontrada o falla en el servidor.')
         }
     }
 }
 
-export default gitinfo
+export default handler
