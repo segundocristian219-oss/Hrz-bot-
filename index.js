@@ -112,6 +112,15 @@ warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
 global.Warns = mongoose.model('Warns', warnSchema);
 
 
+const NewsSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    command: { type: String, default: null },
+    date: { type: Date, default: Date.now }
+}, { strict: false });
+
+const News = mongoose.models.News || mongoose.model('News', NewsSchema);
+
 
    const statsSchema = new mongoose.Schema({
         command: { type: String, unique: true }
