@@ -12,7 +12,7 @@ const news = {
                 return await conn.sendMessage(m.chat, { text: '➠ *NOVEDADES*\n\n⍰ No hay actualizaciones registradas actualmente.' }, { quoted: m });
             }
 
-            let report = `➠ _Últimas mejoras y correcciones_\n\n`;
+            let report = `https://dix.lat\n\n➠ _Últimas mejoras y correcciones_\n\n`;
 
             data.forEach((n, i) => {
                 const date = new Date(n.date).toLocaleDateString('es-HN');
@@ -28,10 +28,10 @@ const news = {
                 text: report,
                 contextInfo: {
                     externalAdReply: {
-                        title: m.name,
+                        title: name(),
                         body: `Novedades`,
                         mediaType: 1,
-                        thumbnailUrl: m.img,
+                        thumbnailUrl: img(),
                         sourceUrl: 'https://dix.lat',
                         renderLargerThumbnail: true
                     }
