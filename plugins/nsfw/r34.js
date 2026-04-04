@@ -5,11 +5,11 @@ const r34 = {
   alias: ['rule34', 'rule'],
   category: 'nsfw',
   nsfw: true,
-  run: async (m, args, usedPrefix, command) => {
+  run: async (m, text, usedPrefix, command) => {
     try {
-      if (!args[0]) return conn.reply(m.chat, `《✧》 Debes especificar tags para buscar\n> Ejemplo » *${usedPrefix + command} neko*`, m)      
+      if (!text[0]) return conn.reply(m.chat, `《✧》 Debes especificar tags para buscar\n> Ejemplo » *${usedPrefix + command} neko*`, m)      
       await m.react('🕒')
-      const tag = args[0].replace(/\s+/g, '_')
+      const tag = text[0].replace(/\s+/g, '_')
       let mediaList = []
       const url = `https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&tags=${tag}&api_key=a4e807dd6d4c9e55768772996946e4074030ec02c49049d291e5edb8808a97b004190660b4b36c3d21699144c823ad93491d066e73682a632a38f9b6c3cf951b&user_id=5753302`
       const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } })
