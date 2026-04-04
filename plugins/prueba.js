@@ -10,51 +10,44 @@ const handler = {
             const query = text ? encodeURIComponent(text) : 'fuck+anime'
             const searchUrl = `https://hentaigifz.com/?s=${query}`
             
-            const { data } = await axios.get(searchUrl, {
+            const { data: searchData } = await axios.get(searchUrl, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
             })
 
-            const $ = cheerio.load(data)
+            const $ = cheerio.load(searchData)
             const results = []
 
             $('article.post-item').each((i, el) => {
                 const url = $(el).find('a.exopop').attr('href')
                 const title = $(el).find('.post-title span').text().trim()
-                const thumb = $(el).find('img').attr('src')
-                if (url) results.push({ title, url, thumb })
+                if (url) results.push({ title, url })
             })
 
-            if (results.length === 0) return m.reply('No results.')
+            if (results.length === 0) return m.reply('No se encontraron resultados.')
 
             const random = results[Math.floor(Math.random() * results.length)]
 
             const { data: pageData } = await axios.get(random.url)
             const $$ = cheerio.load(pageData)
             
-            const gifUrl = $$('.single-post-media img').attr('src')
+            let videoUrl = $$('source[type="video/mp4"]').attr('src') || $$('video').attr('src') || $$('.single-post-media img').attr('src')
 
-            if (!gifUrl) return m.reply('GIF not found.')
+            if (!videoUrl) return m.reply('No se pudo localizar el archivo MP4/GIF.')
+
+            const response = await axios.get(videoUrl, { responseType: 'arraybuffer' })
+            const buffer = Buffer.from(response.data, 'binary')
 
             await conn.sendMessage(m.chat, {
-                video: { url: gifUrl },
-                caption: `*HGIF*\n*Title:* ${random.title}`,
-                gifPlayback: true,
-                contextInfo: {
-                    externalAdReply: {
-                        title: 'Hentai GIF System',
-                        body: random.title,
-                        thumbnailUrl: random.thumb,
-                        sourceUrl: random.url,
-                        mediaType: 1,
-                        renderLargerThumbnail: true
-                    }
-                }
+                video: buffer,
+                caption: `*Resultado:* ${random.title}\n*URL Directa:* ${videoUrl}`,
+                gifPlayback: true
             }, { quoted: m })
 
         } catch (e) {
-            m.reply('Error occurred.')
+            console.error(e)
+            m.reply('Error al procesar la descarga.')
         }
     }
 }
