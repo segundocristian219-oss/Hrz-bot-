@@ -22,7 +22,7 @@ const devsCommand = {
         // --- 2. SEGUNDO DESARROLLADOR (Copia exacta por ahora) ---
         const myNumber2 = '5493772455367'
         const myJid2 = myNumber2 + '@s.whatsapp.net'
-        const brandName2 = 'a ♛' 
+        const brandName2 = 'AxelDev09 ♛' 
 
         const vcard2 = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
