@@ -14,7 +14,7 @@ const devsCommand = {
                       'ORG:KiritoBot-MD Developer;\n' + 
                       'TITLE:Chief Executive Officer;\n' + 
                       `TEL;type=CELL;type=VOICE;waid=${myNumber}:${myNumber}\n` +
-                      'X-WA-BIZ-DESCRIPTION:Desarrollo de software y automatización manejo de bots y programador.\n' +
+                      'X-WA-BIZ-DESCRIPTION:Desarrollo de software, automatización, manejo de bots y programador.\n' +
                       `X-WA-BIZ-NAME:${brandName}\n` +
                       'END:VCARD'
 
@@ -25,7 +25,7 @@ const devsCommand = {
             },
             contextInfo: {
                 externalAdReply: {
-                    title: 'Kirito™ OFFICIAL CONTACT',
+                    title: 'Ϛαριϛυγ™ OFFICIAL CONTACT',
                     body: 'KiritoBot-MD Development Team',
                     thumbnailUrl: img(), // Asegúrate de que img() esté definido en tu global
                     sourceUrl: `https://wa.me/${myNumber}`,
