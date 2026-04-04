@@ -8,13 +8,13 @@ const muteCommand = {
     run: async (m, { conn, command, text }) => {
         let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null;
 
-        if (!who || who === '@s.whatsapp.net') return m.reply(`*👑 Menciona o responde a alguien*`);
+        if (!who || who === '@s.whatsapp.net') return m.reply(`*♛ Menciona o responde a alguien*`);
 
         const ownerBot = global.owner[0][0] + '@s.whatsapp.net';
         const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
 
         if (who === ownerBot || who === botId) {
-            return m.reply('🔥 *No puedes realizar esta acción con el staff del bot*');
+            return m.reply('♛ *No puedes realizar esta acción con el staff del bot*');
         }
 
         const isMuting = ['mute', 'mutar', 'silenciar'].includes(command);
@@ -34,7 +34,7 @@ const muteCommand = {
 
         const status = isMuting ? 'silenciado' : 'desmutado';
         await conn.sendMessage(m.chat, { 
-            text: `✅ *Usuario ${status} correctamente.*`, 
+            text: `> ♛ *Usuario ${status} correctamente.*`, 
             mentions: [who] 
         }, { quoted: m });
     }
