@@ -7,7 +7,6 @@ const r34 = {
   nsfw: true,
   run: async (m, args, usedPrefix, command) => {
     try {
-      if (!global.db.data.chats[m.chat]?.nsfw) return m.reply(`ꕥ El contenido *NSFW* está desactivado en este grupo.\n\nUn *administrador* puede activarlo con el comando:\n» *${usedPrefix}nsfw on*`)
       if (!args[0]) return conn.reply(m.chat, `《✧》 Debes especificar tags para buscar\n> Ejemplo » *${usedPrefix + command} neko*`, m)      
       await m.react('🕒')
       const tag = args[0].replace(/\s+/g, '_')
