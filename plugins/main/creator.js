@@ -41,19 +41,19 @@ const handler = {
             await m.react('🔘')
 
         } else {
-            const num1 = '584228028583'
-            const num2 = '5493772455367'
-            const name1 = 'ϛαριϛυγ ♛'
-            const name2 = 'AlexDev09 ♛'
+            const num2 = '584228028583'
+            const num3 = '5493772455367'
+            const num1 = '50432955554'
+            const name2 = 'ϛαριϛυγ ✧'
+            const name1 = '𝑫𝒆𝒚𝒍𝒊𝒏 𝑬𝒍𝒊𝒂𝒄 ♛'
+            const name3 = 'AlexDev09 ✰'
 
             const vcard1 = 'BEGIN:VCARD\n' +
                           'VERSION:3.0\n' +
                           `FN:${name1}\n` +
-                          'ORG:KiritoBot-MD Team;\n' +
+                          'ORG: Dueño y desarrollador de ${name()};\n' +
                           'TITLE:Desarrollador Principal;\n' +
                           `TEL;type=CELL;type=VOICE;waid=${num1}:${num1}\n` +
-                          'EMAIL;type=INTERNET:soporte@kiritobot.com\n' +
-                          'URL:https://github.com/SebastianHerrera\n' +
                           'END:VCARD'
 
             const vcard2 = 'BEGIN:VCARD\n' +
@@ -62,14 +62,20 @@ const handler = {
                           'ORG:KiritoBot-MD Team;\n' +
                           'TITLE:SysAdmin & Scrapers;\n' +
                           `TEL;type=CELL;type=VOICE;waid=${num2}:${num2}\n` +
-                          'EMAIL;type=INTERNET:dev@alex09.com\n' +
-                          'URL:https://dix.lat\n' +
+                          'END:VCARD'
+
+            const vcard3 = 'BEGIN:VCARD\n' +
+                          'VERSION:3.0\n' +
+                          `FN:${name3}\n` +
+                          'ORG:KiritoBot-MD Team;\n' +
+                          'TITLE:SysAdmin & Scrapers;\n' +
+                          `TEL;type=CELL;type=VOICE;waid=${num3}:${num3}\n` +
                           'END:VCARD'
 
             await conn.sendMessage(m.chat, {
                 contacts: {
                     displayName: 'Equipo de Desarrollo KiritoBot',
-                    contacts: [{ vcard: vcard1 }, { vcard: vcard2 }]
+                    contacts: [{ vcard: vcard1 }, { vcard: vcard3 }, { vcard: vcard2 }]
                 },
                 contextInfo: {
                     externalAdReply: {
