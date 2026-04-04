@@ -123,23 +123,8 @@ const devsCommand = {
                       'X-WA-BIZ-DESCRIPTION:Ventas de cuentas\n' +
                       `X-WA-BIZ-NAME:${brandName8}\n` +
                       'END:VCARD'
-
-        // --- 9. DESARROLLADOR 9 ---
-        const myNumber9 = '584228028583'
-        const myJid9 = myNumber9 + '@s.whatsapp.net'
-        const brandName9 = 'ϛαριϛυγ ♛' 
-        const vcard9 = 'BEGIN:VCARD\n' +
-                      'VERSION:3.0\n' +
-                      `FN:${brandName9}\n` + 
-                      `N:;ϛαρι;ϛυγ;;\n` +
-                      'ORG:KiritoBot-MD Developer;\n' + 
-                      'TITLE:Chief Executive Officer;\n' + 
-                      `TEL;type=CELL;type=VOICE;waid=${myNumber9}:${myNumber9}\n` +
-                      'X-WA-BIZ-DESCRIPTION:programador, owner y desarrollador principal del bot.\n' +
-                      `X-WA-BIZ-NAME:${brandName9}\n` +
-                      'END:VCARD'
-
-        // --- ENVÍO DEL MENSAJE CON LOS 9 CONTACTOS ---
+        
+        // --- ENVÍO DEL MENSAJE CON LOS 8 CONTACTOS ---
         await conn.sendMessage(m.chat, {
             contacts: {
                 displayName: 'Equipo de Desarrollo KiritoBot', 
@@ -151,13 +136,12 @@ const devsCommand = {
                     { vcard: vcard5 }, 
                     { vcard: vcard6 }, 
                     { vcard: vcard7 }, 
-                    { vcard: vcard8 }, 
-                    { vcard: vcard9 }
+                    { vcard: vcard8 }
                 ] 
             },
             contextInfo: {
                 externalAdReply: {
-                    title: 'Ϛαριϛυγ™ OFFICIAL CONTACTS',
+                    title: 'KiritoBot-MD™ OFFICIAL CONTACTS',
                     body: 'KiritoBot-MD Development Team',
                     thumbnailUrl: img(), 
                     sourceUrl: `https://wa.me/${myNumber1}`,
