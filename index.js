@@ -116,9 +116,12 @@ global.Warns = mongoose.model('Warns', warnSchema);
 
 
    const statsSchema = new mongoose.Schema({
-        command: { type: String, unique: true }
-    }, { strict: false });
-    global.Stats = mongoose.model('Stats', statsSchema);
+    command: { type: String, unique: true },
+    globalUsage: { type: Number, default: 0 },
+    groups: { type: Map, of: Number, default: {} } 
+}, { strict: false });
+global.Stats = mongoose.model('Stats', statsSchema);
+
 } else {
     activateLocalDB();
 }
