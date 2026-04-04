@@ -203,7 +203,7 @@ await conn.sendMessage(m.chat, {
     caption: menuText,
     contextInfo: {
         mentionedJid: [m.sender],
-        channelInfo
+        ...channelInfo
     }
 }, { quoted: m });
 
