@@ -1,25 +1,24 @@
 const warnCommand = {
     name: 'warn',
-    alias: ['advertir', 'delwarn', 'quitarwarn', 'warnlist', 'advertencias', 'setwarnlimit'],
+    alias: ['advertir', 'delwarn', 'quitarwarn', 'warnlist', 'advertencias', 'warnlimit'],
     category: 'group',
     group: true,
     run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
         try {
-            // 0. CONFIGURACIÓN DEL LÍMITE DINÁMICO
-            // Usamos la base de datos de chats para guardar el límite personalizado
-            let chat = global.db.data.chats[m.chat] || {};
-            if (!chat.warnLimit) chat.warnLimit = 3; // Límite por defecto
-            let limit = chat.warnLimit;
+            // 0. CONFIGURACIÓN DEL LÍMITE (Estructura dinámica)
+            if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {};
+            if (!global.db.data.chats[m.chat].warnLimit) global.db.data.chats[m.chat].warnLimit = 3;
+            let limit = global.db.data.chats[m.chat].warnLimit;
 
-            // 1. LÓGICA: CONFIGURAR LÍMITE (.setwarnlimit)
-            if (command === 'setwarnlimit') {
+            // 1. LÓGICA: CAMBIAR LÍMITE (.warnlimit)
+            if (command === 'warnlimit') {
                 if (!isAdmin) return global.dfail('admin', m, conn);
                 let newLimit = parseInt(text.trim());
                 if (isNaN(newLimit) || newLimit < 1 || newLimit > 5) {
-                    return conn.reply(m.chat, `*─── [ ⚠️ CONFIG ] ───*\n\n> *♛ USO CORRECTO*\n*${usedPrefix + command}* [1, 2, 3, 4, 5]\n\n_Por favor, elige un número del 1 al 5 para el límite de advertencias._`, m);
+                    return conn.reply(m.chat, `*─── [ ⚙️ CONFIG ] ───*\n\n*Límite actual:* ${limit}\n\n> *♛ USO CORRECTO*\n*${usedPrefix + command}* [1-5]\n\n_Elige un número del 1 al 5 para establecer el tope de advertencias._`, m);
                 }
                 global.db.data.chats[m.chat].warnLimit = newLimit;
-                return conn.reply(m.chat, `*─── [ ✅ AJUSTE ] ───*\n\n*El nuevo límite de advertencias ha sido establecido en:* ${newLimit}\n\n_A partir de ahora, los usuarios serán expulsados al llegar a la advertencia número ${newLimit}._`, m);
+                return conn.reply(m.chat, `*─── [ ✅ AJUSTE ] ───*\n\n*Nuevo límite establecido en:* ${newLimit}\n\n_Los usuarios serán expulsados automáticamente al llegar a ${newLimit} advertencias._`, m);
             }
 
             // 2. IDENTIFICAR AL USUARIO
@@ -42,7 +41,7 @@ const warnCommand = {
                         detail += `\n*${i + 1}.* ${reason}`;
                     });
 
-                    detail += `\n\n*⚠️ Nota:* _Al llegar a ${limit} advertencias, el sistema procederá con la expulsión._`;
+                    detail += `\n\n*⚠️ Nota:* _Al llegar a ${limit} advertencias, será expulsado._`;
                     return conn.reply(m.chat, detail, m, { mentions: [who] });
                 }
 
@@ -53,7 +52,7 @@ const warnCommand = {
                 allWarns.forEach((w, i) => {
                     list += `*${i + 1}.* @${w.userId.split('@')[0]} ( ${w.warnCount}/${limit} )\n`;
                 });
-                list += `\n_Usa *${usedPrefix + command} @user* para ver detalles._`;
+                list += `\n_Usa *${usedPrefix + command} @user* para ver el expediente._`;
                 return conn.reply(m.chat, list, m, { mentions: allWarns.map(w => w.userId) });
             }
 
@@ -130,7 +129,7 @@ const warnCommand = {
                         else await warnDoc.save();
                         return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n*Advertencia #${num} removida.*\n\n*Estado actual:* ${warnDoc.warnCount}/${limit}`, m, { mentions: [who] });
                     } else {
-                        return conn.reply(m.chat, `*❌ Número inválido.*\nEl usuario tiene ${warnDoc.warnCount} advertencias.`, m);
+                        return conn.reply(m.chat, `*❌ Número inválido.*`, m);
                     }
                 } else {
                     warnDoc.warnCount -= 1;
@@ -148,4 +147,4 @@ const warnCommand = {
 };
 
 export default warnCommand;
-                    
+                            
