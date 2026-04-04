@@ -14,7 +14,7 @@ const devsCommand = {
                       'ORG:KiritoBot-MD Developer;\n' + 
                       'TITLE:Chief Executive Officer;\n' + 
                       `TEL;type=CELL;type=VOICE;waid=${myNumber}:${myNumber}\n` +
-                      'X-WA-BIZ-DESCRIPTION:Desarrollo de software, automatización, manejo de bots y programador.\n' +
+                      'X-WA-BIZ-DESCRIPTION:programador,owner y desarrollador principal del bot.\n' +
                       `X-WA-BIZ-NAME:${brandName}\n` +
                       'END:VCARD'
 
