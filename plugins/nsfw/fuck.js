@@ -12,6 +12,7 @@ const reaction = {
 const fuck = {
     name: 'cum',
     alias: ['leche'],
+    nsfw: true,
     category: 'interacciones',
     run: async (m, { conn }) => {
         if (!reaction.links.length) return
