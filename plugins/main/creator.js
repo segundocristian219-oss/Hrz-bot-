@@ -51,7 +51,7 @@ const handler = {
             const vcard1 = 'BEGIN:VCARD\n' +
                           'VERSION:3.0\n' +
                           `FN:${name1}\n` +
-                          'ORG: Dueño y desarrollador de ${name()};\n' +
+                          `ORG: Dueño y desarrollador de ${name()};\n` +
                           'TITLE:Desarrollador Principal;\n' +
                           `TEL;type=CELL;type=VOICE;waid=${num1}:${num1}\n` +
                           'END:VCARD'
