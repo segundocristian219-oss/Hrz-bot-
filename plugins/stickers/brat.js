@@ -86,10 +86,7 @@ const bratCommand = {
                 contextInfo: {
                     forwardingScore: 1, 
                     isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: ch,
-                        newsletterName: name()
-                    }
+                    ...channelInfo
                 }
             }, { quoted: m });
             await m.react('✅');
