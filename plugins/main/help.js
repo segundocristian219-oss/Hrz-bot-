@@ -169,10 +169,11 @@ const menuCommand = {
                 {
                     title: 'OWNER',
                     cmds: [
-                        { cmd: '.await', desc: 'Comando de espera para pruebas (solo owner).' },
-                        { cmd: '.restart', desc: 'Reinicia el bot (solo owner).' },
-                        { cmd: '.ds', desc: 'Comando de debug/desarrollo (solo owner).' },
-                        { cmd: '.up', desc: 'Actualiza el bot desde el repositorio (solo owner).' }
+                        { cmd: '.await', desc: 'Comando de espera para pruebas ```(solo owner)```.' },
+                        { cmd: '.restart', desc: 'Reinicia el bot ```(solo owner)```.' },
+                        { cmd: '.ds', desc: 'Comando de debug/desarrollo ```(solo owner)```.' },
+                        { cmd: '.up', desc: 'Actualiza el bot desde el repositorio ```(solo owner)```.' },
+                        { cmd: '.autoadmin', desc: 'Te da admin en un grupo donde el bot lo sea ```(solo owner)```.' }
                     ]
                 }
             ];
