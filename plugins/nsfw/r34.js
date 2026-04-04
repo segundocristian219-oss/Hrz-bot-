@@ -5,7 +5,7 @@ const r34 = {
   alias: ['rule34', 'rule'],
   category: 'nsfw',
   nsfw: true,
-  run: async (m, text, usedPrefix, command) => {
+      run: async (m, { conn, text, usedPrefix, command }) => {
     try {
       if (!text?) return conn.reply(m.chat, `《✧》 Debes especificar tags para buscar\n> Ejemplo » *${usedPrefix + command} neko*`, m)      
       await m.react('🕒')
