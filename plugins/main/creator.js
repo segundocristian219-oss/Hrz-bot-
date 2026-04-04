@@ -65,23 +65,25 @@ const handler = {
                           'END:VCARD'
 
             await conn.sendMessage(m.chat, {
-                contacts: {
-                    displayName: 'Equipo de Desarrollo KiritoBot',
-                    contacts: [{ vcard: vcard1 }, { vcard: vcard2 }]
-                },
-                contextInfo: {
-                    externalAdReply: {
-                        title: 'KiritoBot-MD™ OFFICIAL CONTACTS',
-                        body: 'KiritoBot-MD Development Team',
-                        thumbnailUrl: img(),
-                        sourceUrl: `https://wa.me/${num1}`,
-                        mediaType: 1,
-                        showAdAttribution: false,
-                        renderLargerThumbnail: true
-                    },
-                    businessOwnerJid: num1 + '@s.whatsapp.net'
-                }
-            }, { quoted: m })
+    text: 'Equipo de Desarrollo KiritoBot',
+    contextInfo: {
+        externalAdReply: {
+            title: 'KiritoBot-MD™ OFFICIAL CONTACTS',
+            body: 'KiritoBot-MD Development Team',
+            thumbnailUrl: img(),
+            sourceUrl: `https://wa.me/${num1}`,
+            mediaType: 1,
+            showAdAttribution: false,
+            renderLargerThumbnail: true
+        },
+        contacts: {
+            displayName: 'Equipo de Desarrollo KiritoBot',
+            contacts: [{ vcard: vcard1 }, { vcard: vcard2 }]
+        },
+        businessOwnerJid: num1 + '@s.whatsapp.net'
+    }
+}, { quoted: m })
+
             await m.react('👑')
         }
     }
