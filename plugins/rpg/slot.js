@@ -61,10 +61,7 @@ const slotCommand = {
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: global.ch, 
-                    newsletterName: name()
-                }
+                ...channelInfo
             }
         }, { quoted: m })
 
