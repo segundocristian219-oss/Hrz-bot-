@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-conts r34 {
+conts r34 = {
   name: 'r34',
   alias: ['rule34', 'rule'],
   category: 'nsfw',
