@@ -40,10 +40,13 @@ const handler = {
             const buffer = Buffer.from(response.data, 'binary')
 
             await conn.sendMessage(m.chat, {
-                video: buffer,
-                caption: `*Resultado:* ${random.title}\n*URL Directa:* ${videoUrl}`,
-                gifPlayback: true
-            }, { quoted: m })
+    video: buffer,
+    patch: true, 
+    caption: `*Resultado:* ${random.title}\n*URL Directa:* ${videoUrl}`,
+    gifPlayback: true,
+    mimetype: 'video/mp4', 
+    headerType: 4 
+}, { quoted: m })
 
         } catch (e) {
             console.error(e)
