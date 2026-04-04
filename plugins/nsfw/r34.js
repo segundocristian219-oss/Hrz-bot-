@@ -7,7 +7,7 @@ const r34 = {
   nsfw: true,
   run: async (m, text, usedPrefix, command) => {
     try {
-      if (!text) return conn.reply(m.chat, `《✧》 Debes especificar tags para buscar\n> Ejemplo » *${usedPrefix + command} neko*`, m)      
+      if (!text?) return conn.reply(m.chat, `《✧》 Debes especificar tags para buscar\n> Ejemplo » *${usedPrefix + command} neko*`, m)      
       await m.react('🕒')
       const tag = text[0].replace(/\s+/g, '_')
       let mediaList = []
