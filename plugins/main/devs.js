@@ -37,7 +37,7 @@ const devsCommand = {
         // --- 3. DESARROLLADOR 3 ---
         const myNumber3 = '525653326435'
         const myJid3 = myNumber3 + '@s.whatsapp.net'
-        const brandName3 = 'ϛαριϛυγ ♛' 
+        const brandName3 = '😎 ♛' 
         const vcard3 = 'BEGIN:VCARD\n' +
                       'VERSION:3.0\n' +
                       `FN:${brandName3}\n` + 
@@ -45,7 +45,7 @@ const devsCommand = {
                       'ORG:KiritoBot-MD Developer;\n' + 
                       'TITLE:Chief Executive Officer;\n' + 
                       `TEL;type=CELL;type=VOICE;waid=${myNumber3}:${myNumber3}\n` +
-                      'X-WA-BIZ-DESCRIPTION:programador, owner y desarrollador principal del bot.\n' +
+                      'X-WA-BIZ-DESCRIPTION:\n' +
                       `X-WA-BIZ-NAME:${brandName3}\n` +
                       'END:VCARD'
 
