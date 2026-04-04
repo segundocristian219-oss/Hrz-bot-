@@ -80,6 +80,15 @@ global.img = () => global.botImages[Math.floor(Math.random() * global.botImages.
 global.img2 = () => global.botImages2[Math.floor(Math.random() * global.botImages2.length)]
 global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 
+global.channelInfo = {
+    forwardingScore: 1,
+    isForwarded: true,
+    forwardedNewsletterMessageInfo: {
+        newsletterJid: ch, 
+        newsletterName: name()
+    }
+};
+
 global.getBuffer = async (url, options = {}) => {
   try {
     const res = await axios({
