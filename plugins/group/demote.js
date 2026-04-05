@@ -14,7 +14,7 @@ const demoteCommand = {
             if (!who) {
                 return conn.reply(
                     m.chat, 
-                    `*─── [ ᰔᩚ ADVERTENCIA ] ───*\n\n_Debes etiquetar a alguien o responder a su mensaje para degradarlo._`, 
+                    `> ⌬ *_Debes etiquetar a alguien o responder a su mensaje para degradarlo._*`, 
                     m
                 );
             }
@@ -31,7 +31,7 @@ const demoteCommand = {
             if (!isTargetAdmin) {
                 return conn.reply(
                     m.chat,
-                    `*─── [ ⓘ INFO ] ───*\n\n_El usuario @${who.split('@')[0]} no es administrador, por lo tanto no puede ser degradado._`,
+                    `> ✰ *_El usuario @${who.split('@')[0]} no es administrador, por lo tanto no puede ser degradado._*`,
                     m,
                     { mentions: [who] }
                 );
