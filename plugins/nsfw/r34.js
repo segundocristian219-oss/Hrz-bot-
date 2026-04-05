@@ -17,6 +17,7 @@ const r34 = {
       if (res.ok && type.includes('json')) {
         const json = await res.json()
         const data = Array.isArray(json) ? json : json?.post || json?.data || []
+        const tags = data?.tags
         const valid = data.map(i => i?.file_url || i?.sample_url || i?.preview_url).filter(u => typeof u === 'string' && /\.(jpe?g|png|gif|mp4)$/i.test(u))
         if (valid.length) {
           mediaList = [...new Set(valid)].sort(() => Math.random() - 0.5)
@@ -25,7 +26,7 @@ const r34 = {
       if (!mediaList.length) 
         return conn.reply(m.chat, `《✧》 No se encontraron resultados para ${tag}`, m)
       const media = mediaList[0]
-      const caption = `✰ Resultados para » ${tag}\n➠ TAGS: ${data?.tags}`
+      const caption = `✰ Resultados para » ${tag}\n➠ TAGS: ${tags}`
       if (media.endsWith('.mp4')) {
         await conn.sendMessage(m.chat, { video: { url: media }, caption, mentions: [m.sender] })
       } else {
