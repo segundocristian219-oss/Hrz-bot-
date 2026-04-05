@@ -10,11 +10,30 @@ const demoteCommand = {
             
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
 
+            
             if (!who) {
                 return conn.reply(
                     m.chat, 
-                    `*─── [ ⚠ ADVERTENCIA ] ───*\n\n_Debes etiquetar a alguien o responder a su mensaje para degradarlo._\n\n*Ejemplo:* ${usedPrefix + command} @usuario`, 
+                    `*─── [ ᰔᩚ ADVERTENCIA ] ───*\n\n_Debes etiquetar a alguien o responder a su mensaje para degradarlo._`, 
                     m
+                );
+            }
+
+            
+            const groupMetadata = await conn.groupMetadata(m.chat);
+            const participants = groupMetadata.participants;
+            const targetUser = participants.find(p => p.id === who);
+            
+            
+            const isTargetAdmin = targetUser?.admin || targetUser?.isSuperAdmin || false;
+
+            
+            if (!isTargetAdmin) {
+                return conn.reply(
+                    m.chat,
+                    `*─── [ ⓘ INFO ] ───*\n\n_El usuario @${who.split('@')[0]} no es administrador, por lo tanto no puede ser degradado._`,
+                    m,
+                    { mentions: [who] }
                 );
             }
 
@@ -23,20 +42,18 @@ const demoteCommand = {
             let date = d.toLocaleDateString('es-HN');
 
             try {
-                
                 await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
 
                 let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Administrador removido\n`;
                 txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
-                txt += `_Acceso verificado correctamente._`;
-
+                
                 await conn.reply(m.chat, txt, m, { mentions: [who] });
 
             } catch (err) {
                 console.error(err);
-                conn.reply(m.chat, `*─── [ ❌ ERROR ] ───*\n\n_No se pudo completar la acción. Asegúrate de que el usuario sea administrador._`, m);
+                conn.reply(m.chat, `*─── [ ❌ ERROR ] ───*\n\n_Error técnico al intentar remover los permisos._`, m);
             }
 
         } catch (e) {
