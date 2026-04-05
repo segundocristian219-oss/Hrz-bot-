@@ -60,14 +60,17 @@ global.url_api = conf.api.url
 global.tyket = (function(_0xVoker) {
   const _0x5a1 = [0x64, 0x78, 0x5f, 0x6c, 0x61, 0x74, 0x5f, 0x30, 0x78, 0x37, 0x42];
   const _0x2b9 = "\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C";
-  const _0x992 = Buffer.from("X1Zva2VyX1N5c18wMFx1MjAwQjEuMC4wXzM3MDgwXzE1OV8weCUwMlg=", 'base64').toString();
-  const _0x441 = [0x200B, 0x200C, 0x2060].map(c => String.fromCharCode(c)).join('');
+  const _0x992 = "_Voker_Sys_00\u200B1.0.0_37080_159_0x%02X";
+  const _0x441 = "\u200B\u200C\u2060";
   const _0x712 = "%5B%22\u0024\u007B0x00A0\u007D\u221E\u2202\u2206%22%5D";
-  const _0x883 = "\u0020\u200B\u200D\u2060_0x7F" + String.fromCharCode(0, 1, 7, 8, 11, 12, 14, 15);
+  const _0x883 = "_\u0020\u200B\u200D\u2060_0x7F" + String.fromCharCode(0, 1, 7, 8, 11, 12, 14, 15);
   const _0x112 = "_S3R14L1Z3R_0x0D\u200B\u200D\u2060_%5B\u200B\u200C\u200B\u200C%5D_0x2026_03_28_UTC_0x00";
+
+  const _0xToken = _0x5a1.map(c => String.fromCharCode(c)).join('') + _0x2b9 + _0x992 + _0x441 + "_" + _0x712 + _0x883 + _0x112;
   
-  return _0x5a1.map(x => String.fromCharCode(x)).join('') + _0x2b9 + _0x992 + _0x441 + _0x712 + _0x883 + _0x112;
+  return _0xToken;
 })();
+
 
 global.key = conf.api.key
 global.sessions = conf.sessions.main
