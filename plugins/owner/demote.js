@@ -16,7 +16,9 @@ const demoteCommand = {
                 return;
             }
 
-            if (!isAdmin) {
+            let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
+
+            if (who === m.sender && !isAdmin) {
                 return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n_No eres administrador, por lo que no es necesario el comando._`, m);
             }
 
@@ -25,15 +27,15 @@ const demoteCommand = {
             let date = d.toLocaleDateString('es-HN');
 
             try {
-                await conn.groupParticipantsUpdate(m.chat, [m.sender], 'demote');
+                await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
 
                 let txt = `*─── [ 🛡️ DEMOTE ] ───*\n\n`;
-                txt += `*♛ Usuario:* @${m.sender.split`@`[0]}\n`;
+                txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Administrador removido\n`;
                 txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
                 txt += `_Acceso de owner verificado correctamente._`;
 
-                await conn.reply(m.chat, txt, m, { mentions: [m.sender] });
+                await conn.reply(m.chat, txt, m, { mentions: [who] });
 
             } catch (err) {
                 console.error(err);
@@ -47,3 +49,4 @@ const demoteCommand = {
 };
 
 export default demoteCommand;
+                
