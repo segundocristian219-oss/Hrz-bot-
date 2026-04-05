@@ -59,16 +59,16 @@ const handler = {
             const vcard2 = 'BEGIN:VCARD\n' +
                           'VERSION:3.0\n' +
                           `FN:${name2}\n` +
-                          'ORG:KiritoBot-MD Team;\n' +
-                          'TITLE:SysAdmin & Scrapers;\n' +
+                          'ORG:Owner principal;\n' +
+                          'TITLE:Programador y Desarrollador del ${name()};\n' +
                           `TEL;type=CELL;type=VOICE;waid=${num2}:${num2}\n` +
                           'END:VCARD'
 
             const vcard3 = 'BEGIN:VCARD\n' +
                           'VERSION:3.0\n' +
                           `FN:${name3}\n` +
-                          'ORG:KiritoBot-MD Team;\n' +
-                          'TITLE:SysAdmin & Scrapers;\n' +
+                          'ORG:Manejo de Bots y Scrappers;\n' +
+                          'TITLE:Admin de ${name()} y Desarrollador de Scrappers;\n' +
                           `TEL;type=CELL;type=VOICE;waid=${num3}:${num3}\n` +
                           'END:VCARD'
 
