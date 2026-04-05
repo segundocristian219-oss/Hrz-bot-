@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const reaction = {
-    emoji: '💦',
+    emoji: '🥵',
     txt_solo: '> ❒ @user1 quiere hacer el delicioso.',
     txt_mencion: '> ❏ @user1 le está haciendo el delicioso a @user2 como nunca se lo avían echo. 🥵\n que salvaje...',
     links: [
