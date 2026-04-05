@@ -71,22 +71,7 @@ global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 
 
 
-global.tyket = (function() {
-  const _0x_p = {
-    7: String.fromCharCode(0, 1, 7, 8, 11, 12, 14, 15),
-    3: "_Voker_Sys_00\u200B1.0.0_37080_159",
-    10: "_0x2026_03_28_UTC_0x00",
-    1: "dx_lat_0x7B",
-    5: "%5B%22\u0024%7B0x00A0%7D\u221E\u2202\u2206%22%5D",
-    8: "_S3R14L1Z3R_0x0D\u200B\u200D\u2060_",
-    2: "\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C",
-    4: "_0x%02X\u200B\u200C\u2060_",
-    9: "%5B\u200B\u200C\u200B\u200C%5D",
-    6: "_\u0020\u200B\u200D\u2060_0x7F"
-  };
-
-  return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => _0x_p[i]).join('');
-})();
+global.tyket = 'dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_Sys_00\u200B1.0.0_37080_159_0x%02X\u200B\u200C\u2060_%5B%22\u0024\u007B0x00A0\u007D\u221E\u2202\u2206%22%5D_%20\u200B\u200D\u2060_0x7F\u0000\u0001\u0007\u0008\u000B\u000C\u000E\u000F_S3R14L1Z3R_0x0D\u200B\u200D\u2060_%5B\u200B\u200C\u200B\u200C%5D_0x2026_03_28_UTC_0x00'
 
 
 
