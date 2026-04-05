@@ -1,0 +1,119 @@
+{
+  "MAIN": [
+    { "cmd": ".menu", "desc": "Muestra este menú de ayuda." },
+    { "cmd": ".code", "desc": "Conviértete en subbot." },
+    { "cmd": ".stop", "desc": "Detener y eliminar la sección como subbot." },
+    { "cmd": ".bots", "desc": "Ver la lista de subbots." },
+    { "cmd": ".reporte/.report/.bug", "desc": "Reporta un error en el sistema." },
+    { "cmd": ".idea/.sugerencia", "desc": "Sugiere un nuevo comando o comparte una idea." },
+    { "cmd": ".creador", "desc": "Información sobre el creador." },
+    { "cmd": ".devs", "desc": "Contactos de los desarrolladores." }
+  ],
+  "FUN": [
+    { "cmd": ".gay", "desc": "Mide tu nivel de homosexualidad (simulación)." },
+    { "cmd": ".poema", "desc": "Poemas Aleatorios." },
+    { "cmd": ".reflexión", "desc": "Una reflexión aleatoria." },
+    { "cmd": ".consejo", "desc": "Consejos aleatorios." },
+    { "cmd": ".meme2", "desc": "Envía un vídeo meme aleatorio para reír." },
+    { "cmd": ".marry", "desc": "Casate con alguien." },
+    { "cmd": ".meme", "desc": "Envía un meme aleatorio para reír." }
+  ],
+  "DOWNLOAD": [
+    { "cmd": ".play", "desc": "Descarga audio de YouTube (música)." },
+    { "cmd": ".spotify", "desc": "Descarga musica de Spotify." },
+    { "cmd": ".play2", "desc": "Descarga video de YouTube." },
+    { "cmd": ".facebook/fb", "desc": "Descarga video de Facebook." },
+    { "cmd": ".instagram/ig", "desc": "Descarga contenido de Instagram (post/reel/story)." },
+    { "cmd": ".tiktok/tt", "desc": "Descarga video de TikTok sin marca de agua." }
+  ],
+  "RPG": [
+    { "cmd": ".tesoro/.mapa", "desc": "Encuentra el tesoro oculto." },
+    { "cmd": ".mate/.math", "desc": "Resuelve una suma matemática." },
+    { "cmd": ".tresenraya/.x0", "desc": "Juega tresenraya con tu amigo." },
+    { "cmd": ".palabra", "desc": "Adivina la palabra." },
+    { "cmd": ".perfil", "desc": "Muestra tu perfil." },
+    { "cmd": ".apostar", "desc": "Apuesta en el casino." },
+    { "cmd": ".trabajar", "desc": "Trabaja para ganar $col." }
+  ],
+  "ANIME": [
+    { "cmd": ".kill", "desc": "Envía un gif de \"matar\" estilo anime." },
+    { "cmd": ".kiss", "desc": "gif de beso anime." },
+    { "cmd": ".kiss2", "desc": "gif de beso gay anime." },
+    { "cmd": ".hug", "desc": "gif de abrazo anime." },
+    { "cmd": ".hello", "desc": "gif de saludo anime." },
+    { "cmd": ".coffee", "desc": "gif de café anime." },
+    { "cmd": ".angry", "desc": "gif de enojo anime." },
+    { "cmd": ".happy", "desc": "gif de felicidad anime." },
+    { "cmd": ".sad", "desc": "gif de tristeza anime." },
+    { "cmd": ".slap", "desc": "gif de bofetada anime." },
+    { "cmd": ".laugh", "desc": "gif de risa anime." }
+  ],
+  "INTELIGENCIA ARTIFICIAL": [
+    { "cmd": ".imgg", "desc": "Genera imágenes a partir de texto usando IA." },
+    { "cmd": ".ia", "desc": "Chat con inteligencia artificial (modelo genérico)." },
+    { "cmd": ".tts", "desc": "Convierte texto a voz (audio)." },
+    { "cmd": ".chatgpt", "desc": "Interactúa con ChatGPT." },
+    { "cmd": ".gemini", "desc": "Interactúa con Gemini AI de Google." },
+    { "cmd": ".removebg", "desc": "Elimina el fondo de una imagen." },
+    { "cmd": ".hd", "desc": "Mejora la calidad/resolución de una imagen." }
+  ],
+  "GROUP CONFIG": [
+    { "cmd": ".antilink", "desc": "Activa/desactiva anti-enlaces en el grupo." },
+    { "cmd": ".modoadmin", "desc": "Activa/desactiva las respuestas solo para administradores." },
+    { "cmd": ".antiestados", "desc": "Activa/desactiva anti-estados (Mención en Estados.)." },
+    { "cmd": ".config_group", "desc": "Muestra la configuración actual del grupo." },
+    { "cmd": ".hidetag", "desc": "Menciona a todos los miembros silenciosamente." },
+    { "cmd": ".setwelcome", "desc": "Establece un mensaje de bienvenida personalizado." },
+    { "cmd": ".todos", "desc": "Menciona a todos los miembros del grupo." },
+    { "cmd": ".setpp", "desc": "Cambia la foto de perfil del grupo." },
+    { "cmd": ".setname", "desc": "Cambia el nombre del grupo." },
+    { "cmd": ".setdesc", "desc": "Cambia la descripción del grupo." },
+    { "cmd": ".delwelcome", "desc": "Elimina el mensaje de bienvenida personalizado." },
+    { "cmd": ".welcome on/off", "desc": "Activa/desactiva el mensaje de bienvenida." },
+    { "cmd": ".detect on/off", "desc": "Activa/desactiva la detección de eventos (entradas/salidas)." },
+    { "cmd": ".kick", "desc": "Expulsa a un miembro del grupo (requiere ser admin)." },
+    { "cmd": ".link", "desc": "Obtiene el enlace de invitación del grupo." },
+    { "cmd": ".open/close", "desc": "Abre o cierra el grupo (solo admins pueden enviar mensajes)." },
+    { "cmd": ".mute/unmute", "desc": "Silencia los mensajes de un usuario." },
+    { "cmd": ".warn/delwarn", "desc": "Advierte a un usuario/a (solo admin)." },
+    { "cmd": ".warnlist", "desc": "Lista de usuarios Advertidos." },
+    { "cmd": ".warnlimit", "desc": "Establece el limite de advertencias (solo admin)." }
+  ],
+  "STICKERS": [
+    { "cmd": ".s", "desc": "Crea un sticker a partir de imagen/video/gif." },
+    { "cmd": ".wm", "desc": "Cambia o agrega información a un sticker." },
+    { "cmd": ".brat", "desc": "Crea sticker con estilo \"brat\" (texto distorsionado)." },
+    { "cmd": ".qc", "desc": "Crea sticker de quote (cita) con avatar." },
+    { "cmd": ".emo", "desc": "Crea sticker animados a partir de un emoji." },
+    { "cmd": ".emojimix", "desc": "Combina emojis." }
+  ],
+  "SEARCH": [
+    { "cmd": ".pinterest", "desc": "Busca imágenes en Pinterest." },
+    { "cmd": ".ttss", "desc": "Busca videos/usuarios en TikTok." },
+    { "cmd": ".gif", "desc": "Busca y envía un GIF animado." },
+    { "cmd": ".ytsearch", "desc": "Busca videos en YouTube." },
+    { "cmd": ".buscar", "desc": "Búsqueda general en Google (resultados en texto)." }
+  ],
+  "TOOLS": [
+    { "cmd": ".get", "desc": "Obtiene información de un enlace (metadata, headers)." },
+    { "cmd": ".wwic", "desc": "Busca información de tu fecha de nacimiento." },
+    { "cmd": ".tourl", "desc": "Sube un archivo a servicios de alojamiento (solo imágenes)." },
+    { "cmd": ".tourl2/.tourl3", "desc": "Sube un archivo a servicios de alojamiento (vide/imagen/audio)." },
+    { "cmd": ".read/ver", "desc": "Extraer archivos de una sola visualización." },
+    { "cmd": ".whatmusic", "desc": "Reconoce música a partir de un audio (Shazam)." },
+    { "cmd": ".traducir", "desc": "Traduce texto a otro idioma." },
+    { "cmd": ".qr", "desc": "Genera un código QR a partir de texto." },
+    { "cmd": ".acortar", "desc": "Acorta una URL usando un servicio (dix.lat)." },
+    { "cmd": ".toimg", "desc": "Convierte un sticker a imagen PNG." },
+    { "cmd": ".pfp", "desc": "Obtiene la foto de perfil de un usuario." },
+    { "cmd": ".reducir", "desc": "Reduce el tamaño de una imagen." },
+    { "cmd": ".ssweb", "desc": "Toma una captura de pantalla de una página web." }
+  ],
+  "OWNER": [
+    { "cmd": ".await", "desc": "Comando de espera para pruebas (solo owner)." },
+    { "cmd": ".restart", "desc": "Reinicia el bot (solo owner)." },
+    { "cmd": ".ds", "desc": "Comando de debug/desarrollo (solo owner)." },
+    { "cmd": ".up", "desc": "Actualiza el bot desde el repositorio (solo owner)." },
+    { "cmd": ".autoadmin", "desc": "Te da admin en un grupo donde el bot lo sea (solo owner)." }
+  ]
+}
