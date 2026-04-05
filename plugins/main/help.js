@@ -241,6 +241,7 @@ function clockString(ms) {
 
 
 /*
+
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -248,7 +249,7 @@ const menuCommand = {
     name: 'menu',
     alias: ['help', 'comandos', 'h'],
     category: 'main',
-    run: async (m, { conn, usedPrefix }) => {
+    run: async (m, { conn, text }) => {
         try {
             await m.react('⏳');
 
@@ -272,13 +273,23 @@ const menuCommand = {
             menuText += `> Usa *#novedades* para descubrir lo nuevo del sistema.\n`;
             menuText += `${rmrText}\n\n`;
 
-            Object.entries(menuData).forEach(([title, cmds]) => {
-                menuText += `┌──「 *${title.toUpperCase()}* 」──\n`;
-                cmds.forEach(item => {
+            const query = text.trim().toUpperCase();
+
+            if (query && menuData[query]) {
+                menuText += `┌──「 *${query}* 」──\n`;
+                menuData[query].forEach(item => {
                     menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
                 });
                 menuText += `└───────────────\n\n`;
-            });
+            } else {
+                Object.entries(menuData).forEach(([title, cmds]) => {
+                    menuText += `┌──「 *${title.toUpperCase()}* 」──\n`;
+                    cmds.forEach(item => {
+                        menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
+                    });
+                    menuText += `└───────────────\n\n`;
+                });
+            }
 
             menuText += `> © Powered by ${developer}.`;
 
@@ -310,5 +321,6 @@ function clockString(ms) {
     let s = Math.floor(ms / 1000) % 60;
     return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
 }
+
 
 */
