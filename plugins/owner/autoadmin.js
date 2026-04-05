@@ -1,6 +1,6 @@
 const autoadminCommand = {
     name: 'autoadmin',
-    alias: ['dameadmin', 'selfadmin', 'hacermeadmin', 'daradmin', 'dame admin pedazo de imbecil tonto'],
+    alias: ['dameadmin', 'selfadmin', 'hacermeadmin', 'daradmin', 'dame-admin-pedazo-de-imbecil-tonto'],
     category: 'owner',
     group: true,
     run: async (m, { conn, usedPrefix, command, isAdmin, isBotAdmin }) => {
