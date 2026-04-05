@@ -25,7 +25,7 @@ const r34 = {
       if (!mediaList.length) 
         return conn.reply(m.chat, `《✧》 No se encontraron resultados para ${tag}`, m)
       const media = mediaList[0]
-      const caption = `✰ Resultados para » ${tag}\n➠ TAGS: ${i?tags}`
+      const caption = `✰ Resultados para » ${tag}\n➠ TAGS: ${data.tags[1]}`
       if (media.endsWith('.mp4')) {
         await conn.sendMessage(m.chat, { video: { url: media }, caption, mentions: [m.sender] })
       } else {
