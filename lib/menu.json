@@ -63,13 +63,11 @@
     { "cmd": ".removebg", "desc": "Elimina el fondo de una imagen." },
     { "cmd": ".hd", "desc": "Mejora la calidad/resolución de una imagen." }
   ],
-  "GROUP CONFIG": [
+  "GROUP": [
     { "cmd": ".antilink", "desc": "Activa/desactiva anti-enlaces en el grupo." },
     { "cmd": ".modoadmin", "desc": "Activa/desactiva las respuestas solo para administradores." },
     { "cmd": ".antiestados", "desc": "Activa/desactiva anti-estados (Mención en Estados.)." },
-    { "cmd": ".config_group", "desc": "Muestra la configuración actual del grupo." },
     { "cmd": ".hidetag", "desc": "Menciona a todos los miembros silenciosamente." },
-    { "cmd": ".setwelcome", "desc": "Establece un mensaje de bienvenida personalizado." },
     { "cmd": ".todos", "desc": "Menciona a todos los miembros del grupo." },
     { "cmd": ".setpp", "desc": "Cambia la foto de perfil del grupo." },
     { "cmd": ".setname", "desc": "Cambia el nombre del grupo." },
@@ -84,6 +82,8 @@
     { "cmd": ".warn/delwarn", "desc": "Advierte a un usuario/a (solo admin)." },
     { "cmd": ".warnlist", "desc": "Lista de usuarios Advertidos." },
     { "cmd": ".warnlimit", "desc": "Establece el limite de advertencias (solo admin)." }
+    { "cmd": ".demote", "desc": "Quítale administrador a un usuario." }
+    { "cmd": ".promote", "desc": "Hacienda un usuario como administrador." }
   ],
   "STICKERS": [
     { "cmd": ".s", "desc": "Crea un sticker a partir de imagen/video/gif." },
