@@ -10,10 +10,6 @@ const demoteCommand = {
 
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
 
-            if (who === m.sender && !isAdmin) {
-                return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\n_No eres administrador, por lo que no es necesario el comando._`, m);
-            }
-
             let d = new Date();
             let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
             let date = d.toLocaleDateString('es-HN');
