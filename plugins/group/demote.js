@@ -3,18 +3,10 @@ const demoteCommand = {
     alias: ['quitaradmin', 'unadmin'],
     category: 'owner',
     group: true,
+    botAdmin: true,
+    admin: true,
     run: async (m, { conn, usedPrefix, command, isAdmin, isBotAdmin }) => {
         try {
-            const isOwner = global.owner.map(v => v[0] + '@s.whatsapp.net').includes(m.sender);
-            if (!isOwner) {
-                global.dfail('owner', m, conn);
-                return;
-            }
-
-            if (!isBotAdmin) {
-                global.dfail('botAdmin', m, conn);
-                return;
-            }
 
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
 
@@ -29,7 +21,7 @@ const demoteCommand = {
             try {
                 await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
 
-                let txt = `*─── [ 🛡️ DEMOTE ] ───*\n\n`;
+                let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Administrador removido\n`;
                 txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
