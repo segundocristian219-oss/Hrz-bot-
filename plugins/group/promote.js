@@ -41,8 +41,8 @@ const promoteCommand = {
                 let txt = `*─── [ ♛ PROMOTE ] ───*\n\n`;
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Nuevo administrador\n`;
-                txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
-                txt += `_Acceso verificado correctamente._`;
+                txt += `*➠ Fecha:* ${date}\n\n`;
+   
 
                 await conn.reply(m.chat, txt, m, { mentions: [who] });
 
