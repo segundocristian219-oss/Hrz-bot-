@@ -25,7 +25,7 @@ const r34 = {
       if (!mediaList.length) 
         return conn.reply(m.chat, `《✧》 No se encontraron resultados para ${tag}`, m)
       const media = mediaList[0]
-      const caption = `✰ Resultados para » ${tag}\n➠ TAGS: ${data.tags[1]}`
+      const caption = `✰ Resultados para » ${tag}\n➠ TAGS: ${data?.tags}`
       if (media.endsWith('.mp4')) {
         await conn.sendMessage(m.chat, { video: { url: media }, caption, mentions: [m.sender] })
       } else {
@@ -34,7 +34,7 @@ const r34 = {
       await m.react('✔️')
     } catch (e) {
       await m.react('✖️')
-      await m.reply(`> An unexpected error occurred while executing command *${usedPrefix + command}*. Please try again or contact support if the issue persists.\n> [Error: *${e.message}*]`)
+      await m.reply(`> [Error: *${e.message}*]`)
     }
   }
 }
