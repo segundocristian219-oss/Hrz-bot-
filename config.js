@@ -69,27 +69,22 @@ global.img2 = () => global.botImages2[Math.floor(Math.random() * global.botImage
 global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 
 
+
+
 global.tyket = (function() {
-  const _0x01 = String.fromCharCode(100, 120, 95, 108, 97, 116, 95, 48, 120, 55, 66);
-  const _0x02 = "\u200B\u001B" + "[38;5;214m\u2060\u200D\u200B\u200C";
-  const _0x03 = (function(s){ return s.split('').reverse().join(''); })("X20%x0_951_08073_0.0.1\u200B00_syS_rekoV_");
-  const _0x04 = "\u200B\u200C\u2060";
-  const _0x05 = [0x5f, 0x25, 0x35, 0x42, 0x25, 0x32, 0x32].map(x => String.fromCharCode(x)).join('');
-  const _0x06 = "\u0024\u007B0x00A0\u007D\u221E\u2202\u2206%22%5D";
-  const _0x07 = "_\u0020\u200B\u200D\u2060_0x7F";
-  const _0x08 = String.fromCharCode(0x00, 0x01, 0x07, 0x08, 0x0B, 0x0C, 0x0E, 0x0F);
-  const _0x09 = "_S3R14L1Z3R_0x0D\u200B\u200D\u2060_%5B\u200B\u200C\u200B\u200C%5D";
-  const _0x0A = "_0x2026_03_28_UTC_0x00";
+  const c1 = "dx_lat_0x7B";
+  const c2 = "\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C";
+  const c3 = "_Voker_Sys_00\u200B1.0.0_37080_159";
+  const c4 = "_0x%02X\u200B\u200C\u2060_";
+  const c5 = "%5B%22\u0024%7B0x00A0%7D\u221E\u2202\u2206%22%5D";
+  const c6 = "_\u0020\u200B\u200D\u2060_0x7F";
+  const c7 = String.fromCharCode(0, 1, 7, 8, 11, 12, 14, 15);
+  const c8 = "_S3R14L1Z3R_0x0D\u200B\u200D\u2060_";
+  const c9 = "%5B\u200B\u200C\u200B\u200C%5D_0x2026_03";
+  const c10 = "_28_UTC_0x00";
 
-  const _0xFinal = [
-    _0x01, _0x02, 
-    (function(s){ return s.split('').reverse().join(''); })(_0x03), 
-    _0x04, _0x05, _0x06, _0x07, _0x08, _0x09, _0x0A
-  ].join('');
-
-  return _0xFinal;
+  return c1.concat(c2, c3, c4, c5, c6, c7, c8, c9, c10);
 })();
-
 
 
 
