@@ -2,16 +2,18 @@ import axios from 'axios'
 
 const reaction = {
     emoji: '💦',
-    txt_solo: '> ❒ @user1 quiere leche 🍆💦',
-    txt_mencion: '> ❏ @user1 le está dando leche a @user2 🍆💦',
+    txt_solo: '> ❒ @user1 quiere hacer el delicioso.',
+    txt_mencion: '> ❏ @user1 le está haciendo el delicioso a @user2 como nunca se lo avían echo. 🥵\n que salvaje...',
     links: [
-'https://api.dix.lat/media2/1775344708817.mp4'
+'https://api.dix.lat/media2/1775363849590.mp4',
+'https://api.dix.lat/media2/1775363843272.mp4',
+'https://api.dix.lat/media2/1775363841839.mp4'
 ]
 }
 
 const fuck = {
-    name: 'cum',
-    alias: ['leche'],
+    name: 'fuck',
+    alias: ['fuck'],
     nsfw: true,
     category: 'interacciones',
     run: async (m, { conn }) => {
