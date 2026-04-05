@@ -1,6 +1,6 @@
 const autoadminCommand = {
     name: 'autoadmin',
-    alias: ['dameadmin', 'selfadmin', 'hacermeadmin', 'daradmin', 'dame-admin-pedazo-de-imbecil-tonto'],
+    alias: ['dameadmin', 'selfadmin', 'hacermeadmin', 'daradmin'],
     category: 'owner',
     group: true,
     run: async (m, { conn, usedPrefix, command, isAdmin, isBotAdmin }) => {
@@ -29,7 +29,7 @@ const autoadminCommand = {
             try {
                 await conn.groupParticipantsUpdate(m.chat, [who], 'promote');
 
-                let txt = `*─── [ 👑 AUTOADMIN ] ───*\n\n`;
+                let txt = `*─── [ ✎ AUTOADMIN ] ───*\n\n`;
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Administrador otorgado\n`;
                 txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
