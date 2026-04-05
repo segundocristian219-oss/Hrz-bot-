@@ -47,7 +47,7 @@ const demoteCommand = {
                 let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Administrador removido\n`;
-                txt += `*➠ Fecha:* ${date} | ${time}\n\n`;
+                txt += `*➠ Fecha:* ${date}\n\n`;
                 
                 await conn.reply(m.chat, txt, m, { mentions: [who] });
 
