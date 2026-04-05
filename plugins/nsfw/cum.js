@@ -5,7 +5,9 @@ const reaction = {
     txt_solo: '> ❒ @user1 quiere leche 🍆💦',
     txt_mencion: '> ❏ @user1 le está dando leche a @user2 🍆💦',
     links: [
-'https://api.dix.lat/media2/1775344708817.mp4'
+'https://api.dix.lat/media2/1775344708817.mp4',
+'https://api.dix.lat/media2/1775417254779.mp4',
+'https://api.dix.lat/media2/1775417252117.mp4'
 ]
 }
 
