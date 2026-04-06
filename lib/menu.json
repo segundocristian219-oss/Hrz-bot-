@@ -7,12 +7,15 @@
     { "cmd": ".reporte/.report/.bug", "desc": "Reporta un error en el sistema." },
     { "cmd": ".idea/.sugerencia", "desc": "Sugiere un nuevo comando o comparte una idea." },
     { "cmd": ".creador", "desc": "Información sobre el creador." },
+    { "cmd": ".uso/.topcmd", "desc": "Lista de comandos más usados." },
+    { "cmd": ".novedades/.news", "desc": "Información sobre nuevas funciones y novedades." },
     { "cmd": ".devs", "desc": "Contactos de los desarrolladores." }
   ],
   "FUN": [
     { "cmd": ".gay", "desc": "Mide tu nivel de homosexualidad (simulación)." },
     { "cmd": ".poema", "desc": "Poemas Aleatorios." },
     { "cmd": ".reflexión", "desc": "Una reflexión aleatoria." },
+    { "cmd": ".font/.fuente", "desc": "Cambia el estilo de fuente de tu texto." },
     { "cmd": ".consejo", "desc": "Consejos aleatorios." },
     { "cmd": ".meme2", "desc": "Envía un vídeo meme aleatorio para reír." },
     { "cmd": ".marry", "desc": "Casate con alguien." },
@@ -24,6 +27,8 @@
     { "cmd": ".play2", "desc": "Descarga video de YouTube." },
     { "cmd": ".facebook/fb", "desc": "Descarga video de Facebook." },
     { "cmd": ".instagram/ig", "desc": "Descarga contenido de Instagram (post/reel/story)." },
+    { "cmd": ".mf/.mediafire", "desc": "Descarga archivos de mediafire." },
+    { "cmd": ".th/.threads", "desc": "Descarga contenido de threads" },
     { "cmd": ".tiktok/tt", "desc": "Descarga video de TikTok sin marca de agua." }
   ],
   "RPG": [
@@ -58,6 +63,7 @@
     { "cmd": ".imgg", "desc": "Genera imágenes a partir de texto usando IA." },
     { "cmd": ".ia", "desc": "Chat con inteligencia artificial (modelo genérico)." },
     { "cmd": ".tts", "desc": "Convierte texto a voz (audio)." },
+    { "cmd": ".copilot", "desc": "Chatea con Copilot en tiempo real." },
     { "cmd": ".chatgpt", "desc": "Interactúa con ChatGPT." },
     { "cmd": ".gemini", "desc": "Interactúa con Gemini AI de Google." },
     { "cmd": ".removebg", "desc": "Elimina el fondo de una imagen." },
@@ -70,6 +76,7 @@
     { "cmd": ".hidetag", "desc": "Menciona a todos los miembros silenciosamente." },
     { "cmd": ".todos", "desc": "Menciona a todos los miembros del grupo." },
     { "cmd": ".setpp", "desc": "Cambia la foto de perfil del grupo." },
+    { "cmd": ".del/.delete", "desc": "Elimina mensajes." },
     { "cmd": ".setname", "desc": "Cambia el nombre del grupo." },
     { "cmd": ".setdesc", "desc": "Cambia la descripción del grupo." },
     { "cmd": ".delwelcome", "desc": "Elimina el mensaje de bienvenida personalizado." },
@@ -97,6 +104,7 @@
     { "cmd": ".pinterest", "desc": "Busca imágenes en Pinterest." },
     { "cmd": ".ttss", "desc": "Busca videos/usuarios en TikTok." },
     { "cmd": ".gif", "desc": "Busca y envía un GIF animado." },
+    { "cmd": ".letra", "desc": "Busca la letra de tu música favorita." },
     { "cmd": ".ytsearch", "desc": "Busca videos en YouTube." },
     { "cmd": ".buscar", "desc": "Búsqueda general en Google (resultados en texto)." }
   ],
