@@ -1,58 +1,79 @@
-import axios from 'axios'
-import * as cheerio from 'cheerio'
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-const handler = {
-    name: 'hgif',
-    alias: ['hentaigif'],
-    category: 'nsfw',
+const menuCommand = {
+    name: 'menuprueba',
+    alias: ['hp'],
+    category: 'main',
     run: async (m, { conn, text }) => {
         try {
-            const query = text ? encodeURIComponent(text) : 'fuck+anime'
-            const searchUrl = `https://hentaigifz.com/?s=${query}`
+            await m.react('⏳');
+
+            const menuData = JSON.parse(readFileSync(join(process.cwd(), 'lib', 'menu.json'), 'utf-8'));
+            const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
             
-            const { data: searchData } = await axios.get(searchUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                }
-            })
+            let uptime = clockString(process.uptime() * 1000);
+            let totalreg = await global.User.countDocuments();
+            let totalchats = await global.Chat.countDocuments();
+            const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
-            const $ = cheerio.load(searchData)
-            const results = []
+            let menuText = `╔══『 *${name()}* 』══╗\n`;
+            menuText += `║ • Usuario: @${m.sender.split('@')[0]}\n`;
+            menuText += `║ • Usuarios: ${totalreg}\n`;
+            menuText += `║ • Grupos: ${totalchats}\n`;
+            menuText += `║ • Uptime: ${uptime}\n`;
+            menuText += `║ • Versión: ${pkg.version}\n`;
+            menuText += `║ • dix.lat/grupo\n`;
+            menuText += `╚═════════════════╝\n\n`;
+            menuText += `> Muy pronto nueva versión con más funciones.\n`;
+            menuText += `> Usa *#novedades* para descubrir lo nuevo del sistema.\n`;
+            menuText += `${rmrText}\n\n`;
 
-            $('article.post-item').each((i, el) => {
-                const url = $(el).find('a.exopop').attr('href')
-                const title = $(el).find('.post-title span').text().trim()
-                if (url) results.push({ title, url })
-            })
+            const query = text.trim().toUpperCase();
 
-            if (results.length === 0) return m.reply('No se encontraron resultados.')
+            if (query && menuData[query]) {
+                menuText += `┌──「 *${query}* 」──\n`;
+                menuData[query].forEach(item => {
+                    menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
+                });
+                menuText += `└───────────────\n\n`;
+            } else {
+                Object.entries(menuData).forEach(([title, cmds]) => {
+                    menuText += `┌──「 *${title.toUpperCase()}* 」──\n`;
+                    cmds.forEach(item => {
+                        menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
+                    });
+                    menuText += `└───────────────\n\n`;
+                });
+            }
 
-            const random = results[Math.floor(Math.random() * results.length)]
+            menuText += `> © Powered by ${developer}.`;
 
-            const { data: pageData } = await axios.get(random.url)
-            const $$ = cheerio.load(pageData)
-            
-            let videoUrl = $$('source[type="video/mp4"]').attr('src') || $$('video').attr('src') || $$('.single-post-media img').attr('src')
-
-            if (!videoUrl) return m.reply('No se pudo localizar el archivo MP4/GIF.')
-
-            const response = await axios.get(videoUrl, { responseType: 'arraybuffer' })
-            const buffer = Buffer.from(response.data, 'binary')
+            const { data: imgBuffer } = await conn.getFile(global.img2());
 
             await conn.sendMessage(m.chat, {
-    video: buffer,
-    patch: true, 
-    caption: `*Resultado:* ${random.title}\n*URL Directa:* ${videoUrl}`,
-    gifPlayback: true,
-    mimetype: 'video/mp4', 
-    headerType: 4 
-}, { quoted: m })
+                image: imgBuffer,
+                caption: menuText,
+                contextInfo: {
+                    mentionedJid: [m.sender],
+                    ...channelInfo
+                }
+            }, { quoted: m });
 
-        } catch (e) {
-            console.error(e)
-            m.reply('Error al procesar la descarga.')
+            await m.react('🍃');
+
+        } catch (error) {
+            console.error(error);
+            m.reply('❌ Error al generar el menú.\n\nUsa el comando *#report* para reportar esté error.');
         }
     }
-}
+};
 
-export default handler
+export default menuCommand;
+
+function clockString(ms) {
+    let h = Math.floor(ms / 3600000);
+    let m = Math.floor(ms / 60000) % 60;
+    let s = Math.floor(ms / 1000) % 60;
+    return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+}
