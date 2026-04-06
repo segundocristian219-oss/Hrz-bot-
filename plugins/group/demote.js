@@ -7,10 +7,8 @@ const demoteCommand = {
     admin: true,
     run: async (m, { conn, usedPrefix, command }) => {
         try {
-            
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
 
-            
             if (!who) {
                 return conn.reply(
                     m.chat, 
@@ -19,15 +17,12 @@ const demoteCommand = {
                 );
             }
 
-            
             const groupMetadata = await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
             const targetUser = participants.find(p => p.id === who);
-            
-            
-            const isTargetAdmin = targetUser?.admin || targetUser?.isSuperAdmin || false;
 
-            
+            const isTargetAdmin = targetUser?.admin !== null && targetUser?.admin !== undefined;
+
             if (!isTargetAdmin) {
                 return conn.reply(
                     m.chat,
@@ -38,7 +33,6 @@ const demoteCommand = {
             }
 
             let d = new Date();
-            let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
             let date = d.toLocaleDateString('es-HN');
 
             try {
@@ -48,7 +42,7 @@ const demoteCommand = {
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Administrador removido\n`;
                 txt += `*➠ Fecha:* ${date}\n\n`;
-                
+
                 await conn.reply(m.chat, txt, m, { mentions: [who] });
 
             } catch (err) {
