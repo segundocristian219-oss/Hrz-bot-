@@ -14,8 +14,7 @@ const demoteCommand = {
 
             const who = await getRealJid(conn, rawWho, m);
             const groupMetadata = await conn.groupMetadata(m.chat);
-            const participants = groupMetadata.participants;
-            const targetUser = participants.find(p => p.id === who);
+            const targetUser = groupMetadata.participants.find(p => p.id === who);
 
             if (!targetUser) return conn.reply(m.chat, `> ❌ *_El usuario no se encuentra en el grupo._*`, m);
 
@@ -37,7 +36,7 @@ const demoteCommand = {
 
         } catch (e) {
             console.error(e);
-            conn.reply(m.chat, `> ❌ *_Error al degradar al usuario. Verifica mis permisos._*`, m);
+            conn.reply(m.chat, `> ❌ *_Error al degradar al usuario._*`, m);
         }
     }
 };
