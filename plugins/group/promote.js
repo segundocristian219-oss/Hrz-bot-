@@ -1,4 +1,4 @@
-import { smsg } from '../lib/serializer.js';
+import { smsg } from '../../lib/serializer.js';
 
 const promoteCommand = {
     name: 'promote',
