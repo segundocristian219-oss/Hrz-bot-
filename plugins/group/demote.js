@@ -1,21 +1,15 @@
 const demoteCommand = {
     name: 'demote',
     alias: ['quitaradmin', 'unadmin'],
-    category: 'owner',
+    category: 'grupo',
     group: true,
     botAdmin: true,
     admin: true,
-    run: async (m, { conn, usedPrefix, command }) => {
+    run: async (m, { conn }) => {
         try {
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
 
-            if (!who) {
-                return conn.reply(
-                    m.chat, 
-                    `> ⌬ *_Debes etiquetar a alguien o responder a su mensaje para degradarlo._*`, 
-                    m
-                );
-            }
+            if (!who) return conn.reply(m.chat, `> ⌬ *_Debes etiquetar a alguien o responder a su mensaje._*`, m);
 
             const groupMetadata = await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
@@ -24,34 +18,23 @@ const demoteCommand = {
             const isTargetAdmin = targetUser?.admin !== null && targetUser?.admin !== undefined;
 
             if (!isTargetAdmin) {
-                return conn.reply(
-                    m.chat,
-                    `> ✰ *_El usuario @${who.split('@')[0]} no es administrador, por lo tanto no puede ser degradado._*`,
-                    m,
-                    { mentions: [who] }
-                );
+                return conn.reply(m.chat, `> ✰ *_El usuario @${who.split('@')[0]} no es administrador._*`, m, { mentions: [who] });
             }
 
-            let d = new Date();
-            let date = d.toLocaleDateString('es-HN');
+            let date = new Date().toLocaleDateString('es-HN');
 
-            try {
-                await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
+            await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
 
-                let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
-                txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
-                txt += `*✰ Estado:* Administrador removido\n`;
-                txt += `*➠ Fecha:* ${date}\n\n`;
+            let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
+            txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
+            txt += `*✰ Estado:* Administrador removido\n`;
+            txt += `*➠ Fecha:* ${date}\n\n`;
 
-                await conn.reply(m.chat, txt, m, { mentions: [who] });
-
-            } catch (err) {
-                console.error(err);
-                conn.reply(m.chat, `*─── [ ❌ ERROR ] ───*\n\n_Error técnico al intentar remover los permisos._`, m);
-            }
+            await conn.reply(m.chat, txt, m, { mentions: [who] });
 
         } catch (e) {
             console.error(e);
+            conn.reply(m.chat, `> ❌ *_Error al degradar al usuario. Verifica mis permisos._*`, m);
         }
     }
 };
