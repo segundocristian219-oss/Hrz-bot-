@@ -1,28 +1,25 @@
 const slotCommand = {
     name: 'slot2',
-    alias: ['tragaperras', 'tragamonedas', 'slot2'],
+    alias: ['apostar', 'slots', 'suerte', 'slot2'],
     category: 'rpg',
     run: async (m, { conn, args, usedPrefix, command }) => {
         try {
-            let user = global.users[m.sender];
-            if (!user) {
-                global.users[m.sender] = { monedas: 0, xp: 0 };
-                user = global.users[m.sender];
-            }
+            let user = await global.User.findOne({ id: m.sender });
+            if (!user) user = await global.User.create({ id: m.sender, col: 0, exp: 0 });
 
-            let apuesta = parseInt(args[0]);
-
-            if (!apuesta || isNaN(apuesta) || apuesta <= 0) {
-                let guia = `*─── [ 🎰 CASINO ROYALE ] ───*\n\n`;
-                guia += `*💡 Uso:* ${usedPrefix + command} <cantidad>\n`;
-                guia += `*💳 Tu Saldo:* ${(user.monedas || 0).toLocaleString()} Monedas\n\n`;
-                guia += `*🏆 T A B L A   D E   P R E M I O S*\n`;
+            let amount = args[0];
+            
+            if (!amount || isNaN(amount) || amount <= 0) {
+                let guia = `\n\t\t\t\t♛  *KIRITO CASINO* ♛\n\n`;
+                guia += `✧ *USO CORRECTO:* ${usedPrefix + command} <cantidad>\n`;
+                guia += `✦ *BALANCE ACTUAL:* ${user.col ?? 0} Col\n\n`;
+                guia += `◈ *TABLA DE PREMIOS*\n`;
                 guia += `👑 👑 👑 ➔ *Jackpot (x10)*\n`;
                 guia += `🍒 🍒 ❌ ➔ *Premio Menor (x2)*\n`;
-                guia += `*────────────────────*`;
                 return conn.reply(m.chat, guia, m);
             }
 
+            amount = parseInt(amount);
             let now = Date.now();
             let cooldown = user.vip ? 15000 : 60000;
 
@@ -31,45 +28,67 @@ const slotCommand = {
                 let mTime = Math.floor(s / 60000);
                 let sec = Math.floor((s % 60000) / 1000);
                 let timeString = (mTime > 0 ? `${mTime}m ` : '') + `${sec}s`;
-                return conn.reply(m.chat, `*─── [ ⏳ COOLDOWN ] ───*\n\n_Las máquinas se están enfriando._\n_⏱️ Espera: *${timeString}*_`, m);
+                return conn.reply(m.chat, `⏳ Las máquinas se están enfriando. Espera: *${timeString}*`, m);
             }
 
-            if ((user.monedas || 0) < apuesta) {
-                return conn.reply(m.chat, `*─── [ ❌ FONDOS ] ───*\n\n_Fondos insuficientes. Tienes *${(user.monedas || 0).toLocaleString()}* Monedas._`, m);
+            if ((user.col ?? 0) < amount) {
+                return conn.reply(m.chat, `✦ No tienes suficientes *Col*. Tu balance es: ${user.col ?? 0}`, m);
             }
 
-            user.monedas -= apuesta;
-            user.lastSlot = now;
+            await m.react("🎰");
 
-            const emojis = ["🍒", "🍇", "🍋", "🔔", "💎", "👑"];
-            let a = emojis[Math.floor(Math.random() * emojis.length)];
-            let b = emojis[Math.floor(Math.random() * emojis.length)];
-            let c = emojis[Math.floor(Math.random() * emojis.length)];
+            const symbols = ["🍒", "🍇", "🍋", "🔔", "💎", "👑"];
+            let x = [
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)]
+            ];
 
-            let visual = `*─── [ 🎰 SLOT MACHINE ] ───*\n\n`;
-            visual += `       ➤ [ ${a} | ${b} | ${c} ] ⮜\n\n`;
+            let isJackpot = x[0] === x[1] && x[1] === x[2];
+            let isWin = x[0] === x[1] || x[1] === x[2] || x[0] === x[2];
+            
+            let resultCol = 0;
+            let status = "";
 
-            if (a === b && b === c) {
-                let ganancia = apuesta * 10;
-                user.monedas += ganancia;
-                visual += `*🎊 ¡ J A C K P O T ! 🎊*\n`;
-                visual += `*📈 Ganaste:* +${ganancia.toLocaleString()} Monedas\n`;
-            } else if (a === b || b === c || a === c) {
-                let ganancia = apuesta * 2;
-                user.monedas += ganancia;
-                visual += `*✨ ¡ B U E N A   S U E R T E ! ✨*\n`;
-                visual += `*🪙 Ganaste:* +${ganancia.toLocaleString()} Monedas\n`;
+            if (isJackpot) {
+                resultCol = amount * 10;
+                status = "♛ ¡JACKPOT LEGENDARIO! ♛";
+            } else if (isWin) {
+                resultCol = amount * 2;
+                status = "✧ ¡GANANCIA MEDIA! ✧";
             } else {
-                visual += `*💀 ¡ P É R D I D A ! 💀*\n`;
-                visual += `*📉 Perdiste:* -${apuesta.toLocaleString()} Monedas\n`;
+                resultCol = -amount;
+                status = "💀 DERROTA 💀";
             }
 
-            if (user.monedas < 0) user.monedas = 0;
+            const newCol = (user.col ?? 0) + resultCol;
+            
+            await global.User.updateOne(
+                { id: m.sender }, 
+                { $set: { col: newCol < 0 ? 0 : newCol, lastSlot: now } }
+            );
 
-            visual += `\n*💳 Nuevo Saldo:* ${user.monedas.toLocaleString()}\n`;
-            visual += `*────────────────────*`;
+            const slotText = `
+\t\t\t\t♛  *KIRITO CASINO* ♛
 
-            await conn.reply(m.chat, visual, m);
+\t\t\t\t    [ ${x[0]} | ${x[1]} | ${x[2]} ]
+
+◈  *ESTADO:* ${status}
+✦  *RESULTADO:* ${resultCol > 0 ? '+' : ''}${resultCol} Col
+✧  *BALANCE ACTUAL:* ${newCol < 0 ? 0 : newCol} Col
+`;
+
+            await conn.sendMessage(m.chat, { 
+                text: slotText,
+                contextInfo: {
+                    forwardingScore: 1,
+                    isForwarded: true,
+                    ...channelInfo
+                }
+            }, { quoted: m });
+
+            if (resultCol > 0) await m.react("✅");
+            else await m.react("❌");
 
         } catch (e) {
             console.error(e);
@@ -78,4 +97,3 @@ const slotCommand = {
 };
 
 export default slotCommand;
-                
