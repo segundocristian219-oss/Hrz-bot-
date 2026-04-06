@@ -88,8 +88,8 @@
     { "cmd": ".mute/unmute", "desc": "Silencia los mensajes de un usuario." },
     { "cmd": ".warn/delwarn", "desc": "Advierte a un usuario/a (solo admin)." },
     { "cmd": ".warnlist", "desc": "Lista de usuarios Advertidos." },
-    { "cmd": ".warnlimit", "desc": "Establece el limite de advertencias (solo admin)." }
-    { "cmd": ".demote", "desc": "Quítale administrador a un usuario." }
+    { "cmd": ".warnlimit", "desc": "Establece el limite de advertencias (solo admin)." },
+    { "cmd": ".demote", "desc": "Quítale administrador a un usuario." },
     { "cmd": ".promote", "desc": "Hacienda un usuario como administrador." }
   ],
   "STICKERS": [
