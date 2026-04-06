@@ -12,17 +12,11 @@ const delcoinCommand = {
 
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
 
-            if (!global.users[who]) {
-                global.users[who] = { monedas: 0, xp: 0 };
-            }
-
             let inputStr = args.join(' ').toLowerCase();
             let isAll = inputStr.includes('all');
             let amount = 0;
 
-            if (isAll) {
-                amount = global.users[who].monedas || 0;
-            } else {
+            if (!isAll) {
                 let match = inputStr.match(/\d+/);
                 if (match) amount = parseInt(match[0]);
             }
@@ -33,19 +27,30 @@ const delcoinCommand = {
                 return conn.reply(m.chat, txt, m);
             }
 
-            if (amount > (global.users[who].monedas || 0)) {
-                amount = global.users[who].monedas || 0;
+            let targetUser = await global.User.findOne({ id: who });
+            if (!targetUser) targetUser = await global.User.create({ id: who, col: 0, exp: 0 });
+
+            let currentCol = targetUser.col ?? 0;
+            
+            if (isAll) {
+                amount = currentCol;
+            } else if (amount > currentCol) {
+                amount = currentCol; // No puede quitar más de lo que tiene el usuario
             }
 
-            global.users[who].monedas -= amount;
-            if (global.users[who].monedas < 0) global.users[who].monedas = 0;
+            const newCol = currentCol - amount;
+            
+            await global.User.updateOne(
+                { id: who }, 
+                { $set: { col: newCol < 0 ? 0 : newCol } }
+            );
 
             const txt = `
 \t\t\t\t♛  *REDUCCIÓN DE FONDOS* ♛
 
 ◈  *DESTINATARIO:* @${who.split('@')[0]}
 ✦  *MONTO RETIRADO:* -${amount} Col
-✧  *NUEVO BALANCE:* ${global.users[who].monedas} Col
+✧  *NUEVO BALANCE:* ${newCol < 0 ? 0 : newCol} Col
 `;
 
             await conn.sendMessage(m.chat, { 
@@ -67,4 +72,3 @@ const delcoinCommand = {
 };
 
 export default delcoinCommand;
-                                  
