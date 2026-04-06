@@ -13,13 +13,13 @@ const promoteCommand = {
             let rawWho = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
             if (!rawWho) return conn.reply(m.chat, `> ♛ *_Debes etiquetar a alguien o responder a su mensaje._*`, m);
 
-            const who = await getRealJid(conn, rawWho, m);
-            const groupMetadata = await conn.groupMetadata(m.chat);
+            const who = jidNormalizedUser(await getRealJid(conn, rawWho, m));
+            const groupMetadata = await conn.groupMetadata(m.chat).catch(() => ({ participants: [] }));
             const participants = groupMetadata.participants || [];
 
             const targetUser = participants.find(p => 
-                jidNormalizedUser(p.id) === jidNormalizedUser(who) || 
-                (p.lid && jidNormalizedUser(p.lid) === jidNormalizedUser(who))
+                jidNormalizedUser(p.id) === who || 
+                (p.lid && jidNormalizedUser(p.lid) === who)
             );
 
             if (!targetUser) return conn.reply(m.chat, `> ❌ *_El usuario no se encuentra en el grupo._*`, m);
