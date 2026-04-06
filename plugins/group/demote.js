@@ -1,4 +1,3 @@
-import { getRealJid } from '../../lib/identifier.js'
 
 const demoteCommand = {
     name: 'demote',
@@ -7,40 +6,59 @@ const demoteCommand = {
     group: true,
     botAdmin: true,
     admin: true,
-    run: async (m, { conn }) => {
+    run: async (m, { conn, usedPrefix, command }) => {
         try {
-            
-            let rawWho = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
 
-            if (!rawWho) return conn.reply(m.chat, `> ⌬ *_Debes etiquetar a alguien o responder a su mensaje._*`, m);
+            let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
 
-            
-            const who = await getRealJid(conn, rawWho, m);
+
+            if (!who) {
+                return conn.reply(
+                    m.chat, 
+                    `> ⌬ *_Debes etiquetar a alguien o responder a su mensaje para degradarlo._*`, 
+                    m
+                );
+            }
+
 
             const groupMetadata = await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
             const targetUser = participants.find(p => p.id === who);
 
-            const isTargetAdmin = targetUser?.admin !== null && targetUser?.admin !== undefined;
+
+            const isTargetAdmin = targetUser?.admin || targetUser?.isSuperAdmin || false;
+
 
             if (!isTargetAdmin) {
-                return conn.reply(m.chat, `> ✰ *_El usuario @${who.split('@')[0]} no es administrador._*`, m, { mentions: [who] });
+                return conn.reply(
+                    m.chat,
+                    `> ✰ *_El usuario @${who.split('@')[0]} no es administrador, por lo tanto no puede ser degradado._*`,
+                    m,
+                    { mentions: [who] }
+                );
             }
 
-            let date = new Date().toLocaleDateString('es-HN');
+            let d = new Date();
+            let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
+            let date = d.toLocaleDateString('es-HN');
 
-            await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
+            try {
+                await conn.groupParticipantsUpdate(m.chat, [who], 'demote');
 
-            let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
-            txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
-            txt += `*✰ Estado:* Administrador removido\n`;
-            txt += `*➠ Fecha:* ${date}\n\n`;
+                let txt = `*─── [ ⍰ DEMOTE ] ───*\n\n`;
+                txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
+                txt += `*✰ Estado:* Administrador removido\n`;
+                txt += `*➠ Fecha:* ${date}\n\n`;
 
-            await conn.reply(m.chat, txt, m, { mentions: [who] });
+                await conn.reply(m.chat, txt, m, { mentions: [who] });
+
+            } catch (err) {
+                console.error(err);
+                conn.reply(m.chat, `*─── [ ❌ ERROR ] ───*\n\n_Error técnico al intentar remover los permisos._`, m);
+            }
 
         } catch (e) {
             console.error(e);
-            conn.reply(m.chat, `> ❌ *_Error al degradar al usuario. Verifica mis permisos._*`, m);
         }
     }
 };
