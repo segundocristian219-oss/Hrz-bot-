@@ -22,7 +22,7 @@ const promoteCommand = {
                 (p.lid && jidNormalizedUser(p.lid) === who)
             );
 
-            if (!targetUser) return conn.reply(m.chat, `> ❌ *_El usuario no se encuentra en el grupo._*`, m);
+            if (!targetUser) return conn.reply(m.chat, `> ❌ *_El usuario no se encuentra en el grupo._* ${targetUser}`, m);
 
             const isTargetAdmin = !!(targetUser.admin || targetUser.isCommunityAdmin);
 
