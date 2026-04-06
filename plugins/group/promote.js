@@ -1,3 +1,5 @@
+import { smsg } from '../lib/serializer.js';
+
 const promoteCommand = {
     name: 'promote',
     alias: ['daradmin'],
@@ -20,12 +22,13 @@ const promoteCommand = {
             const groupMetadata = await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
             const targetUser = participants.find(p => p.id === who);
-            const isTargetAdmin = targetUser?.admin || targetUser?.isSuperAdmin || false;
+            
+            const isTargetAdmin = targetUser?.admin !== null && targetUser?.admin !== undefined;
 
             if (isTargetAdmin) {
                 return conn.reply(
                     m.chat,
-                    `> ✎ *_El usuario @${who.split('@')[0]} ya es administrador._*`,
+                    `> ✎ *_El usuario @${who.split('@')[0]} ya es administrador de este grupo._*`,
                     m,
                     { mentions: [who] }
                 );
@@ -42,7 +45,6 @@ const promoteCommand = {
                 txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
                 txt += `*✰ Estado:* Nuevo administrador\n`;
                 txt += `*➠ Fecha:* ${date}\n\n`;
-   
 
                 await conn.reply(m.chat, txt, m, { mentions: [who] });
 
