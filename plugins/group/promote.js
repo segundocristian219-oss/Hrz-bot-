@@ -3,7 +3,7 @@ import { smsg } from '../lib/serializer.js';
 const promoteCommand = {
     name: 'promote',
     alias: ['daradmin'],
-    category: 'owner',
+    category: 'group',
     group: true,
     botAdmin: true,
     admin: true,
