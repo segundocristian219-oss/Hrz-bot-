@@ -21,7 +21,9 @@ const slotCommand = {
 
             amount = parseInt(amount);
             let now = Date.now();
-            let cooldown = user.vip ? 15000 : 60000;
+
+            /*
+            let cooldown = 300000;
 
             if (user.lastSlot && (now - user.lastSlot) < cooldown) {
                 let s = cooldown - (now - user.lastSlot);
@@ -30,6 +32,7 @@ const slotCommand = {
                 let timeString = (mTime > 0 ? `${mTime}m ` : '') + `${sec}s`;
                 return conn.reply(m.chat, `⏳ Las máquinas se están enfriando. Espera: *${timeString}*`, m);
             }
+            */
 
             if ((user.col ?? 0) < amount) {
                 return conn.reply(m.chat, `✦ No tienes suficientes *Col*. Tu balance es: ${user.col ?? 0}`, m);
