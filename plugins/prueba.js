@@ -3,7 +3,7 @@ import { join } from 'path';
 
 const menuCommand = {
     name: 'menuprueba',
-    alias: ['hp'],
+    alias: ['h2'],
     category: 'main',
     run: async (m, { conn, text }) => {
         try {
