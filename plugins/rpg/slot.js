@@ -1,6 +1,6 @@
 const slotCommand = {
     name: 'slot',
-    alias: ['tragamonedas', 'slots', 'tragaperras', 'slot'],
+    alias: ['tragamonedas', 'slots', 'tragaperras', 'slot', 'apostar'],
     category: 'rpg',
     run: async (m, { conn, args, usedPrefix, command }) => {
         try {
