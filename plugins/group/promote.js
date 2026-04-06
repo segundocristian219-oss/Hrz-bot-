@@ -1,60 +1,40 @@
-import { smsg } from '../../lib/serializer.js';
-
 const promoteCommand = {
     name: 'promote',
     alias: ['daradmin'],
-    category: 'group',
+    category: 'grupo',
     group: true,
     botAdmin: true,
     admin: true,
-    run: async (m, { conn, usedPrefix, command }) => {
+    run: async (m, { conn }) => {
         try {
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
 
-            if (!who) {
-                return conn.reply(
-                    m.chat, 
-                    `> ♛ *_Debes etiquetar a alguien o responder a su mensaje para promoverlo._*`, 
-                    m
-                );
-            }
+            if (!who) return conn.reply(m.chat, `> ♛ *_Debes etiquetar a alguien o responder a su mensaje._*`, m);
 
             const groupMetadata = await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
             const targetUser = participants.find(p => p.id === who);
-            
+
             const isTargetAdmin = targetUser?.admin !== null && targetUser?.admin !== undefined;
 
             if (isTargetAdmin) {
-                return conn.reply(
-                    m.chat,
-                    `> ✎ *_El usuario @${who.split('@')[0]} ya es administrador de este grupo._*`,
-                    m,
-                    { mentions: [who] }
-                );
+                return conn.reply(m.chat, `> ✎ *_El usuario @${who.split('@')[0]} ya es administrador._*`, m, { mentions: [who] });
             }
 
-            let d = new Date();
-            let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
-            let date = d.toLocaleDateString('es-HN');
+            let date = new Date().toLocaleDateString('es-HN');
 
-            try {
-                await conn.groupParticipantsUpdate(m.chat, [who], 'promote');
+            await conn.groupParticipantsUpdate(m.chat, [who], 'promote');
 
-                let txt = `*─── [ ♛ PROMOTE ] ───*\n\n`;
-                txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
-                txt += `*✰ Estado:* Nuevo administrador\n`;
-                txt += `*➠ Fecha:* ${date}\n\n`;
+            let txt = `*─── [ ♛ PROMOTE ] ───*\n\n`;
+            txt += `*♛ Usuario:* @${who.split('@')[0]}\n`;
+            txt += `*✰ Estado:* Nuevo administrador\n`;
+            txt += `*➠ Fecha:* ${date}\n\n`;
 
-                await conn.reply(m.chat, txt, m, { mentions: [who] });
-
-            } catch (err) {
-                console.error(err);
-                conn.reply(m.chat, `*─── [ ❌ ERROR ] ───*\n\n_No se pudo completar la acción. Revisa los permisos del bot._`, m);
-            }
+            await conn.reply(m.chat, txt, m, { mentions: [who] });
 
         } catch (e) {
             console.error(e);
+            conn.reply(m.chat, `> ❌ *_Error al promover al usuario. Verifica mis permisos._*`, m);
         }
     }
 };
