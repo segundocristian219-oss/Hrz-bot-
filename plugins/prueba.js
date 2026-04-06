@@ -64,7 +64,7 @@ const menuCommand = {
 
         } catch (error) {
             console.error(error);
-            m.reply('❌ Error al generar el menú.\n\nUsa el comando *#report* para reportar esté error.');
+            m.reply(`❌ Error al generar el menú. ${error.message}\n\nUsa el comando *#report* para reportar esté error.`);
         }
     }
 };
