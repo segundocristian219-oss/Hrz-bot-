@@ -58,7 +58,7 @@
     { "cmd": ".waifu", "desc": "+18" },
     { "cmd": ".fuck", "desc": "+18" },
     { "cmd": ".r34/.rule34", "desc": "+18" }
-  ]
+  ],
   "INTELIGENCIA ARTIFICIAL": [
     { "cmd": ".imgg", "desc": "Genera imágenes a partir de texto usando IA." },
     { "cmd": ".ia", "desc": "Chat con inteligencia artificial (modelo genérico)." },
