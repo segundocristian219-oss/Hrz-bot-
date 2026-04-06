@@ -12,13 +12,24 @@ const delcoinCommand = {
 
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
 
-            let inputStr = args.join(' ').toLowerCase();
-            let isAll = inputStr.includes('all');
+            let targetUser = await global.User.findOne({ id: who });
+            if (!targetUser) targetUser = await global.User.create({ id: who, col: 0, exp: 0 });
+
+            let input = args.join(' ').toLowerCase();
+            let isAll = input.includes('all');
             let amount = 0;
 
-            if (!isAll) {
-                let match = inputStr.match(/\d+/);
-                if (match) amount = parseInt(match[0]);
+            if (isAll) {
+                amount = targetUser.col ?? 0;
+            } else {
+                amount = parseInt(args[0] || (args[1] ? args[1] : 0));
+                if (m.quoted && args[0] && !isNaN(args[0])) {
+                    amount = parseInt(args[0]);
+                } else if (m.mentionedJid && m.mentionedJid[0] && args[1] && !isNaN(args[1])) {
+                    amount = parseInt(args[1]);
+                } else if (!m.quoted && !m.mentionedJid && args[0] && !isNaN(args[0])) {
+                    amount = parseInt(args[0]);
+                }
             }
 
             if (!isAll && (!amount || isNaN(amount) || amount <= 0)) {
@@ -27,30 +38,21 @@ const delcoinCommand = {
                 return conn.reply(m.chat, txt, m);
             }
 
-            let targetUser = await global.User.findOne({ id: who });
-            if (!targetUser) targetUser = await global.User.create({ id: who, col: 0, exp: 0 });
-
-            let currentCol = targetUser.col ?? 0;
-            
-            if (isAll) {
-                amount = currentCol;
-            } else if (amount > currentCol) {
-                amount = currentCol; // No puede quitar más de lo que tiene el usuario
-            }
-
-            const newCol = currentCol - amount;
+            const newCol = (targetUser.col ?? 0) - amount;
+            const finalCol = newCol < 0 ? 0 : newCol;
+            const removedAmount = isAll ? (targetUser.col ?? 0) : (amount > (targetUser.col ?? 0) ? (targetUser.col ?? 0) : amount);
             
             await global.User.updateOne(
                 { id: who }, 
-                { $set: { col: newCol < 0 ? 0 : newCol } }
+                { $set: { col: finalCol } }
             );
 
             const txt = `
 \t\t\t\t♛  *REDUCCIÓN DE FONDOS* ♛
 
 ◈  *DESTINATARIO:* @${who.split('@')[0]}
-✦  *MONTO RETIRADO:* -${amount} Col
-✧  *NUEVO BALANCE:* ${newCol < 0 ? 0 : newCol} Col
+✦  *MONTO RETIRADO:* -${removedAmount} Col
+✧  *NUEVO BALANCE:* ${finalCol} Col
 `;
 
             await conn.sendMessage(m.chat, { 
