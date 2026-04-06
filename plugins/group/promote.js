@@ -1,4 +1,4 @@
-import { getRealJid } from '../lib/identifier.js'
+import { getRealJid } from '../../lib/identifier.js'
 import { jidNormalizedUser } from '@whiskeysockets/baileys'
 
 const promoteCommand = {
