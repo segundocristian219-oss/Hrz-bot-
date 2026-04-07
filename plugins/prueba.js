@@ -1,5 +1,5 @@
 import pkg from '@whiskeysockets/baileys'
-const { proto, generateMessageID } = pkg
+const { proto, generateWAMessageFromContent, generateMessageID } = pkg
 
 const interactiveTestCommand = {
     name: 'testbtn',
@@ -20,7 +20,7 @@ const interactiveTestCommand = {
                     buttonParamsJson: JSON.stringify({
                         display_text: "🌐 SITIO WEB",
                         url: "https://google.com",
-                        merchant_url: "https://google.com"
+                        merchant_url: "https://google.com"   // opcional pero recomendado
                     })
                 },
                 {
@@ -50,17 +50,24 @@ const interactiveTestCommand = {
                 })
             })
 
-            const messageProto = proto.Message.create({
+            // === ESTA ES LA PARTE QUE FALTABA ===
+            const msg = generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
+                        messageContextInfo: {
+                            deviceListMetadata: {},
+                            deviceListMetadataVersion: 2
+                        },
                         interactiveMessage: interactiveMessage
                     }
                 }
+            }, {})
+
+            await conn.relayMessage(m.chat, msg.message, {
+                messageId: msg.key.id || generateMessageID()   // usa el que genera la función
             })
 
-            await conn.relayMessage(m.chat, messageProto, {
-                messageId: generateMessageID()
-            })
+            console.log('✅ Mensaje interactivo V7 enviado correctamente')
 
         } catch (err) {
             console.error('Error en Interactive V7:', err)
