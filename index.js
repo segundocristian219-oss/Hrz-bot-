@@ -168,8 +168,30 @@ const connectionOptions = {
   connectTimeoutMs: 60000,
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
-  getMessage: async () => ({ conversation: "" })
+  getMessage: async () => ({ conversation: "" }),
+  patchMessageBeforeSending: (message) => {
+      const requiresPatch = !!(
+          message.interactiveMessage ||
+          message.templateMessage ||
+          message.listMessage
+      );
+      if (requiresPatch) {
+          message = {
+              viewOnceMessage: {
+                  message: {
+                      messageContextInfo: {
+                          deviceListMetadata: {},
+                          deviceListMetadataVersion: 2
+                      },
+                      ...message
+                  }
+              }
+          };
+      }
+      return message;
+  }
 };
+ 
 
 global.conn = makeWASocket(connectionOptions);
 global.conn.isMain = true;
