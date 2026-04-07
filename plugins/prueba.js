@@ -2,7 +2,6 @@ import pkg from '@whiskeysockets/baileys'
 import chalk from 'chalk'
 
 const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
-
 const { generateWAMessageFromContent } = (await import('@whiskeysockets/baileys/lib/Utils/messages.js')).default || await import('@whiskeysockets/baileys/lib/Utils/messages.js')
 
 const testOficialCommand = {
@@ -12,49 +11,47 @@ const testOficialCommand = {
     run: async (m, { conn }) => {
         try {
             if (!proto) return console.log(chalk.red('┃ ERROR: proto no cargado'))
-            if (typeof generateWAMessageFromContent !== 'function') return console.log(chalk.red('┃ ERROR: Función generate no cargada'))
 
             const texto = `✨ Pulsa el botón para unirte al canal oficial`.trim()
 
-            const messageContent = {
-                viewOnceMessage: {
-                    message: {
-                        messageContextInfo: {
-                            deviceListMetadata: {},
-                            deviceListMetadataVersion: 2
-                        },
-                        interactiveMessage: proto.Message.InteractiveMessage.create({
-                            body: proto.Message.InteractiveMessage.Body.create({ text: texto }),
-                            footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Pikachu Bot by Deylin' }),
-                            header: proto.Message.InteractiveMessage.Header.create({ hasMediaAttachment: false }),
-                            nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
-                                buttons: [
-                                    {
-                                        name: 'cta_url',
-                                        buttonParamsJson: JSON.stringify({
-                                            display_text: '✐ canal oficial',
-                                            url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
-                                            merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
-                                        })
-                                    }
-                                ]
+            // Definimos solo el interactiveMessage puro
+            const interactiveMessage = proto.Message.InteractiveMessage.create({
+                body: proto.Message.InteractiveMessage.Body.create({ text: texto }),
+                footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Pikachu Bot by Deylin' }),
+                header: proto.Message.InteractiveMessage.Header.create({ hasMediaAttachment: false }),
+                nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                    buttons: [
+                        {
+                            name: 'cta_url',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: '✐ canal oficial',
+                                url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
+                                merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
                             })
-                        })
-                    }
-                }
-            }
+                        }
+                    ],
+                    messageVersion: 1
+                })
+            })
 
-            const msg = generateWAMessageFromContent(m.chat, messageContent, {
+            // Generamos el mensaje base sin envolverlo aún en viewOnce
+            const msg = generateWAMessageFromContent(m.chat, { interactiveMessage }, {
                 userJid: conn.user.id,
                 quoted: m
             })
 
+            // El relayMessage enviará el nodo 'biz' que es obligatorio para cuentas Business
             await conn.relayMessage(m.chat, msg.message, { 
                 messageId: msg.key.id,
-                additionalNodes: [{ tag: 'biz', attrs: {} }] 
+                additionalNodes: [
+                    {
+                        tag: 'biz',
+                        attrs: { native_flow_name: 'order_details' }
+                    }
+                ] 
             })
 
-            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando enviado con éxito (Importación Directa)'))
+            console.log(chalk.cyan('┃ ') + chalk.greenBright('Nodo enviado al servidor de WhatsApp...'))
 
         } catch (err) {
             console.error(chalk.red('❌ Error en comando:'), err.message)
