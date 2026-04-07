@@ -13,14 +13,16 @@ const wordsNormal = [
     "computadora", "relampago", "mariposa", "escritorio", "universo", "aventura", "guitarra", 
     "planeta", "perro", "gato", "hierro", "sapo", "oro", "tecnologia", "murcielago", "diamante", 
     "elefante", "hamburguesa", "astronauta", "esmeralda", "fantasma", "galaxia", "biblioteca",
-    "zapato", "bosque", "cometa", "dinosaurio", "espejo", "fuego", "globo", "helado", "isla"
+    "zapato", "bosque", "cometa", "dinosaurio", "espejo", "fuego", "globo", "helado", "isla",
+    "jardin", "kilo", "limon", "manzana", "nube", "oceano", "puerta", "queso", "raton", "sol"
 ];
 
 const wordsHard = [
     "electroencefalografista", "esternocleidomastoideo", "desoxirribonucleico", "paralelepipedo",
     "ovoviviparo", "constantinopla", "otorrinolaringologo", "electrocardiograma", "anticonstitucionalmente",
     "caleidoscopio", "arquitectonico", "biotecnologia", "cinematografia", "espectroscopia",
-    "fotosintesis", "neurociencia", "paleontologia", "cuantificacion", "termorregulacion"
+    "fotosintesis", "neurociencia", "paleontologia", "cuantificacion", "termorregulacion",
+    "electrodomestico", "infraestructura", "interdisciplinario", "metamorfosis", "reivindicacion"
 ];
 
 const scrambleGame = {
@@ -49,7 +51,7 @@ const scrambleGame = {
 
             if (game.bet > 0) {
                 const multipliers = [2, 0.5, 0.4, 0.3, 0.2];
-                rewardCol = Math.floor(game.bet * multipliers[game.attempts]);
+                rewardCol = game.bet + Math.floor(game.bet * multipliers[game.attempts]);
             } else {
                 rewardCol = Math.floor(Math.random() * 50) + 20;
             }
@@ -83,13 +85,13 @@ const scrambleGame = {
                 let loseTxt = `💀 *JUEGO TERMINADO*\n\nSe agotaron tus intentos, @${m.sender.split('@')[0]}.\nLa palabra era: *${game.original.toUpperCase()}*`;
                 
                 if (game.bet > 0) {
-                    const fee = Math.floor(game.bet * 0.25);
+                    const penalty = Math.floor(game.bet * 0.25);
                     let user = await global.User.findOne({ id: m.sender });
                     await global.User.updateOne(
                         { id: m.sender },
-                        { $set: { col: Math.max(0, (user.col ?? 0) - fee) } }
+                        { $set: { col: Math.max(0, (user.col ?? 0) - penalty) } }
                     );
-                    loseTxt += `\n✦ *PENALIZACIÓN:* -${fee} Col (25%)`;
+                    loseTxt += `\n✦ *PENALIZACIÓN EXTRA:* -${penalty} Col (25%)`;
                 }
 
                 await conn.sendMessage(m.chat, { text: loseTxt, contextInfo: { mentionedJid: [m.sender] } }, { quoted: m });
@@ -114,20 +116,53 @@ const scrambleGame = {
         global.wordGames = global.wordGames || {};
         const gameId = `${m.chat}-${m.sender}`;
 
-        if (global.wordGames[gameId]) {
-            return conn.sendMessage(m.chat, { 
-                text: `⚠️ Termina el juego actual: *${global.wordGames[gameId].scrambled.toUpperCase()}*`,
-                contextInfo: { mentionedJid: [m.sender] }
-            }, { quoted: m });
+        if (!args[0]) {
+            const menu = `
+\t\t\t\t♛  *SCRAMBLE DASHBOARD* ♛
+
+◈ *¿CÓMO JUGAR?*
+Ordena las letras de la palabra mezclada para ganar. Solo el que inicia el juego puede responder.
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃    🎮 MODOS DISPONIBLES    ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ✦ *NORMAL:* ┃
+┃   - Comando: \`${usedPrefix + command} modo normal\`
+┃   - Intentos: 3 | Tiempo: 60s
+┃   - Premio: Aleatorio (Col/Exp)
+┣━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ✧ *APOSTADOR (PRO):* ┃
+┃   - Comando: \`${usedPrefix + command} <cantidad>\`
+┃   - Intentos: 5 | Palabras Hard
+┃   - Multiplicadores:
+┃     • 1er Intento: x2.0
+┃     • 2do Intento: x0.5
+┃     • 3er Intento: x0.4
+┃     • 4to Intento: x0.3
+┃     • 5to Intento: x0.2
+┃   ⚠️ *Si pierdes:* Pierdes todo 
+┃     + 25% de penalización.
+┗━━━━━━━━━━━━━━━━━━━━━━━━┛
+`;
+            return conn.sendMessage(m.chat, { text: menu, contextInfo: { mentionedJid: [m.sender] } }, { quoted: m });
         }
 
+        if (global.wordGames[gameId]) {
+            return m.reply(`⚠️ Termina el juego actual: *${global.wordGames[gameId].scrambled.toUpperCase()}*`);
+        }
+
+        let isNormal = args[0] === 'modo' && args[1] === 'normal';
         let bet = parseInt(args[0]);
         let isBetting = !isNaN(bet) && bet > 0;
-        
+
+        if (!isNormal && !isBetting) {
+            return m.reply(`❌ Uso incorrecto. Prueba con \`${usedPrefix + command} modo normal\` o \`${usedPrefix + command} 100\``);
+        }
+
         if (isBetting) {
             let user = await global.User.findOne({ id: m.sender });
             if (!user || (user.col ?? 0) < bet) {
-                return m.reply(`❌ No tienes suficientes Col para apostar ${bet}.`);
+                return m.reply(`❌ Fondos insuficientes para apostar ${bet} Col.`);
             }
             await global.User.updateOne({ id: m.sender }, { $set: { col: (user.col ?? 0) - bet } });
         }
@@ -150,35 +185,15 @@ const scrambleGame = {
             }, 60000)
         };
 
-        const helpTable = isBetting ? `
-┏━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   💸 TABLA DE APUESTAS 💸   ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ ✦ Acertar 1ro: x2.0         ┃
-┃ ✧ Acertar 2do: x0.5         ┃
-┃ ✦ Acertar 3ro: x0.4         ┃
-┃ ✧ Acertar 4to: x0.3         ┃
-┃ ✦ Acertar 5to: x0.2         ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ ⚠️ Fallar: Pierdes apuesta  ┃
-┃ ⚠️ + Penalización del 25%   ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━┛` : `
-┏━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃    🎮 MODO NORMAL 🎮       ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ ✦ Intentos: 3               ┃
-┃ ✧ Tiempo: 60s               ┃
-┃ ✦ Recompensa: Aleatoria     ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━┛`;
-
         const startTxt = `
 \t\t\t\t♛  *SCRAMBLE: ${isBetting ? 'HARDCORE' : 'NORMAL'}* ♛
 
-Hola @${m.sender.split('@')[0]}, ordena las letras:
+@${m.sender.split('@')[0]}, ordena estas letras:
 ◈ *${scrambledWord.toUpperCase()}*
-${helpTable}
 
-${isBetting ? `✦ *APUESTA ACTUAL:* ${bet} Col` : '✧ _Juego sin apuesta activado_'}
+✦ *INTENTOS:* ${isBetting ? '5' : '3'}
+✧ *TIEMPO:* 60 Segundos
+${isBetting ? `✦ *APUESTA:* ${bet} Col` : '✧ *MODO:* Sin apuesta'}
 `;
 
         return conn.sendMessage(m.chat, { text: startTxt, contextInfo: { mentionedJid: [m.sender] } }, { quoted: m });
@@ -186,4 +201,4 @@ ${isBetting ? `✦ *APUESTA ACTUAL:* ${bet} Col` : '✧ _Juego sin apuesta activ
 };
 
 export default scrambleGame;
-                
+            
