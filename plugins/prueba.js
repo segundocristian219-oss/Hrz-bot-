@@ -1,7 +1,7 @@
 import pkg from '@whiskeysockets/baileys'
 import chalk from 'chalk'
 
-const { generateWAMessageFromContent, prepareWAMessageMedia } = (await import('@whiskeysockets/baileys/lib/Utils/messages.js')).default || await import('@whiskeysockets/baileys/lib/Utils/messages.js')
+const { generateWAMessageFromContent, proto } = (await import('@whiskeysockets/baileys')).default || await import('@whiskeysockets/baileys')
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -9,64 +9,61 @@ const testOficialCommand = {
     category: 'admin',
     run: async (m, { conn }) => {
         try {
-            const texto = `✨ PRUEBA DE RENDERIZADO`
+            const texto = `✨ SISTEMA DE RENDERIZADO ACTIVO`
 
             const messageContent = {
                 viewOnceMessage: {
                     message: {
-                        messageContextInfo: {
-                            deviceListMetadata: {},
-                            deviceListMetadataVersion: 2
-                        },
-                        interactiveMessage: {
-                            body: { 
-                                text: texto 
-                            },
-                            footer: { 
-                                text: 'Deylin Studio - Systems' 
-                            },
-                            header: { 
-                                title: "CONEXIÓN ESTABLECIDA", 
-                                hasMediaAttachment: false 
-                            },
-                            nativeFlowMessage: {
+                        interactiveMessage: proto.Message.InteractiveMessage.create({
+                            body: proto.Message.InteractiveMessage.Body.create({
+                                text: texto
+                            }),
+                            footer: proto.Message.InteractiveMessage.Footer.create({
+                                text: 'Deylin Studio - Engine v6'
+                            }),
+                            header: proto.Message.InteractiveMessage.Header.create({
+                                title: "VERIFICACIÓN DE PROTOCOLO",
+                                subtitle: "Status: Online",
+                                hasMediaAttachment: false
+                            }),
+                            nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
                                 buttons: [
                                     {
-                                        name: 'cta_url',
+                                        name: "cta_url",
                                         buttonParamsJson: JSON.stringify({
-                                            display_text: 'Canal Oficial',
-                                            url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
-                                            merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
+                                            display_text: "Canal Oficial",
+                                            url: "https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m",
+                                            merchant_url: "https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m"
                                         })
                                     },
                                     {
-                                        name: 'quick_reply',
+                                        name: "quick_reply",
                                         buttonParamsJson: JSON.stringify({
-                                            display_text: 'Ping',
-                                            id: '.ping'
+                                            display_text: "Ejecutar Comando",
+                                            id: ".menu"
                                         })
                                     }
                                 ],
                                 messageVersion: 1
-                            }
-                        }
+                            })
+                        })
                     }
                 }
             }
 
-            const msg = generateWAMessageFromContent(m.chat, messageContent, { 
-                userJid: conn.user.id, 
-                quoted: m 
+            const msg = generateWAMessageFromContent(m.chat, messageContent, {
+                userJid: conn.user.id,
+                quoted: m
             })
 
-            await conn.relayMessage(m.chat, msg.message, { 
-                messageId: msg.key.id 
+            await conn.relayMessage(m.chat, msg.message, {
+                messageId: msg.key.id
             })
 
-            console.log(chalk.cyan('┃ ') + chalk.greenBright('Protocolo de botones ejecutado con éxito.'));
+            console.log(chalk.cyan('┃ ') + chalk.greenBright('Mensaje inyectado correctamente en el flujo de relay.'));
 
         } catch (err) {
-            console.error(chalk.red('❌ Error en el sistema de botones:'), err.message)
+            console.error(chalk.red('❌ Error en el núcleo de botones:'), err.message)
         }
     }
 }
