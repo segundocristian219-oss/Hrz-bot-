@@ -1,44 +1,59 @@
-import pkg from '@ryuu-reinzz/button-helper';
-// Esta línea asegura que encontremos la función sin importar cómo esté exportada
-const createInteractiveMessage = pkg.createInteractiveMessage || pkg.default?.createInteractiveMessage || pkg.default;
+import pkg from '@whiskeysockets/baileys'
+const { proto, generateMessageID } = pkg
 
-import pkgBaileys from '@whiskeysockets/baileys';
-const { generateMessageID } = pkgBaileys;
-
-const interactiveTestCommand = {
-    name: 'testbtn',
-    alias: ['botones'],
-    category: 'tools',
+const testOficialCommand = {
+    name: 'testoficial',
+    alias: ['pure'],
+    category: 'admin',
     run: async (m, { conn }) => {
         try {
-            // Verificación de seguridad en consola
-            if (typeof createInteractiveMessage !== 'function') {
-                throw new Error('La función createInteractiveMessage no se cargó correctamente.');
+            // Construcción manual del InteractiveMessage usando el proto oficial
+            const interactiveMessage = {
+                body: { text: "🧪 *PRUEBA OFICIAL BAILEYS V7*\n\nSi este mensaje llega, el parche en index.js está activo." },
+                footer: { text: "KIRITO BOT - DEBUG MODE" },
+                header: { 
+                    title: "DEBUG SISTEMA", 
+                    hasMediaAttachment: false 
+                },
+                nativeFlowMessage: {
+                    buttons: [
+                        {
+                            name: "quick_reply",
+                            buttonParamsJson: JSON.stringify({
+                                display_text: "TERMINAR DEBUG",
+                                id: "debug_done"
+                            })
+                        },
+                        {
+                            name: "cta_copy",
+                            buttonParamsJson: JSON.stringify({
+                                display_text: "COPIAR MI ID",
+                                copy_code: m.sender
+                            })
+                        }
+                    ],
+                    messageVersion: 1
+                }
             }
 
-            const interactive = createInteractiveMessage({
-                body: "✅ *SISTEMA V7 VINCULADO*\n\nSi ves esto, la importación dinámica funcionó.",
-                footer: "KIRITO BOT",
-                header: { title: "CONTROL DE MÓDULOS", hasMediaAttachment: false },
-                buttons: [
-                    {
-                        name: "quick_reply",
-                        buttonParamsJson: JSON.stringify({ display_text: "ACEPTAR", id: "ok" })
+            // Enviamos vía relayMessage envolviendo en viewOnceMessage
+            await conn.relayMessage(m.chat, { 
+                viewOnceMessage: {
+                    message: {
+                        interactiveMessage: interactiveMessage
                     }
-                ]
-            });
-
-            await conn.relayMessage(m.chat, { interactiveMessage: interactive }, { 
+                }
+            }, { 
                 messageId: generateMessageID(),
-                additionalNodes: [{ tag: 'biz', attrs: {} }]
-            });
+                additionalNodes: [{ tag: 'biz', attrs: {} }] 
+            })
+
+            console.log('✅ Intento de envío oficial realizado.')
 
         } catch (err) {
-            console.error('❌ Error en el comando:', err.message);
-            // Opcional: te avisa en WhatsApp si falló la función
-            await conn.sendMessage(m.chat, { text: `❌ Error técnico: ${err.message}` }, { quoted: m });
+            console.error('❌ Error en Baileys Oficial:', err)
         }
     }
-};
+}
 
-export default interactiveTestCommand;
+export default testOficialCommand
