@@ -1,7 +1,6 @@
 import pkg from '@whiskeysockets/baileys'
 import chalk from 'chalk'
 
-const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
 const { generateWAMessageFromContent } = (await import('@whiskeysockets/baileys/lib/Utils/messages.js')).default || await import('@whiskeysockets/baileys/lib/Utils/messages.js')
 
 const testOficialCommand = {
@@ -10,37 +9,45 @@ const testOficialCommand = {
     category: 'admin',
     run: async (m, { conn }) => {
         try {
-            if (!proto) return console.log(chalk.red('┃ ERROR: proto no cargado'))
+            const texto = `✨ PRUEBA DE RENDERIZADO BUSINESS`.trim()
 
-            const texto = `✨ Pulsa el botón para unirte al canal oficial`.trim()
-
-            // Definimos solo el interactiveMessage puro
-            const interactiveMessage = proto.Message.InteractiveMessage.create({
-                body: proto.Message.InteractiveMessage.Body.create({ text: texto }),
-                footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Pikachu Bot by Deylin' }),
-                header: proto.Message.InteractiveMessage.Header.create({ hasMediaAttachment: false }),
-                nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+            const interactiveMessage = {
+                body: { text: texto },
+                footer: { text: 'Pikachu Bot - Debug' },
+                header: { title: "CONEXIÓN EMPRESA", hasMediaAttachment: false },
+                nativeFlowMessage: {
                     buttons: [
                         {
                             name: 'cta_url',
                             buttonParamsJson: JSON.stringify({
-                                display_text: '✐ canal oficial',
+                                display_text: 'Canal Oficial',
                                 url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
                                 merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
                             })
                         }
                     ],
                     messageVersion: 1
-                })
+                }
+            }
+
+            // Generamos el mensaje envolviéndolo manualmente en viewOnce y messageContextInfo
+            // Esto a veces "salta" el filtro de las cuentas Business
+            const msg = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: {
+                    message: {
+                        messageContextInfo: {
+                            deviceListMetadata: {},
+                            deviceListMetadataVersion: 2
+                        },
+                        interactiveMessage: interactiveMessage
+                    }
+                }
+            }, { 
+                userJid: conn.user.id, 
+                quoted: m 
             })
 
-            // Generamos el mensaje base sin envolverlo aún en viewOnce
-            const msg = generateWAMessageFromContent(m.chat, { interactiveMessage }, {
-                userJid: conn.user.id,
-                quoted: m
-            })
-
-            // El relayMessage enviará el nodo 'biz' que es obligatorio para cuentas Business
+            // El relayMessage con el tag 'biz' es CRÍTICO para cuentas de empresa
             await conn.relayMessage(m.chat, msg.message, { 
                 messageId: msg.key.id,
                 additionalNodes: [
@@ -51,10 +58,10 @@ const testOficialCommand = {
                 ] 
             })
 
-            console.log(chalk.cyan('┃ ') + chalk.greenBright('Nodo enviado al servidor de WhatsApp...'))
+            console.log(chalk.cyan('┃ ') + chalk.yellowBright('Paquete entregado. Si no aparece, revisa si el número receptor te tiene agregado.'));
 
         } catch (err) {
-            console.error(chalk.red('❌ Error en comando:'), err.message)
+            console.error(chalk.red('❌ Error en relay:'), err.message)
         }
     }
 }
