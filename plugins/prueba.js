@@ -1,7 +1,7 @@
 import pkg from '@whiskeysockets/baileys'
 const { generateWAMessageFromContent } = pkg
-// FIX CRÍTICO: Extraer proto de forma segura para que no sea undefined
 const proto = pkg.default?.proto || pkg.proto
+import chalk from 'chalk'
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -9,9 +9,9 @@ const testOficialCommand = {
     category: 'admin',
     run: async (m, { conn }) => {
         try {
-            // Verificación manual para que no crashee
             if (!proto) {
-                return console.log(chalk.red('┃ ERROR: El objeto "proto" no se pudo cargar desde Baileys.'));
+                console.log(chalk.red('┃ ERROR: proto no cargado'))
+                return
             }
 
             const texto = `✨ Pulsa el botón para unirte al canal oficial`.trim()
@@ -54,10 +54,10 @@ const testOficialCommand = {
                 additionalNodes: [{ tag: 'biz', attrs: {} }] 
             })
 
-            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando ejecutado sin errores de undefined.'));
+            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando ejecutado correctamente'))
 
         } catch (err) {
-            console.error('❌ Error en comando:', err.message)
+            console.error(chalk.red('❌ Error en comando:'), err.message)
         }
     }
 }
