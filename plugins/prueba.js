@@ -1,6 +1,9 @@
 import pkg from '@whiskeysockets/baileys'
-const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
 import chalk from 'chalk'
+
+const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
+
+const { generateWAMessageFromContent } = (await import('@whiskeysockets/baileys/lib/Utils/messages.js')).default || await import('@whiskeysockets/baileys/lib/Utils/messages.js')
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -9,13 +12,7 @@ const testOficialCommand = {
     run: async (m, { conn }) => {
         try {
             if (!proto) return console.log(chalk.red('┃ ERROR: proto no cargado'))
-
-            // Extracción segura de la función desde el paquete o su propiedad default
-            const generateWAMessageFromContent = pkg.generateWAMessageFromContent || pkg.default?.generateWAMessageFromContent
-
-            if (typeof generateWAMessageFromContent !== 'function') {
-                return console.log(chalk.red('┃ ERROR: generateWAMessageFromContent no es una función'))
-            }
+            if (typeof generateWAMessageFromContent !== 'function') return console.log(chalk.red('┃ ERROR: Función generate no cargada'))
 
             const texto = `✨ Pulsa el botón para unirte al canal oficial`.trim()
 
@@ -57,7 +54,7 @@ const testOficialCommand = {
                 additionalNodes: [{ tag: 'biz', attrs: {} }] 
             })
 
-            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando enviado con éxito'))
+            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando enviado con éxito (Importación Directa)'))
 
         } catch (err) {
             console.error(chalk.red('❌ Error en comando:'), err.message)
