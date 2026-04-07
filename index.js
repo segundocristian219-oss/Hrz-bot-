@@ -168,7 +168,7 @@ const connectionOptions = {
   connectTimeoutMs: 60000,
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
-  getMessage: async () => ({ conversation: "" }),
+  getMessage: async () => ({ conversation: "&#$_#&&#&$2_&#" }),
   patchMessageBeforeSending: (message) => {
       const requiresPatch = !!(
           message.interactiveMessage ||
