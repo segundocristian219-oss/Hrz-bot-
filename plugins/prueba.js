@@ -1,5 +1,5 @@
 import pkg from '@whiskeysockets/baileys'
-const { proto, generateMessageID } = pkg
+const { proto } = pkg
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -7,51 +7,46 @@ const testOficialCommand = {
     category: 'admin',
     run: async (m, { conn }) => {
         try {
-            // Construcción manual del InteractiveMessage usando el proto oficial
+            // Generamos el ID directamente desde la conexión o con un string aleatorio
+            const messageId = conn.generateMessageID ? conn.generateMessageID() : `KIRITO${Date.now()}`
+
             const interactiveMessage = {
-                body: { text: "🧪 *PRUEBA OFICIAL BAILEYS V7*\n\nSi este mensaje llega, el parche en index.js está activo." },
-                footer: { text: "KIRITO BOT - DEBUG MODE" },
-                header: { 
-                    title: "DEBUG SISTEMA", 
-                    hasMediaAttachment: false 
-                },
+                body: { text: "🧪 *DEBUG BAILEYS V7*\n\nSi ves esto, el error de generateMessageID ha sido superado." },
+                footer: { text: "KIRITO BOT - ESTABLE" },
+                header: { title: "ESTADO DEL SISTEMA", hasMediaAttachment: false },
                 nativeFlowMessage: {
                     buttons: [
                         {
                             name: "quick_reply",
-                            buttonParamsJson: JSON.stringify({
-                                display_text: "TERMINAR DEBUG",
-                                id: "debug_done"
-                            })
-                        },
-                        {
-                            name: "cta_copy",
-                            buttonParamsJson: JSON.stringify({
-                                display_text: "COPIAR MI ID",
-                                copy_code: m.sender
-                            })
+                            buttonParamsJson: JSON.stringify({ display_text: "ACEPTAR", id: "ok" })
                         }
                     ],
                     messageVersion: 1
                 }
             }
 
-            // Enviamos vía relayMessage envolviendo en viewOnceMessage
-            await conn.relayMessage(m.chat, { 
+            const msg = proto.Message.fromObject({
                 viewOnceMessage: {
                     message: {
                         interactiveMessage: interactiveMessage
                     }
                 }
-            }, { 
-                messageId: generateMessageID(),
-                additionalNodes: [{ tag: 'biz', attrs: {} }] 
             })
 
-            console.log('✅ Intento de envío oficial realizado.')
+            await conn.relayMessage(m.chat, msg, { 
+                messageId: messageId,
+                additionalNodes: [
+                    {
+                        tag: 'biz',
+                        attrs: { native_flow_name: 'order_details' }
+                    }
+                ]
+            })
+
+            console.log('✅ Nodo enviado correctamente con ID:', messageId)
 
         } catch (err) {
-            console.error('❌ Error en Baileys Oficial:', err)
+            console.error('❌ Error en relay:', err)
         }
     }
 }
