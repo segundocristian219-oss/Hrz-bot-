@@ -1,6 +1,7 @@
-import pkg from '@whiskeysockets/baileys'
-const { generateMessageID } = pkg
-import { createInteractiveMessage } from '@ryuu-reinzz/button-helper'
+import pkg from '@ryuu-reinzz/button-helper';
+const { createInteractiveMessage } = pkg;
+import pkgBaileys from '@whiskeysockets/baileys';
+const { generateMessageID } = pkgBaileys;
 
 const interactiveTestCommand = {
     name: 'testbtn',
@@ -9,42 +10,31 @@ const interactiveTestCommand = {
     run: async (m, { conn }) => {
         try {
             const interactive = createInteractiveMessage({
-                body: "*SISTEMA V7 ACTIVO*\n\nSi recibes esto, el patch de conexión funcionó.",
+                body: "*CONEXIÓN EXITOSA*\n\nEl error de importación ha sido corregido.",
                 footer: "KIRITO BOT",
                 header: {
-                    title: "PANTALLA DE CONTROL",
+                    title: "SISTEMA V7",
                     hasMediaAttachment: false
                 },
                 buttons: [
                     {
                         name: "quick_reply",
-                        buttonParamsJson: JSON.stringify({ display_text: "✅ ACEPTAR", id: "action_accept" })
-                    },
-                    {
-                        name: "cta_url",
-                        buttonParamsJson: JSON.stringify({ display_text: "🌐 WEB", url: "https://google.com" })
+                        buttonParamsJson: JSON.stringify({ display_text: "✅ FUNCIONA", id: "ok" })
                     }
                 ]
-            })
+            });
 
-            // IMPORTANTE: No metas 'interactive' dentro de otro viewOnceMessage manualmente aqui
-            // Dejamos que relayMessage lo maneje con los nodos adicionales
             await conn.relayMessage(m.chat, { interactiveMessage: interactive }, { 
                 messageId: generateMessageID(),
-                additionalNodes: [
-                    {
-                        tag: 'biz',
-                        attrs: {}
-                    }
-                ]
-            })
+                additionalNodes: [{ tag: 'biz', attrs: {} }]
+            });
 
-            console.log('✅ Intento de envío completado')
+            console.log('✅ Mensaje enviado tras corregir SyntaxError');
 
         } catch (err) {
-            console.error('Error:', err)
+            console.error('Error en el comando:', err);
         }
     }
-}
+};
 
-export default interactiveTestCommand
+export default interactiveTestCommand;
