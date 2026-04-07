@@ -1,88 +1,48 @@
-import { proto } from '@whiskeysockets/baileys'
-import { createInteractiveMessage } from '@ryuu-reinzz/button-helper'   // ← NUEVO
+import pkg from '@whiskeysockets/baileys'
+const { generateMessageID } = pkg
+import { createInteractiveMessage } from '@ryuu-reinzz/button-helper'
 
 const interactiveTestCommand = {
     name: 'testbtn',
-    alias: ['botones', 'menutest', 'interactive'],
+    alias: ['botones', 'interactive'],
     category: 'tools',
     run: async (m, { conn }) => {
         try {
             const interactive = createInteractiveMessage({
-                body: "*PRUEBA DE BOTONES V7*\n\nEste mensaje usa el helper oficial para WhiskeySockets",
-                footer: "KIRITO BOT - SISTEMA V6.1.0",
+                body: "*SISTEMA V7 ACTIVO*\n\nSi recibes esto, el patch de conexión funcionó.",
+                footer: "KIRITO BOT",
                 header: {
                     title: "PANTALLA DE CONTROL",
-                    subtitle: "Prueba completa de botones"
+                    hasMediaAttachment: false
                 },
                 buttons: [
                     {
                         name: "quick_reply",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "✅ ACEPTAR",
-                            id: "action_accept"
-                        })
-                    },
-                    {
-                        name: "quick_reply",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "❌ CANCELAR",
-                            id: "action_cancel"
-                        })
+                        buttonParamsJson: JSON.stringify({ display_text: "✅ ACEPTAR", id: "action_accept" })
                     },
                     {
                         name: "cta_url",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "🌐 SITIO WEB",
-                            url: "https://google.com"
-                        })
-                    },
-                    {
-                        name: "cta_copy",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "📋 COPIAR ID",
-                            copy_code: m.sender.split('@')[0]
-                        })
-                    },
-                    {
-                        name: "single_select",   // ← Lista desplegable
-                        buttonParamsJson: JSON.stringify({
-                            title: "Elige una opción",
-                            sections: [{
-                                title: "Opciones",
-                                rows: [
-                                    { title: "Opción 1", description: "Primera opción", id: "op1" },
-                                    { title: "Opción 2", description: "Segunda opción", id: "op2" }
-                                ]
-                            }]
-                        })
+                        buttonParamsJson: JSON.stringify({ display_text: "🌐 WEB", url: "https://google.com" })
                     }
                 ]
             })
 
-            const msg = conn.generateWAMessageFromContent(m.chat, {
-                viewOnceMessage: {
-                    message: {
-                        messageContextInfo: {
-                            deviceListMetadata: {},
-                            deviceListMetadataVersion: 2,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: "120363314182963253@newsletter",
-                                serverMessageId: 1,
-                                newsletterName: "KIRITO BOT"
-                            }
-                        },
-                        interactiveMessage: interactive
+            // IMPORTANTE: No metas 'interactive' dentro de otro viewOnceMessage manualmente aqui
+            // Dejamos que relayMessage lo maneje con los nodos adicionales
+            await conn.relayMessage(m.chat, { interactiveMessage: interactive }, { 
+                messageId: generateMessageID(),
+                additionalNodes: [
+                    {
+                        tag: 'biz',
+                        attrs: {}
                     }
-                }
-            }, {})
+                ]
+            })
 
-            await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id })
-
-            console.log('✅ Botones enviados con helper @ryuu-reinzz/button-helper')
+            console.log('✅ Intento de envío completado')
 
         } catch (err) {
             console.error('Error:', err)
-            await conn.reply(m.chat, `❌ Error: ${err.message}`, m)
         }
     }
 }
