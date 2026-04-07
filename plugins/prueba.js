@@ -1,6 +1,6 @@
 import pkg from '@whiskeysockets/baileys'
 const { generateWAMessageFromContent } = pkg
-const proto = pkg.default?.proto || pkg.proto
+const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
 import chalk from 'chalk'
 
 const testOficialCommand = {
@@ -10,7 +10,7 @@ const testOficialCommand = {
     run: async (m, { conn }) => {
         try {
             if (!proto) {
-                console.log(chalk.red('┃ ERROR: proto no cargado'))
+                console.log(chalk.red('┃ ERROR: proto sigue sin cargar'))
                 return
             }
 
@@ -54,7 +54,7 @@ const testOficialCommand = {
                 additionalNodes: [{ tag: 'biz', attrs: {} }] 
             })
 
-            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando ejecutado correctamente'))
+            console.log(chalk.cyan('┃ ') + chalk.greenBright('Comando enviado con proto forzado'))
 
         } catch (err) {
             console.error(chalk.red('❌ Error en comando:'), err.message)
