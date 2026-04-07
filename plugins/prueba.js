@@ -1,5 +1,5 @@
 import pkg from '@whiskeysockets/baileys'
-const { proto } = pkg
+const { generateMessageID } = pkg
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -7,11 +7,12 @@ const testOficialCommand = {
     category: 'admin',
     run: async (m, { conn }) => {
         try {
-            // Generamos el ID directamente desde la conexión o con un string aleatorio
-            const messageId = conn.generateMessageID ? conn.generateMessageID() : `KIRITO${Date.now()}`
+            // Generamos ID manual para evitar fallos de importación
+            const messageId = `KIRITO${Date.now()}`
 
+            // Estructura de mensaje interactivo pura
             const interactiveMessage = {
-                body: { text: "🧪 *DEBUG BAILEYS V7*\n\nSi ves esto, el error de generateMessageID ha sido superado." },
+                body: { text: "🧪 *DEBUG V7 FINAL*\n\nSi ves esto, superamos todos los errores de importación." },
                 footer: { text: "KIRITO BOT - ESTABLE" },
                 header: { title: "ESTADO DEL SISTEMA", hasMediaAttachment: false },
                 nativeFlowMessage: {
@@ -25,15 +26,9 @@ const testOficialCommand = {
                 }
             }
 
-            const msg = proto.Message.fromObject({
-                viewOnceMessage: {
-                    message: {
-                        interactiveMessage: interactiveMessage
-                    }
-                }
-            })
-
-            await conn.relayMessage(m.chat, msg, { 
+            // Enviamos el objeto plano. 
+            // El 'patchMessageBeforeSending' del index.js se encargará de envolverlo.
+            await conn.relayMessage(m.chat, { interactiveMessage }, { 
                 messageId: messageId,
                 additionalNodes: [
                     {
@@ -43,10 +38,10 @@ const testOficialCommand = {
                 ]
             })
 
-            console.log('✅ Nodo enviado correctamente con ID:', messageId)
+            console.log('✅ Nodo enviado al servidor con ID:', messageId)
 
         } catch (err) {
-            console.error('❌ Error en relay:', err)
+            console.error('❌ Error en relay:', err.message)
         }
     }
 }
