@@ -1,6 +1,6 @@
 import pkg from '@whiskeysockets/baileys'
-// Esta es la forma segura de extraer el proto en ESM
-const proto = pkg.default?.proto || pkg.proto
+// Importación directa del archivo proto para evitar el error de "undefined"
+const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -10,8 +10,7 @@ const testOficialCommand = {
         try {
             const messageId = `KIRITO${Date.now()}`
 
-            if (!proto) throw new Error('No se pudo cargar el objeto proto de Baileys')
-
+            // Construcción del mensaje interactivo
             const interactiveMessage = {
                 body: { 
                     text: "🧪 *SISTEMA V7 VALIDADO*\n\nSi este mensaje aparece con botones, tu index.js está procesando los metadatos correctamente." 
@@ -44,6 +43,7 @@ const testOficialCommand = {
                 }
             }
 
+            // Generar el mensaje usando el proto importado directamente
             const msg = proto.Message.fromObject({
                 interactiveMessage: interactiveMessage
             })
