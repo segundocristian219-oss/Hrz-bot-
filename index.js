@@ -17,14 +17,14 @@ const filterOutput = (chunk, originalWrite, encoding, callback) => {
     } catch {
         return originalWrite(chunk, encoding, callback);
     }
-};*/
+};
 
 const stdoutWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = (chunk, encoding, callback) => filterOutput(chunk, stdoutWrite, encoding, callback);
 
 const stderrWrite = process.stderr.write.bind(process.stderr);
 process.stderr.write = (chunk, encoding, callback) => filterOutput(chunk, stderrWrite, encoding, callback);
-
+*/
 import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
