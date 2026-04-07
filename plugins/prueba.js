@@ -1,6 +1,6 @@
 import * as crypto from 'crypto'
 import pkg from '@whiskeysockets/baileys'
-const { generateMessageID } = pkg
+const { generateMessageID, prepareWAMessageMedia } = pkg
 
 const snippetPagoCommand = {
     name: 'snippetpago',
@@ -9,38 +9,32 @@ const snippetPagoCommand = {
     run: async (m, { conn }) => {
         try {
             const message = {
-                viewOnceMessage: {
+                viewOnceMessageV2: {
                     message: {
                         interactiveMessage: {
-                            header: { hasMediaAttachment: false },
-                            body: { text: "📦 *SNIPPET GENERADO*" },
-                            footer: { text: "KIRITO BOT" },
-                            nativeFlowMessage: {
-                                buttons: [
-                                    {
-                                        name: "cta_url",
-                                        buttonParamsJson: JSON.stringify({
-                                            display_text: "Ver Repositorio",
-                                            url: "https://github.com/",
-                                            merchant_url: "https://github.com/"
-                                        })
-                                    }
-                                ],
-                                messageVersion: 1
+                            header: { 
+                                title: "SISTEMA DE PAGO",
+                                hasMediaAttachment: false 
                             },
-                            contextInfo: {
-                                mentionedJid: [m.sender],
-                                isForwarded: true,
-                                forwardedAiBotMessageInfo: { botJid: "867051314767696@bot" },
-                                businessMessageForwardInfo: { businessOwnerJid: "867051314767696@bot" }
+                            body: { text: "📦 *BLOQUE DE CÓDIGO DETECTADO*" },
+                            footer: { text: "KIRITO BOT - DEVELOPER" },
+                            nativeFlowMessage: {
+                                buttons: [{
+                                    name: "cta_url",
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: "Soporte",
+                                        url: "https://google.com"
+                                    })
+                                }],
+                                messageVersion: 1
                             }
                         }
                     }
                 }
             }
 
-            // Inyectamos el bloque de código directamente en el nodo de mensaje
-            message.viewOnceMessage.message.botForwardedMessage = {
+            // Inyección del contenedor de código (Snippet)
+            message.viewOnceMessageV2.message.botForwardedMessage = {
                 message: {
                     richResponseMessage: {
                         messageType: 1,
@@ -50,7 +44,7 @@ const snippetPagoCommand = {
                                 codeLanguage: "javascript",
                                 codeBlocks: [{
                                     highlightType: 1,
-                                    codeContent: "// plugin: pago-nativo.js\nimport * as crypto from 'crypto'\nimport pkg from '@whiskeysockets/baileys'\nconst { generateMessageID } = pkg\n\nconst handler = async (m, { conn }) => {\n  // Código de pago nativo activo\n}\n\nexport default handler"
+                                    codeContent: "// plugin: pago-nativo.js\nimport pkg from '@whiskeysockets/baileys'\nconst { generateMessageID } = pkg\n\nconst handler = async (m, { conn }) => {\n  console.log('Ejecutando snippet de pago');\n}\n\nexport default handler"
                                 }]
                             }
                         }]
@@ -60,11 +54,16 @@ const snippetPagoCommand = {
 
             await conn.relayMessage(m.chat, message, {
                 messageId: generateMessageID(),
-                participant: m.sender
+                additionalNodes: [
+                    {
+                        tag: 'biz',
+                        attrs: { native_flow_name: 'order_details' }
+                    }
+                ]
             })
 
         } catch (err) {
-            console.error('Error al enviar snippet:', err)
+            console.error('Error crítico en relayMessage:', err)
         }
     }
 }
