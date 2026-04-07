@@ -1,5 +1,4 @@
-import pkg from '@whiskeysockets/baileys'
-const { proto, generateWAMessageFromContent, generateMessageID } = pkg
+import { proto } from '@whiskeysockets/baileys'   // ← Solo proto (import nombrado)
 
 const interactiveTestCommand = {
     name: 'testbtn',
@@ -34,7 +33,7 @@ const interactiveTestCommand = {
 
             const interactiveMessage = proto.Message.InteractiveMessage.create({
                 body: proto.Message.InteractiveMessage.Body.create({
-                    text: "*PRUEBA DE PROTOCOLO V7*\n\nEste mensaje usa la estructura nativa requerida por la versión más reciente de Baileys."
+                    text: "*PRUEBA DE PROTOCOLO V7*\n\nEste mensaje usa la estructura nativa de Baileys v7+"
                 }),
                 footer: proto.Message.InteractiveMessage.Footer.create({
                     text: "KIRITO BOT - SISTEMA V6.1.0"
@@ -50,8 +49,8 @@ const interactiveTestCommand = {
                 })
             })
 
-            // === ESTA ES LA PARTE QUE FALTABA Y QUE LO HACE FUNCIONAR ===
-            const msg = generateWAMessageFromContent(m.chat, {
+            // Usamos la función que ya tienes adjunta en conn (smsg.js)
+            const msg = conn.generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
                         messageContextInfo: {
@@ -64,14 +63,14 @@ const interactiveTestCommand = {
             }, {})
 
             await conn.relayMessage(m.chat, msg.message, {
-                messageId: msg.key.id || generateMessageID()
+                messageId: msg.key.id
             })
 
-            console.log('✅ Mensaje interactivo V7 enviado correctamente a', m.chat)
+            console.log('✅ Mensaje interactivo V7 enviado correctamente')
 
         } catch (err) {
             console.error('Error en Interactive V7:', err)
-            await conn.reply(m.chat, `❌ Error al enviar botones: ${err.message}`, m)
+            await conn.reply(m.chat, `❌ Error: ${err.message}`, m)
         }
     }
 }
