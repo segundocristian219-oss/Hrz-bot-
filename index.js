@@ -2,7 +2,7 @@ import 'dotenv/config';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 
-const blockKeywords = [
+/*const blockKeywords = [
     'SessionEntry', 'ratchetKey', 'chainKey', 'senderKey', 
     'aliceBaseKey', 'bobBaseKey', 'currentRatchet', 
     'messageKeys', 'nextHeader', 'index', 'ratchet',
@@ -17,7 +17,7 @@ const filterOutput = (chunk, originalWrite, encoding, callback) => {
     } catch {
         return originalWrite(chunk, encoding, callback);
     }
-};
+};*/
 
 const stdoutWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = (chunk, encoding, callback) => filterOutput(chunk, stdoutWrite, encoding, callback);
