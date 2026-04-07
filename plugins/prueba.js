@@ -1,41 +1,36 @@
 import pkg from '@whiskeysockets/baileys'
-// Importación directa del archivo proto para evitar el error de "undefined"
-const { proto } = (await import('@whiskeysockets/baileys/WAProto/index.js')).default || await import('@whiskeysockets/baileys/WAProto/index.js')
+const { generateMessageID } = pkg
 
-const testOficialCommand = {
-    name: 'testoficial',
-    alias: ['pure', 'botones'],
-    category: 'admin',
+const canalCommand = {
+    name: 'canal',
+    alias: ['canaloficial'],
+    category: 'info',
     run: async (m, { conn }) => {
         try {
-            const messageId = `KIRITO${Date.now()}`
+            const texto = `✨ Pulsa el botón para unirte al canal oficial`.trim()
 
-            // Construcción del mensaje interactivo
             const interactiveMessage = {
-                body: { 
-                    text: "🧪 *SISTEMA V7 VALIDADO*\n\nSi este mensaje aparece con botones, tu index.js está procesando los metadatos correctamente." 
-                },
-                footer: { 
-                    text: "KIRITO BOT - ESTABLE" 
-                },
+                body: { text: texto },
+                footer: { text: 'Pikachu Bot by Deylin' },
                 header: { 
-                    title: "DEBUG FINAL", 
+                    title: "KIRITO - NEWS",
                     hasMediaAttachment: false 
                 },
                 nativeFlowMessage: {
                     buttons: [
                         {
-                            name: "quick_reply",
-                            buttonParamsJson: JSON.stringify({ 
-                                display_text: "✅ FUNCIONA", 
-                                id: "test_ok" 
+                            name: 'cta_url',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: '✐ Canal oficial',
+                                url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
+                                merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
                             })
                         },
                         {
-                            name: "cta_copy",
+                            name: 'quick_reply', // Cambiado para que sea compatible con Native Flow
                             buttonParamsJson: JSON.stringify({
-                                display_text: "COPIAR MI ID",
-                                copy_code: m.sender
+                                display_text: 'Creador',
+                                id: '.creador'
                             })
                         }
                     ],
@@ -43,13 +38,10 @@ const testOficialCommand = {
                 }
             }
 
-            // Generar el mensaje usando el proto importado directamente
-            const msg = proto.Message.fromObject({
-                interactiveMessage: interactiveMessage
-            })
-
-            await conn.relayMessage(m.chat, msg, { 
-                messageId: messageId,
+            // Enviamos directamente el objeto interactiveMessage
+            // Tu index.js se encarga de ponerle el viewOnce y los metadatos de dispositivo
+            await conn.relayMessage(m.chat, { interactiveMessage }, { 
+                messageId: generateMessageID(),
                 additionalNodes: [
                     {
                         tag: 'biz',
@@ -58,12 +50,12 @@ const testOficialCommand = {
                 ]
             })
 
-            console.log('✅ Nodo enviado con ID:', messageId)
+            console.log('✅ Canal oficial enviado')
 
         } catch (err) {
-            console.error('❌ Error en relay:', err.message)
+            console.error('❌ Error en comando canal:', err.message)
         }
     }
 }
 
-export default testOficialCommand
+export default canalCommand
