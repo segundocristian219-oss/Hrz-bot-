@@ -1,5 +1,6 @@
 import pkg from '@whiskeysockets/baileys'
-const { proto } = pkg
+// Esta es la forma segura de extraer el proto en ESM
+const proto = pkg.default?.proto || pkg.proto
 
 const testOficialCommand = {
     name: 'testoficial',
@@ -8,6 +9,8 @@ const testOficialCommand = {
     run: async (m, { conn }) => {
         try {
             const messageId = `KIRITO${Date.now()}`
+
+            if (!proto) throw new Error('No se pudo cargar el objeto proto de Baileys')
 
             const interactiveMessage = {
                 body: { 
