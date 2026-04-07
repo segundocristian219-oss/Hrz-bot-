@@ -20,7 +20,7 @@ const interactiveTestCommand = {
                     buttonParamsJson: JSON.stringify({
                         display_text: "🌐 SITIO WEB",
                         url: "https://google.com",
-                        merchant_url: "https://google.com"   // opcional pero recomendado
+                        merchant_url: "https://google.com"
                     })
                 },
                 {
@@ -50,7 +50,7 @@ const interactiveTestCommand = {
                 })
             })
 
-            // === ESTA ES LA PARTE QUE FALTABA ===
+            // === ESTA ES LA PARTE QUE FALTABA Y QUE LO HACE FUNCIONAR ===
             const msg = generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
@@ -64,13 +64,14 @@ const interactiveTestCommand = {
             }, {})
 
             await conn.relayMessage(m.chat, msg.message, {
-                messageId: msg.key.id || generateMessageID()   // usa el que genera la función
+                messageId: msg.key.id || generateMessageID()
             })
 
-            console.log('✅ Mensaje interactivo V7 enviado correctamente')
+            console.log('✅ Mensaje interactivo V7 enviado correctamente a', m.chat)
 
         } catch (err) {
             console.error('Error en Interactive V7:', err)
+            await conn.reply(m.chat, `❌ Error al enviar botones: ${err.message}`, m)
         }
     }
 }
