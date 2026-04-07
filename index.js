@@ -258,7 +258,7 @@ global.reload = async function(restatConn) {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
 
-        if (m.isGroup && !global.groupCache.has(m.chat)) {
+        if (m?.isGroup && !global.groupCache.has(m.chat)) {
             const metadata = await conn.groupMetadata(m.chat).catch(() => null);
             if (metadata) global.groupCache.set(m.chat, metadata);
         }
