@@ -1,71 +1,71 @@
-import * as crypto from 'crypto'
 import pkg from '@whiskeysockets/baileys'
-const { generateMessageID, prepareWAMessageMedia } = pkg
+const { proto, generateMessageID } = pkg
 
-const snippetPagoCommand = {
-    name: 'snippetpago',
-    alias: ['snippet'],
-    category: 'ai',
+const interactiveTestCommand = {
+    name: 'testbtn',
+    alias: ['botones', 'menutest'],
+    category: 'tools',
     run: async (m, { conn }) => {
         try {
-            const message = {
-                viewOnceMessageV2: {
+            const buttons = [
+                {
+                    name: "quick_reply",
+                    buttonParamsJson: JSON.stringify({
+                        display_text: "✅ ACEPTAR",
+                        id: "action_accept"
+                    })
+                },
+                {
+                    name: "cta_url",
+                    buttonParamsJson: JSON.stringify({
+                        display_text: "🌐 SITIO WEB",
+                        url: "https://google.com",
+                        merchant_url: "https://google.com"
+                    })
+                },
+                {
+                    name: "cta_copy",
+                    buttonParamsJson: JSON.stringify({
+                        display_text: "📋 COPIAR ID",
+                        copy_code: m.sender.split('@')[0]
+                    })
+                }
+            ]
+
+            const interactiveMessage = proto.Message.InteractiveMessage.create({
+                body: proto.Message.InteractiveMessage.Body.create({
+                    text: "*PRUEBA DE PROTOCOLO V7*\n\nEste mensaje usa la estructura nativa requerida por la versión más reciente de Baileys."
+                }),
+                footer: proto.Message.InteractiveMessage.Footer.create({
+                    text: "KIRITO BOT - SISTEMA V6.1.0"
+                }),
+                header: proto.Message.InteractiveMessage.Header.create({
+                    title: "PANTALLA DE CONTROL",
+                    subtitle: "Subtítulo de prueba",
+                    hasMediaAttachment: false
+                }),
+                nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                    buttons: buttons,
+                    messageVersion: 1
+                })
+            })
+
+            const messageProto = proto.Message.create({
+                viewOnceMessage: {
                     message: {
-                        interactiveMessage: {
-                            header: { 
-                                title: "SISTEMA DE PAGO",
-                                hasMediaAttachment: false 
-                            },
-                            body: { text: "📦 *BLOQUE DE CÓDIGO DETECTADO*" },
-                            footer: { text: "KIRITO BOT - DEVELOPER" },
-                            nativeFlowMessage: {
-                                buttons: [{
-                                    name: "cta_url",
-                                    buttonParamsJson: JSON.stringify({
-                                        display_text: "Soporte",
-                                        url: "https://google.com"
-                                    })
-                                }],
-                                messageVersion: 1
-                            }
-                        }
+                        interactiveMessage: interactiveMessage
                     }
                 }
-            }
+            })
 
-            // Inyección del contenedor de código (Snippet)
-            message.viewOnceMessageV2.message.botForwardedMessage = {
-                message: {
-                    richResponseMessage: {
-                        messageType: 1,
-                        submessages: [{
-                            messageType: 5,
-                            codeMetadata: {
-                                codeLanguage: "javascript",
-                                codeBlocks: [{
-                                    highlightType: 1,
-                                    codeContent: "// plugin: pago-nativo.js\nimport pkg from '@whiskeysockets/baileys'\nconst { generateMessageID } = pkg\n\nconst handler = async (m, { conn }) => {\n  console.log('Ejecutando snippet de pago');\n}\n\nexport default handler"
-                                }]
-                            }
-                        }]
-                    }
-                }
-            }
-
-            await conn.relayMessage(m.chat, message, {
-                messageId: generateMessageID(),
-                additionalNodes: [
-                    {
-                        tag: 'biz',
-                        attrs: { native_flow_name: 'order_details' }
-                    }
-                ]
+            await conn.relayMessage(m.chat, messageProto, {
+                messageId: generateMessageID()
             })
 
         } catch (err) {
-            console.error('Error crítico en relayMessage:', err)
+            console.error('Error en Interactive V7:', err)
         }
     }
 }
 
-export default snippetPagoCommand
+export default interactiveTestCommand
