@@ -1,61 +1,58 @@
 import pkg from '@whiskeysockets/baileys'
-const { generateMessageID } = pkg
+const { generateWAMessageFromContent, proto } = pkg
 
-const canalCommand = {
-    name: 'canal',
-    alias: ['canaloficial'],
-    category: 'info',
+const testOficialCommand = {
+    name: 'testoficial',
+    alias: ['pure', 'botones'],
+    category: 'admin',
     run: async (m, { conn }) => {
         try {
             const texto = `✨ Pulsa el botón para unirte al canal oficial`.trim()
 
-            const interactiveMessage = {
-                body: { text: texto },
-                footer: { text: 'Pikachu Bot by Deylin' },
-                header: { 
-                    title: "KIRITO - NEWS",
-                    hasMediaAttachment: false 
-                },
-                nativeFlowMessage: {
-                    buttons: [
-                        {
-                            name: 'cta_url',
-                            buttonParamsJson: JSON.stringify({
-                                display_text: '✐ Canal oficial',
-                                url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
-                                merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
-                            })
+            const messageContent = {
+                viewOnceMessage: {
+                    message: {
+                        messageContextInfo: {
+                            deviceListMetadata: {},
+                            deviceListMetadataVersion: 2
                         },
-                        {
-                            name: 'quick_reply', // Cambiado para que sea compatible con Native Flow
-                            buttonParamsJson: JSON.stringify({
-                                display_text: 'Creador',
-                                id: '.creador'
+                        interactiveMessage: proto.Message.InteractiveMessage.create({
+                            body: proto.Message.InteractiveMessage.Body.create({ text: texto }),
+                            footer: proto.Message.InteractiveMessage.Footer.create({ text: 'Pikachu Bot by Deylin' }),
+                            header: proto.Message.InteractiveMessage.Header.create({ hasMediaAttachment: false }),
+                            nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                                buttons: [
+                                    {
+                                        name: 'cta_url',
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: '✐ canal oficial',
+                                            url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m',
+                                            merchant_url: 'https://whatsapp.com/channel/0029VawF8fBBvvsktcInIz3m'
+                                        })
+                                    }
+                                ]
                             })
-                        }
-                    ],
-                    messageVersion: 1
+                        })
+                    }
                 }
             }
 
-            // Enviamos directamente el objeto interactiveMessage
-            // Tu index.js se encarga de ponerle el viewOnce y los metadatos de dispositivo
-            await conn.relayMessage(m.chat, { interactiveMessage }, { 
-                messageId: generateMessageID(),
-                additionalNodes: [
-                    {
-                        tag: 'biz',
-                        attrs: { native_flow_name: 'order_details' }
-                    }
-                ]
+            const msg = generateWAMessageFromContent(m.chat, messageContent, {
+                userJid: conn.user.id,
+                quoted: m
             })
 
-            console.log('✅ Canal oficial enviado')
+            await conn.relayMessage(m.chat, msg.message, { 
+                messageId: msg.key.id,
+                additionalNodes: [{ tag: 'biz', attrs: {} }] 
+            })
+
+            console.log('✅ Comando ejecutado con tu estructura de importación')
 
         } catch (err) {
-            console.error('❌ Error en comando canal:', err.message)
+            console.error('❌ Error en comando:', err.message)
         }
     }
 }
 
-export default canalCommand
+export default testOficialCommand
