@@ -191,7 +191,7 @@ const connectionOptions = {
       return message;
   }
 };
- 
+
 
 global.conn = makeWASocket(connectionOptions);
 global.conn.isMain = true;
