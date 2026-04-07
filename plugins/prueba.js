@@ -1,34 +1,51 @@
 import pkg from '@whiskeysockets/baileys'
-const { generateMessageID } = pkg
+const { proto } = pkg
 
 const testOficialCommand = {
     name: 'testoficial',
-    alias: ['pure'],
+    alias: ['pure', 'botones'],
     category: 'admin',
     run: async (m, { conn }) => {
         try {
-            // Generamos ID manual para evitar fallos de importación
             const messageId = `KIRITO${Date.now()}`
 
-            // Estructura de mensaje interactivo pura
             const interactiveMessage = {
-                body: { text: "🧪 *DEBUG V7 FINAL*\n\nSi ves esto, superamos todos los errores de importación." },
-                footer: { text: "KIRITO BOT - ESTABLE" },
-                header: { title: "ESTADO DEL SISTEMA", hasMediaAttachment: false },
+                body: { 
+                    text: "🧪 *SISTEMA V7 VALIDADO*\n\nSi este mensaje aparece con botones, tu index.js está procesando los metadatos correctamente." 
+                },
+                footer: { 
+                    text: "KIRITO BOT - ESTABLE" 
+                },
+                header: { 
+                    title: "DEBUG FINAL", 
+                    hasMediaAttachment: false 
+                },
                 nativeFlowMessage: {
                     buttons: [
                         {
                             name: "quick_reply",
-                            buttonParamsJson: JSON.stringify({ display_text: "ACEPTAR", id: "ok" })
+                            buttonParamsJson: JSON.stringify({ 
+                                display_text: "✅ FUNCIONA", 
+                                id: "test_ok" 
+                            })
+                        },
+                        {
+                            name: "cta_copy",
+                            buttonParamsJson: JSON.stringify({
+                                display_text: "COPIAR MI ID",
+                                copy_code: m.sender
+                            })
                         }
                     ],
                     messageVersion: 1
                 }
             }
 
-            // Enviamos el objeto plano. 
-            // El 'patchMessageBeforeSending' del index.js se encargará de envolverlo.
-            await conn.relayMessage(m.chat, { interactiveMessage }, { 
+            const msg = proto.Message.fromObject({
+                interactiveMessage: interactiveMessage
+            })
+
+            await conn.relayMessage(m.chat, msg, { 
                 messageId: messageId,
                 additionalNodes: [
                     {
@@ -38,7 +55,7 @@ const testOficialCommand = {
                 ]
             })
 
-            console.log('✅ Nodo enviado al servidor con ID:', messageId)
+            console.log('✅ Nodo enviado con ID:', messageId)
 
         } catch (err) {
             console.error('❌ Error en relay:', err.message)
