@@ -1,8 +1,8 @@
-import { proto } from '@whiskeysockets/baileys'   // ← Solo proto (import nombrado)
+import { proto } from '@whiskeysockets/baileys'
 
 const interactiveTestCommand = {
     name: 'testbtn',
-    alias: ['botones', 'menutest'],
+    alias: ['botones', 'menutest', 'interactive'],
     category: 'tools',
     run: async (m, { conn }) => {
         try {
@@ -12,6 +12,13 @@ const interactiveTestCommand = {
                     buttonParamsJson: JSON.stringify({
                         display_text: "✅ ACEPTAR",
                         id: "action_accept"
+                    })
+                },
+                {
+                    name: "quick_reply",
+                    buttonParamsJson: JSON.stringify({
+                        display_text: "❌ CANCELAR",
+                        id: "action_cancel"
                     })
                 },
                 {
@@ -33,14 +40,14 @@ const interactiveTestCommand = {
 
             const interactiveMessage = proto.Message.InteractiveMessage.create({
                 body: proto.Message.InteractiveMessage.Body.create({
-                    text: "*PRUEBA DE PROTOCOLO V7*\n\nEste mensaje usa la estructura nativa de Baileys v7+"
+                    text: "*PRUEBA DE BOTONES V7*\n\nEste mensaje usa la estructura nativa oficial de Baileys v7+"
                 }),
                 footer: proto.Message.InteractiveMessage.Footer.create({
                     text: "KIRITO BOT - SISTEMA V6.1.0"
                 }),
                 header: proto.Message.InteractiveMessage.Header.create({
                     title: "PANTALLA DE CONTROL",
-                    subtitle: "Subtítulo de prueba",
+                    subtitle: "Prueba de botones interactivos",
                     hasMediaAttachment: false
                 }),
                 nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
@@ -49,13 +56,19 @@ const interactiveTestCommand = {
                 })
             })
 
-            // Usamos la función que ya tienes adjunta en conn (smsg.js)
+            // Estructura completa + truco newsletter (mejor renderizado en Android + iOS)
             const msg = conn.generateWAMessageFromContent(m.chat, {
                 viewOnceMessage: {
                     message: {
                         messageContextInfo: {
                             deviceListMetadata: {},
-                            deviceListMetadataVersion: 2
+                            deviceListMetadataVersion: 2,
+                            // Truco oficial recomendado para que se vea en iOS y Android
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: "120363314182963253@newsletter",  // puedes cambiarlo
+                                serverMessageId: 1,
+                                newsletterName: "KIRITO BOT"
+                            }
                         },
                         interactiveMessage: interactiveMessage
                     }
@@ -70,7 +83,7 @@ const interactiveTestCommand = {
 
         } catch (err) {
             console.error('Error en Interactive V7:', err)
-            await conn.reply(m.chat, `❌ Error: ${err.message}`, m)
+            await conn.reply(m.chat, `❌ Error al enviar botones: ${err.message}`, m)
         }
     }
 }
