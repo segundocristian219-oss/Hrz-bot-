@@ -1,48 +1,34 @@
-const geturl = {
-    name: 'geturl',
-    category: 'tools',
-    run: async (conn, m) => {
-        const quoted = m.quoted ? m.quoted : m;
-        const mime = (quoted.msg || quoted).mimetype || '';
+const handler = {
+    name: 'salir',
+    alias: ['leavegc', 'salirdelgrupo', 'leave'],
+    category: 'owner',
+    run: async (conn, m, { text }) => {
+        const id = text ? text : m.chat;
         
         const sendReaction = (emoji) => conn.sendMessage(m.chat, { react: { text: emoji, key: m.key } });
         const sendMsg = (text) => conn.sendMessage(m.chat, { text: text }, { quoted: m });
 
-        if (!/image|video|audio|sticker|document/.test(mime)) {
-            await sendReaction('❓');
-            return sendMsg('❌ Responde a un archivo para obtener su URL.');
-        }
-
         try {
-            await sendReaction('⏳');
-
-            // Usamos downloadM que es el método de descarga de tu Bot
-            const media = await conn.downloadM(quoted, mime.split('/')[0]);
+            await sendReaction('👋');
             
-            if (!media) {
-                await sendReaction('❌');
-                return sendMsg('❌ No se pudo descargar el archivo.');
-            }
+            await sendMsg('*Me despido de este grupo, hasta pronto.*');
 
-            // Usamos waUploadToServer con el buffer obtenido de tu función nativa
-            const upload = await conn.waUploadToServer(media, { 
-                mimetype: mime,
-                fileType: mime.split('/')[0] || 'document'
-            });
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-            if (upload && upload.url) {
-                await sendReaction('✅');
-                await sendMsg(upload.url);
-            } else {
-                throw new Error("Sin respuesta del servidor");
-            }
+            
+            await conn.groupLeave(id);
 
         } catch (e) {
             console.error(e);
             await sendReaction('❌');
-            sendMsg('❌ Error al procesar el archivo en el servidor de WhatsApp.');
+            
+            try {
+                sendMsg('❌ Ocurrió un error al intentar salir del grupo.');
+            } catch (err) {
+                console.log('No se pudo enviar mensaje de error porque el bot ya no está en el chat.');
+            }
         }
     }
 };
 
-export default geturl;
+export default handler;
