@@ -1,34 +1,28 @@
-const handler = {
+const leaveCommand = {
     name: 'salir',
     alias: ['leavegc', 'salirdelgrupo', 'leave'],
     category: 'owner',
-    run: async (conn, m, { text }) => {
-        const id = text ? text : m.chat;
-        
-        const sendReaction = (emoji) => conn.sendMessage(m.chat, { react: { text: emoji, key: m.key } });
-        const sendMsg = (text) => conn.sendMessage(m.chat, { text: text }, { quoted: m });
-
+    run: async (m, { conn, text }) => {
         try {
-            await sendReaction('👋');
-            
-            await sendMsg('*Me despido de este grupo, hasta pronto.*');
+            let id = text ? text.trim() : m.chat;
 
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (!id.endsWith('@g.us')) {
+                return m.reply('❌ El ID proporcionado no es un grupo válido.');
+            }
 
+            await m.react('👋');
             
+            await conn.sendMessage(id, { 
+                text: `${global.emoji || '👋'} *Me despido de este grupo.*` 
+            });
+
             await conn.groupLeave(id);
 
-        } catch (e) {
-            console.error(e);
-            await sendReaction('❌');
-            
-            try {
-                sendMsg('❌ Ocurrió un error al intentar salir del grupo.');
-            } catch (err) {
-                console.log('No se pudo enviar mensaje de error porque el bot ya no está en el chat.');
-            }
+        } catch (error) {
+            console.error(error);
+            m.reply('❌ Ocurrió un error al intentar salir del grupo.');
         }
     }
 };
 
-export default handler;
+export default leaveCommand;
