@@ -1,30 +1,18 @@
+
 import 'dotenv/config';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 
-/*const blockKeywords = [
-    'SessionEntry', 'ratchetKey', 'chainKey', 'senderKey', 
-    'aliceBaseKey', 'bobBaseKey', 'currentRatchet', 
-    'messageKeys', 'nextHeader', 'index', 'ratchet',
-    'closing session', 'Closing session', 'Bad MAC', 'decryption failed'
-];
-
-const filterOutput = (chunk, originalWrite, encoding, callback) => {
-    try {
-        const msg = chunk.toString();
-        if (blockKeywords.some(k => msg.includes(k))) return true;
-        return originalWrite(chunk, encoding, callback);
-    } catch {
-        return originalWrite(chunk, encoding, callback);
+const _stderr = process.stderr.write.bind(process.stderr);
+process.stderr.write = function(chunk, encoding, callback) {
+    if (chunk?.toString?.().includes('Closing session')) {
+        if (typeof encoding === 'function') encoding();
+        else if (typeof callback === 'function') callback();
+        return true;
     }
+    return _stderr(chunk, encoding, callback);
 };
 
-const stdoutWrite = process.stdout.write.bind(process.stdout);
-process.stdout.write = (chunk, encoding, callback) => filterOutput(chunk, stdoutWrite, encoding, callback);
-
-const stderrWrite = process.stderr.write.bind(process.stderr);
-process.stderr.write = (chunk, encoding, callback) => filterOutput(chunk, stderrWrite, encoding, callback);
-*/
 import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
