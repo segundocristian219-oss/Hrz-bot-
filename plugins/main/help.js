@@ -1,5 +1,15 @@
-import { readFileSync } from 'fs';
+import { readFileSync, watchFile } from 'fs';
 import { join } from 'path';
+
+const menuPath = join(process.cwd(), 'lib', 'menu.json');
+const pkgPath = join(process.cwd(), 'package.json');
+
+let menuData = JSON.parse(readFileSync(menuPath, 'utf-8'));
+let pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+
+watchFile(menuPath, () => {
+    menuData = JSON.parse(readFileSync(menuPath, 'utf-8'));
+});
 
 const menuCommand = {
     name: 'menu',
@@ -7,11 +17,6 @@ const menuCommand = {
     category: 'main',
     run: async (m, { conn, text }) => {
         try {
-            await m.react('⏳');
-
-            const menuData = JSON.parse(readFileSync(join(process.cwd(), 'lib', 'menu.json'), 'utf-8'));
-            const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
-            
             let uptime = clockString(process.uptime() * 1000);
             let totalreg = await global.User.countDocuments();
             let totalchats = await global.Chat.countDocuments();
@@ -37,33 +42,29 @@ const menuCommand = {
                 });
                 menuText += `└───────────────\n\n`;
             } else {
-                Object.entries(menuData).forEach(([title, cmds]) => {
+                for (const [title, cmds] of Object.entries(menuData)) {
                     menuText += `┌──「 *${title.toUpperCase()}* 」──\n`;
                     cmds.forEach(item => {
                         menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
                     });
                     menuText += `└───────────────\n\n`;
-                });
+                }
             }
 
             menuText += `> © Powered by ${developer}.`;
 
-            const { data: imgBuffer } = await conn.getFile(global.img2());
-
             await conn.sendMessage(m.chat, {
-                image: imgBuffer,
+                image: { url: global.img2() },
                 caption: menuText,
+                mentions: [m.sender],
                 contextInfo: {
-                    mentionedJid: [m.sender],
                     ...channelInfo
                 }
             }, { quoted: m });
 
-            await m.react('🍃');
-
         } catch (error) {
             console.error(error);
-            m.reply('❌ Error al generar el menú.\n\nUsa el comando *#report* para reportar esté error.');
+            m.reply('❌ Error al generar el menú.');
         }
     }
 };
@@ -76,4 +77,3 @@ function clockString(ms) {
     let s = Math.floor(ms / 1000) % 60;
     return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
 }
-
