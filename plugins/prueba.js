@@ -2,6 +2,7 @@ const addCommand = {
     name: 'add',
     alias: ['atd', 'añadir', 'agregar'],
     category: 'admin',
+    isBotAdmin: true,
     run: async (m, { conn, text }) => {
         try {
             if (!m.isGroup) return m.reply('❌ Este comando solo se puede usar en grupos.');
@@ -9,10 +10,7 @@ const addCommand = {
             const groupMetadata = global.groupCache.get(m.chat) || await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants.map(p => p.id);
             const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
-            const isBotAdmin = groupMetadata.participants.find(p => p.id === botId)?.admin;
-
-            if (!isBotAdmin) return m.reply('❌ Necesito ser administrador para agregar usuarios.');
-
+            
             let input = text ? text : m.quoted ? m.quoted.sender : '';
             if (!input) return m.reply('❌ Proporciona un número o menciona a alguien.');
 
