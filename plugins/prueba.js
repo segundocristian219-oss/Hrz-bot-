@@ -1,7 +1,7 @@
 const geturl = {
     name: 'geturl',
     category: 'tools',
-    run: async (conn, m) => {
+    run: async (m, { conn }) => {
         const quoted = m.quoted ? m.quoted : m;
         const mime = (quoted.msg || quoted).mimetype || '';
         
@@ -36,8 +36,10 @@ const geturl = {
             await sendMsg(upload.url);
         } catch (e) {
             console.error(e);
-            await sendReaction('❌');
-            sendMsg('❌ Error al subir a los servidores de WhatsApp.');
+            if (conn) {
+                await sendReaction('❌');
+                sendMsg('❌ Error al subir a los servidores de WhatsApp.');
+            }
         }
     }
 };
