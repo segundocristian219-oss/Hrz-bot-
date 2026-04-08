@@ -1,43 +1,64 @@
-const geturl = {
+import fetch from "node-fetch";
+import { FormData, Blob } from "formdata-node";
+import { fileTypeFromBuffer } from "file-type";
+
+const uploadCommand = {
     name: 'geturl',
+    alias: ['tourl', 'img'],
     category: 'tools',
-    run: async (conn, m) => {
+    run: async (conn, m, { command }) => {
         const quoted = m.quoted ? m.quoted : m;
         const mime = (quoted.msg || quoted).mimetype || '';
 
-        if (!/image|video|audio|sticker|document/.test(mime)) {
-            
-            return m.reply('❌ Responde a una imagen, video o archivo para obtener su URL.');
+        const sendReaction = (emoji) => conn.sendMessage(m.chat, { react: { text: emoji, key: m.key } });
+        const sendMsg = (text) => conn.sendMessage(m.chat, { text: text }, { quoted: m });
+
+        if (!mime || !/image/.test(mime)) {
+            return sendMsg(`> ✰⋆͙̈ Responde a una imagen con el comando ➠ *${command}*`);
         }
 
         try {
-            
+            await sendReaction('🕒');
 
-            const media = await quoted.download();
-            if (!media || media.length === 0) {
-                
-                return m.reply('❌ No se pudo descargar el archivo del servidor de WhatsApp.');
+            const buffer = await quoted.download();
+            if (!buffer) {
+                await sendReaction('❌');
+                return sendMsg("> ⚔ Error al obtener el buffer.");
             }
 
-            let mediaType = 'document';
-            if (/image/.test(mime)) mediaType = 'image';
-            else if (/video/.test(mime)) mediaType = 'video';
-            else if (/audio/.test(mime)) mediaType = 'audio';
+            const type = await fileTypeFromBuffer(buffer);
+            const fileName = `img_${Date.now()}.${type?.ext || 'jpg'}`;
 
-            const upload = await conn.waUploadToServer(media, { 
-                mimetype: mime,
-                fileType: mediaType 
+            const formData = new FormData();
+            const blob = new Blob([buffer], { type: mime });
+            formData.append('file', blob, fileName);
+
+            const response = await fetch('https://api.dix.lat/upload1', {
+                method: 'POST',
+                body: formData,
+                headers: { 'User-Agent': 'Drive-Client' }
             });
 
-            
-            await m.reply(upload.url);
+            const json = await response.json();
 
+            if (json.status && json.data) {
+                const result = json.data;
+                let txt = `▢ *ID:* ${result.id}\n`;
+                txt += `▢ *URL:* ${result.url}\n`;
+                txt += `▢ *PESO:* ${result.size}\n`;
+                txt += `▢ *MIME:* ${result.mime}`;
+
+                await sendMsg(txt);
+                await sendReaction('✅');
+            } else {
+                await sendReaction('❌');
+                sendMsg("> ⚔ Error en la respuesta del servidor.");
+            }
         } catch (e) {
-            console.error(e);
-            
-            m.reply('❌ Ocurrió un error al intentar subir el archivo.');
+            await sendReaction('❌');
+            sendMsg(`> ⚔ Error: ${e.message}`);
         }
     }
 };
 
-export default geturl;
+export default uploadCommand;
