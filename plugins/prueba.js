@@ -1,4 +1,4 @@
-export default {
+const geturl = {
     name: 'geturl',
     category: 'tools',
     run: async (conn, m) => {
@@ -31,3 +31,6 @@ export default {
         }
     }
 };
+
+
+export default geturl;
