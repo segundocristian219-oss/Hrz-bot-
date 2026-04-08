@@ -18,6 +18,9 @@ const addCommand = {
             const jid = `${num}@s.whatsapp.net`;
             const { subject: groupName, participants } = groupMetadata;
 
+            const [onWA] = await conn.onWhatsApp(jid).catch(() => [null]);
+            if (!onWA?.exists) return m.reply('❌ Ese número no está registrado en WhatsApp.');
+
             const [result] = await conn.groupParticipantsUpdate(m.chat, [jid], 'add').catch(() => [null]);
 
             if (result?.status === '200') {
@@ -26,16 +29,20 @@ const addCommand = {
             }
 
             const statusMessages = {
-                '403': '⛔ El usuario tiene restringido ser añadido a grupos.',
-                '408': '⏳ El usuario no ha aceptado la invitación anterior.',
+                '403': null,
+                '408': null,
                 '409': '⚠️ El usuario ya es miembro del grupo.',
                 '500': '❌ Error interno al intentar añadir al usuario.'
             };
 
             const statusCode = result?.status?.toString();
 
-            if (statusCode && statusCode !== '403' && statusCode !== '408') {
-                return m.reply(statusMessages[statusCode] || `❌ No se pudo añadir. Código: ${statusCode}`);
+            if (statusCode && statusMessages[statusCode] !== undefined && statusMessages[statusCode] !== null) {
+                return m.reply(statusMessages[statusCode]);
+            }
+
+            if (statusCode && !['403', '408'].includes(statusCode)) {
+                return m.reply(`❌ No se pudo añadir. Código: ${statusCode}`);
             }
 
             const code = await conn.groupInviteCode(m.chat).catch(() => null);
@@ -47,7 +54,6 @@ const addCommand = {
                 `🔗 *Enlace:* https://chat.whatsapp.com/${code}`;
 
             const sent = await conn.sendMessage(jid, { text: inviteText }).catch(() => null);
-
             if (!sent) return m.reply('❌ No se pudo enviar la invitación al usuario.');
 
             await m.react('📨');
