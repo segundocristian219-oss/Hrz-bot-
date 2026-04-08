@@ -25,8 +25,7 @@ const menuCommand = {
             menuText += `║ • Versión: ${pkg.version}\n`;
             menuText += `║ • dix.lat/grupo\n`;
             menuText += `╚═════════════════╝\n\n`;
-            menuText += `> Muy pronto nueva versión con más funciones.\n`;
-            menuText += `> Usa *#novedades* para descubrir lo nuevo del sistema.\n`;
+            menuText += `> Usa *#code* para convertirte en subbot.\n`;
             menuText += `${rmrText}\n\n`;
 
             const query = text.trim().toUpperCase();
