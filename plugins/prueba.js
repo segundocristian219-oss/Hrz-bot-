@@ -1,9 +1,10 @@
 const geturl = {
     name: 'geturl',
     category: 'tools',
-    run: async (conn, m) => {
+    run: async (m, { conn }) => {
         const quoted = m.quoted ? m.quoted : m;
         const mime = (quoted.msg || quoted).mimetype || '';
+        
         const sendReaction = (emoji) => conn.sendMessage(m.chat, { react: { text: emoji, key: m.key } });
         const sendMsg = (text) => conn.sendMessage(m.chat, { text: text }, { quoted: m });
 
@@ -33,8 +34,11 @@ const geturl = {
             await sendReaction('✅');
             await sendMsg(upload.url);
         } catch (e) {
-            await sendReaction('❌');
-            sendMsg('❌ Ocurrió un error al intentar subir el archivo.');
+            console.error(e);
+            if (conn) {
+                await sendReaction('❌');
+                sendMsg('❌ Ocurrió un error al intentar subir el archivo.');
+            }
         }
     }
 };
