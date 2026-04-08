@@ -2,52 +2,49 @@ const addCommand = {
     name: 'add',
     alias: ['atd', 'añadir', 'agregar'],
     category: 'admin',
-    isBotAdmin: true,
     run: async (m, { conn, text }) => {
         try {
             if (!m.isGroup) return m.reply('❌ Este comando solo se puede usar en grupos.');
             
             const groupMetadata = global.groupCache.get(m.chat) || await conn.groupMetadata(m.chat);
-            const participants = groupMetadata.participants.map(p => p.id);
             const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
             
+
             let input = text ? text : m.quoted ? m.quoted.sender : '';
-            if (!input) return m.reply('❌ Proporciona un número o menciona a alguien.');
+            if (!input) return m.reply('❌ Proporciona un número.');
 
             let jid = input.replace(/\D/g, '') + '@s.whatsapp.net';
 
-            if (participants.includes(jid)) return m.reply('❌ El usuario ya está en el grupo.');
-
-            const response = await conn.groupParticipantsUpdate(m.chat, [jid], 'add');
+            const response = await conn.groupParticipantsUpdate(m.chat, [jid], 'add').catch(e => {
+                return [{ status: 'error', jid }];
+            });
 
             for (let res of response) {
                 if (res.status === '403') {
-                    await m.reply('⚠️ El usuario tiene su cuenta privada. Enviando invitación directa...');
-                    
                     const code = await conn.groupInviteCode(m.chat);
-                    const inviteMsg = {
+                    await conn.sendMessage(res.jid, {
                         groupInviteMessage: {
                             groupJid: m.chat,
                             inviteCode: code,
                             inviteExpiration: 259200,
                             groupName: groupMetadata.subject,
-                            caption: `Hola, te invito a unirte a mi grupo.`
+                            caption: `Hola, no pude agregarte directamente. Aquí tienes la invitación.`
                         }
-                    };
-                    
-                    await conn.sendMessage(res.jid, inviteMsg);
+                    });
+                    await m.reply('⚠️ Cuenta privada, invitación enviada.');
                 } else if (res.status === '408') {
-                    await m.reply('❌ El usuario acaba de salir del grupo, no se puede agregar ahora.');
+                    await m.reply('❌ Salió recientemente del grupo.');
                 } else if (res.status === '409') {
-                    await m.reply('❌ El usuario ya es miembro del grupo.');
+                    await m.reply('❌ Ya está en el grupo.');
                 } else if (res.status === '200') {
                     await m.react('✅');
+                } else {
+                    await m.reply('❌ No se pudo agregar (Número inválido o error de red).');
                 }
             }
 
         } catch (error) {
             console.error(error);
-            m.reply('❌ Error al intentar agregar al usuario.');
         }
     }
 };
