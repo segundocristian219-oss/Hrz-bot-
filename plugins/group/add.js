@@ -5,51 +5,57 @@ const addCommand = {
     botadmin: true,
     grupo: true,
     run: async (m, { conn, text }) => {
-        let num;
         try {
-            const groupMetadata = global.groupCache.get(m.chat) || await conn.groupMetadata(m.chat).catch(() => null);
+            const groupMetadata = global.groupCache?.get(m.chat) || await conn.groupMetadata(m.chat).catch(() => null);
             if (!groupMetadata) return;
 
-            let input = text ? text : m.quoted ? m.quoted.sender : '';
+            let input = text?.trim() || (m.quoted ? m.quoted.sender : '');
             if (!input) return m.reply('❌ Escribe el número o menciona a alguien.');
 
-            num = input.replace(/\D/g, '');
+            const num = input.replace(/\D/g, '');
             if (num.length < 7) return m.reply('❌ Número inválido.');
-            
-            let jid = num + '@s.whatsapp.net';
-            let groupName = groupMetadata.subject;
-            let totalMem = groupMetadata.participants.length;
 
-            const response = await conn.groupParticipantsUpdate(m.chat, [jid], 'add').catch(() => null);
-            
-            const res = Array.isArray(response) ? response[0] : null;
+            const jid = `${num}@s.whatsapp.net`;
+            const { subject: groupName, participants } = groupMetadata;
 
-            if (res && res.status === '200') {
+            const [result] = await conn.groupParticipantsUpdate(m.chat, [jid], 'add').catch(() => [null]);
+
+            if (result?.status === '200') {
                 await m.react('✅');
-                return await m.reply(`✨ @${num} ha sido añadido con éxito.`, null, { mentions: [jid] });
+                return m.reply(`✨ @${num} ha sido añadido con éxito.`, null, { mentions: [jid] });
+            }
+
+            const statusMessages = {
+                '403': '⛔ El usuario tiene restringido ser añadido a grupos.',
+                '408': '⏳ El usuario no ha aceptado la invitación anterior.',
+                '409': '⚠️ El usuario ya es miembro del grupo.',
+                '500': '❌ Error interno al intentar añadir al usuario.'
+            };
+
+            const statusCode = result?.status?.toString();
+
+            if (statusCode && statusCode !== '403' && statusCode !== '408') {
+                return m.reply(statusMessages[statusCode] || `❌ No se pudo añadir. Código: ${statusCode}`);
             }
 
             const code = await conn.groupInviteCode(m.chat).catch(() => null);
-            if (!code) return m.reply('❌ No se pudo añadir al usuario ni generar un enlace.');
+            if (!code) return m.reply('❌ No se pudo añadir ni generar enlace de invitación.');
 
-            const inviteUrl = `https://chat.whatsapp.com/${code}`;
-            const inviteBody = `Hola @${num}, fuiste invitado a unirte a nuestro grupo.\n\n` +
-                               `*Grupo:* ${groupName}\n` +
-                               `*Miembros:* ${totalMem}\n` +
-                               `*Enlace:* ${inviteUrl}`;
+            const inviteText =
+                `Hola, fuiste invitado a unirte al grupo *${groupName}*.\n\n` +
+                `👥 *Miembros:* ${participants.length}\n` +
+                `🔗 *Enlace:* https://chat.whatsapp.com/${code}`;
 
-            await conn.sendMessage(jid, { 
-                text: inviteBody, 
-                mentions: [jid] 
-            }).catch(() => {
-                const jidAlt = num.split('@')[0] + '@s.whatsapp.net';
-                return conn.sendMessage(jidAlt, { text: inviteBody, mentions: [jidAlt] }).catch(() => null);
-            });
+            const sent = await conn.sendMessage(jid, { text: inviteText }).catch(() => null);
 
-            await m.reply(`✅ Se ha enviado una invitación privada a @${num} debido a las restricciones de su cuenta.`, null, { mentions: [jid] });
+            if (!sent) return m.reply('❌ No se pudo enviar la invitación al usuario.');
 
-        } catch (error) {
-            console.log('Error controlado en Add:', error.message);
+            await m.react('📨');
+            return m.reply(`📨 Se envió invitación privada a @${num} porque no puede ser añadido directamente.`, null, { mentions: [jid] });
+
+        } catch (err) {
+            console.error('[add] Error:', err.message);
+            return m.reply('❌ Ocurrió un error inesperado.');
         }
     }
 };
