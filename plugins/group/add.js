@@ -29,9 +29,8 @@ const addCommand = {
                 return await m.reply(`✨ @${num} ha sido añadido con éxito.`, null, { mentions: [jid] });
             }
 
-            
             const code = await conn.groupInviteCode(m.chat).catch(() => null);
-            if (!code) return m.reply('❌ No se pudo añadir al usuario ni generar un enlace de invitación.');
+            if (!code) return m.reply('❌ No se pudo añadir al usuario ni generar un enlace.');
 
             const inviteUrl = `https://chat.whatsapp.com/${code}`;
             const inviteBody = `Hola @${num}, fuiste invitado a unirte a nuestro grupo.\n\n` +
@@ -39,7 +38,14 @@ const addCommand = {
                                `*Miembros:* ${totalMem}\n` +
                                `*Enlace:* ${inviteUrl}`;
 
-            await conn.sendMessage(jid, { text: inviteBody, mentions: [jid] }).catch(() => null);
+            await conn.sendMessage(jid, { 
+                text: inviteBody, 
+                mentions: [jid] 
+            }).catch(() => {
+                const jidAlt = num.split('@')[0] + '@s.whatsapp.net';
+                return conn.sendMessage(jidAlt, { text: inviteBody, mentions: [jidAlt] }).catch(() => null);
+            });
+
             await m.reply(`✅ Se ha enviado una invitación privada a @${num} debido a las restricciones de su cuenta.`, null, { mentions: [jid] });
 
         } catch (error) {
