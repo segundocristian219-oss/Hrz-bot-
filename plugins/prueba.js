@@ -6,17 +6,17 @@ const geturl = {
         const mime = (quoted.msg || quoted).mimetype || '';
 
         if (!/image|video|audio|sticker|document/.test(mime)) {
-            await conn.sendMessage(m.chat, { react: { text: '❓', key: m.key } });
-            return m.reply('❌ Debes responder a un archivo (imagen, video, audio, etc.)');
+            await m.react('❓');
+            return m.reply('❌ Responde a una imagen, video o archivo para obtener su URL.');
         }
 
         try {
-            await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+            await m.react('⏳');
 
-            const media = await quoted.download?.() || await conn.downloadMediaMessage(quoted);
-            if (!media) {
-                await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                return m.reply('❌ No se pudo descargar el archivo.');
+            const media = await quoted.download();
+            if (!media || media.length === 0) {
+                await m.react('❌');
+                return m.reply('❌ No se pudo descargar el archivo del servidor de WhatsApp.');
             }
 
             let mediaType = 'document';
@@ -29,17 +29,13 @@ const geturl = {
                 fileType: mediaType 
             });
 
-            const directUrl = upload.url;
-
-            await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            await conn.sendMessage(m.chat, { 
-                text: directUrl 
-            }, { quoted: m });
+            await m.react('✅');
+            await m.reply(upload.url);
 
         } catch (e) {
             console.error(e);
-            await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            m.reply('❌ Error interno al subir al servidor.');
+            await m.react('❌');
+            m.reply('❌ Ocurrió un error al intentar subir el archivo.');
         }
     }
 };
