@@ -4,6 +4,7 @@ const copilotCommand = {
     name: 'copilot',
     alias: ['copilot', 'microsoft'],
     category: 'ai',
+    col: 5,
     run: async (m, { conn, text }) => {
         if (!text) return conn.sendMessage(m.chat, { text: '¡Hola! Soy Copilot, ¿en qué puedo ayudarte?' }, { quoted: m });
 
