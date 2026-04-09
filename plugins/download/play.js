@@ -51,7 +51,7 @@ const youtubeCommand = {
                 const apiRes = await fetch(apiUrl).then(res => res.json());
 
                 if (apiRes.status && apiRes.result) {
-                    downloadUrl = apiRes.result.dl;
+                    downloadUrl = apiRes.data.dl;
                 }
             } else {
 
