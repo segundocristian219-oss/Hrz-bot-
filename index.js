@@ -1,6 +1,5 @@
 
 import 'dotenv/config';
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 process.removeAllListeners('warning');
 
 const _stderr = process.stderr.write.bind(process.stderr);
