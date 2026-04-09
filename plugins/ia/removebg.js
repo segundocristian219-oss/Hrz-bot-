@@ -4,6 +4,7 @@ const deleteBgCommand = {
     name: 'delfon',
     alias: ['nofondo', 'removebg'],
     category: 'tools',
+    col: 5,
     run: async (m, { conn, usedPrefix, command }) => {
         let q = m.quoted ? m.quoted : m
         let mime = (q.msg || q).mimetype || q.mediaType || ''
