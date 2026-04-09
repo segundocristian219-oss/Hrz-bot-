@@ -47,7 +47,7 @@ const youtubeCommand = {
             let downloadUrl;
             if (isAudio) {
 
-                const apiUrl = `https://api.dix.lat/mp3?url=${encodeURIComponent(videoUrl)}&api_key=dx_lat_0x7B%5Cu200B%5Cu001B%5B38%3B5%3B214m%5Cu2060%5Cu200D%5Cu200B%5Cu200C_Voker_Sys_00%5Cu200B1.0.0_37080_159_0x%2502X%5Cu200B%5Cu200C%5Cu2060_%255B%2522%5Cu0024%5Cu007B0x00A0%5Cu007D%5Cu221E%5Cu2202%5Cu2206%2522%255D_%2520%5Cu200B%5Cu200D%5Cu2060_0x7F%5Cu0000%5Cu0001%5Cu0007%5Cu0008%5Cu000B%5Cu000C%5Cu000E%5Cu000F_S3R14L1Z3R_0x0D%5Cu200B%5Cu200D%5Cu2060_%255B%5Cu200B%5Cu200C%5Cu200B%5Cu200C%255D_0x2026_03_28_UTC_0x00`;
+                const apiUrl = `https://api.dix.lat/mp3?url=${encodeURIComponent(videoUrl)}/*&api_key=dx_lat_0x7B%5Cu200B%5Cu001B%5B38%3B5%3B214m%5Cu2060%5Cu200D%5Cu200B%5Cu200C_Voker_Sys_00%5Cu200B1.0.0_37080_159_0x%2502X%5Cu200B%5Cu200C%5Cu2060_%255B%2522%5Cu0024%5Cu007B0x00A0%5Cu007D%5Cu221E%5Cu2202%5Cu2206%2522%255D_%2520%5Cu200B%5Cu200D%5Cu2060_0x7F%5Cu0000%5Cu0001%5Cu0007%5Cu0008%5Cu000B%5Cu000C%5Cu000E%5Cu000F_S3R14L1Z3R_0x0D%5Cu200B%5Cu200D%5Cu2060_%255B%5Cu200B%5Cu200C%5Cu200B%5Cu200C%255D_0x2026_03_28_UTC_0x00*/`;
                 const apiRes = await fetch(apiUrl).then(res => res.json());
 
                 if (apiRes.status && apiRes.result) {
