@@ -90,7 +90,8 @@
     { "cmd": ".warnlist", "desc": "Lista de usuarios Advertidos." },
     { "cmd": ".warnlimit", "desc": "Establece el limite de advertencias (solo admin)." },
     { "cmd": ".demote", "desc": "Quítale administrador a un usuario." },
-    { "cmd": ".promote", "desc": "Hacienda un usuario como administrador." }
+    { "cmd": ".promote", "desc": "Hacienda un usuario como administrador." },
+    { "cmd": ".autosticker", "desc": "El bot envia sticker automaticos a ciertas palabras." }
   ],
   "STICKERS": [
     { "cmd": ".s", "desc": "Crea un sticker a partir de imagen/video/gif." },
