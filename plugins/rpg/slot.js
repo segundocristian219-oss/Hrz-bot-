@@ -27,8 +27,9 @@ const slotCommand = {
 
             if (user.lastSlot && (now - user.lastSlot) < cooldown) {
                 let s = cooldown - (now - user.lastSlot);
-                let mTime = Math.floor(s / 20000);
-                let sec = Math.floor((s % 20000) / 1000);
+                let mTime = Math.floor(s / 60000);
+                let sec = Math.floor((s % 60000) / 1000);
+
                 let timeString = (mTime > 0 ? `${mTime}m ` : '') + `${sec}s`;
                 return conn.reply(m.chat, `⏳ Las máquinas se están enfriando. Espera: *${timeString}*`, m);
             }
@@ -40,7 +41,7 @@ const slotCommand = {
 
             await m.react("🎰");
 
-            const symbols = ["🍒", "🍇", "🍋", "🔔", "💎", "👑"];
+            const symbols = ["🛑", "🔔", "💎", "👑"];
             let x = [
                 symbols[Math.floor(Math.random() * symbols.length)],
                 symbols[Math.floor(Math.random() * symbols.length)],
