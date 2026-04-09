@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 process.removeAllListeners('warning');
 
@@ -31,6 +30,15 @@ import { LocalDB } from './lib/localDB.js';
 import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
+
+process.on('uncaughtException', (err) => {
+    console.error('⚠️ ERROR NO CONTROLADO:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ PROMESA NO CONTROLADA:', reason);
+});
+
 
 const silentLogger = pino({ 
     level: 'silent',
