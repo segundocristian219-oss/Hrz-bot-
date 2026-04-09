@@ -12,6 +12,7 @@ const ttsCommand = {
     name: 'tts',
     alias: ['voz', 'decir'],
     category: 'tools',
+    col: 10,
     run: async (m, { conn, text }) => {
         if (!text) return;
 
