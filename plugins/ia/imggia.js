@@ -5,6 +5,7 @@ const aimgCommand = {
     name: 'aimg',
     alias: ['iaimg', 'imgg', 'genimg'],
     category: 'ai',
+    col: 15,
     run: async (m, { conn, text }) => {
         if (!text) return conn.sendMessage(m.chat, { text: `*✎ Agrega un texto para generar la imagen con 𝗜𝗔 𝗖𝗔𝗧 𝗕𝗢𝗧*` }, { quoted: m });
 
