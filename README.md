@@ -13,7 +13,7 @@ Mantente actualizado a través de nuestro canal oficial:
 </h1>
 
 <a href="https://github.com/eliac-d/kirito-Bot-MD">
-<img src="https://voker.dix.lat/api/stats?user=eliac-d&repo=kirito-Bot-md&theme=dark&style=minimal&animate=true&show_owner=true&hide_border=true&accent=00ff00&bg=0d1117&text=c9d1d9&border=0000ff" width="4000" />
+<img src="https://kirito.dix.lat/api/stats?user=eliac-d&repo=kirito-Bot-md&theme=dark&style=minimal&animate=true&show_owner=true&hide_border=true&accent=00ff00&bg=0d1117&text=c9d1d9&border=0000ff" width="4000" />
 
 </a>
 
