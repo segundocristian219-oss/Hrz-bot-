@@ -94,7 +94,7 @@ const economyCommand = {
         balTxt += `──────────────────\n\n`;
         balTxt += `> Usa *.deposit* para guardar tu dinero y *.with* para retirar`;
 
-        await conn.sendMessage(m.chat, { text: balTxt mentions: [m.sender] },  { quoted: m });
+        await conn.sendMessage(m.chat, { text: balTxt, mentions: [m.sender] },  { quoted: m });
     }
 };
 
