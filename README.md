@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **Welcome to the official breathing system of *kirito-Bot MD*, a multi-function bot for WhatsApp using the Baileys library. This system is under constant development and may experience errors during its operation.We invite you to follow our channel [Kirito channel](https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29)
+
+
 <img src='https://api.dix.lat/media2/1773640122670.jpg'>
 
 <h1 align="center">
