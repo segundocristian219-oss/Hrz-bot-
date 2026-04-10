@@ -92,7 +92,7 @@ const economyCommand = {
         balTxt += `──────────────────\n`;
         balTxt += `◈ Total: ${formatCol(total)} Col\n`;
         balTxt += `──────────────────\n\n`;
-        balTxt += `✦ > Usa *.deposit* para guardar tu dinero y *.with* para retirar`;
+        balTxt += `> Usa *.deposit* para guardar tu dinero y *.with* para retirar`;
 
         await conn.sendMessage(m.chat, { text: balTxt }, { quoted: m });
     }
