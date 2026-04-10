@@ -4,7 +4,7 @@ const formatCol = (num) => {
 
 const economyCommand = {
     name: 'balance',
-    alias: ['bal', 'b', 'd', 'deposit', 'depositar'],
+    alias: ['bal', 'b', 'd', 'deposit', 'depositar', 'w', 'withdraw', 'retirar'],
     category: 'economy',
     run: async (m, { conn, args, command }) => {
         const user = await global.User.findOne({ id: m.sender });
@@ -46,6 +46,40 @@ const economyCommand = {
             return conn.sendMessage(m.chat, { text: depTxt }, { quoted: m });
         }
 
+        if (['w', 'withdraw', 'retirar'].includes(command)) {
+            let amount = args[0];
+            let withdrawAmount = 0;
+
+            if (amount === 'all') {
+                withdrawAmount = user.bank || 0;
+            } else {
+                withdrawAmount = parseInt(amount);
+            }
+
+            if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+                return m.reply("⨯ Ingresa una cantidad valida o usa 'all'.");
+            }
+
+            if ((user.bank || 0) < withdrawAmount) {
+                return m.reply("⨯ No tienes suficientes fondos en el banco.");
+            }
+
+            const newCol = (user.col || 0) + withdrawAmount;
+            const newBank = user.bank - withdrawAmount;
+
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, bank: newBank } });
+
+            let withTxt = "『 RETIRO EXITOSO 』\n\n";
+            withTxt += `✦ Usuario: ${name}\n`;
+            withTxt += `──────────────────\n`;
+            withTxt += `◈ Retirado: ${formatCol(withdrawAmount)} Col\n`;
+            withTxt += `◈ En Cartera: ${formatCol(newCol)} Col\n`;
+            withTxt += `◈ En Banco: ${formatCol(newBank)} Col\n`;
+            withTxt += `──────────────────`;
+            
+            return conn.sendMessage(m.chat, { text: withTxt }, { quoted: m });
+        }
+
         const wallet = user.col || 0;
         const bank = user.bank || 0;
         const total = wallet + bank;
@@ -58,10 +92,11 @@ const economyCommand = {
         balTxt += `──────────────────\n`;
         balTxt += `◈ Total: ${formatCol(total)} Col\n`;
         balTxt += `──────────────────\n\n`;
-        balTxt += `✦ usa .deposit para guardar tu dinero en el banco`;
+        balTxt += `✦ Usa .deposit para guardar dinero y .withdraw para retirar`;
 
         await conn.sendMessage(m.chat, { text: balTxt }, { quoted: m });
     }
 };
 
 export default economyCommand;
+                
