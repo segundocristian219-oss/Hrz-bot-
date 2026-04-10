@@ -7,7 +7,7 @@ const economyCommand = {
     alias: ['bal', 'b', 'd', 'deposit', 'depositar'],
     category: 'economy',
     run: async (m, { conn, args, command }) => {
-        const user = global.db.data.users[m.sender];
+        const user = await global.User.findOne({ id: m.sender });
         if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
 
         const name = (await conn.getName(m.sender)).toUpperCase();
@@ -32,6 +32,7 @@ const economyCommand = {
 
             user.col -= depositAmount;
             user.bank = (user.bank || 0) + depositAmount;
+            await user.save();
 
             let depTxt = "『 TRANSACCION EXITOSA 』\n\n";
             depTxt += `✦ Usuario: ${name}\n`;
