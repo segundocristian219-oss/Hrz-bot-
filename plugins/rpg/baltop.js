@@ -18,46 +18,34 @@ const baltopCommand = {
         const totalUsers = await global.User.countDocuments({ col: { $gt: 0 } });
         const totalPages = Math.ceil(totalUsers / limit) || 1;
 
-        if (page > totalPages && totalPages > 0) {
-            return m.reply(`❌ Página inexistente. Total: ${totalPages}`);
-        }
+        if (page > totalPages && totalPages > 0) return m.reply(`❌ Pág. ${page} no existe.`);
 
         const users = await global.User.find({ col: { $gt: 0 } }).sort({ col: -1 }).skip(skip).limit(limit).lean();
 
-        let txt = `\n\t\t\t\t♛  *LEADERBOARD GLOBAL* ♛\n\n`;
-        txt += `◈ *Página:* ${page}/${totalPages}\n`;
-        txt += `┏━━━━━━━━━━━━━━━━━━━━━━━━┓\n`;
+        let txt = `♛  *TOP GLOBAL* (${page}/${totalPages})\n\n`;
 
         if (users.length === 0) {
-            txt += `┃ ✦ Sin registros disponibles.   ┃\n`;
+            txt += `◈ _No hay registros aún._\n`;
         } else {
-            for (let i = 0; i < users.length; i++) {
-                const user = users[i];
-                const rank = skip + i + 1;
-                let medal = '🏅';
-                if (rank === 1) medal = '🥇';
-                if (rank === 2) medal = '🥈';
-                if (rank === 3) medal = '🥉';
+            users.forEach((user, index) => {
+                const rank = skip + index + 1;
+                let sym = '•';
+                if (rank === 1) sym = '🥇';
+                else if (rank === 2) sym = '🥈';
+                else if (rank === 3) sym = '🥉';
 
-                const name = user.name || "Usuario Desconocido";
+                const name = (user.name || "Invitado").substring(0, 15);
                 const colStr = formatCol(user.col || 0);
 
-                txt += `┃ ${medal} *${rank}.* ${name}\n`;
-                txt += `┃ ✧ *Riqueza:* ${colStr} Col\n`;
-                
-                if (i < users.length - 1) {
-                    txt += `┣━━━━━━━━━━━━━━━━━━━━━━━━┫\n`;
-                }
-            }
+                txt += `${sym} *${rank}.* ${name} ➭ *${colStr} Col*\n`;
+            });
         }
-
-        txt += `┗━━━━━━━━━━━━━━━━━━━━━━━━┛\n`;
         
         if (page < totalPages) {
-            txt += `\n✦ _Siguiente: ${usedPrefix + command} ${page + 1}_`;
+            txt += `\n✧ _Pág. Siguiente: ${usedPrefix + command} ${page + 1}_`;
         }
 
-        await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: txt.trim() }, { quoted: m });
         await m.react("🏆");
     }
 };
