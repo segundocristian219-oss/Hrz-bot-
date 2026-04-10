@@ -19,7 +19,7 @@ const baltopCommand = {
         const totalPages = Math.ceil(totalUsers / limit) || 1;
 
         if (page > totalPages && totalPages > 0) {
-            return m.reply(`❌ La página ${page} no existe. Solo hay ${totalPages} página(s).`);
+            return m.reply(`❌ Página inexistente. Total: ${totalPages}`);
         }
 
         const users = await global.User.find({ col: { $gt: 0 } }).sort({ col: -1 }).skip(skip).limit(limit).lean();
@@ -29,20 +29,26 @@ const baltopCommand = {
         txt += `┏━━━━━━━━━━━━━━━━━━━━━━━━┓\n`;
 
         if (users.length === 0) {
-            txt += `┃ ✦ No hay datos suficientes.    ┃\n`;
+            txt += `┃ ✦ Sin registros disponibles.   ┃\n`;
         } else {
-            users.forEach((user, index) => {
-                const rank = skip + index + 1;
+            for (let i = 0; i < users.length; i++) {
+                const user = users[i];
+                const rank = skip + i + 1;
                 let medal = '🏅';
                 if (rank === 1) medal = '🥇';
                 if (rank === 2) medal = '🥈';
                 if (rank === 3) medal = '🥉';
 
-                const userId = `+${user.id.split('@')[0]}`;
+                const name = user.name || "Usuario Desconocido";
                 const colStr = formatCol(user.col || 0);
 
-                txt += `┃ ${medal} *${rank}.* ${userId} ➭ *${colStr} Col*\n`;
-            });
+                txt += `┃ ${medal} *${rank}.* ${name}\n`;
+                txt += `┃ ✧ *Riqueza:* ${colStr} Col\n`;
+                
+                if (i < users.length - 1) {
+                    txt += `┣━━━━━━━━━━━━━━━━━━━━━━━━┫\n`;
+                }
+            }
         }
 
         txt += `┗━━━━━━━━━━━━━━━━━━━━━━━━┛\n`;
