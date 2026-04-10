@@ -85,7 +85,7 @@ const economyCommand = {
         const total = wallet + bank;
 
         let balTxt = "『 ESTADO DE CUENTA 』\n\n";
-        balTxt += `✦ Usuario: ${name}\n`;
+        balTxt += `✦ Usuario: @${m.sender}\n`;
         balTxt += `──────────────────\n`;
         balTxt += `◈ Cartera: ${formatCol(wallet)} Col\n`;
         balTxt += `◈ Banco: ${formatCol(bank)} Col\n`;
