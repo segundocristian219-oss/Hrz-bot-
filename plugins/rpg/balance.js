@@ -23,23 +23,24 @@ const economyCommand = {
             }
 
             if (isNaN(depositAmount) || depositAmount <= 0) {
-                return m.reply(`⨯ Ingresa una cantidad valida o usa "all".`);
+                return m.reply("⨯ Ingresa una cantidad valida o usa 'all'.");
             }
 
             if ((user.col || 0) < depositAmount) {
                 return m.reply("⨯ No tienes suficiente capital en cartera.");
             }
 
-            user.col -= depositAmount;
-            user.bank = (user.bank || 0) + depositAmount;
-            await user.save();
+            const newCol = user.col - depositAmount;
+            const newBank = (user.bank || 0) + depositAmount;
+
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, bank: newBank } });
 
             let depTxt = "『 TRANSACCION EXITOSA 』\n\n";
             depTxt += `✦ Usuario: ${name}\n`;
             depTxt += `──────────────────\n`;
             depTxt += `◈ Depositado: ${formatCol(depositAmount)} Col\n`;
-            depTxt += `◈ En Cartera: ${formatCol(user.col)} Col\n`;
-            depTxt += `◈ En Banco: ${formatCol(user.bank)} Col\n`;
+            depTxt += `◈ En Cartera: ${formatCol(newCol)} Col\n`;
+            depTxt += `◈ En Banco: ${formatCol(newBank)} Col\n`;
             depTxt += `──────────────────`;
             
             return conn.sendMessage(m.chat, { text: depTxt }, { quoted: m });
