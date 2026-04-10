@@ -17,23 +17,30 @@ const baltopCommand = {
             .sort((a, b) => b.total - a.total)
             .slice(0, 6);
 
-        let topTxt = "『 RANKING DE RIQUEZA TOTAL 』\n\n";
-        topTxt += `✦ Top: 6 Global\n`;
-        topTxt += `──────────────────\n\n`;
+        let topTxt = "『 ✦ RANGO DE ELITE: TOP 6 ✦ 』\n\n";
+        topTxt += "◈ Registro Global de Riqueza\n";
+        topTxt += "──────────────────\n\n";
         
         if (sortedUsers.length === 0) {
-            topTxt += "◈ No hay registros disponibles.\n";
+            topTxt += "◈ No se encontraron registros en el sistema.\n";
         } else {
             for (let i = 0; i < sortedUsers.length; i++) {
                 const u = sortedUsers[i];
                 let name = await conn.getName(u.id);
-                if (!name) name = "Usuario";
                 
-                topTxt += `[ ${i + 1} ] ── ${name.toUpperCase().substring(0, 20)}\n`;
+                if (!name || /^\d+$/.test(name)) {
+                    name = "Usuario Anonimo";
+                }
+
+                const position = i + 1;
+                
+                topTxt += `[ 0${position} ] ── ${name.toUpperCase().substring(0, 25)}\n`;
                 topTxt += `◈ Capital: ${formatCol(u.total)} Col\n`;
-                topTxt += `──────────────────\n\n`;
+                topTxt += "──────────────────\n\n";
             }
         }
+
+        topTxt += "✦ Los datos se actualizan en tiempo real";
 
         await conn.sendMessage(m.chat, { text: topTxt.trim() }, { quoted: m });
     }
