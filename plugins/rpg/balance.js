@@ -80,23 +80,39 @@ const economyCommand = {
             return conn.sendMessage(m.chat, { text: withTxt }, { quoted: m });
         }
 
-        const wallet = user.col || 0;
-        const bank = user.bank || 0;
+        let targetId = m.sender;
+        if (m.mentionedJid && m.mentionedJid[0]) {
+            targetId = m.mentionedJid[0];
+        } else if (m.quoted && m.quoted.sender) {
+            targetId = m.quoted.sender;
+        }
+
+        let targetUser = user;
+        if (targetId !== m.sender) {
+            targetUser = await global.User.findOne({ id: targetId });
+            if (!targetUser) return m.reply("⨯ El usuario objetivo no tiene una cuenta registrada.");
+        }
+
+        const wallet = targetUser.col || 0;
+        const bank = targetUser.bank || 0;
         const total = wallet + bank;
 
+        const isOwnBalance = targetId === m.sender;
+        const displayBank = isOwnBalance ? formatCol(bank) : "---";
+        const displayTotal = isOwnBalance ? formatCol(total) : "---";
+
         let balTxt = "『 ESTADO DE CUENTA 』\n\n";
-        balTxt += `✦ Usuario: @${m.sender.split('@')[0]}\n`;
+        balTxt += `✦ Usuario: @${targetId.split('@')[0]}\n`;
         balTxt += `──────────────────\n`;
         balTxt += `◈ Cartera: ${formatCol(wallet)} Col\n`;
-        balTxt += `◈ Banco: ${formatCol(bank)} Col\n`;
+        balTxt += `◈ Banco: ${displayBank} Col\n`;
         balTxt += `──────────────────\n`;
-        balTxt += `◈ Total: ${formatCol(total)} Col\n`;
+        balTxt += `◈ Total: ${displayTotal} Col\n`;
         balTxt += `──────────────────\n\n`;
         balTxt += `> Usa *.deposit* para guardar tu dinero y *.with* para retirar`;
 
-        await conn.sendMessage(m.chat, { text: balTxt, mentions: [m.sender] },  { quoted: m });
+        await conn.sendMessage(m.chat, { text: balTxt, mentions: [targetId] },  { quoted: m });
     }
 };
 
 export default economyCommand;
-                
