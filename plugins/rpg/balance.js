@@ -4,7 +4,7 @@ const formatCol = (num) => {
 
 const economyCommand = {
     name: 'balance',
-    alias: ['bal', 'b', 'd', 'deposit', 'depositar', 'w', 'withdraw', 'retirar'],
+    alias: ['bal', 'b', 'd', 'deposit', 'depositar', 'w', 'with', 'retirar'],
     category: 'economy',
     run: async (m, { conn, args, command }) => {
         const user = await global.User.findOne({ id: m.sender });
@@ -92,7 +92,7 @@ const economyCommand = {
         balTxt += `──────────────────\n`;
         balTxt += `◈ Total: ${formatCol(total)} Col\n`;
         balTxt += `──────────────────\n\n`;
-        balTxt += `✦ Usa .deposit para guardar dinero y .withdraw para retirar`;
+        balTxt += `✦ > Usa *.deposit* para guardar tu dinero y *.with* para retirar`;
 
         await conn.sendMessage(m.chat, { text: balTxt }, { quoted: m });
     }
