@@ -12,12 +12,13 @@ const baltopCommand = {
         const sortedUsers = users
             .map(user => ({
                 id: user.id,
+                name: user.name,
                 total: (user.col || 0) + (user.bank || 0)
             }))
             .sort((a, b) => b.total - a.total)
             .slice(0, 6);
 
-        let topTxt = "『 ✦ RANGO DE ELITE: TOP 6 ✦ 』\n\n";
+        let topTxt = "『 ✦ TOP 6 CON MAS BALANCE ✦ 』\n\n";
         topTxt += "◈ Registro Global de Riqueza\n";
         topTxt += "──────────────────\n\n";
         
@@ -26,16 +27,16 @@ const baltopCommand = {
         } else {
             for (let i = 0; i < sortedUsers.length; i++) {
                 const u = sortedUsers[i];
-                let name = await conn.getName(u.id);
+                let name = u.name || await conn.getName(u.id);
                 
-                if (!name || /^\d+$/.test(name)) {
-                    name = "Usuario Anonimo";
+                if (!name || name.trim() === '') {
+                    name = "Desconocido";
                 }
 
                 const position = i + 1;
                 
                 topTxt += `[ 0${position} ] ── ${name.toUpperCase().substring(0, 25)}\n`;
-                topTxt += `◈ Capital: ${formatCol(u.total)} Col\n`;
+                topTxt += `◈ Col: ${formatCol(u.total)} Col\n`;
                 topTxt += "──────────────────\n\n";
             }
         }
