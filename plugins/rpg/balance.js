@@ -4,7 +4,7 @@ const formatCol = (num) => {
 
 const economyCommand = {
     name: 'balance',
-    alias: ['bal', 'b', 'd', 'deposit', 'depositar', 'w', 'with', 'retirar'],
+    alias: ['bal', 'd', 'deposit', 'depositar', 'with', 'retirar'],
     category: 'economy',
     run: async (m, { conn, args, command }) => {
         const user = await global.User.findOne({ id: m.sender });
@@ -46,7 +46,7 @@ const economyCommand = {
             return conn.sendMessage(m.chat, { text: depTxt }, { quoted: m });
         }
 
-        if (['w', 'withdraw', 'retirar'].includes(command)) {
+        if (['with', 'retirar'].includes(command)) {
             let amount = args[0];
             let withdrawAmount = 0;
 
