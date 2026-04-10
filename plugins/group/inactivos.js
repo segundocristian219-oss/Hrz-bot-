@@ -51,7 +51,8 @@ const inactivosCommand = {
                 }
 
                 const num = u.id.split('@')[0];
-                const name = await conn.getName(u.id) || `Usuario ${i + 1}`;
+                let name = await conn.getName(u.id);
+                if (!name) name = `Usuario ${i + 1}`;
                 
                 txt += `${i + 1}. ${name}\n`;
                 txt += `+${num}\n`;
@@ -87,5 +88,17 @@ const inactivosCommand = {
             if (targets.length === 0) return m.reply("⨯ No hay miembros elegibles para expulsar.");
 
             await conn.sendMessage(m.chat, { 
-                text:
-                    
+                text: `≡ INICIANDO LIMPIEZA ≡\n\nProcesando ${targets.length} miembros.\nSe aplicara un retraso de 2 segundos por usuario para evitar caidas de latencia...` 
+            }, { quoted: m });
+
+            for (let u of targets) {
+                await delay(2000);
+                await conn.groupParticipantsUpdate(m.chat, [u.id], "remove").catch(() => {});
+            }
+
+            return conn.sendMessage(m.chat, { text: `≡ LIMPIEZA FINALIZADA ≡` }, { quoted: m });
+        }
+    }
+};
+
+export default inactivosCommand;
