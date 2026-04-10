@@ -1,3 +1,9 @@
+const formatCol = (num) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+};
+
 const baltopCommand = {
     name: 'baltop',
     alias: ['topcol', 'topcoins', 'topmonedas', 'leaderboard'],
@@ -12,17 +18,15 @@ const baltopCommand = {
         const totalUsers = await global.User.countDocuments({ col: { $gt: 0 } });
         const totalPages = Math.ceil(totalUsers / limit) || 1;
 
-        if (page > totalPages) {
+        if (page > totalPages && totalPages > 0) {
             return m.reply(`❌ La página ${page} no existe. Solo hay ${totalPages} página(s).`);
         }
 
         const users = await global.User.find({ col: { $gt: 0 } }).sort({ col: -1 }).skip(skip).limit(limit).lean();
 
-        let txt = `\n\t\t\t\t♛  *TOP GLOBAL FINANCIERO* ♛\n\n`;
-        txt += `◈ *PÁGINA:* ${page}/${totalPages}\n`;
+        let txt = `\n\t\t\t\t♛  *LEADERBOARD GLOBAL* ♛\n\n`;
+        txt += `◈ *Página:* ${page}/${totalPages}\n`;
         txt += `┏━━━━━━━━━━━━━━━━━━━━━━━━┓\n`;
-
-        let mentions = [];
 
         if (users.length === 0) {
             txt += `┃ ✦ No hay datos suficientes.    ┃\n`;
@@ -34,26 +38,20 @@ const baltopCommand = {
                 if (rank === 2) medal = '🥈';
                 if (rank === 3) medal = '🥉';
 
-                const userId = user.id.split('@')[0];
-                mentions.push(user.id);
-                const colFormated = (user.col || 0).toLocaleString('en-US');
+                const userId = `+${user.id.split('@')[0]}`;
+                const colStr = formatCol(user.col || 0);
 
-                txt += `┃ ${medal} *#${rank}* ┃ @${userId}\n`;
-                txt += `┃ ✧ *Fondos:* ${colFormated} Col\n`;
-                
-                if (index < users.length - 1) {
-                    txt += `┣━━━━━━━━━━━━━━━━━━━━━━━━┫\n`;
-                }
+                txt += `┃ ${medal} *${rank}.* ${userId} ➭ *${colStr} Col*\n`;
             });
         }
 
         txt += `┗━━━━━━━━━━━━━━━━━━━━━━━━┛\n`;
         
         if (page < totalPages) {
-            txt += `\n✦ _Usa ${usedPrefix + command} ${page + 1} para ver la siguiente página._`;
+            txt += `\n✦ _Siguiente: ${usedPrefix + command} ${page + 1}_`;
         }
 
-        await conn.sendMessage(m.chat, { text: txt, mentions }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
         await m.react("🏆");
     }
 };
