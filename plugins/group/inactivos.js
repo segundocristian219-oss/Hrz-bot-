@@ -31,8 +31,11 @@ const inactivosCommand = {
 
         for (let p of participants) {
             if (p.id === botJid || groupAdmins.includes(p.id)) continue;
+            
             const lastSeen = global.actividadGrupo[m.chat][p.id] || 0;
-            const name = await conn.getName(p.id);
+            let name = await conn.getName(p.id);
+            
+            if (!name || name.includes('@')) name = "Usuario Sin Nombre";
 
             if (lastSeen === 0) {
                 fantasmas.push({ id: p.id, name });
@@ -57,22 +60,21 @@ const inactivosCommand = {
             }
 
             if (inactivos.length === 0 && fantasmas.length === 0) {
-                txt += "◈ Todo el grupo esta activo.\n";
+                txt += "◈ No se detectaron usuarios inactivos.\n";
             }
 
             txt += `──────────────────\n`;
-            txt += `> Usa ${usedPrefix}warninactivos para avisar\n`;
-            txt += `> Usa ${usedPrefix}kickinactivos para purgar`;
+            txt += `> Usa ${usedPrefix}kickinactivos para abrir el menu de gestion`;
             
             return conn.sendMessage(m.chat, { text: txt.trim() }, { quoted: m });
         }
 
         if (command === 'warninactivos') {
             const targets = [...inactivos, ...fantasmas];
-            if (targets.length === 0) return m.reply("⨯ No hay inactivos.");
+            if (targets.length === 0) return m.reply("⨯ No hay usuarios para advertir.");
 
-            let warnTxt = "『 ATENCION MIEMBROS 』\n\n";
-            warnTxt += "Los siguientes usuarios deben enviar un mensaje o seran eliminados:\n\n";
+            let warnTxt = "『 AVISO DE ACTIVIDAD 』\n\n";
+            warnTxt += "Los siguientes usuarios deben reportarse pronto:\n\n";
             for (let u of targets) warnTxt += `• ${u.name}\n`;
             
             return conn.sendMessage(m.chat, { text: warnTxt }, { quoted: m });
@@ -83,22 +85,23 @@ const inactivosCommand = {
             const opt = args[0]?.toLowerCase();
 
             if (!['all', 'inactivos', 'fantasmas'].includes(opt)) {
-                let menu = "『 MENU DE PURGA 』\n\n";
+                let menu = "『 MENU DE GESTION 』\n\n";
                 menu += `➭ ${usedPrefix + command} all\n`;
                 menu += `➭ ${usedPrefix + command} inactivos\n`;
-                menu += `➭ ${usedPrefix + command} fantasmas`;
+                menu += `➭ ${usedPrefix + command} fantasmas\n\n`;
+                menu += `✦ Total objetivos: ${inactivos.length + fantasmas.length}`;
                 return m.reply(menu);
             }
 
             let toKick = opt === 'inactivos' ? inactivos : (opt === 'fantasmas' ? fantasmas : [...inactivos, ...fantasmas]);
-            if (toKick.length === 0) return m.reply("⨯ Sin objetivos.");
+            if (toKick.length === 0) return m.reply("⨯ Nada que gestionar aqui.");
 
-            m.reply(`『 ELIMINANDO ${toKick.length} MIEMBROS 』`);
+            m.reply(`『 PROCESANDO ${toKick.length} MIEMBROS 』`);
             for (let u of toKick) {
                 await delay(2000);
                 await conn.groupParticipantsUpdate(m.chat, [u.id], "remove").catch(() => {});
             }
-            return m.reply("『 LIMPIEZA FINALIZADA 』");
+            return m.reply("『 GESTION FINALIZADA 』");
         }
     }
 };
