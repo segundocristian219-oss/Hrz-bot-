@@ -2,9 +2,10 @@ const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 const inactivosCommand = {
     name: 'inactivos',
-    alias: ['kickinactivos'],
+    alias: ['kickinactivos', 'warninactivos'],
     category: 'group',
 
+    // Este bloque registra el tiempo exacto cada vez que alguien envía un mensaje
     async before(m) {
         if (!m.isGroup) return false;
         global.actividadGrupo = global.actividadGrupo || {};
@@ -13,7 +14,7 @@ const inactivosCommand = {
         return false;
     },
 
-    run: async (m, { conn, args, usedPrefix, command, isBotAdmin, isAdmin }) => {
+    run: async (m, { conn, args, usedPrefix, command }) => {
         if (!m.isGroup) return m.reply("⨯ Comando exclusivo para grupos.");
 
         global.actividadGrupo = global.actividadGrupo || {};
@@ -23,100 +24,146 @@ const inactivosCommand = {
         const participants = meta.participants;
         const botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
         const now = Date.now();
-        const twoDays = 2 * 24 * 60 * 60 * 1000;
+        const limiteHoras = 48; // Puedes cambiar las horas de inactividad aquí
+        const tiempoLimite = limiteHoras * 60 * 60 * 1000;
 
-        let users = [];
+        let inactivos = [];
+        let fantasmas = [];
+        const groupAdmins = participants.filter(p => p.admin).map(p => p.id);
+
+        // Clasificar usuarios
         for (let p of participants) {
-            if (p.id === botJid) continue;
+            // Ignoramos al bot y a los administradores del grupo
+            if (p.id === botJid || groupAdmins.includes(p.id)) continue;
+
             const lastSeen = global.actividadGrupo[m.chat][p.id] || 0;
-            users.push({
-                id: p.id,
-                admin: p.admin,
-                time: lastSeen,
-                isInactive: lastSeen === 0 || (now - lastSeen) >= twoDays
-            });
+
+            if (lastSeen === 0) {
+                fantasmas.push({ id: p.id }); // Cero actividad desde el último reinicio del bot
+            } else if ((now - lastSeen) >= tiempoLimite) {
+                inactivos.push({ id: p.id, time: lastSeen }); // Actividad antigua
+            }
         }
 
-        users.sort((a, b) => a.time - b.time);
+        // Ordenar los inactivos del que tiene más tiempo al que tiene menos
+        inactivos.sort((a, b) => a.time - b.time);
+        const totalObjetivos = inactivos.length + fantasmas.length;
 
+        /* =======================================================
+           COMANDO 1: MONITOR DE INACTIVOS (.inactivos)
+        ======================================================= */
         if (command === 'inactivos') {
-            const inactivosOnly = users.filter(u => u.isInactive);
-            
-            let txt = "『 MONITOR DE INACTIVIDAD 』\n\n";
-            txt += `✦ Limite: 48 Horas\n`;
-            txt += `✦ Total: ${inactivosOnly.length} miembros\n`;
+            let txt = "『 MONITOR DE ACTIVIDAD 』\n\n";
+            txt += `✦ Limite: ${limiteHoras} Horas\n`;
+            txt += `✦ Total Detectados: ${totalObjetivos} miembros\n`;
             txt += `──────────────────\n\n`;
-            
-            if (inactivosOnly.length === 0) {
-                txt += "◈ No se detectaron usuarios inactivos.\n";
-            } else {
-                for (let i = 0; i < inactivosOnly.length; i++) {
-                    const u = inactivosOnly[i];
-                    let dateStr;
-                    
-                    if (u.time > 0) {
-                        const d = new Date(u.time);
-                        const iso = d.toISOString();
-                        const datePart = iso.substring(0, 10);
-                        const timePart = iso.substring(11, 16);
-                        dateStr = `${datePart} | ${timePart} UTC`;
-                    } else {
-                        dateStr = "Sin actividad reciente";
-                    }
 
-                    const num = u.id.split('@')[0];
-                    let name = await conn.getName(u.id);
-                    if (!name || name === num) name = "User";
-                    
-                    txt += `[ ${i + 1} ] ── ${name.toUpperCase().substring(0, 20)}\n`;
-                    txt += `◈ Numero: +${num}\n`;
-                    txt += `◈ Visto: ${dateStr}\n`;
-                    txt += `──────────────────\n\n`;
-                }
+            if (totalObjetivos === 0) {
+                txt += "◈ El grupo esta completamente activo. ¡Excelente!\n";
+                return conn.sendMessage(m.chat, { text: txt.trim() }, { quoted: m });
             }
 
-            return conn.sendMessage(m.chat, { text: txt.trim() }, { quoted: m });
+            if (inactivos.length > 0) {
+                txt += `[ ⚠️ ] ── USUARIOS INACTIVOS (+${limiteHoras}h)\n\n`;
+                for (let i = 0; i < inactivos.length; i++) {
+                    const u = inactivos[i];
+                    const d = new Date(u.time);
+                    const dateStr = `${d.toISOString().substring(0, 10)} | ${d.toISOString().substring(11, 16)} UTC`;
+                    txt += `◈ @${u.id.split('@')[0]} ➭ Visto: ${dateStr}\n`;
+                }
+                txt += `\n──────────────────\n\n`;
+            }
+
+            if (fantasmas.length > 0) {
+                txt += `[ 👻 ] ── FANTASMAS (Sin registro reciente)\n\n`;
+                for (let i = 0; i < fantasmas.length; i++) {
+                    txt += `◈ @${fantasmas[i].id.split('@')[0]}\n`;
+                }
+                txt += `\n──────────────────\n`;
+            }
+
+            txt += `\n> Usa *.warninactivos* para advertirles o *.kickinactivos* para el menu de purga.`;
+
+            // Mencionamos a los usuarios para que el formato @numero se vea bien, pero sin notificar agresivamente
+            const allMentions = [...inactivos.map(u => u.id), ...fantasmas.map(u => u.id)];
+            return conn.sendMessage(m.chat, { text: txt.trim(), mentions: allMentions }, { quoted: m });
         }
 
+        /* =======================================================
+           COMANDO 2: ADVERTENCIA GENERAL (.warninactivos)
+        ======================================================= */
+        if (command === 'warninactivos') {
+            const isBotAdmin = participants.find(p => p.id === botJid)?.admin;
+            const isAdmin = groupAdmins.includes(m.sender);
+            
+            if (!isAdmin) return m.reply("⨯ Acceso restringido: Solo Administradores.");
+            if (totalObjetivos === 0) return m.reply("⨯ No hay usuarios inactivos para advertir.");
+
+            let warnTxt = "『 ⚠️ ADVERTENCIA DE INACTIVIDAD ⚠️ 』\n\n";
+            warnTxt += `El sistema ha detectado inactividad o falta de participacion en los siguientes usuarios. Por favor, envien un mensaje para evitar ser eliminados en la proxima limpieza.\n\n`;
+            
+            const allTargets = [...inactivos.map(u => u.id), ...fantasmas.map(u => u.id)];
+            for (let id of allTargets) {
+                warnTxt += `◈ @${id.split('@')[0]}\n`;
+            }
+            
+            warnTxt += `\n──────────────────\n`;
+            warnTxt += `✦ Administrador a cargo: @${m.sender.split('@')[0]}`;
+
+            return conn.sendMessage(m.chat, { text: warnTxt, mentions: [...allTargets, m.sender] }, { quoted: m });
+        }
+
+        /* =======================================================
+           COMANDO 3: MENÚ Y EJECUCIÓN DE PURGA (.kickinactivos)
+        ======================================================= */
         if (command === 'kickinactivos') {
-            if (!isAdmin) return m.reply("⨯ Acceso restringido: Administradores.");
-            if (!isBotAdmin) return m.reply("⨯ Error: Bot sin privilegios.");
+            const isBotAdmin = participants.find(p => p.id === botJid)?.admin;
+            const isAdmin = groupAdmins.includes(m.sender);
+
+            if (!isAdmin) return m.reply("⨯ Acceso restringido: Solo Administradores.");
+            if (!isBotAdmin) return m.reply("⨯ Error: El bot necesita ser administrador para expulsar.");
 
             const option = args[0] ? args[0].toLowerCase() : '';
 
-            if (!['all', 'first50', 'last50'].includes(option)) {
+            if (!['all', 'inactivos', 'fantasmas'].includes(option)) {
                 let menu = "『 GESTION DE LIMPIEZA 』\n\n";
                 menu += `◈ Comando: ${usedPrefix + command} [opcion]\n\n`;
                 menu += `◈ Opciones disponibles:\n`;
-                menu += `➭ all : Purga total de inactivos\n`;
-                menu += `➭ first50 : Purga de los 50 mas antiguos\n`;
-                menu += `➭ last50 : Purga de los 50 mas recientes\n\n`;
-                menu += `✦ Nota: Solo afecta a usuarios con +2 dias de inactividad.\n`;
-                menu += `✦ Exencion: Administradores no seran expulsados.`;
+                menu += `➭ inactivos : Purga solo a los inactivos confirmados (+${limiteHoras}h)\n`;
+                menu += `➭ fantasmas : Purga solo a los que no tienen registro\n`;
+                menu += `➭ all : Purga total (Inactivos + Fantasmas)\n\n`;
+                menu += `✦ Objetivos actuales: ${totalObjetivos}\n`;
+                menu += `✦ Nota: Los Administradores estan exentos automaticamente.`;
                 
                 return conn.sendMessage(m.chat, { text: menu }, { quoted: m });
             }
 
-            let targets = users.filter(u => u.isInactive && !u.admin);
+            let targetsToKick = [];
+            if (option === 'inactivos') targetsToKick = inactivos.map(u => u.id);
+            if (option === 'fantasmas') targetsToKick = fantasmas.map(u => u.id);
+            if (option === 'all') targetsToKick = [...inactivos.map(u => u.id), ...fantasmas.map(u => u.id)];
 
-            if (option === 'first50') targets = targets.slice(0, 50);
-            if (option === 'last50') targets = targets.slice(-50);
-
-            if (targets.length === 0) return m.reply("⨯ No hay objetivos detectados.");
+            if (targetsToKick.length === 0) return m.reply("⨯ No hay objetivos en esta categoria para eliminar.");
 
             await conn.sendMessage(m.chat, { 
-                text: `『 EJECUTANDO PURGA 』\n\nObjetivos: ${targets.length}\nIntervalo: 2s (Seguridad Anti-Lag)` 
+                text: `『 EJECUTANDO PURGA 』\n\n◈ Categoria: ${option.toUpperCase()}\n◈ Objetivos: ${targetsToKick.length}\n◈ Intervalo: 2s por seguridad anti-lag...` 
             }, { quoted: m });
 
-            for (let u of targets) {
+            let expulsados = 0;
+            for (let id of targetsToKick) {
                 await delay(2000);
-                await conn.groupParticipantsUpdate(m.chat, [u.id], "remove").catch(() => {});
+                try {
+                    await conn.groupParticipantsUpdate(m.chat, [id], "remove");
+                    expulsados++;
+                } catch (e) {
+                    console.log(`No se pudo expulsar a ${id}`);
+                }
             }
 
-            return conn.sendMessage(m.chat, { text: `『 PROCESO FINALIZADO 』` }, { quoted: m });
+            return conn.sendMessage(m.chat, { text: `『 PROCESO FINALIZADO 』\n\n✦ Usuarios eliminados: ${expulsados}` }, { quoted: m });
         }
     }
 };
 
 export default inactivosCommand;
-                    
+    
