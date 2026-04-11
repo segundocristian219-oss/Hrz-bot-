@@ -1,3 +1,7 @@
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
+
 const addcoinCommand = {
     name: 'addcoin',
     alias: ['darcol', 'addcol', 'agregarmonedas', 'darcoins'],
@@ -6,7 +10,7 @@ const addcoinCommand = {
         try {
             const isOwner = global.owner.map(v => v[0] + '@s.whatsapp.net').includes(m.sender);
             if (!isOwner) {
-                global.dfail('owner', m, conn);
+                if (global.dfail) global.dfail('owner', m, conn);
                 return;
             }
 
@@ -22,9 +26,10 @@ const addcoinCommand = {
                 amount = parseInt(args[0]);
             }
 
-            if (!amount || isNaN(amount) || amount <= 0) {
-                let txt = `\n\t\t\t\t♛  *SISTEMA FINANCIERO* ♛\n\n`;
-                txt += `✧ *USO CORRECTO:* ${usedPrefix + command} <cantidad> [@usuario / responder]\n`;
+            if (isNaN(amount) || amount === 0) {
+                let txt = `『 ✦ SISTEMA FINANCIERO ✦ 』\n\n`;
+                txt += `◈ Uso: ${usedPrefix + command} <cantidad> [@usuario / responder]\n`;
+                txt += `◈ Ejemplo: ${usedPrefix + command} -100\n`;
                 return conn.reply(m.chat, txt, m);
             }
 
@@ -38,13 +43,13 @@ const addcoinCommand = {
                 { $set: { col: newCol } }
             );
 
-            const txt = `
-\t\t\t\t♛  *TRANSFERENCIA EXITOSA* ♛
-
-◈  *DESTINATARIO:* @${who.split('@')[0]}
-✦  *MONTO AÑADIDO:* +${amount} Col
-✧  *NUEVO BALANCE:* ${newCol} Col
-`;
+            const status = amount > 0 ? `+${formatCol(amount)}` : `${formatCol(amount)}`;
+            
+            const txt = `『 ✦ MOVIMIENTO DE FONDOS ✦ 』\n\n` +
+                        `◈ Destinatario: @${who.split('@')[0]}\n` +
+                        `◈ Cantidad: ${status} Col\n` +
+                        `◈ Nuevo Balance: ${formatCol(newCol)} Col\n` +
+                        `──────────────────`;
 
             await conn.sendMessage(m.chat, { 
                 text: txt,
@@ -65,4 +70,3 @@ const addcoinCommand = {
 };
 
 export default addcoinCommand;
-              
