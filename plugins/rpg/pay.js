@@ -19,32 +19,29 @@ const payCommand = {
                 return conn.reply(m.chat, txt, m);
             }
 
-            const senderId = m.sender.split('@')[0];
-            const targetId = who.split('@')[0];
+            if (who === m.sender) return m.reply("⨯ Operacion rechazada: No puedes transferir fondos a ti mismo.");
 
-            if (targetId === senderId) return m.reply("⨯ Operacion rechazada: No puedes transferir fondos a ti mismo.");
+            let senderUser = await global.User.findOne({ id: m.sender });
+            if (!senderUser) return m.reply("⨯ No tienes una cuenta registrada.");
 
-            let senderUser = await global.User.findOne({ id: { $regex: senderId } });
-            if (!senderUser) senderUser = await global.User.create({ id: m.sender, col: 0, banco: 0 });
+            const currentBank = senderUser.bank || 0;
 
-            const currentBanco = senderUser.banco || 0;
-
-            if (currentBanco < amount) {
-                return m.reply(`⨯ Fondos insuficientes.\n◈ Tu saldo bancario es de: ${formatCol(currentBanco)} Col.`);
+            if (currentBank < amount) {
+                return m.reply(`⨯ Fondos insuficientes.\n◈ Tu saldo bancario es de: ${formatCol(currentBank)} Col.`);
             }
 
-            let targetUser = await global.User.findOne({ id: { $regex: targetId } });
-            if (!targetUser) targetUser = await global.User.create({ id: who, col: 0, banco: 0 });
+            let targetUser = await global.User.findOne({ id: who });
+            if (!targetUser) targetUser = await global.User.create({ id: who, col: 0, bank: 0 });
 
-            await global.User.updateOne({ _id: senderUser._id }, { $inc: { banco: -amount } });
-            await global.User.updateOne({ _id: targetUser._id }, { $inc: { banco: amount } });
+            await global.User.updateOne({ id: m.sender }, { $inc: { bank: -amount } });
+            await global.User.updateOne({ id: who }, { $inc: { bank: amount } });
 
             const txt = `『 ✦ TRANSFERENCIA EXITOSA ✦ 』\n\n` +
-                        `◈ Remitente: @${senderId}\n` +
-                        `◈ Destinatario: @${targetId}\n` +
+                        `◈ Remitente: @${m.sender.split('@')[0]}\n` +
+                        `◈ Destinatario: @${who.split('@')[0]}\n` +
                         `◈ Monto Transferido: ${formatCol(amount)} Col\n` +
                         `──────────────────\n` +
-                        `✦ Tu nuevo balance: ${formatCol(currentBanco - amount)} Col\n` +
+                        `✦ Tu nuevo balance: ${formatCol(currentBank - amount)} Col\n` +
                         `──────────────────`;
 
             await conn.sendMessage(m.chat, { 
@@ -60,10 +57,9 @@ const payCommand = {
 
         } catch (e) {
             console.error(e);
-            m.reply("⨯ Ocurrio un error al procesar la transferencia en la base de datos.");
+            m.reply("⨯ Ocurrio un error al procesar la transferencia.");
         }
     }
 };
 
 export default payCommand;
-                                                                   
