@@ -60,7 +60,7 @@ const workCommand = {
             ];
             lore = loseLore[Math.floor(Math.random() * loseLore.length)];
             
-            if (newCol < amount) amount = newCol; 
+            // La resta ahora se hace directa para respetar las deudas (números negativos)
             newCol -= amount;
             statusPrefix = `-${formatCol(amount)}`;
             headerTitle = "『 ACCIDENTE LABORAL 』";
