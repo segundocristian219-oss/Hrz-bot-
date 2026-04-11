@@ -1,65 +1,82 @@
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
+
 const workCommand = {
     name: 'work',
     alias: ['trabajar', 'chamba', 'chambear'],
     category: 'rpg',
-    run: async (m, { conn, usedPrefix, command }) => {
-        let user = await global.User.findOne({ id: m.sender })
-        if (!user) user = await global.User.create({ id: m.sender, col: 10, exp: 0 })
+    run: async (m, { conn }) => {
+        let user = await global.User.findOne({ id: m.sender });
+        if (!user) user = await global.User.create({ id: m.sender, col: 0 });
 
-        const now = Date.now()
-        const cooldown = 10 * 60 * 1000 
-        const lastWork = user.lastWork || 0
+        const now = Date.now();
+        const cooldown = 10 * 60 * 1000; 
+        const lastWork = user.lastWork || 0;
 
         if (now - lastWork < cooldown) {
-            const remaining = Math.ceil((cooldown - (now - lastWork)) / 1000)
-            const mins = Math.floor(remaining / 60)
-            const secs = remaining % 60
-            return conn.reply(m.chat, `⌛ *DESCANSO NECESARIO*\n\nHas trabajado mucho. Regresa en: *${mins}m ${secs}s*`, m)
+            const remaining = Math.ceil((cooldown - (now - lastWork)) / 1000);
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            return m.reply(`⨯ Necesitas descansar. Regresa en: ${mins}m ${secs}s`);
         }
 
-        await m.react("💪")
+        const isWin = Math.random() < 0.70; 
 
-        
-        const empleos = [
-            { t: "Ayudaste a un anciano a acomodar cajas en su tienda", p: [8, 13, 17] },
-            { t: "Cuidaste el huerto de un vecino durante la mañana", p: [6, 9] },
-            { t: "Repartiste volantes de la panadería local", p: [17, 20] },
-            { t: "Limpiaste los establos en la granja del pueblo", p: [22, 20] },
-            { t: "Recogiste leña seca en el campo para el invierno", p: [7, 9] },
-            { t: "Ayudaste a cargar bultos de café en el mercado", p: [29, 25] },
-            { t: "Limpiaste los vidrios de una oficina pequeña", p: [10, 15] }
-        ]
+        let amount = 0;
+        let lore = "";
+        let newCol = user.col || 0;
+        let statusPrefix = "";
+        let headerTitle = "";
 
-        const job = empleos[Math.floor(Math.random() * empleos.length)]
-        const pago = Math.floor(Math.random() * (job.p[1] - job.p[0] + 1)) + job.p[0]
+        if (isWin) {
+            amount = Math.floor(Math.pow(Math.random(), 3) * 99999) + 1;
+            
+            const winLore = [
+                "Desarrollaste un bot para una empresa y te pagaron el contrato.",
+                "Reparaste la placa base de un telefono de alta gama.",
+                "Hackeaste la seguridad de una corporacion rival y vendiste los datos.",
+                "Trabajaste como guardia de seguridad en un evento VIP.",
+                "Minaste criptomonedas aprovechando la electricidad de tu vecino.",
+                "Ganaste un torneo de programacion clandestino.",
+                "Encontraste una billetera perdida y el dueño te dio una recompensa.",
+                "Ayudaste a descargar mercancía pesada en el muelle de la ciudad."
+            ];
+            lore = winLore[Math.floor(Math.random() * winLore.length)];
+            newCol += amount;
+            statusPrefix = `+${formatCol(amount)}`;
+            headerTitle = "『 JORNADA EXITOSA 』";
+        } else {
+            amount = Math.floor(Math.pow(Math.random(), 1/3) * 9999) + 1;
+            
+            const loseLore = [
+                "Invertiste en una criptomoneda falsa y perdiste tus ahorros.",
+                "Rompiste equipo caro en el trabajo y te lo descontaron del sueldo.",
+                "Te asaltaron en un callejon oscuro mientras volvias de cobrar.",
+                "Apostaste en carreras clandestinas y tu corredor tropezo.",
+                "La policia te multo por alterar el orden publico.",
+                "Compraste hardware defectuoso por internet y el vendedor desaparecio.",
+                "Te quedaste dormido en el trabajo y te multaron por ineficiencia."
+            ];
+            lore = loseLore[Math.floor(Math.random() * loseLore.length)];
+            
+            if (newCol < amount) amount = newCol; 
+            newCol -= amount;
+            statusPrefix = `-${formatCol(amount)}`;
+            headerTitle = "『 ACCIDENTE LABORAL 』";
+        }
 
-        const newCol = (user.col ?? 0) + pago
+        await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, lastWork: now } });
 
-        await global.User.updateOne(
-            { id: m.sender }, 
-            { $set: { col: newCol, lastWork: now } }
-        )
+        let txt = `${headerTitle}\n\n`;
+        txt += `◈ ${lore}\n`;
+        txt += `──────────────────\n`;
+        txt += `✦ ${isWin ? 'Ganancia' : 'Perdida'}: ${statusPrefix} Col\n`;
+        txt += `✧ Balance Actual: ${formatCol(newCol)} Col\n`;
+        txt += `──────────────────`;
 
-        const workText = `
-\t\t\t\t♛  *JORNADA LABORAL* ♛
-
-◈  *ACTIVIDAD:* ${job.t}
-✦  *PAGO:* +${pago} Col
-✧  *BALANCE:* ${newCol} Col
-
-`
-
-        await conn.sendMessage(m.chat, { 
-            text: workText,
-            contextInfo: {
-                forwardingScore: 1,
-                isForwarded: true,
-                ...channelInfo
-            }
-        }, { quoted: m })
-
-        await m.react("✅")
+        await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
     }
-}
+};
 
-export default workCommand
+export default workCommand;
