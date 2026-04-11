@@ -9,10 +9,7 @@ const payCommand = {
     run: async (m, { conn, args, usedPrefix, command }) => {
         try {
             let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : null;
-            
-            let amount = args[0];
-            if (m.mentionedJid && m.mentionedJid[0]) amount = args[1];
-            amount = parseInt(amount);
+            let amount = parseInt(args.find(a => !isNaN(a) && !a.includes('@')));
 
             if (!who || isNaN(amount) || amount <= 0) {
                 let txt = `『 ✦ SISTEMA BANCARIO ✦ 』\n\n`;
@@ -21,45 +18,39 @@ const payCommand = {
                 return conn.reply(m.chat, txt, m);
             }
 
-            if (who === m.sender) return m.reply("⨯ No puedes transferir fondos a ti mismo.");
+            const f_sender = m.sender.split('@')[0].split(':')[0] + '@s.whatsapp.net';
+            const f_target = who.split('@')[0].split(':')[0] + '@s.whatsapp.net';
 
-            let senderUser = await global.User.findOne({ id: m.sender });
-            if (!senderUser) senderUser = await global.User.create({ id: m.sender, col: 0, banco: 0 });
+            if (f_target === f_sender) return m.reply("⨯ No puedes transferir fondos a ti mismo.");
 
-            let targetUser = await global.User.findOne({ id: who });
-            if (!targetUser) targetUser = await global.User.create({ id: who, col: 0, banco: 0 });
+            let senderUser = await global.User.findOne({ id: f_sender });
+            if (!senderUser) senderUser = await global.User.create({ id: f_sender, col: 0, banco: 0 });
 
-            const senderBanco = senderUser.banco || 0;
+            const currentBanco = senderUser.banco || 0;
 
-            if (senderBanco < amount) {
-                return m.reply(`⨯ Fondos insuficientes.\n◈ Tu saldo bancario es de: ${formatCol(senderBanco)} Col.`);
+            if (currentBanco < amount) {
+                return m.reply(`⨯ Fondos insuficientes.\n◈ Tu saldo bancario es de: ${formatCol(currentBanco)} Col.`);
             }
 
-            await global.User.updateOne({ id: m.sender }, { $inc: { banco: -amount } });
-            await global.User.updateOne({ id: who }, { $inc: { banco: amount } });
+            let targetUser = await global.User.findOne({ id: f_target });
+            if (!targetUser) targetUser = await global.User.create({ id: f_target, col: 0, banco: 0 });
+
+            await global.User.updateOne({ id: f_sender }, { $inc: { banco: -amount } });
+            await global.User.updateOne({ id: f_target }, { $inc: { banco: amount } });
 
             const txt = `『 ✦ TRANSFERENCIA EXITOSA ✦ 』\n\n` +
-                        `◈ Remitente: @${m.sender.split('@')[0]}\n` +
-                        `◈ Destinatario: @${who.split('@')[0]}\n` +
-                        `◈ Monto Transferido: ${formatCol(amount)} Col\n` +
+                        `◈ Remitente: @${f_sender.split('@')[0]}\n` +
+                        `◈ Destinatario: @${f_target.split('@')[0]}\n` +
+                        `◈ Monto: ${formatCol(amount)} Col\n` +
                         `──────────────────\n` +
-                        `✦ Nuevo saldo: ${formatCol(senderBanco - amount)} Col\n` +
+                        `✦ Nuevo saldo: ${formatCol(currentBanco - amount)} Col\n` +
                         `──────────────────`;
 
-            await conn.sendMessage(m.chat, { 
-                text: txt,
-                mentions: [m.sender, who],
-                contextInfo: {
-                    forwardingScore: 1,
-                    isForwarded: true,
-                    ...(typeof channelInfo !== 'undefined' ? channelInfo : {})
-                }
-            }, { quoted: m });
-
+            await conn.sendMessage(m.chat, { text: txt, mentions: [f_sender, f_target] }, { quoted: m });
             await m.react("💸");
 
         } catch (e) {
-            console.error(e);
+            console.error(who, amount, e);
             m.reply("⨯ Error al procesar la transferencia.");
         }
     }
