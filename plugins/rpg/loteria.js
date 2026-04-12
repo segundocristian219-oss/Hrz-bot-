@@ -1,35 +1,60 @@
-let handler = async (m, { conn, args, usedPrefix, command }) => {
-    let user = global.db.data.users[m.sender]
-    let costoBoleto = 500 // Costo fijo por entrada
-    let premio = 25000 // Premio mayor
-    
-    if (user.col < costoBoleto) return m.reply(`❌ No tienes suficientes Col para comprar un boleto. Necesitas ${costoBoleto} Col.`)
+const formatCol = (num) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+};
 
-    // El usuario elige un número del 1 al 10 o el bot le asigna uno si no pone nada
-    let numeroElegido = parseInt(args[0])
-    if (!numeroElegido || numeroElegido < 1 || numeroElegido > 10) {
-        return m.reply(`🎰 *LOTERÍA KIRITO* 🎰\n\nPara participar, elige un número del 1 al 10.\nEjemplo: *${usedPrefix + command} 7*\n\n*Costo:* ${costoBoleto} Col\n*Premio:* ${premio} Col`)
+const loteriaCommand = {
+    name: 'loteria',
+    alias: ['lotto', 'sorteo'],
+    category: 'economy',
+    run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
+        if (!isOwner) return m.reply("⨯ Comando restringido para Owners.");
+        if (!m.isGroup) return m.reply("⨯ Comando exclusivo para grupos.");
+
+        const user = await global.User.findOne({ id: m.sender });
+        if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
+
+        const numeroElegido = parseInt(args[0]);
+        const costo = 500;
+        const premio = 25000;
+
+        if (isNaN(numeroElegido) || numeroElegido < 1 || numeroElegido > 10) {
+            let help = "『 CASINO: LOTERIA 』\n\n";
+            help += `◈ USO: ${usedPrefix + command} [1-10]\n`;
+            help += `✦ COSTO: ${formatCol(costo)} Col\n`;
+            help += `✦ PREMIO: ${formatCol(premio)} Col\n`;
+            return m.reply(help);
+        }
+
+        if (user.col < costo) return m.reply("⨯ Fondos insuficientes.");
+
+        const numeroGanador = Math.floor(Math.random() * 10) + 1;
+        const gano = numeroElegido === numeroGanador;
+
+        user.col -= costo;
+        if (gano) user.col += premio;
+
+        await user.save();
+
+        let resTxt = "『 L O T E R I A 』\n\n";
+        resTxt += `✦ Tu Numero: ${numeroElegido}\n`;
+        resTxt += `✦ Ganador: ${numeroGanador}\n`;
+        resTxt += `──────────────────\n\n`;
+
+        if (gano) {
+            resTxt += `『 ¡GANASTE! 』\n`;
+            resTxt += `◈ Premio: +${formatCol(premio)} Col\n`;
+        } else {
+            resTxt += `『 PERDISTE 』\n`;
+            resTxt += `◈ Perdida: -${formatCol(costo)} Col\n`;
+        }
+
+        resTxt += `\n✦ Saldo: ${formatCol(user.col)} Col`;
+
+        await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
+        if (gano) await m.react("🎟️");
     }
+};
 
-    // Cobrar el boleto
-    user.col -= costoBoleto
-    
-    // Sorteo rápido
-    let numeroGanador = Math.floor(Math.random() * 10) + 1
-    let mensaje = `🎟️ *BOLETO COMPRADO* 🎟️\n\nTu número: [ ${numeroElegido} ]\nNúmero ganador: [ ${numeroGanador} ]\n\n`
-
-    if (numeroElegido === numeroGanador) {
-        user.col += premio
-        mensaje += `✨ ¡FELICIDADES! ✨\nHas ganado el premio mayor de *${premio} Col*. Tu saldo ha sido actualizado.`
-    } else {
-        mensaje += `😞 No hubo suerte esta vez. Perdiste los ${costoBoleto} Col invertidos. ¡Sigue intentando!`
-    }
-
-    await m.reply(mensaje)
-}
-
-handler.command = /^(loteria|lotto)$/i
-handler.tags = ['rpg']
-handler.help = ['loteria <1-10>']
-
-export default handler
+export default loteriaCommand;
