@@ -14,18 +14,19 @@ const loteriaCommand = {
         const user = await global.User.findOne({ id: m.sender });
         if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
 
-        const isOwner = [conn.user.jid, ...global.config.owner.map(o => o[0] + '@s.whatsapp.net')].includes(m.sender);
+        const ownerList = global.config?.owner || [];
+        const isOwner = ownerList.some(owner => owner[0] + '@s.whatsapp.net' === m.sender) || m.sender === conn.user.jid;
 
         const ahora = Date.now();
-        const cooldown = 10 * 60 * 1000;
-        if (!isOwner && user.lastLoteria && ahora - user.lastLoteria < cooldown) {
+        const cooldown = 600000;
+        if (!isOwner && user.lastLoteria && (ahora - user.lastLoteria < cooldown)) {
             const mins = Math.ceil((cooldown - (ahora - user.lastLoteria)) / 60000);
             return m.reply(`⨯ Espera ${mins} minutos para volver a jugar.`);
         }
 
         const num = parseInt(args[0]);
         const costo = 10000;
-        const premio = Math.floor(Math.random() * (50000 - 25000 + 1)) + 25000;
+        const premio = Math.floor(Math.random() * 25001) + 25000;
 
         if (isNaN(num) || num < 1 || num > 10) {
             let help = "『 CASINO: LOTERIA 』\n\n";
