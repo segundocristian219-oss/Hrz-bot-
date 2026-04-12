@@ -14,21 +14,20 @@ const loteriaCommand = {
         const user = await global.User.findOne({ id: m.sender });
         if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
 
-        const owners = [conn.user.jid, ...global.config.owner.map(owner => owner[0] + '@s.whatsapp.net')];
-        const isOwner = owners.includes(m.sender);
+        const isOwner = [conn.user.jid, ...global.config.owner.map(o => o[0] + '@s.whatsapp.net')].includes(m.sender);
 
         const ahora = Date.now();
-        const tiempoCooldown = 10 * 60 * 1000;
-        if (!isOwner && user.lastLoteria && ahora - user.lastLoteria < tiempoCooldown) {
-            const restante = Math.ceil((tiempoCooldown - (ahora - user.lastLoteria)) / 60000);
-            return m.reply(`⨯ Espera ${restante} minutos para volver a jugar.`);
+        const cooldown = 10 * 60 * 1000;
+        if (!isOwner && user.lastLoteria && ahora - user.lastLoteria < cooldown) {
+            const mins = Math.ceil((cooldown - (ahora - user.lastLoteria)) / 60000);
+            return m.reply(`⨯ Espera ${mins} minutos para volver a jugar.`);
         }
 
-        const numeroElegido = parseInt(args[0]);
+        const num = parseInt(args[0]);
         const costo = 10000;
         const premio = Math.floor(Math.random() * (50000 - 25000 + 1)) + 25000;
 
-        if (isNaN(numeroElegido) || numeroElegido < 1 || numeroElegido > 10) {
+        if (isNaN(num) || num < 1 || num > 10) {
             let help = "『 CASINO: LOTERIA 』\n\n";
             help += `◈ USO: ${usedPrefix + command} [1-10]\n`;
             help += `✦ COSTO: ${formatCol(costo)} Col\n`;
@@ -38,8 +37,8 @@ const loteriaCommand = {
 
         if (user.col < costo) return m.reply("⨯ Fondos insuficientes.");
 
-        const numeroGanador = Math.floor(Math.random() * 10) + 1;
-        const gano = numeroElegido === numeroGanador;
+        const ganador = Math.floor(Math.random() * 10) + 1;
+        const gano = num === ganador;
         const profit = gano ? (premio - costo) : -costo;
 
         await global.User.updateOne(
@@ -50,22 +49,22 @@ const loteriaCommand = {
             }
         );
 
-        let resTxt = "『 L O T E R I A 』\n\n";
-        resTxt += `✦ Tu Numero: ${numeroElegido}\n`;
-        resTxt += `✦ Ganador: ${numeroGanador}\n`;
-        resTxt += `──────────────────\n\n`;
+        let txt = "『 L O T E R I A 』\n\n";
+        txt += `✦ Tu Numero: ${num}\n`;
+        txt += `✦ Ganador: ${ganador}\n`;
+        txt += `──────────────────\n\n`;
 
         if (gano) {
-            resTxt += `『 ¡GANASTE! 』\n`;
-            resTxt += `◈ Premio: +${formatCol(premio)} Col\n`;
+            txt += `『 ¡GANASTE! 』\n`;
+            txt += `◈ Premio: +${formatCol(premio)} Col\n`;
         } else {
-            resTxt += `『 PERDISTE 』\n`;
-            resTxt += `◈ Perdida: -${formatCol(costo)} Col\n`;
+            txt += `『 PERDISTE 』\n`;
+            txt += `◈ Perdida: -${formatCol(costo)} Col\n`;
         }
 
-        resTxt += `\n✦ Saldo: ${formatCol(user.col + profit)} Col`;
+        txt += `\n✦ Saldo: ${formatCol(user.col + profit)} Col`;
 
-        await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
         if (gano) await m.react("🎟️");
     }
 };
