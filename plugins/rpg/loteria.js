@@ -14,15 +14,25 @@ const loteriaCommand = {
         const user = await global.User.findOne({ id: m.sender });
         if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
 
+        const owners = [conn.user.jid, ...global.config.owner.map(owner => owner[0] + '@s.whatsapp.net')];
+        const isOwner = owners.includes(m.sender);
+
+        const ahora = Date.now();
+        const tiempoCooldown = 10 * 60 * 1000;
+        if (!isOwner && user.lastLoteria && ahora - user.lastLoteria < tiempoCooldown) {
+            const restante = Math.ceil((tiempoCooldown - (ahora - user.lastLoteria)) / 60000);
+            return m.reply(`⨯ Espera ${restante} minutos para volver a jugar.`);
+        }
+
         const numeroElegido = parseInt(args[0]);
-        const costo = 500;
-        const premio = 25000;
+        const costo = 10000;
+        const premio = Math.floor(Math.random() * (50000 - 25000 + 1)) + 25000;
 
         if (isNaN(numeroElegido) || numeroElegido < 1 || numeroElegido > 10) {
             let help = "『 CASINO: LOTERIA 』\n\n";
             help += `◈ USO: ${usedPrefix + command} [1-10]\n`;
             help += `✦ COSTO: ${formatCol(costo)} Col\n`;
-            help += `✦ PREMIO: ${formatCol(premio)} Col\n`;
+            help += `✦ PREMIO: 25K - 50K Col\n`;
             return m.reply(help);
         }
 
@@ -30,10 +40,15 @@ const loteriaCommand = {
 
         const numeroGanador = Math.floor(Math.random() * 10) + 1;
         const gano = numeroElegido === numeroGanador;
+        const profit = gano ? (premio - costo) : -costo;
 
-        let profit = gano ? (premio - costo) : -costo;
-        
-        await global.User.updateOne({ id: m.sender }, { $inc: { col: profit } });
+        await global.User.updateOne(
+            { id: m.sender }, 
+            { 
+                $inc: { col: profit },
+                $set: { lastLoteria: ahora }
+            }
+        );
 
         let resTxt = "『 L O T E R I A 』\n\n";
         resTxt += `✦ Tu Numero: ${numeroElegido}\n`;
@@ -56,4 +71,3 @@ const loteriaCommand = {
 };
 
 export default loteriaCommand;
-    
