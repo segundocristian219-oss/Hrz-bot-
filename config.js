@@ -75,30 +75,14 @@ global.tyket = 'dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_
 
 
 
-/*global.channelInfo = {
+global.channelInfo = {
     forwardingScore: 1,
     isForwarded: true,
     forwardedNewsletterMessageInfo: {
         newsletterJid: ch, 
         newsletterName: name()
     }
-};*/
-
-Object.defineProperty(global, 'channelInfo', {
-    get: function() {
-        if (global.opts && global.opts['isprem']) return null;
-        return {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: ch, 
-                newsletterName: name()
-            }
-        };
-    },
-    enumerable: true,
-    configurable: true
-});
+};
 
 
 global.getBuffer = async (url, options = {}) => {
