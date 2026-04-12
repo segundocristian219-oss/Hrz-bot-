@@ -57,9 +57,7 @@ const menuCommand = {
                 image: { url: global.img2() },
                 caption: menuText,
                 mentions: [m.sender],
-                contextInfo: {
-                    ...channelInfo
-                }
+                contextInfo: { currentChannelInfo }
             }, { quoted: m });
 
         } catch (error) {
