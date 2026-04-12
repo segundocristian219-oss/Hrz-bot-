@@ -8,12 +8,13 @@ const loteriaCommand = {
     name: 'loteria',
     alias: ['lotto', 'sorteo'],
     category: 'economy',
-    run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
-        if (!isOwner) return m.reply("⨯ Comando restringido para Owners.");
+    run: async (m, { conn, args, usedPrefix, command }) => {
+        const owners = [conn.user.jid, ...global.config.owner.map(owner => owner[0] + '@s.whatsapp.net')];
+        if (!owners.includes(m.sender)) return m.reply("⨯ Comando exclusivo para Owners.");
         if (!m.isGroup) return m.reply("⨯ Comando exclusivo para grupos.");
 
         const user = await global.User.findOne({ id: m.sender });
-        if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
+        if (!user) return m.reply("⨯ No tienes una cuenta registrada en el sistema.");
 
         const numeroElegido = parseInt(args[0]);
         const costo = 500;
@@ -32,10 +33,13 @@ const loteriaCommand = {
         const numeroGanador = Math.floor(Math.random() * 10) + 1;
         const gano = numeroElegido === numeroGanador;
 
-        user.col -= costo;
-        if (gano) user.col += premio;
+        if (gano) {
+            await global.User.updateOne({ id: m.sender }, { $inc: { col: (premio - costo) } });
+        } else {
+            await global.User.updateOne({ id: m.sender }, { $inc: { col: -costo } });
+        }
 
-        await user.save();
+        const nuevoSaldo = gano ? (user.col + (premio - costo)) : (user.col - costo);
 
         let resTxt = "『 L O T E R I A 』\n\n";
         resTxt += `✦ Tu Numero: ${numeroElegido}\n`;
@@ -50,7 +54,7 @@ const loteriaCommand = {
             resTxt += `◈ Perdida: -${formatCol(costo)} Col\n`;
         }
 
-        resTxt += `\n✦ Saldo: ${formatCol(user.col)} Col`;
+        resTxt += `\n✦ Saldo: ${formatCol(nuevoSaldo)} Col`;
 
         await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
         if (gano) await m.react("🎟️");
