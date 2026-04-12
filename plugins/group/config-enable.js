@@ -10,7 +10,6 @@ const enable = {
             'welcome': 'welcome',
             'bv': 'welcome',
             'detect': 'detect',
-            'gacha': 'gacha',
             'antisub': 'antisub',
             'antilink': 'antiLink',
             'nsfw': 'nsfw',
