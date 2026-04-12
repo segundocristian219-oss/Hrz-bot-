@@ -1,18 +1,16 @@
 const formatCol = (num) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    return num.toString();
+    return Number(num).toLocaleString('de-DE');
 };
 
 const loteriaCommand = {
     name: 'loteria',
-    alias: ['lotto', 'sorteo'],
+    alias: ['lotto', 'sorteo', 'ticket', 'casino'],
     category: 'economy',
     run: async (m, { conn, args, usedPrefix, command }) => {
-        if (!m.isGroup) return m.reply("⨯ Comando exclusivo para grupos.");
+        if (!m.isGroup) return m.reply("⨯ La tómbola solo gira en grupos.");
 
         const user = await global.User.findOne({ id: m.sender });
-        if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
+        if (!user) return m.reply("⨯ Necesitas registrarte en el casino primero.");
 
         const ownerList = global.config?.owner || [];
         const isOwner = ownerList.some(owner => owner[0] + '@s.whatsapp.net' === m.sender) || m.sender === conn.user.jid;
@@ -21,26 +19,35 @@ const loteriaCommand = {
         const cooldown = 600000;
         if (!isOwner && user.lastLoteria && (ahora - user.lastLoteria < cooldown)) {
             const mins = Math.ceil((cooldown - (ahora - user.lastLoteria)) / 60000);
-            return m.reply(`⨯ Espera ${mins} minutos para volver a jugar.`);
+            return m.reply(`⏳ La tómbola se está enfriando. Regresa en ${mins} minutos.`);
         }
 
-        const num = parseInt(args[0]);
         const costo = 10000;
-        const premio = Math.floor(Math.random() * 25001) + 25000;
+        const premioBase = Math.floor(Math.random() * 25001) + 25000;
+        const probabilidadJackpot = Math.random() < 0.1;
+        const jackpotFinal = probabilidadJackpot ? (premioBase * 2) : premioBase;
+        const num = parseInt(args[0]);
 
         if (isNaN(num) || num < 1 || num > 10) {
-            let help = "『 CASINO: LOTERIA 』\n\n";
-            help += `◈ USO: ${usedPrefix + command} [1-10]\n`;
-            help += `✦ COSTO: ${formatCol(costo)} Col\n`;
-            help += `✦ PREMIO: 25K - 50K Col\n`;
-            return m.reply(help);
+            let menu = `『 🎰 MEGA LOTERÍA VIP 🎰 』\n\n`;
+            menu += `Bienvenido al sorteo de alto riesgo. ¿Tienes un número de la suerte?\n\n`;
+            menu += `🎫 *CÓMO JUGAR*\n`;
+            menu += `Compite contra la casa eligiendo un número del 1 al 10.\n\n`;
+            menu += `◈ Comando: *${usedPrefix}${command} <1-10>*\n`;
+            menu += `◈ Costo del Boleto: *${formatCol(costo)} Col*\n`;
+            menu += `◈ Premio Standard: *25.000 - 50.000 Col*\n`;
+            menu += `⭐ *JACKPOT OCULTO:* ¡Pequeña probabilidad de duplicar tu premio!\n\n`;
+            menu += `> "La fortuna favorece a los audaces."`;
+            return m.reply(menu);
         }
 
-        if (user.col < costo) return m.reply("⨯ Fondos insuficientes.");
+        if ((user.col || 0) < costo) return m.reply(`⨯ Fondos insuficientes. Un boleto cuesta ${formatCol(costo)} Col.`);
 
+        const name = (await conn.getName(m.sender)).toUpperCase();
         const ganador = Math.floor(Math.random() * 10) + 1;
         const gano = num === ganador;
-        const profit = gano ? (premio - costo) : -costo;
+        const gananciaReal = gano ? jackpotFinal : 0;
+        const profit = gano ? (gananciaReal - costo) : -costo;
 
         await global.User.updateOne(
             { id: m.sender }, 
@@ -50,23 +57,44 @@ const loteriaCommand = {
             }
         );
 
-        let txt = "『 L O T E R I A 』\n\n";
-        txt += `✦ Tu Numero: ${num}\n`;
-        txt += `✦ Ganador: ${ganador}\n`;
-        txt += `──────────────────\n\n`;
+        let susTxt = `『 🎟️ COMPRANDO BOLETO... 』\n\n`;
+        susTxt += `👤 Jugador: ${name}\n`;
+        susTxt += `💵 Inversión: -${formatCol(costo)} Col\n`;
+        susTxt += `🔢 Número Elegido: [ ${num} ]\n\n`;
+        susTxt += `> ⏳ Sellando boleto y girando la tómbola...`;
+
+        await conn.sendMessage(m.chat, { text: susTxt }, { quoted: m });
+        
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        let resTxt = `『 🎰 RESULTADO DEL SORTEO 🎰 』\n\n`;
+        resTxt += `👉 Tu Elección: [ ${num} ]\n`;
+        resTxt += `🎯 Número Ganador: [ ${ganador} ]\n`;
+        resTxt += `──────────────────\n\n`;
 
         if (gano) {
-            txt += `『 ¡GANASTE! 』\n`;
-            txt += `◈ Premio: +${formatCol(premio)} Col\n`;
+            if (probabilidadJackpot) {
+                resTxt += `🎉 ¡🌟 MEGA JACKPOT! ¡EXPLOTASTE LA BANCA! 🌟\n`;
+                resTxt += `💰 Ganancia: +${formatCol(gananciaReal)} Col\n`;
+            } else {
+                resTxt += `🎉 ¡FELICIDADES! ¡ACERTASTE EL NÚMERO!\n`;
+                resTxt += `💰 Ganancia: +${formatCol(gananciaReal)} Col\n`;
+            }
         } else {
-            txt += `『 PERDISTE 』\n`;
-            txt += `◈ Perdida: -${formatCol(costo)} Col\n`;
+            resTxt += `💀 LA CASA GANA. NÚMERO INCORRECTO.\n`;
+            resTxt += `💸 Pérdida: -${formatCol(costo)} Col\n`;
         }
 
-        txt += `\n✦ Saldo: ${formatCol(user.col + profit)} Col`;
+        resTxt += `──────────────────\n`;
+        resTxt += `💳 Cartera Actual: ${formatCol((user.col || 0) + profit)} Col`;
 
-        await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
-        if (gano) await m.react("🎟️");
+        await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
+
+        if (gano) {
+            await m.react("🤑");
+        } else {
+            await m.react("💀");
+        }
     }
 };
 
