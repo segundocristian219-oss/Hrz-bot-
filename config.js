@@ -74,9 +74,24 @@ global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 global.tyket = 'dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_Sys_00\u200B1.0.0_37080_159_0x%02X\u200B\u200C\u2060_%5B%22\u0024\u007B0x00A0\u007D\u221E\u2202\u2206%22%5D_%20\u200B\u200D\u2060_0x7F\u0000\u0001\u0007\u0008\u000B\u000C\u000E\u000F_S3R14L1Z3R_0x0D\u200B\u200D\u2060_%5B\u200B\u200C\u200B\u200C%5D_0x2026_03_28_UTC_0x00'
 
 
+global.channelInfo = {
+    get contextInfo() {
+        if (global.opts && global.opts['isprem']) {
+            return null;
+        }
+        return {
+            forwardingScore: 1,
+    isForwarded: true,
+    forwardedNewsletterMessageInfo: {
+        newsletterJid: ch, 
+        newsletterName: name()
+    }
+        };
+    }
+};
 
 
-
+/*
 global.channelInfo = {
     forwardingScore: 1,
     isForwarded: true,
@@ -84,7 +99,7 @@ global.channelInfo = {
         newsletterJid: ch, 
         newsletterName: name()
     }
-};
+};*/
 
 global.getBuffer = async (url, options = {}) => {
   try {
