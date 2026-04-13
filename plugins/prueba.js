@@ -18,9 +18,9 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download().catch(e => { throw new Error('Error al descargar el video original') });
-            const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
-            const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
-            const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
+            const title = text.split('|')[0]?.trim() || name();
+            const author = text.split('|')[1]?.trim() || name();
+            const albumArtUrl = "https://api.dix.lat/media/img_1776118064574_7EcHvXZ1T.jpg";
 
             let albumArtBuffer;
             try {
