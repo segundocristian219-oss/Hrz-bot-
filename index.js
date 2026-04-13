@@ -323,10 +323,13 @@ global.reload = async function(restatConn) {
   });
 
   global.conn.ev.on('group-participants.update', async (update) => {
+    
+    global.groupCache.delete(update.id);
+    
     const metadata = await conn.groupMetadata(update.id).catch(() => null);
     if (metadata) global.groupCache.set(update.id, metadata);
-  });
-};
+});
+
 
 await global.reload();
 
