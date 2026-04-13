@@ -1,4 +1,4 @@
-import { jidNormalizedUser } from '@whiskeysockets/baileities';
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const ECO_CONFIG = {
     BASE_COL: 1000,
