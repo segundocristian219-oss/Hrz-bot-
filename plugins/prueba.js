@@ -19,8 +19,8 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
-            const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
+            const title = text.split('|')[0]?.trim() || name();
+            const author = text.split('|')[1]?.trim() || "Deylin Elíac";
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
 
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
