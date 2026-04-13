@@ -12,7 +12,7 @@ const musicViewCommand = {
 
         if (!/video/.test(mime)) {
             m.react('⚠️');
-            return conn.reply(m.chat, `> ⍰ Responde a un video para enviarlo con estructura de música nativa.`, m);
+            return conn.reply(m.chat, `> ⍰ Responde a un video.`, m);
         }
 
         try {
@@ -23,27 +23,23 @@ const musicViewCommand = {
             const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
 
-            // 1. Descargar carátula para el Buffer
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
-            const artworkSha = crypto.createHash('sha256').update(albumArtBuffer).digest();
+            
+            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
 
-            // 2. Generar el contenido del video (Subida a servidores de WA)
             const messageContent = await generateWAMessageContent(
                 { video: media, mimetype: 'video/mp4' },
                 { upload: conn.waUploadToServer }
             );
 
             const videoMsg = messageContent.videoMessage;
-
-            // 3. IDs únicos para evitar conflicto con el catálogo de Meta (Adele)
-            const randomId = crypto.randomBytes(8).readBigUInt64BE().toString();
+            const trackId = crypto.randomBytes(10).toString('hex');
 
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
                     jpegThumbnail: albumArtBuffer,
-                    caption: `🎵 ${author} - ${title}`,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -64,20 +60,21 @@ const musicViewCommand = {
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.25, y: 0.4 },
-                                { x: 0.75, y: 0.4 },
-                                { x: 0.75, y: 0.6 },
-                                { x: 0.25, y: 0.6 }
+                                { x: 0.2, y: 0.2 },
+                                { x: 0.8, y: 0.2 },
+                                { x: 0.8, y: 0.8 },
+                                { x: 0.2, y: 0.8 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                    musicContentMediaId: randomId,
-                                    songId: randomId,
+                                    musicContentMediaId: trackId,
+                                    songId: trackId,
                                     author: author,
                                     title: title,
-                                    artworkSha256: artworkSha, // CRITICO: Vincula la imagen con la música
-                                    artistAttribution: `https://www.instagram.com/_u/${author.replace(/\s/g, '').toLowerCase()}`,
+                                    artistAttribution: author,
+                                    artworkSha256: artworkSha256,
+                                    artworkEncSha256: artworkSha256,
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
@@ -93,7 +90,6 @@ const musicViewCommand = {
             m.react('✅');
 
         } catch (error) {
-            console.error(`> [ERROR]: ${error.message}`);
             m.react('❌');
             conn.reply(m.chat, `> ❌ *Error:* ${error.message}`, m);
         }
