@@ -17,32 +17,33 @@ const musicViewCommand = {
         try {
             m.react('🕒');
 
-            const media = await q.download();
+            const media = await q.download().catch(e => { throw new Error('Error al descargar el video original') });
             const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
             const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
 
-            
-            const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
-            const albumArtBuffer = Buffer.from(resp.data);
+            let albumArtBuffer;
+            try {
+                const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer', timeout: 10000 });
+                albumArtBuffer = Buffer.from(resp.data);
+            } catch (e) {
+                throw new Error('No se pudo cargar la imagen de la portada (URL caída)');
+            }
 
             const messageContent = await generateWAMessageContent(
-                { 
-                    video: media, 
-                    mimetype: 'video/mp4',
-                },
+                { video: media, mimetype: 'video/mp4' },
                 { upload: conn.waUploadToServer }
             );
 
             const videoMsg = messageContent.videoMessage;
+            if (!videoMsg) throw new Error('Error al procesar el contenido del video (Baileys)');
 
-            
-            const trackId = Buffer.from(title).toString('get-byte-length'); 
+            const trackId = Buffer.from(title + author).toString('base64').substring(0, 15);
 
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    jpegThumbnail: albumArtBuffer, 
+                    jpegThumbnail: albumArtBuffer,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -95,6 +96,8 @@ const musicViewCommand = {
         } catch (error) {
             console.error(`> [ERROR]: ${error.message}`);
             m.react('❌');
+            
+            conn.reply(m.chat, `> ❌ *Error en el comando:* ${error.message}`, m);
         }
     }
 };
