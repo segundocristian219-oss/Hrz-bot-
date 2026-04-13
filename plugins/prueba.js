@@ -11,7 +11,7 @@ const musicViewCommand = {
 
         if (!/video|audio/.test(mime)) {
             m.react('⚠️');
-            return conn.reply(m.chat, `> ⍰ Responde a un video o audio para enviarlo con estructura de música.`, m);
+            return conn.reply(m.chat, `> ⍰ Responde a un video o audio para enviarlo con esa estructura.`, m);
         }
 
         try {
@@ -38,12 +38,18 @@ const musicViewCommand = {
                         externalAdReply: {
                             title: title,
                             body: author,
-                            mediaType: 2,
-                            mediaUrl: "https://www.instagram.com/adele",
+                            mediaType: 1,
+                            renderLargerThumbnail: true,
                             thumbnailUrl: albumArt,
-                            sourceUrl: "https://www.instagram.com/adele",
-                            showAdAttribution: true,
-                            renderLargerThumbnail: true
+                            sourceUrl: "https://www.instagram.com/reels/audio/227020654558518/",
+                            mediaUrl: "https://www.instagram.com/reels/audio/227020654558518/"
+                        },
+                        forwardingScore: 1,
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363302772535780@newsletter',
+                            newsletterName: 'Kirito ♕ — Official Channel ™',
+                            serverMessageId: 1
                         }
                     },
                     annotations: [
@@ -57,14 +63,16 @@ const musicViewCommand = {
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                    musicContentMediaId: "991565763443567",
+                                    musicContentMediaId: "227020654558518",
                                     songId: "227020654558518",
                                     author: author,
                                     title: title,
                                     artworkDirectPath: albumArt,
-                                    artistAttribution: `https://www.instagram.com/_u/${author.toLowerCase().replace(/\s/g, '')}`,
+                                    artistAttribution: "adele",
                                     isExplicit: false,
-                                    musicSongStartTimeInMs: "0"
+                                    musicSongStartTimeInMs: 0,
+                                    derivedContentStartTimeInMs: 0,
+                                    overlapDurationInMs: 30000
                                 }
                             },
                             embeddedAction: true
