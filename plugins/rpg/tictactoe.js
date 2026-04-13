@@ -57,7 +57,7 @@ const ticTacToeGame = {
             let finalMsg = `『 TRES EN RAYA - FIN 』\n\n${renderVisualBoard(game.board)}\n\n`;
 
             if (winner === 'tie') {
-                finalMsg += `⚖️  ¡Es un EMPATE!\n\n『 VOKER SYSTEMS 』`;
+                finalMsg += `⚖️  ¡Es un EMPATE!`;
                 await conn.sendMessage(m.chat, { text: finalMsg }, { quoted: m });
             } else {
                 let loser = await global.User.findOne({ id: loserJid });
@@ -75,7 +75,7 @@ const ticTacToeGame = {
                 await global.User.updateOne({ id: loserJid }, { $set: { col: newLoserCol } });
                 await global.User.updateOne({ id: winnerJid }, { $set: { col: newWinnerCol } });
 
-                finalMsg += `🏆 ¡@${winnerJid.split('@')[0]} (${winner}) GANA!\n\n✦ Recompensa: +${formatCol(amountToTake)} Col\n✦ Perdedor: -${formatCol(amountToTake)} Col\n\n『 VOKER SYSTEMS 』`;
+                finalMsg += `🏆 ¡@${winnerJid.split('@')[0]} (${winner}) GANA!\n\n✦ Recompensa: +${formatCol(amountToTake)} Col\n✦ Perdedor: -${formatCol(amountToTake)} Col`;
                 
                 await conn.sendMessage(m.chat, { 
                     text: finalMsg, 
@@ -123,7 +123,7 @@ const ticTacToeGame = {
         const p1 = m.sender.split('@')[0];
         const p2 = opponent.split('@')[0];
 
-        const textoInicio = `『 TRES EN RAYA - INICIO 』\n\n✦ @${p1} (❌) vs @${p2} (⭕)\n† Apuesta: ${formatCol(ECO_CONFIG.BET_TTT)} Col\n\n${boardStr}\n\n✦ Empieza: @${p1}\n\n『 VOKER SYSTEMS 』`;
+        const textoInicio = `『 TRES EN RAYA - INICIO 』\n\n✦ @${p1} (❌) vs @${p2} (⭕)\n† Apuesta: ${formatCol(ECO_CONFIG.BET_TTT)} Col\n\n${boardStr}\n\n✦ Empieza: @${p1}\n\n`;
 
         return conn.sendMessage(m.chat, {
             text: textoInicio,
