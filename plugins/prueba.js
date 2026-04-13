@@ -18,8 +18,8 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || "Set Fire to the Rain";
-            const author = text.split('|')[1]?.trim() || "Adele";
+            const title = text.split('|')[0]?.trim() || name();
+            const author = text.split('|')[1]?.trim() || name();
             const albumArt = "https://api.dix.lat/media2/1773637265253.jpg";
 
             const messageContent = await generateWAMessageContent(
@@ -47,8 +47,8 @@ const musicViewCommand = {
                             mediaType: 2,
                             renderLargerThumbnail: true,
                             thumbnailUrl: albumArt,
-                            sourceUrl: "https://www.instagram.com/reels/audio/227020654558518/",
-                            mediaUrl: "https://www.instagram.com/reels/audio/227020654558518/"
+                            sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29",
+                            mediaUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
                         }
                     },
                     annotations: [
