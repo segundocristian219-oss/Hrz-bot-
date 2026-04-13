@@ -21,7 +21,7 @@ const slotCommand = {
             let currentCol = user.col || ECO_CONFIG.BASE_COL;
 
             if (!amount || isNaN(amount) || amount <= 0) {
-                let guia = `『  VOKER CASINO  』\n\n✦ USO: ${usedPrefix + command} <cantidad>\n✧ BALANCE: ${formatCol(currentCol)} Col\n\n『 TABLA PREMIOS 』\n👑 👑 👑 ➔ Jackpot (x10)\n💎 💎 ✦ ➔ Premio (x2)\n──────────────────\n『 VOKER SYSTEMS 』`;
+                let guia = `『  KIRITO CASINO  』\n\n✦ USO: ${usedPrefix + command} <cantidad>\n✧ BALANCE: ${formatCol(currentCol)} Col\n\n『 TABLA PREMIOS 』\n👑 👑 👑 ➔ Jackpot (x10)\n💎 💎 ✦ ➔ Premio (x2)`;
                 return conn.reply(m.chat, guia, m);
             }
 
@@ -75,7 +75,7 @@ const slotCommand = {
                 { $set: { col: newCol, lastSlot: now } }
             );
 
-            const slotText = `『 VOKER CASINO 』\n\n    [ ${x[0]} | ${x[1]} | ${x[2]} ]\n\n◈ ESTADO: ${status}\n✦ RESULTADO: ${resultCol > 0 ? '+' : ''}${formatCol(resultCol)} Col\n✧ BALANCE: ${formatCol(newCol)} Col\n──────────────────\n『 VOKER SYSTEMS 』`;
+            const slotText = `『 KIRITO CASINO 』\n\n    [ ${x[0]} | ${x[1]} | ${x[2]} ]\n\n◈ ESTADO: ${status}\n✦ RESULTADO: ${resultCol > 0 ? '+' : ''}${formatCol(resultCol)} Col\n✧ BALANCE: ${formatCol(newCol)} Col`;
 
             await conn.sendMessage(m.chat, { 
                 text: slotText,
