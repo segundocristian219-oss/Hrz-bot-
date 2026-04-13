@@ -1,3 +1,13 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    BASE_COL: 1000
+};
+
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
+
 const signs = [
     "aries", "tauro", "geminis", "cancer", "leo", "virgo", 
     "libra", "escorpio", "sagitario", "capricornio", "acuario", "piscis"
@@ -44,21 +54,24 @@ const horoscopoCommand = {
         const cleanArg = args[0] ? args[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
 
         if (!args[0] || !signs.includes(cleanArg)) {
-            let txt = `\n\t\t\t\t♛  *ASTROLOGÍA MÍSTICA* ♛\n\n`;
-            txt += `✧ *USO CORRECTO:* ${usedPrefix + command} <signo>\n`;
-            txt += `✦ *COSTO:* ${cost} Col\n\n`;
-            txt += `◈ *SIGNOS VÁLIDOS:*\n${signs.join(', ')}`;
+            let txt = `『 ASTROLOGÍA MÍSTICA 』\n\n`;
+            txt += `✦ USO: ${usedPrefix + command} <signo>\n`;
+            txt += `✧ COSTO: ${formatCol(cost)} Col\n\n`;
+            txt += `◈ SIGNOS:\n${signs.join(', ')}\n──────────────────`;
             return conn.reply(m.chat, txt, m);
         }
 
         let user = await global.User.findOne({ id: m.sender });
-        if (!user) user = await global.User.create({ id: m.sender, col: 0, exp: 0 });
+        if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
 
-        if ((user.col ?? 0) < cost) {
-            return m.reply(`❌ No tienes suficientes fondos. Necesitas ${cost} Col para consultar a los astros.`);
+        if ((user.col || ECO_CONFIG.BASE_COL) < cost) {
+            return m.reply(`❌ Fondos insuficientes. Necesitas ${formatCol(cost)} Col.`);
         }
 
-        await global.User.updateOne({ id: m.sender }, { $set: { col: (user.col ?? 0) - cost } });
+        let newCol = (user.col || ECO_CONFIG.BASE_COL) - cost;
+        if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
+
+        await global.User.updateOne({ id: m.sender }, { $set: { col: newCol } });
 
         const amor = fortunes.amor[Math.floor(Math.random() * fortunes.amor.length)];
         const dinero = fortunes.dinero[Math.floor(Math.random() * fortunes.dinero.length)];
@@ -68,29 +81,7 @@ const horoscopoCommand = {
         const num1 = Math.floor(Math.random() * 99) + 1;
         const num2 = Math.floor(Math.random() * 99) + 1;
 
-        const txt = `
-\t\t\t\t♛  *HORÓSCOPO Y DESTINO* ♛
-
-◈ *SIGNO:* ${cleanArg.toUpperCase()}
-◈ *CONSULTANTE:* @${m.sender.split('@')[0]}
-✧ *COSTO:* -${cost} Col
-
-┏━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   ✨ PREDICCIONES ASTROLOGICAS ✨
-┣━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ ❤️ *AMOR:* ┃ ${amor}
-┃
-┃ 💰 *DINERO:* ┃ ${dinero}
-┃
-┃ 🩺 *SALUD:* ┃ ${salud}
-┣━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃   🔮 MINI-ADIVINACIÓN 🔮
-┣━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ ✦ *VISIÓN:* ${adivinacion}
-┃ ✧ *COLOR DE LA SUERTE:* ${color}
-┃ ✦ *NÚMEROS MÁGICOS:* ${num1}, ${num2}
-┗━━━━━━━━━━━━━━━━━━━━━━━━┛
-`;
+        const txt = `『 HORÓSCOPO Y DESTINO 』\n\n◈ SIGNO: ${cleanArg.toUpperCase()}\n◈ CONSULTANTE: @${m.sender.split('@')[0]}\n✧ COSTO: -${formatCol(cost)} Col\n\n✨ PREDICCIONES\n ❤️ AMOR: ${amor}\n 💰 DINERO: ${dinero}\n 🩺 SALUD: ${salud}\n\n🔮 MINI-ADIVINACIÓN\n ✦ VISIÓN: ${adivinacion}\n ✧ COLOR: ${color}\n ✦ NÚMEROS: ${num1}, ${num2}\n\n✧ BALANCE: ${formatCol(newCol)} Col\n──────────────────`;
 
         await conn.sendMessage(m.chat, { text: txt, contextInfo: { mentionedJid: [m.sender] } }, { quoted: m });
         await m.react("🔮");
