@@ -30,7 +30,7 @@ const menuCommand = {
                 menuText += `> │ ⋄ 𝚅𝚎𝚛𝚜𝚒𝚘́𝚗: ${pkg.version}\n`;
                 menuText += `> │ ⋄ 𝚄𝚁𝙻     : Kirito.dix.lat\n`;
                 menuText += `> ╰────────────╯\n\n`;
-                menuText += `> *➥ 𝚄𝚜𝚊 #code 𝚙𝚊𝚛𝚊 𝚜𝚞𝚋𝚋𝚘𝚝"\n`;
+                menuText += `> *➥ 𝚄𝚜𝚊 #code 𝚙𝚊𝚛𝚊 𝚜𝚞𝚋𝚋𝚘𝚝*\n`;
             menuText += `${rmrText}\n\n`;
 
             const query = text.trim().toUpperCase();
@@ -45,7 +45,7 @@ const menuCommand = {
                 for (const [title, cmds] of Object.entries(menuData)) {
                     menuText += `┌──「 *${title.toUpperCase()}* 」──\n`;
                     cmds.forEach(item => {
-                        menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
+                        menuText += `╭♛ *${item.cmd}* \n> ╰➠${item.desc}\n`;
                     });
                     menuText += `└───────────────\n\n`;
                 }
