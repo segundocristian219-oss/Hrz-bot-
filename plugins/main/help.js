@@ -45,7 +45,7 @@ const menuCommand = {
                 for (const [title, cmds] of Object.entries(menuData)) {
                     menuText += `┌──「 *${title.toUpperCase()}* 」──\n`;
                     cmds.forEach(item => {
-                        menuText += `╭♛ *${item.cmd}* \n> ╰➠${item.desc}\n`;
+                        menuText += `┃ ╭♛ *${item.cmd}* \n> ╰➠${item.desc}\n`;
                     });
                     menuText += `└───────────────\n\n`;
                 }
