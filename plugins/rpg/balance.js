@@ -1,57 +1,118 @@
-import { jidNormalizedUser } from '@whiskeysockets/baileys';
-
-const ECO_CONFIG = {
-    MIN_WORK: 100,
-    MAX_WORK: 1000,
-    BASE_COL: 1000
-};
-
 const formatCol = (num) => {
     return Number(num).toLocaleString('de-DE');
 };
 
-const workCommand = {
-    name: 'work',
-    alias: ['trabajar', 'chamba', 'chambear'],
-    category: 'rpg',
-    run: async (m, { conn }) => {
-        let user = await global.User.findOne({ id: m.sender });
-        if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
+const economyCommand = {
+    name: 'balance',
+    alias: ['bal', 'd', 'deposit', 'depositar', 'with', 'retirar'],
+    category: 'economy',
+    run: async (m, { conn, args, command }) => {
+        const user = await global.User.findOne({ id: m.sender });
+        if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
 
-        const now = Date.now();
-        const cooldown = 10 * 60 * 1000; 
-        const lastWork = user.lastWork || 0;
+        const name = (await conn.getName(m.sender)).toUpperCase();
+        
+        if (['d', 'deposit', 'depositar'].includes(command)) {
+            let amount = args[0];
+            let depositAmount = 0;
 
-        if (now - lastWork < cooldown) {
-            const remaining = Math.ceil((cooldown - (now - lastWork)) / 1000);
-            const mins = Math.floor(remaining / 60);
-            const secs = remaining % 60;
-            return m.reply(`⨯ Necesitas descansar\nRegresa en: ${mins}m ${secs}s`);
+            if (amount === 'all') {
+                depositAmount = user.col || 0;
+            } else {
+                depositAmount = parseInt(amount);
+            }
+
+            if (isNaN(depositAmount) || depositAmount <= 0) {
+                return m.reply("⨯ Ingresa una cantidad valida o usa 'all'.");
+            }
+
+            if ((user.col || 0) < depositAmount) {
+                return m.reply("⨯ No tienes suficiente capital en cartera.");
+            }
+
+            const newCol = user.col - depositAmount;
+            const newBank = (user.bank || 0) + depositAmount;
+
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, bank: newBank } });
+
+            let depTxt = "『 TRANSACCION EXITOSA 』\n\n";
+            depTxt += `✦ Usuario: ${name}\n`;
+            depTxt += `──────────────────\n`;
+            depTxt += `◈ Depositado: ${formatCol(depositAmount)} Col\n`;
+            depTxt += `◈ En Cartera: ${formatCol(newCol)} Col\n`;
+            depTxt += `◈ En Banco: ${formatCol(newBank)} Col\n`;
+            depTxt += `──────────────────`;
+            
+            return conn.sendMessage(m.chat, { text: depTxt }, { quoted: m });
         }
 
-        const amount = Math.floor(Math.random() * (ECO_CONFIG.MAX_WORK - ECO_CONFIG.MIN_WORK + 1)) + ECO_CONFIG.MIN_WORK;
+        if (['with', 'retirar'].includes(command)) {
+            let amount = args[0];
+            let withdrawAmount = 0;
 
-        const winLore = [
-            "Optimizaste una base de datos y recibiste un pago",
-            "Reparaste un error de sintaxis en un script crítico",
-            "Configuraste un servidor proxy con éxito",
-            "Realizaste mantenimiento preventivo a un sistema",
-            "Ayudaste a un usuario a vincular su dispositivo",
-            "Desplegaste una API sin errores en el primer intento"
-        ];
-        
-        const lore = winLore[Math.floor(Math.random() * winLore.length)];
-        let currentBalance = user.col || ECO_CONFIG.BASE_COL;
-        let newCol = currentBalance + amount;
-        
-        if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
+            if (amount === 'all') {
+                withdrawAmount = user.bank || 0;
+            } else {
+                withdrawAmount = parseInt(amount);
+            }
 
-        await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, lastWork: now } });
+            if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+                return m.reply("⨯ Ingresa una cantidad valida o usa 'all'.");
+            }
 
-        const txt = `『 JORNADA EXITOSA 』\n\n◈ ${lore}\n──────────────────\n✦ Ganancia: +${formatCol(amount)} Col\n✧ Balance Actual: ${formatCol(newCol)} Col\n──────────────────\n『 VOKER SYSTEMS 』`;
+            if ((user.bank || 0) < withdrawAmount) {
+                return m.reply("⨯ No tienes suficientes fondos en el banco.");
+            }
 
-        await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
+            const newCol = (user.col || 0) + withdrawAmount;
+            const newBank = user.bank - withdrawAmount;
+
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, bank: newBank } });
+
+            let withTxt = "『 RETIRO EXITOSO 』\n\n";
+            withTxt += `✦ Usuario: ${name}\n`;
+            withTxt += `──────────────────\n`;
+            withTxt += `◈ Retirado: ${formatCol(withdrawAmount)} Col\n`;
+            withTxt += `◈ En Cartera: ${formatCol(newCol)} Col\n`;
+            withTxt += `◈ En Banco: ${formatCol(newBank)} Col\n`;
+            withTxt += `──────────────────`;
+            
+            return conn.sendMessage(m.chat, { text: withTxt }, { quoted: m });
+        }
+
+        let targetId = m.sender;
+        if (m.mentionedJid && m.mentionedJid[0]) {
+            targetId = m.mentionedJid[0];
+        } else if (m.quoted && m.quoted.sender) {
+            targetId = m.quoted.sender;
+        }
+
+        let targetUser = user;
+        if (targetId !== m.sender) {
+            targetUser = await global.User.findOne({ id: targetId });
+            if (!targetUser) return m.reply("⨯ El usuario objetivo no tiene una cuenta registrada.");
+        }
+
+        const wallet = targetUser.col || 0;
+        const bank = targetUser.bank || 0;
+        const total = wallet + bank;
+
+        const isOwnBalance = targetId === m.sender;
+        const displayBank = isOwnBalance ? formatCol(bank) : "---";
+        const displayTotal = isOwnBalance ? formatCol(total) : "---";
+
+        let balTxt = "『 ESTADO DE CUENTA 』\n\n";
+        balTxt += `✦ Usuario: @${targetId.split('@')[0]}\n`;
+        balTxt += `──────────────────\n`;
+        balTxt += `◈ Cartera: ${formatCol(wallet)} Col\n`;
+        balTxt += `◈ Banco: ${displayBank} Col\n`;
+        balTxt += `──────────────────\n`;
+        balTxt += `◈ Total: ${displayTotal} Col\n`;
+        balTxt += `──────────────────\n\n`;
+        balTxt += `> Usa *.deposit* para guardar tu dinero y *.with* para retirar`;
+
+        await conn.sendMessage(m.chat, { text: balTxt, mentions: [targetId] },  { quoted: m });
     }
 };
 
-export default workCommand;
+export default economyCommand;
