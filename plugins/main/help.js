@@ -22,15 +22,15 @@ const menuCommand = {
             let totalchats = await global.Chat.countDocuments();
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
-            let menuText = `╔══『 *${name()}* 』══╗\n`;
-            menuText += `║ • Usuario: @${m.sender.split('@')[0]}\n`;
-            menuText += `║ • Usuarios: ${totalreg}\n`;
-            menuText += `║ • Grupos: ${totalchats}\n`;
-            menuText += `║ • Uptime: ${uptime}\n`;
-            menuText += `║ • Versión: ${pkg.version}\n`;
-            menuText += `║ • URL: Kirito.dix.lat\n`;
-            menuText += `╚═════════════════╝\n\n`;
-            menuText += `> Usa *#code* para convertirte en subbot.\n`;
+            let menuText = `> ╭─〔 ${name()} 〕─╮\n`;
+                menuText += `> │ ⋄ 𝚄𝚜𝚞𝚊𝚛𝚒𝚘 : @${m.sender.split('@')[0]}\n`;
+                menuText += `> │ ⋄ 𝚄𝚜𝚞𝚊𝚛𝚒𝚘𝚜: ${totalreg}\n`;
+                menuText += `> │ ⋄ 𝙶𝚛𝚞𝚙𝚘𝚜  : ${totalchats}\n`;
+                menuText += `> │ ⋄ 𝚄𝚙𝚝𝚒𝚖𝚎  : ${uptime}\n`;
+                menuText += `> │ ⋄ 𝚅𝚎𝚛𝚜𝚒𝚘́𝚗: ${pkg.version}\n`;
+                menuText += `> │ ⋄ 𝚄𝚁𝙻     : Kirito.dix.lat\n`;
+                menuText += `> ╰────────────╯\n\n`;
+                menuText += `> *➥ 𝚄𝚜𝚊 #code 𝚙𝚊𝚛𝚊 𝚜𝚞𝚋𝚋𝚘𝚝"\n`;
             menuText += `${rmrText}\n\n`;
 
             const query = text.trim().toUpperCase();
@@ -38,7 +38,7 @@ const menuCommand = {
             if (query && menuData[query]) {
                 menuText += `┌──「 *${query}* 」──\n`;
                 menuData[query].forEach(item => {
-                    menuText += `♛ *${item.cmd}* \n> ➠${item.desc}\n`;
+                    menuText += `╭♛ *${item.cmd}* \n> ╰➠${item.desc}\n`;
                 });
                 menuText += `└───────────────\n\n`;
             } else {
