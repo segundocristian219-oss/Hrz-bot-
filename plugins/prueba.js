@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { generateWAMessageContent } from '@whiskeysockets/baileys';
+import crypto from 'crypto';
 
 const musicViewCommand = {
     name: 'musicview',
@@ -9,41 +10,40 @@ const musicViewCommand = {
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
 
-        if (!/video|audio/.test(mime)) {
+        if (!/video/.test(mime)) {
             m.react('⚠️');
-            return conn.reply(m.chat, `> ⍰ Responde a un video para generar la vista de música de canal.`, m);
+            return conn.reply(m.chat, `> ⍰ Responde a un video para enviarlo con estructura de música nativa.`, m);
         }
 
         try {
             m.react('🕒');
 
-            const media = await q.download().catch(e => { throw new Error('Error al descargar el video original') });
-            const title = text.split('|')[0]?.trim() || name();
-            const author = text.split('|')[1]?.trim() || name();
-            const albumArtUrl = "https://api.dix.lat/media/img_1776118064574_7EcHvXZ1T.jpg";
+            const media = await q.download();
+            const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
+            const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
+            const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
 
-            let albumArtBuffer;
-            try {
-                const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer', timeout: 10000 });
-                albumArtBuffer = Buffer.from(resp.data);
-            } catch (e) {
-                throw new Error('No se pudo cargar la imagen de la portada (URL caída)');
-            }
+            // 1. Descargar carátula para el Buffer
+            const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
+            const albumArtBuffer = Buffer.from(resp.data);
+            const artworkSha = crypto.createHash('sha256').update(albumArtBuffer).digest();
 
+            // 2. Generar el contenido del video (Subida a servidores de WA)
             const messageContent = await generateWAMessageContent(
                 { video: media, mimetype: 'video/mp4' },
                 { upload: conn.waUploadToServer }
             );
 
             const videoMsg = messageContent.videoMessage;
-            if (!videoMsg) throw new Error('Error al procesar el contenido del video (Baileys)');
 
-            const trackId = Buffer.from(title + author).toString('base64').substring(0, 15);
+            // 3. IDs únicos para evitar conflicto con el catálogo de Meta (Adele)
+            const randomId = crypto.randomBytes(8).readBigUInt64BE().toString();
 
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
                     jpegThumbnail: albumArtBuffer,
+                    caption: `🎵 ${author} - ${title}`,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -58,27 +58,26 @@ const musicViewCommand = {
                             mediaType: 2,
                             renderLargerThumbnail: true,
                             thumbnail: albumArtBuffer,
-                            sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29",
-                            mediaUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
+                            sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
                         }
                     },
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.1, y: 0.1 },
-                                { x: 0.9, y: 0.1 },
-                                { x: 0.9, y: 0.9 },
-                                { x: 0.1, y: 0.9 }
+                                { x: 0.25, y: 0.4 },
+                                { x: 0.75, y: 0.4 },
+                                { x: 0.75, y: 0.6 },
+                                { x: 0.25, y: 0.6 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                    musicContentMediaId: trackId,
-                                    songId: trackId,
+                                    musicContentMediaId: randomId,
+                                    songId: randomId,
                                     author: author,
                                     title: title,
-                                    artistAttribution: author,
-                                    artworkDirectPath: "", 
+                                    artworkSha256: artworkSha, // CRITICO: Vincula la imagen con la música
+                                    artistAttribution: `https://www.instagram.com/_u/${author.replace(/\s/g, '').toLowerCase()}`,
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
@@ -96,8 +95,7 @@ const musicViewCommand = {
         } catch (error) {
             console.error(`> [ERROR]: ${error.message}`);
             m.react('❌');
-            
-            conn.reply(m.chat, `> ❌ *Error en el comando:* ${error.message}`, m);
+            conn.reply(m.chat, `> ❌ *Error:* ${error.message}`, m);
         }
     }
 };
