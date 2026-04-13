@@ -1,4 +1,12 @@
-const clean = (str) => str.trim();
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    BASE_COL: 1000
+};
+
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
 
 const mathGame = {
     name: 'math',
@@ -9,7 +17,6 @@ const mathGame = {
         if (!txt || m.isBaileys || m.fromMe || new RegExp('^[#!./]').test(txt)) return false;
 
         global.mathGames = global.mathGames || {};
-
         const gameId = `${m.chat}-${m.sender}`;
         if (!global.mathGames[gameId]) return false;
 
@@ -18,8 +25,16 @@ const mathGame = {
 
         if (userAns === game.result) {
             await m.react("✅");
+            
+            const reward = Math.floor(Math.random() * 400) + 100;
+            let user = await global.User.findOne({ id: m.sender });
+            if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
+
+            let newCol = (user.col || ECO_CONFIG.BASE_COL) + reward;
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol } });
+
             await conn.sendMessage(m.chat, {
-                text: `🎉 ¡@${m.sender.split('@')[0]} eres un genio matemático!\n\nLa respuesta correcta era: *${game.result}*`,
+                text: `『 DESAFÍO COMPLETADO 』\n\n✦ @${m.sender.split('@')[0]} eres un genio matemático\n\n◈ RESPUESTA: ${game.result}\n✦ PREMIO: +${formatCol(reward)} Col\n✧ BALANCE: ${formatCol(newCol)} Col\n──────────────────`,
                 contextInfo: { mentionedJid: [m.sender] }
             }, { quoted: m });
 
@@ -31,17 +46,17 @@ const mathGame = {
 
             if (game.attempts >= 2) {
                 await conn.sendMessage(m.chat, {
-                    text: `❌ *JUEGO TERMINADO*\n\nSe agotaron los intentos, @${m.sender.split('@')[0]}.\nLa respuesta era: *${game.result}*`,
+                    text: `『 GAME OVER 』\n\n💀 Se agotaron los intentos, @${m.sender.split('@')[0]}\nLa respuesta era: ${game.result}\n──────────────────`,
                     contextInfo: { mentionedJid: [m.sender] }
                 }, { quoted: m });
                 delete global.mathGames[gameId];
                 return true;
             }
 
-            const hint = Math.abs(userAns - game.result) < 5 ? "¡Estás muy cerca!" : (userAns < game.result ? "Es un número más alto." : "Es un número más bajo.");
+            const hint = Math.abs(userAns - game.result) < 5 ? "Estás muy cerca" : (userAns < game.result ? "Es un número más alto" : "Es un número más bajo");
 
             await conn.sendMessage(m.chat, {
-                text: `❌ *Incorrecto* @${m.sender.split('@')[0]}\n💡 ${hint}\n_Intento ${game.attempts}/2_`,
+                text: `『 INCORRECTO 』\n\n✦ @${m.sender.split('@')[0]}\n† Pista: ${hint}\n† Intento: ${game.attempts}/2`,
                 contextInfo: { mentionedJid: [m.sender] }
             }, { quoted: m });
             return true;
@@ -53,7 +68,7 @@ const mathGame = {
 
         if (global.mathGames[gameId]) {
             return conn.sendMessage(m.chat, { 
-                text: `⚠️ Ya tienes un reto activo, @${m.sender.split('@')[0]}. Resuelve: *${global.mathGames[gameId].equation}*`,
+                text: `⚠️ Termina el reto actual, @${m.sender.split('@')[0]}:\n\n◈ ${global.mathGames[gameId].equation}`,
                 contextInfo: { mentionedJid: [m.sender] }
             }, { quoted: m });
         }
@@ -80,7 +95,7 @@ const mathGame = {
         };
 
         return conn.sendMessage(m.chat, {
-            text: `🧮 *RETO MATEMÁTICO PERSONAL*\n\nHola @${m.sender.split('@')[0]}, resuelve:\n\n💡 *${equation}*\n\n_Solo tú puedes responder. Tienes 2 intentos._`,
+            text: `『 RETO MATEMÁTICO 』\n\nHola @${m.sender.split('@')[0]}, resuelve:\n\n◈ ${equation}\n\n✦ Tienes 2 intentos\n──────────────────`,
             contextInfo: { mentionedJid: [m.sender] }
         }, { quoted: m });
     }
