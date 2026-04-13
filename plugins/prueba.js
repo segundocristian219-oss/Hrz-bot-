@@ -23,16 +23,15 @@ const musicViewCommand = {
             const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
             const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
 
-            const albumArtBuffer = Buffer.from([
-                // Aquí iría el buffer real si lo descargas, pero como ya tienes los datos del RAW,
-                // usamos directamente los valores que proporcionaste para mayor precisión
-            ]);
+            const resp = await axios.get("https://api.dix.lat/media2/1773637265253.jpg", { responseType: 'arraybuffer' });
+            const albumArtBuffer = Buffer.from(resp.data);
 
-            // Valores reales extraídos del RAW de la imagen que enviaste
-            const artworkDirectPath = "/o1/v/t24/f2/m233/AQMCVKtzxZNrCzCkWeOp0caplPmgYRHO8BnnpKJbRgLxIt4W_1OJcXi-rqs5KtAzohRoaLn5Aaw_Oq6Z5xLFIrcV6m9LS15X7evpnki3qw?ccb=9-4&oh=01_Q5Aa4QFKBPLxiAs_hmQ25ZYfblRTkdJvaa6K1BvwjZamGR2D5Q&oe=6A04E169&_nc_sid=e6ed6c";
-            const artworkSha256 = "Mu3vWZIEchc8t37PVeXjWjqa9KKOIvpg+ZqiLODSy9g=";
-            const artworkEncSha256 = "cjNby1GyeST6xELalOQtWAuaPm0/Ji4OvClEobUIFMA=";
-            const artworkMediaKey = "oRGI3/6buCDH2zXNTMpvT8pn180LBfvhUwV5tSfPd5Y=";
+            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
+
+            const uploadedArt = await conn.waUploadToServer(albumArtBuffer, { 
+                mediaType: 'image',
+                fileLength: albumArtBuffer.length 
+            });
 
             const messageContent = await generateWAMessageContent(
                 { video: media, mimetype: 'video/mp4' },
@@ -46,7 +45,7 @@ const musicViewCommand = {
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    jpegThumbnail: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==", 'base64'), // thumbnail mínimo
+                    jpegThumbnail: albumArtBuffer,
                     contextInfo: {
                         forwardingScore: 2,
                         isForwarded: true,
@@ -72,10 +71,10 @@ const musicViewCommand = {
                                     author: author,
                                     title: title,
                                     artistAttribution: author,
-                                    artworkDirectPath: artworkDirectPath,
+                                    artworkDirectPath: uploadedArt.directPath || "/o1/v/t24/f2/m233/AQMCVKtzxZNrCzCkWeOp0caplPmgYRHO8BnnpKJbRgLxIt4W_1OJcXi-rqs5KtAzohRoaLn5Aaw_Oq6Z5xLFIrcV6m9LS15X7evpnki3qw?ccb=9-4&oh=01_Q5Aa4QFKBPLxiAs_hmQ25ZYfblRTkdJvaa6K1BvwjZamGR2D5Q&oe=6A04E169&_nc_sid=e6ed6c",
                                     artworkSha256: artworkSha256,
-                                    artworkEncSha256: artworkEncSha256,
-                                    artworkMediaKey: artworkMediaKey,
+                                    artworkEncSha256: artworkSha256,
+                                    artworkMediaKey: uploadedArt.mediaKey || "oRGI3/6buCDH2zXNTMpvT8pn180LBfvhUwV5tSfPd5Y=",
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
