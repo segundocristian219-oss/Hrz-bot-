@@ -28,11 +28,6 @@ const musicViewCommand = {
 
             const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
 
-            const uploadedArt = await conn.waUploadToServer(albumArtBuffer, { 
-                mediaType: 'image',
-                fileLength: albumArtBuffer.length 
-            });
-
             const messageContent = await generateWAMessageContent(
                 { video: media, mimetype: 'video/mp4' },
                 { upload: conn.waUploadToServer }
@@ -71,10 +66,10 @@ const musicViewCommand = {
                                     author: author,
                                     title: title,
                                     artistAttribution: author,
-                                    artworkDirectPath: uploadedArt.directPath || "/o1/v/t24/f2/m233/AQMCVKtzxZNrCzCkWeOp0caplPmgYRHO8BnnpKJbRgLxIt4W_1OJcXi-rqs5KtAzohRoaLn5Aaw_Oq6Z5xLFIrcV6m9LS15X7evpnki3qw?ccb=9-4&oh=01_Q5Aa4QFKBPLxiAs_hmQ25ZYfblRTkdJvaa6K1BvwjZamGR2D5Q&oe=6A04E169&_nc_sid=e6ed6c",
+                                    artworkDirectPath: "/o1/v/t24/f2/m233/AQMCVKtzxZNrCzCkWeOp0caplPmgYRHO8BnnpKJbRgLxIt4W_1OJcXi-rqs5KtAzohRoaLn5Aaw_Oq6Z5xLFIrcV6m9LS15X7evpnki3qw?ccb=9-4&oh=01_Q5Aa4QFKBPLxiAs_hmQ25ZYfblRTkdJvaa6K1BvwjZamGR2D5Q&oe=6A04E169&_nc_sid=e6ed6c",
                                     artworkSha256: artworkSha256,
-                                    artworkEncSha256: artworkSha256,
-                                    artworkMediaKey: uploadedArt.mediaKey || "oRGI3/6buCDH2zXNTMpvT8pn180LBfvhUwV5tSfPd5Y=",
+                                    artworkEncSha256: "cjNby1GyeST6xELalOQtWAuaPm0/Ji4OvClEobUIFMA=",
+                                    artworkMediaKey: "oRGI3/6buCDH2zXNTMpvT8pn180LBfvhUwV5tSfPd5Y=",
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
