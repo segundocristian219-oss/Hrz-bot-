@@ -1,3 +1,9 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    BASE_COL: 1000
+};
+
 const formatCol = (num) => {
     return Number(num).toLocaleString('de-DE');
 };
@@ -9,8 +15,8 @@ const loteriaCommand = {
     run: async (m, { conn, args, usedPrefix, command }) => {
         if (!m.isGroup) return m.reply("⨯ La tómbola solo gira en grupos.");
 
-        const user = await global.User.findOne({ id: m.sender });
-        if (!user) return m.reply("⨯ Necesitas registrarte en el casino primero.");
+        let user = await global.User.findOne({ id: m.sender });
+        if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
 
         const ownerList = global.config?.owner || [];
         const isOwner = ownerList.some(owner => owner[0] + '@s.whatsapp.net' === m.sender) || m.sender === conn.user.jid;
@@ -29,72 +35,56 @@ const loteriaCommand = {
         const num = parseInt(args[0]);
 
         if (isNaN(num) || num < 1 || num > 10) {
-            let menu = `『 🎰 MEGA LOTERÍA VIP 🎰 』\n\n`;
-            menu += `Bienvenido al sorteo de alto riesgo. ¿Tienes un número de la suerte?\n\n`;
-            menu += `🎫 *CÓMO JUGAR*\n`;
-            menu += `Compite contra la casa eligiendo un número del 1 al 10.\n\n`;
-            menu += `◈ Comando: *${usedPrefix}${command} <1-10>*\n`;
-            menu += `◈ Costo del Boleto: *${formatCol(costo)} Col*\n`;
-            menu += `◈ Premio Standard: *25.000 - 50.000 Col*\n`;
-            menu += `⭐ *JACKPOT OCULTO:* ¡Pequeña probabilidad de duplicar tu premio!\n\n`;
-            menu += `> "La fortuna favorece a los audaces."`;
+            let menu = `『 🎰 MEGA LOTERÍA 🎰 』\n\n`;
+            menu += `🎫 CÓMO JUGAR\n`;
+            menu += `Elige un número del 1 al 10.\n\n`;
+            menu += `◈ Comando: ${usedPrefix + command} <1-10>\n`;
+            menu += `◈ Costo: ${formatCol(costo)} Col\n`;
+            menu += `◈ Premio: 25.000 - 50.000 Col\n\n`;
+            menu += `✦ BALANCE: ${formatCol(user.col)} Col\n──────────────────`;
             return m.reply(menu);
         }
 
-        if ((user.col || 0) < costo) return m.reply(`⨯ Fondos insuficientes. Un boleto cuesta ${formatCol(costo)} Col.`);
+        if ((user.col || 0) < costo) return m.reply(`⨯ Fondos insuficientes. El boleto cuesta ${formatCol(costo)} Col.`);
 
         const name = (await conn.getName(m.sender)).toUpperCase();
         const ganador = Math.floor(Math.random() * 10) + 1;
         const gano = num === ganador;
-        const gananciaReal = gano ? jackpotFinal : 0;
-        const profit = gano ? (gananciaReal - costo) : -costo;
+        
+        let newCol = (user.col || ECO_CONFIG.BASE_COL) - costo;
+        if (gano) newCol += jackpotFinal;
+        
+        if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
 
         await global.User.updateOne(
             { id: m.sender }, 
             { 
-                $inc: { col: profit },
-                $set: { lastLoteria: ahora }
+                $set: { col: newCol, lastLoteria: ahora }
             }
         );
 
-        let susTxt = `『 🎟️ COMPRANDO BOLETO... 』\n\n`;
-        susTxt += `👤 Jugador: ${name}\n`;
-        susTxt += `💵 Inversión: -${formatCol(costo)} Col\n`;
-        susTxt += `🔢 Número Elegido: [ ${num} ]\n\n`;
-        susTxt += `> ⏳ Sellando boleto y girando la tómbola...`;
-
+        let susTxt = `『 🎟️ BOLETO SELLADO 』\n\n👤 Jugador: ${name}\n🔢 Número: [ ${num} ]\n\n> Girando la tómbola...`;
         await conn.sendMessage(m.chat, { text: susTxt }, { quoted: m });
-        
+
         await new Promise(resolve => setTimeout(resolve, 2500));
 
-        let resTxt = `『 🎰 RESULTADO DEL SORTEO 🎰 』\n\n`;
-        resTxt += `👉 Tu Elección: [ ${num} ]\n`;
-        resTxt += `🎯 Número Ganador: [ ${ganador} ]\n`;
+        let resTxt = `『 RESULTADO SORTEO 』\n\n`;
+        resTxt += `✦ Tu Número: [ ${num} ]\n`;
+        resTxt += `🎯 Ganador: [ ${ganador} ]\n`;
         resTxt += `──────────────────\n\n`;
 
         if (gano) {
-            if (probabilidadJackpot) {
-                resTxt += `🎉 ¡🌟 MEGA JACKPOT! ¡EXPLOTASTE LA BANCA! 🌟\n`;
-                resTxt += `💰 Ganancia: +${formatCol(gananciaReal)} Col\n`;
-            } else {
-                resTxt += `🎉 ¡FELICIDADES! ¡ACERTASTE EL NÚMERO!\n`;
-                resTxt += `💰 Ganancia: +${formatCol(gananciaReal)} Col\n`;
-            }
+            resTxt += probabilidadJackpot ? `🎉 ¡MEGA JACKPOT! 🎉\n` : `🎉 ¡ACERTASTE! 🎉\n`;
+            resTxt += `💰 Ganancia: +${formatCol(jackpotFinal)} Col\n`;
         } else {
-            resTxt += `💀 LA CASA GANA. NÚMERO INCORRECTO.\n`;
-            resTxt += `💸 Pérdida: -${formatCol(costo)} Col\n`;
+            resTxt += `💀 PERDISTE\n`;
+            resTxt += `💸 Costo: -${formatCol(costo)} Col\n`;
         }
 
-        resTxt += `──────────────────\n`;
-        resTxt += `💳 Cartera Actual: ${formatCol((user.col || 0) + profit)} Col`;
+        resTxt += `\n✧ Balance: ${formatCol(newCol)} Col\n──────────────────`;
 
         await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
-
-        if (gano) {
-            await m.react("🤑");
-        } else {
-            await m.react("💀");
-        }
+        await m.react(gano ? "🤑" : "💀");
     }
 };
 
