@@ -54,7 +54,7 @@ const treasureGame = {
 
             await m.react("💰");
             await conn.sendMessage(m.chat, {
-                text: `『 TESORO ENCONTRADO 』\n\n🎊 @${m.sender.split('@')[0]} excavaste en *${game.target}*\n\n${renderBoard(game.board)}\n\n✦ Recompensa: +${formatCol(reward)} Col\n✧ Balance: ${formatCol(newCol)} Col\n──────────────────\n『 VOKER SYSTEMS 』`,
+                text: `『 TESORO ENCONTRADO 』\n\n🎊 @${m.sender.split('@')[0]} excavaste en *${game.target}*\n\n${renderBoard(game.board)}\n\n✦ Recompensa: +${formatCol(reward)} Col\n✧ Balance: ${formatCol(newCol)} Col\n──────────────────`,
                 contextInfo: { mentionedJid: [m.sender] }
             }, { quoted: m });
             delete global.treasureGames[gameId];
@@ -68,7 +68,7 @@ const treasureGame = {
                 const ty = parseInt(game.target[1]) - 1;
                 game.board[ty][tx] = '💎';
                 await conn.sendMessage(m.chat, {
-                    text: `『 GAME OVER 』\n\n💀 Se agotaron los intentos, @${m.sender.split('@')[0]}\nEl tesoro estaba en *${game.target}*\n\n${renderBoard(game.board)}\n──────────────────\n『 VOKER SYSTEMS 』`,
+                    text: `『 GAME OVER 』\n\n💀 Se agotaron los intentos, @${m.sender.split('@')[0]}\nEl tesoro estaba en *${game.target}*\n\n${renderBoard(game.board)}\n──────────────────`,
                     contextInfo: { mentionedJid: [m.sender] }
                 }, { quoted: m });
                 delete global.treasureGames[gameId];
@@ -105,7 +105,7 @@ const treasureGame = {
         const initialMap = "      A.    B.    C.     D.     E\n" + board.map((row, i) => `${i + 1}   ${row.join('  ')}`).join('\n');
 
         return conn.sendMessage(m.chat, {
-            text: `『 BÚSQUEDA DEL TESORO 』\n\nHola @${m.sender.split('@')[0]}, hay un botín oculto aquí:\n\n${initialMap}\n\nEscribe una coordenada (A1-E5)\n✦ Tienes 5 intentos\n──────────────────\n『 VOKER SYSTEMS 』`,
+            text: `『 BÚSQUEDA DEL TESORO 』\n\nHola @${m.sender.split('@')[0]}, hay un botín oculto aquí:\n\n${initialMap}\n\nEscribe una coordenada (A1-E5)\n✦ Tienes 5 intentos\n──────────────────`,
             contextInfo: { mentionedJid: [m.sender] }
         }, { quoted: m });
     }
