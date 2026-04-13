@@ -1,3 +1,14 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    BET_TTT: 500,
+    BASE_COL: 1000
+};
+
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
+
 const ticTacToeGame = {
     name: 'tictactoe',
     alias: ['ttt', 'x0', 'tresenraya'],
@@ -41,16 +52,34 @@ const ticTacToeGame = {
         const winner = checkWin(game.board);
         if (winner) {
             const winnerJid = winner === 'X' ? game.playerX : game.playerO;
-            let finalMsg = `🎮 *TRES EN RAYA - FIN*\n\n${renderVisualBoard(game.board)}\n\n`;
+            const loserJid = winner === 'X' ? game.playerO : game.playerX;
+            
+            let finalMsg = `『 TRES EN RAYA - FIN 』\n\n${renderVisualBoard(game.board)}\n\n`;
 
             if (winner === 'tie') {
-                finalMsg += `⚖️ *¡Es un EMPATE!*`;
+                finalMsg += `⚖️  ¡Es un EMPATE!\n\n『 VOKER SYSTEMS 』`;
                 await conn.sendMessage(m.chat, { text: finalMsg }, { quoted: m });
             } else {
-                finalMsg += `🏆 *¡@${winnerJid.split('@')[0]} (${winner}) ES EL GANADOR!*`;
+                let loser = await global.User.findOne({ id: loserJid });
+                if (!loser) loser = await global.User.create({ id: loserJid, col: ECO_CONFIG.BASE_COL });
+
+                let amountToTake = ECO_CONFIG.BET_TTT;
+                if (loser.col < amountToTake) amountToTake = Math.max(0, loser.col);
+
+                let winnerUser = await global.User.findOne({ id: winnerJid });
+                if (!winnerUser) winnerUser = await global.User.create({ id: winnerJid, col: ECO_CONFIG.BASE_COL });
+
+                const newLoserCol = loser.col - amountToTake;
+                const newWinnerCol = winnerUser.col + amountToTake;
+
+                await global.User.updateOne({ id: loserJid }, { $set: { col: newLoserCol } });
+                await global.User.updateOne({ id: winnerJid }, { $set: { col: newWinnerCol } });
+
+                finalMsg += `🏆 ¡@${winnerJid.split('@')[0]} (${winner}) GANA!\n\n✦ Recompensa: +${formatCol(amountToTake)} Col\n✦ Perdedor: -${formatCol(amountToTake)} Col\n\n『 VOKER SYSTEMS 』`;
+                
                 await conn.sendMessage(m.chat, { 
                     text: finalMsg, 
-                    contextInfo: { mentionedJid: [winnerJid] } 
+                    contextInfo: { mentionedJid: [winnerJid, loserJid] } 
                 }, { quoted: m });
             }
             delete global.tttGames[m.chat];
@@ -59,7 +88,7 @@ const ticTacToeGame = {
 
         game.turn = game.turn === 'X' ? 'O' : 'X';
         const nextJid = game.turn === 'X' ? game.playerX : game.playerO;
-        const nextText = `🎮 *TRES EN RAYA*\n\n${renderVisualBoard(game.board)}\n\nSigue el turno de *${game.turn}*: @${nextJid.split('@')[0]}\n_Escribe un número del 1 al 9._`;
+        const nextText = `『 TRES EN RAYA 』\n\n${renderVisualBoard(game.board)}\n\n✦ Turno de ${game.turn}: @${nextJid.split('@')[0]}\n† Apuesta en juego: ${formatCol(ECO_CONFIG.BET_TTT)} Col`;
 
         await conn.sendMessage(m.chat, { 
             text: nextText, 
@@ -94,7 +123,7 @@ const ticTacToeGame = {
         const p1 = m.sender.split('@')[0];
         const p2 = opponent.split('@')[0];
 
-        const textoInicio = `🎮 *TRES EN RAYA - INICIO*\n\n@${p1} (❌) vs @${p2} (⭕)\n\n${boardStr}\n\nEmpieza el turno de *❌*: @${p1}`;
+        const textoInicio = `『 TRES EN RAYA - INICIO 』\n\n✦ @${p1} (❌) vs @${p2} (⭕)\n† Apuesta: ${formatCol(ECO_CONFIG.BET_TTT)} Col\n\n${boardStr}\n\n✦ Empieza: @${p1}\n\n『 VOKER SYSTEMS 』`;
 
         return conn.sendMessage(m.chat, {
             text: textoInicio,
