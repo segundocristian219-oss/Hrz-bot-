@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { generateWAMessageContent } from '@whiskeysockets/baileys';
 
 const musicViewCommand = {
     name: 'musicview',
@@ -17,14 +18,20 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || name();
-            const author = text.split('|')[1]?.trim() || name();
+            const title = text.split('|')[0]?.trim() || "Set Fire to the Rain";
+            const author = text.split('|')[1]?.trim() || "Adele";
             const albumArt = "https://api.dix.lat/media2/1773637265253.jpg";
+
+            const messageContent = await generateWAMessageContent(
+                { audio: media, mimetype: 'audio/mp4' },
+                { upload: conn.waUploadToServer }
+            );
+
+            const audioMsg = messageContent.audioMessage;
 
             await conn.relayMessage(m.chat, {
                 audioMessage: {
-                    url: null,
-                    mimetype: 'audio/mp4',
+                    ...audioMsg,
                     seconds: 30,
                     ptt: false,
                     contextInfo: {
