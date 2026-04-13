@@ -7,7 +7,7 @@ const ECO_CONFIG = {
 };
 
 const formatCol = (num) => {
-    return Number(num).toLocaleString('en-US').replace(/,/g, ' ');
+    return Number(num).toLocaleString('de-DE');
 };
 
 const workCommand = {
