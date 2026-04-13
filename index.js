@@ -15,7 +15,7 @@ import './config.js';
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
-import fs, { existsSync, readdirSync, statSync, watch, mkdirSync, promises as fsP } from 'fs';
+import fs, { existsSync, mkdirSync, watch, promises as fsP } from 'fs';
 import chalk from 'chalk';
 import pino from 'pino';
 import yargs from 'yargs';
@@ -32,13 +32,16 @@ import { exec } from "child_process";
 EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', (err) => {
+    const msg = err?.message || '';
+    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
     console.error('⚠️ ERROR NO CONTROLADO:', err);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
+    const msg = String(reason?.message || reason || '');
+    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
     console.error('⚠️ PROMESA NO CONTROLADA:', reason);
 });
-
 
 const silentLogger = pino({ 
     level: 'silent',
@@ -83,51 +86,23 @@ if (mongoURI && !process.argv.includes('--local')) {
         activateLocalDB();
     });
 
-    const userSchema = new mongoose.Schema({
-        id: { type: String, unique: true },
-        lastSeen: { type: Date, default: Date.now }
-    }, { strict: false });
+    const userSchema = new mongoose.Schema({ id: { type: String, unique: true }, lastSeen: { type: Date, default: Date.now } }, { strict: false });
     global.User = mongoose.model('User', userSchema);
-
-    const chatSchema = new mongoose.Schema({
-        id: { type: String, unique: true },
-        isBanned: { type: Boolean, default: false }
-    }, { strict: false });
+    const chatSchema = new mongoose.Schema({ id: { type: String, unique: true }, isBanned: { type: Boolean, default: false } }, { strict: false });
     global.Chat = mongoose.model('Chat', chatSchema);
-
-const warnSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
-    groupId: { type: String, required: true },
-    reasons: { type: [String], default: [] },
-    warnCount: { type: Number, default: 0 },
-    date: { type: Date, default: Date.now }
-});
-
-warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
-global.Warns = mongoose.model('Warns', warnSchema);
-
-
+    const warnSchema = new mongoose.Schema({ userId: { type: String, required: true }, groupId: { type: String, required: true }, reasons: { type: [String], default: [] }, warnCount: { type: Number, default: 0 }, date: { type: Date, default: Date.now } });
+    warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
+    global.Warns = mongoose.model('Warns', warnSchema);
     global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
-
-
-   const statsSchema = new mongoose.Schema({
-    command: { type: String, unique: true },
-    globalUsage: { type: Number, default: 0 },
-    groups: { type: Map, of: Number, default: {} } 
-}, { strict: false });
-global.Stats = mongoose.model('Stats', statsSchema);
-
+    const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
+    global.Stats = mongoose.model('Stats', statsSchema);
 } else {
     activateLocalDB();
 }
 
 const { 
-    makeWASocket, 
-    DisconnectReason, 
-    useMultiFileAuthState, 
-    fetchLatestBaileysVersion, 
-    makeCacheableSignalKeyStore, 
-    Browsers
+    makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion, 
+    makeCacheableSignalKeyStore, Browsers
 } = await import('@whiskeysockets/baileys');
 
 if (!existsSync('./tmp')) mkdirSync('./tmp');
@@ -163,35 +138,19 @@ const connectionOptions = {
   connectTimeoutMs: 60000,
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
-  getMessage: async (key) => {
-      return undefined; 
-  },
+  getMessage: async (key) => { return undefined; },
   patchMessageBeforeSending: (message) => {
-      const requiresPatch = !!(
-          message.interactiveMessage ||
-          message.templateMessage ||
-          message.listMessage
-      );
+      const requiresPatch = !!(message.interactiveMessage || message.templateMessage || message.listMessage);
       if (requiresPatch) {
-          message = {
-              viewOnceMessage: {
-                  message: {
-                      messageContextInfo: {
-                          deviceListMetadata: {},
-                          deviceListMetadataVersion: 2
-                      },
-                      ...message
-                  }
-              }
-          };
+          message = { viewOnceMessage: { message: { messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 }, ...message } } };
       }
       return message;
   }
 };
 
-
 global.conn = makeWASocket(connectionOptions);
 global.conn.isMain = true;
+
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const question = (t) => new Promise((r) => rl.question(t, r));
@@ -210,19 +169,14 @@ const cleanSessions = async () => {
     try {
         const rootPath = './sessions';
         if (!existsSync(rootPath)) return;
-
         const removeOldFiles = async (dir) => {
             const items = await fsP.readdir(dir);
             for (const item of items) {
                 const fullPath = join(dir, item);
                 const stat = await fsP.stat(fullPath);
-
-                if (stat.isDirectory()) {
-                    await removeOldFiles(fullPath);
-                } else {
-                    if (item !== 'creds.json' && (Date.now() - stat.mtimeMs > 2 * 24 * 60 * 60 * 1000)) {
-                        await fsP.unlink(fullPath).catch(() => null);
-                    }
+                if (stat.isDirectory()) await removeOldFiles(fullPath);
+                else if (item !== 'creds.json' && (Date.now() - stat.mtimeMs > 2 * 24 * 60 * 60 * 1000)) {
+                    await fsP.unlink(fullPath).catch(() => null);
                 }
             }
         };
@@ -254,14 +208,11 @@ global.reload = async function(restatConn) {
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
-
         if (m?.isGroup && !global.groupCache.has(m.chat)) {
             const metadata = await conn.groupMetadata(m.chat).catch(() => null);
             if (metadata) global.groupCache.set(m.chat, metadata);
         }
-    } catch (e) { 
-        if (!e.message?.includes('decrypt')) console.error(e); 
-    }
+    } catch (e) { if (!e.message?.includes('decrypt')) console.error(e); }
   });
 
   global.conn.ev.removeAllListeners('connection.update');
@@ -275,29 +226,22 @@ global.reload = async function(restatConn) {
             console.error(chalk.red(`┃ STATUS: LOGGED OUT - ELIMINANDO SESIÓN`));
             exec(`rm -rf ${sessionPath}/*`);
             process.exit(1);
-        } else {
-            setTimeout(() => global.reload(true), 5000);
-        }
+        } else setTimeout(() => global.reload(true), 5000);
     }
     if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
-
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
-        for (const id in groups) {
-            global.groupCache.set(id, groups[id]);
-        }
+        for (const id in groups) global.groupCache.set(id, groups[id]);
         console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
-
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
                 await loadSubBots(global.conn);
             } catch (e) {}
         }, 1000);
-
         const updateStatus = async () => {
             try {
                 const time = new Date().toLocaleString('es-HN', { hour12: true });
@@ -313,23 +257,23 @@ global.reload = async function(restatConn) {
         global.keepAlive = setInterval(updateStatus, 600000);
     }
   });
+
   global.conn.ev.on('creds.update', saveCreds);
 
   global.conn.ev.on('groups.update', async (updates) => {
     for (const update of updates) {
+        global.groupCache.delete(update.id);
         const metadata = await conn.groupMetadata(update.id).catch(() => null);
         if (metadata) global.groupCache.set(update.id, metadata);
     }
   });
 
   global.conn.ev.on('group-participants.update', async (update) => {
-    
     global.groupCache.delete(update.id);
-    
     const metadata = await conn.groupMetadata(update.id).catch(() => null);
     if (metadata) global.groupCache.set(update.id, metadata);
-});
-
+  });
+};
 
 await global.reload();
 
@@ -356,13 +300,3 @@ async function readRecursive(folder) {
   }
 }
 await readRecursive(join(process.cwd(), './plugins'));
-
-process.on('uncaughtException', (err) => {
-  const msg = err?.message || '';
-  if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
-});
-
-process.on('unhandledRejection', (reason) => {
-  const msg = String(reason?.message || reason || '');
-  if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
-});
