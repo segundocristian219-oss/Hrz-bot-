@@ -22,7 +22,7 @@ const loteriaCommand = {
             return m.reply(`⏳ La tómbola se está enfriando. Regresa en ${mins} minutos.`);
         }
 
-        const costo = 10000;
+        const costo = 50;
         const premioBase = Math.floor(Math.random() * 25001) + 25000;
         const probabilidadJackpot = Math.random() < 0.1;
         const jackpotFinal = probabilidadJackpot ? (premioBase * 2) : premioBase;
