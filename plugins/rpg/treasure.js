@@ -1,3 +1,15 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    MIN_TREASURE: 500,
+    MAX_TREASURE: 5000,
+    BASE_COL: 1000
+};
+
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
+
 const clean = (str) => str.toUpperCase().trim();
 
 const treasureGame = {
@@ -32,9 +44,17 @@ const treasureGame = {
 
         if (txt === game.target) {
             game.board[y][x] = '💎';
+            
+            const reward = Math.floor(Math.random() * (ECO_CONFIG.MAX_TREASURE - ECO_CONFIG.MIN_TREASURE + 1)) + ECO_CONFIG.MIN_TREASURE;
+            let user = await global.User.findOne({ id: m.sender });
+            if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
+            
+            let newCol = (user.col || ECO_CONFIG.BASE_COL) + reward;
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol } });
+
             await m.react("💰");
             await conn.sendMessage(m.chat, {
-                text: `🎊 ¡@${m.sender.split('@')[0]} ENCONTRASTE EL TESORO EN *${game.target}*!\n\n${renderBoard(game.board)}`,
+                text: `『 TESORO ENCONTRADO 』\n\n🎊 @${m.sender.split('@')[0]} excavaste en *${game.target}*\n\n${renderBoard(game.board)}\n\n✦ Recompensa: +${formatCol(reward)} Col\n✧ Balance: ${formatCol(newCol)} Col\n──────────────────\n『 VOKER SYSTEMS 』`,
                 contextInfo: { mentionedJid: [m.sender] }
             }, { quoted: m });
             delete global.treasureGames[gameId];
@@ -48,7 +68,7 @@ const treasureGame = {
                 const ty = parseInt(game.target[1]) - 1;
                 game.board[ty][tx] = '💎';
                 await conn.sendMessage(m.chat, {
-                    text: `💀 *GAME OVER*\n\nSe agotaron los intentos, @${m.sender.split('@')[0]}.\nEl tesoro estaba en *${game.target}*.\n\n${renderBoard(game.board)}`,
+                    text: `『 GAME OVER 』\n\n💀 Se agotaron los intentos, @${m.sender.split('@')[0]}\nEl tesoro estaba en *${game.target}*\n\n${renderBoard(game.board)}\n──────────────────\n『 VOKER SYSTEMS 』`,
                     contextInfo: { mentionedJid: [m.sender] }
                 }, { quoted: m });
                 delete global.treasureGames[gameId];
@@ -56,7 +76,7 @@ const treasureGame = {
             }
 
             await conn.sendMessage(m.chat, {
-                text: `🕳️ Nada por aquí, @${m.sender.split('@')[0]}... (Intento ${game.attempts}/5)\n\n${renderBoard(game.board)}\n\nSigue excavando, ejemplo: *C3*`,
+                text: `『 EXCAVANDO 』\n\n🕳️ Nada por aquí... (Intento ${game.attempts}/5)\n\n${renderBoard(game.board)}\n\nSigue excavando, ejemplo: *C3*`,
                 contextInfo: { mentionedJid: [m.sender] }
             }, { quoted: m });
             return true;
@@ -67,7 +87,7 @@ const treasureGame = {
         const gameId = `${m.chat}-${m.sender}`;
 
         if (global.treasureGames[gameId]) return conn.sendMessage(m.chat, {
-            text: `⚠️ Ya tienes una búsqueda en curso, @${m.sender.split('@')[0]}.`,
+            text: `⚠️ Ya tienes una búsqueda en curso, @${m.sender.split('@')[0]}`,
             contextInfo: { mentionedJid: [m.sender] }
         }, { quoted: m });
 
@@ -85,7 +105,7 @@ const treasureGame = {
         const initialMap = "      A.    B.    C.     D.     E\n" + board.map((row, i) => `${i + 1}   ${row.join('  ')}`).join('\n');
 
         return conn.sendMessage(m.chat, {
-            text: `🗺️ *BÚSQUEDA DEL TESORO PERSONAL*\n\nHola @${m.sender.split('@')[0]}, hay un botín oculto aquí:\n\n${initialMap}\n\nEscribe una coordenada (A1-E5):\n_Solo tú puedes excavar. Tienes 5 intentos._`,
+            text: `『 BÚSQUEDA DEL TESORO 』\n\nHola @${m.sender.split('@')[0]}, hay un botín oculto aquí:\n\n${initialMap}\n\nEscribe una coordenada (A1-E5)\n✦ Tienes 5 intentos\n──────────────────\n『 VOKER SYSTEMS 』`,
             contextInfo: { mentionedJid: [m.sender] }
         }, { quoted: m });
     }
