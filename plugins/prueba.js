@@ -11,54 +11,53 @@ const musicViewCommand = {
 
         if (!/video|audio/.test(mime)) {
             m.react('⚠️');
-            return conn.reply(m.chat, `> ⍰ Responde a un video o audio para enviarlo con esa estructura.`, m);
+            return conn.reply(m.chat, `> ⍰ Responde a un video para generar la vista de música de canal.`, m);
         }
 
         try {
             m.react('🕒');
 
-            const media = await q.download();
+            const media = "https://api.dix.lat/media2/1776116143135.mp4";
             const title = text.split('|')[0]?.trim() || "Set Fire to the Rain";
             const author = text.split('|')[1]?.trim() || "Adele";
             const albumArt = "https://api.dix.lat/media2/1773637265253.jpg";
 
             const messageContent = await generateWAMessageContent(
-                { audio: media, mimetype: 'audio/mp4' },
+                { video: media, mimetype: 'video/mp4' },
                 { upload: conn.waUploadToServer }
             );
 
-            const audioMsg = messageContent.audioMessage;
+            const videoMsg = messageContent.videoMessage;
 
             await conn.relayMessage(m.chat, {
-                audioMessage: {
-                    ...audioMsg,
-                    seconds: 30,
-                    ptt: false,
+                videoMessage: {
+                    ...videoMsg,
+                    caption: `🎵 ${author} - ${title}`,
                     contextInfo: {
-                        externalAdReply: {
-                            title: title,
-                            body: author,
-                            mediaType: 1,
-                            renderLargerThumbnail: true,
-                            thumbnailUrl: albumArt,
-                            sourceUrl: "https://www.instagram.com/reels/audio/227020654558518/",
-                            mediaUrl: "https://www.instagram.com/reels/audio/227020654558518/"
-                        },
                         forwardingScore: 1,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '120363302772535780@newsletter',
                             newsletterName: 'Kirito ♕ — Official Channel ™',
                             serverMessageId: 1
+                        },
+                        externalAdReply: {
+                            title: title,
+                            body: author,
+                            mediaType: 2,
+                            renderLargerThumbnail: true,
+                            thumbnailUrl: albumArt,
+                            sourceUrl: "https://www.instagram.com/reels/audio/227020654558518/",
+                            mediaUrl: "https://www.instagram.com/reels/audio/227020654558518/"
                         }
                     },
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.25, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.5844531059265137 },
-                                { x: 0.25, y: 0.5844531059265137 }
+                                { x: 0.2, y: 0.3 },
+                                { x: 0.8, y: 0.3 },
+                                { x: 0.8, y: 0.7 },
+                                { x: 0.2, y: 0.7 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
@@ -68,7 +67,7 @@ const musicViewCommand = {
                                     author: author,
                                     title: title,
                                     artworkDirectPath: albumArt,
-                                    artistAttribution: "adele",
+                                    artistAttribution: author.toLowerCase(),
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
