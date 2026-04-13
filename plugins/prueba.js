@@ -19,47 +19,54 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || name();
-            const author = text.split('|')[1]?.trim() || "Deylin Elíac";
+
+            const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
+            const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
+
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
 
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
             
-            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest();
+            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
 
             const messageContent = await generateWAMessageContent(
-                { 
-                    video: media, 
-                    mimetype: 'video/mp4',
-                    jpegThumbnail: albumArtBuffer 
-                },
+                { video: media, mimetype: 'video/mp4' },
                 { upload: conn.waUploadToServer }
             );
 
             const videoMsg = messageContent.videoMessage;
-            const trackId = crypto.randomBytes(10).toString('hex');
+
+            const trackId = crypto.randomBytes(16).toString('hex');
 
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
                     jpegThumbnail: albumArtBuffer,
                     contextInfo: {
-                        forwardingScore: 1,
+                        forwardingScore: 2,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363406846602793@newsletter',
+                            newsletterJid: '120363302772535780@newsletter',
                             newsletterName: 'Kirito ♕ — Official Channel ™',
                             serverMessageId: 1
+                        },
+                        externalAdReply: {
+                            title: title,
+                            body: author,
+                            mediaType: 2,
+                            renderLargerThumbnail: true,
+                            thumbnail: albumArtBuffer,
+                            sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
                         }
                     },
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.25, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.5844531059265137 },
-                                { x: 0.25, y: 0.5844531059265137 }
+                                { x: 0.25, y: 0.42 },
+                                { x: 0.75, y: 0.42 },
+                                { x: 0.75, y: 0.58 },
+                                { x: 0.25, y: 0.58 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
