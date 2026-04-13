@@ -48,7 +48,7 @@ const workCommand = {
 
         await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, lastWork: now } });
 
-        const txt = `『 JORNADA EXITOSA 』\n\n◈ ${lore}\n──────────────────\n✦ Ganancia: +${formatCol(amount)} Col\n✧ Balance Actual: ${formatCol(newCol)} Col\n──────────────────\n『 VOKER SYSTEMS 』`;
+        const txt = `『 JORNADA EXITOSA 』\n\n◈ ${lore}\n──────────────────\n✦ Ganancia: +${formatCol(amount)} Col\n✧ Balance Actual: ${formatCol(newCol)} Col\n──────────────────`;
 
         await conn.sendMessage(m.chat, { text: txt }, { quoted: m });
     }
