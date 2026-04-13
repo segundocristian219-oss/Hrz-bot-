@@ -18,27 +18,31 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || "Sin Título";
-            const author = text.split('|')[1]?.trim() || "Desconocido";
-            const albumArt = "https://api.dix.lat/media2/1773637265253.jpg";
+            const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
+            const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
+            const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
+
+            
+            const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
+            const albumArtBuffer = Buffer.from(resp.data);
 
             const messageContent = await generateWAMessageContent(
                 { 
                     video: media, 
                     mimetype: 'video/mp4',
-                    caption: `🎵 ${author} - ${title}`
                 },
                 { upload: conn.waUploadToServer }
             );
 
             const videoMsg = messageContent.videoMessage;
 
+            
+            const trackId = Buffer.from(title).toString('get-byte-length'); 
+
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    viewOnce: false,
-                    gifPlayback: false,
-                    
+                    jpegThumbnail: albumArtBuffer, 
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -52,7 +56,7 @@ const musicViewCommand = {
                             body: author,
                             mediaType: 2,
                             renderLargerThumbnail: true,
-                            thumbnailUrl: albumArt,
+                            thumbnail: albumArtBuffer,
                             sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29",
                             mediaUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
                         }
@@ -62,20 +66,18 @@ const musicViewCommand = {
                             polygonVertices: [
                                 { x: 0.1, y: 0.1 },
                                 { x: 0.9, y: 0.1 },
-                                { x: 0.9, y: 0.2 }, // Reducido para que la etiqueta flote arriba
-                                { x: 0.1, y: 0.2 }
+                                { x: 0.9, y: 0.9 },
+                                { x: 0.1, y: 0.9 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                   
-                                    musicContentMediaId: `${Math.floor(Math.random() * 100000000000000)}`,
-                                    songId: `${Math.floor(Math.random() * 100000000000000)}`,
+                                    musicContentMediaId: trackId,
+                                    songId: trackId,
                                     author: author,
                                     title: title,
-                                    artworkDirectPath: albumArt,
-                                    artworkSha256: videoMsg.fileSha256, 
-                                    artistAttribution: author.toLowerCase(),
+                                    artistAttribution: author,
+                                    artworkDirectPath: "", 
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
