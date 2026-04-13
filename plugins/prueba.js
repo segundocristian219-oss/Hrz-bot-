@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { generateWAMessageContent } from '@whiskeysockets/baileys';
+import { generateWAMessageContent, downloadMediaMessage, getContentType } from '@whiskeysockets/baileys';
 import crypto from 'crypto';
+import fs from 'fs/promises'; // opcional, por si quieres guardar temporalmente
 
 const musicViewCommand = {
     name: 'musicview',
@@ -18,29 +19,47 @@ const musicViewCommand = {
         try {
             m.react('🕒');
 
-            const media = await q.download();
+            // Descarga correcta y estable del video
+            const mediaBuffer = await downloadMediaMessage(
+                q,
+                'buffer',
+                {},
+                { 
+                    reuploadRequest: conn.updateMediaMessage 
+                }
+            );
 
             const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
             const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
 
-            const resp = await axios.get("https://api.dix.lat/media2/1773637265253.jpg", { responseType: 'arraybuffer' });
+            // Descargar portada (álbum art)
+            const resp = await axios.get("https://api.dix.lat/media2/1773637265253.jpg", { 
+                responseType: 'arraybuffer' 
+            });
             const albumArtBuffer = Buffer.from(resp.data);
 
             const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
 
+            // Generar el contenido del mensaje (esto cifra y prepara el video)
             const messageContent = await generateWAMessageContent(
-                { video: media, mimetype: 'video/mp4' },
-                { upload: conn.waUploadToServer }
+                { 
+                    video: mediaBuffer, 
+                    mimetype: 'video/mp4' 
+                },
+                { 
+                    upload: conn.waUploadToServer 
+                }
             );
 
             const videoMsg = messageContent.videoMessage;
 
             const trackId = crypto.randomBytes(16).toString('hex');
 
+            // Enviar con relayMessage + annotations para el efecto Music View
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    jpegThumbnail: albumArtBuffer,
+                    jpegThumbnail: albumArtBuffer,        // Usamos la portada como thumbnail
                     contextInfo: {
                         forwardingScore: 2,
                         isForwarded: true,
@@ -73,7 +92,7 @@ const musicViewCommand = {
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
-                                    overlapDurationInMs: 30000
+                                    overlapDurationInMs: 30000   // 30 segundos de overlap (ajusta si quieres)
                                 }
                             },
                             embeddedAction: true
@@ -85,6 +104,7 @@ const musicViewCommand = {
             m.react('✅');
 
         } catch (error) {
+            console.error('Error en musicview:', error);
             m.react('❌');
             conn.reply(m.chat, `> ❌ *Error:* ${error.message}`, m);
         }
