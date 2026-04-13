@@ -29,7 +29,11 @@ const musicViewCommand = {
             const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest();
 
             const messageContent = await generateWAMessageContent(
-                { video: media, mimetype: 'video/mp4' },
+                { 
+                    video: media, 
+                    mimetype: 'video/mp4',
+                    jpegThumbnail: albumArtBuffer 
+                },
                 { upload: conn.waUploadToServer }
             );
 
@@ -44,26 +48,18 @@ const musicViewCommand = {
                         forwardingScore: 1,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363302772535780@newsletter',
+                            newsletterJid: '120363406846602793@newsletter',
                             newsletterName: 'Kirito ♕ — Official Channel ™',
                             serverMessageId: 1
-                        },
-                        externalAdReply: {
-                            title: title,
-                            body: author,
-                            mediaType: 2,
-                            renderLargerThumbnail: true,
-                            thumbnail: albumArtBuffer,
-                            sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
                         }
                     },
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.2, y: 0.4 },
-                                { x: 0.8, y: 0.4 },
-                                { x: 0.8, y: 0.6 },
-                                { x: 0.2, y: 0.6 }
+                                { x: 0.25, y: 0.41553908586502075 },
+                                { x: 0.75, y: 0.41553908586502075 },
+                                { x: 0.75, y: 0.5844531059265137 },
+                                { x: 0.25, y: 0.5844531059265137 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
