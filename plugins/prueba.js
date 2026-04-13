@@ -27,8 +27,14 @@ const musicViewCommand = {
 
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
-            
+
             const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
+
+            // Subimos la imagen de portada a los servidores de WhatsApp para obtener directPath
+            const uploadedArt = await conn.waUploadToServer(albumArtBuffer, { 
+                mediaType: 'image',
+                fileLength: albumArtBuffer.length 
+            });
 
             const messageContent = await generateWAMessageContent(
                 { video: media, mimetype: 'video/mp4' },
@@ -47,17 +53,9 @@ const musicViewCommand = {
                         forwardingScore: 2,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363302772535780@newsletter',
+                            newsletterJid: '120363406846602793@newsletter',
                             newsletterName: 'Kirito ♕ — Official Channel ™',
                             serverMessageId: 1
-                        },
-                        externalAdReply: {
-                            title: title,
-                            body: author,
-                            mediaType: 2,
-                            renderLargerThumbnail: true,
-                            thumbnail: albumArtBuffer,
-                            sourceUrl: "https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29"
                         }
                     },
                     annotations: [
@@ -76,6 +74,7 @@ const musicViewCommand = {
                                     author: author,
                                     title: title,
                                     artistAttribution: author,
+                                    artworkDirectPath: uploadedArt.directPath,
                                     artworkSha256: artworkSha256,
                                     artworkEncSha256: artworkSha256,
                                     isExplicit: false,
