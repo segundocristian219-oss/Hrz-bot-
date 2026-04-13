@@ -1,7 +1,11 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    BASE_COL: 1000
+};
+
 const formatCol = (num) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    return num.toString();
+    return Number(num).toLocaleString('de-DE');
 };
 
 const ruletaCommand = {
@@ -11,8 +15,8 @@ const ruletaCommand = {
     run: async (m, { conn, args, usedPrefix, command }) => {
         if (!m.isGroup) return m.reply("⨯ Comando exclusivo para grupos.");
 
-        const user = await global.User.findOne({ id: m.sender });
-        if (!user) return m.reply("⨯ No tienes una cuenta registrada.");
+        let user = await global.User.findOne({ id: m.sender });
+        if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
 
         const choice = (args[0] || "").toLowerCase();
         const bet = parseInt(args[1]);
@@ -30,11 +34,11 @@ const ruletaCommand = {
             help += `➭ Numero: 1 - 36 (x36)\n`;
             help += `➭ El Cero: 0 (x50)\n\n`;
             help += `──────────────────\n`;
-            help += `✦ EJEMPLO: ${usedPrefix + command} negro 500\n`;
+            help += `✦ BALANCE: ${formatCol(user.col)} Col`;
             return m.reply(help);
         }
 
-        if (user.col < bet) return m.reply("⨯ Fondos insuficientes.");
+        if (user.col < bet) return m.reply(`⨯ Fondos insuficientes. Tienes: ${formatCol(user.col)} Col`);
 
         const now = Date.now();
         const cooldown = 5000;
@@ -58,15 +62,20 @@ const ruletaCommand = {
             multiplier = result === 0 ? 50 : 36;
         }
 
-        user.col -= bet;
+        let newCol = user.col - bet;
         let profit = 0;
+        
         if (win) {
             profit = bet * multiplier;
-            user.col += profit;
+            newCol += profit;
         }
 
-        user.lastRt = now;
-        await user.save();
+        if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
+
+        await global.User.updateOne(
+            { id: m.sender }, 
+            { $set: { col: newCol, lastRt: now } }
+        );
 
         let resTxt = "『 R E S U L T A D O 』\n\n";
         resTxt += `✦ Giro: ${result} [ ${colorResult.toUpperCase()} ]\n`;
@@ -81,7 +90,7 @@ const ruletaCommand = {
             resTxt += `◈ Perdida: -${formatCol(bet)} Col\n`;
         }
 
-        resTxt += `\n✦ Saldo: ${formatCol(user.col)} Col`;
+        resTxt += `\n✦ Saldo: ${formatCol(newCol)} Col\n──────────────────`;
 
         await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
         if (win) await m.react("💰");
@@ -89,4 +98,3 @@ const ruletaCommand = {
 };
 
 export default ruletaCommand;
-      
