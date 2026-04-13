@@ -18,12 +18,16 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || name();
-            const author = text.split('|')[1]?.trim() || name();
+            const title = text.split('|')[0]?.trim() || "Sin Título";
+            const author = text.split('|')[1]?.trim() || "Desconocido";
             const albumArt = "https://api.dix.lat/media2/1773637265253.jpg";
 
             const messageContent = await generateWAMessageContent(
-                { video: media, mimetype: 'video/mp4' },
+                { 
+                    video: media, 
+                    mimetype: 'video/mp4',
+                    caption: `🎵 ${author} - ${title}`
+                },
                 { upload: conn.waUploadToServer }
             );
 
@@ -32,7 +36,9 @@ const musicViewCommand = {
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    caption: `🎵 ${author} - ${title}`,
+                    viewOnce: false,
+                    gifPlayback: false,
+                    
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -54,19 +60,21 @@ const musicViewCommand = {
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.2, y: 0.3 },
-                                { x: 0.8, y: 0.3 },
-                                { x: 0.8, y: 0.7 },
-                                { x: 0.2, y: 0.7 }
+                                { x: 0.1, y: 0.1 },
+                                { x: 0.9, y: 0.1 },
+                                { x: 0.9, y: 0.2 }, // Reducido para que la etiqueta flote arriba
+                                { x: 0.1, y: 0.2 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                    musicContentMediaId: "227020654558518",
-                                    songId: "227020654558518",
+                                   
+                                    musicContentMediaId: `${Math.floor(Math.random() * 100000000000000)}`,
+                                    songId: `${Math.floor(Math.random() * 100000000000000)}`,
                                     author: author,
                                     title: title,
                                     artworkDirectPath: albumArt,
+                                    artworkSha256: videoMsg.fileSha256, 
                                     artistAttribution: author.toLowerCase(),
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
