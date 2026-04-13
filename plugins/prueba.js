@@ -26,8 +26,7 @@ const musicViewCommand = {
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
             
-            const artworkSha256Buffer = crypto.createHash('sha256').update(albumArtBuffer).digest();
-            const artworkSha256 = artworkSha256Buffer.toString('base64');
+            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest();
 
             const messageContent = await generateWAMessageContent(
                 { video: media, mimetype: 'video/mp4' },
@@ -35,14 +34,12 @@ const musicViewCommand = {
             );
 
             const videoMsg = messageContent.videoMessage;
-            
-            const trackIdHex = crypto.randomBytes(8).toString('hex');
+            const trackId = crypto.randomBytes(10).toString('hex');
 
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
                     jpegThumbnail: albumArtBuffer,
-                    caption: `🎵 ${author} - ${title}`,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -63,19 +60,19 @@ const musicViewCommand = {
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.25, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.5844531059265137 },
-                                { x: 0.25, y: 0.5844531059265137 }
+                                { x: 0.2, y: 0.4 },
+                                { x: 0.8, y: 0.4 },
+                                { x: 0.8, y: 0.6 },
+                                { x: 0.2, y: 0.6 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                    musicContentMediaId: trackIdHex,
-                                    songId: trackIdHex,
+                                    musicContentMediaId: trackId,
+                                    songId: trackId,
                                     author: author,
                                     title: title,
-                                    artistAttribution: `https://www.instagram.com/_u/${author.replace(/\s/g, '').toLowerCase()}`,
+                                    artistAttribution: author,
                                     artworkSha256: artworkSha256,
                                     artworkEncSha256: artworkSha256,
                                     isExplicit: false,
