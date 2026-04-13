@@ -1,42 +1,44 @@
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const ECO_CONFIG = {
+    BASE_COL: 1000
+};
+
+const formatCol = (num) => {
+    return Number(num).toLocaleString('de-DE');
+};
+
 const slotCommand = {
     name: 'slot',
-    alias: ['tragamonedas', 'slots', 'tragaperras', 'slot', 'apostar'],
+    alias: ['tragamonedas', 'slots', 'tragaperras', 'apostar'],
     category: 'rpg',
     run: async (m, { conn, args, usedPrefix, command }) => {
         try {
             let user = await global.User.findOne({ id: m.sender });
-            if (!user) user = await global.User.create({ id: m.sender, col: 0, exp: 0 });
+            if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
 
             let amount = args[0];
-            
+            let currentCol = user.col || ECO_CONFIG.BASE_COL;
+
             if (!amount || isNaN(amount) || amount <= 0) {
-                let guia = `\n\t\t\t\t♛  *KIRITO CASINO* ♛\n\n`;
-                guia += `✧ *USO CORRECTO:* ${usedPrefix + command} <cantidad>\n`;
-                guia += `✦ *BALANCE ACTUAL:* ${user.col ?? 0} Col\n\n`;
-                guia += `◈ *TABLA DE PREMIOS*\n`;
-                guia += `👑 👑 👑 ➔ *Jackpot (x10)*\n`;
-                guia += `🍒 🍒 ❌ ➔ *Premio Menor (x2)*\n`;
+                let guia = `『  VOKER CASINO  』\n\n✦ USO: ${usedPrefix + command} <cantidad>\n✧ BALANCE: ${formatCol(currentCol)} Col\n\n『 TABLA PREMIOS 』\n👑 👑 👑 ➔ Jackpot (x10)\n💎 💎 ✦ ➔ Premio (x2)\n──────────────────\n『 VOKER SYSTEMS 』`;
                 return conn.reply(m.chat, guia, m);
             }
 
             amount = parseInt(amount);
             let now = Date.now();
-
-            
             let cooldown = 300000;
 
             if (user.lastSlot && (now - user.lastSlot) < cooldown) {
                 let s = cooldown - (now - user.lastSlot);
                 let mTime = Math.floor(s / 60000);
                 let sec = Math.floor((s % 60000) / 1000);
-
                 let timeString = (mTime > 0 ? `${mTime}m ` : '') + `${sec}s`;
-                return conn.reply(m.chat, `⏳ Las máquinas se están enfriando. Espera: *${timeString}*`, m);
+                return conn.reply(m.chat, `⏳ Las máquinas se están enfriando\nEspera: ${timeString}`, m);
             }
-            
 
-            if ((user.col ?? 0) < amount) {
-                return conn.reply(m.chat, `✦ No tienes suficientes *Col*. Tu balance es: ${user.col ?? 0}`, m);
+            if (currentCol < amount) {
+                return conn.reply(m.chat, `✦ No tienes suficientes Col\nBalance actual: ${formatCol(currentCol)}`, m);
             }
 
             await m.react("🎰");
@@ -50,43 +52,34 @@ const slotCommand = {
 
             let isJackpot = x[0] === x[1] && x[1] === x[2];
             let isWin = x[0] === x[1] || x[1] === x[2] || x[0] === x[2];
-            
+
             let resultCol = 0;
             let status = "";
 
             if (isJackpot) {
                 resultCol = amount * 10;
-                status = "♛ ¡JACKPOT LEGENDARIO! ♛";
+                status = "JACKPOT LEGENDARIO";
             } else if (isWin) {
                 resultCol = amount * 2;
-                status = "✧ ¡GANANCIA MEDIA! ✧";
+                status = "GANANCIA MEDIA";
             } else {
                 resultCol = -amount;
-                status = "💀 DERROTA 💀";
+                status = "DERROTA";
             }
 
-            const newCol = (user.col ?? 0) + resultCol;
-            
+            let newCol = currentCol + resultCol;
+            if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
+
             await global.User.updateOne(
                 { id: m.sender }, 
-                { $set: { col: newCol < 0 ? 0 : newCol, lastSlot: now } }
+                { $set: { col: newCol, lastSlot: now } }
             );
 
-            const slotText = `
-\t\t\t\t♛  *KIRITO CASINO* ♛
-
-\t\t\t\t    [ ${x[0]} | ${x[1]} | ${x[2]} ]
-
-◈  *ESTADO:* ${status}
-✦  *RESULTADO:* ${resultCol > 0 ? '+' : ''}${resultCol} Col
-✧  *BALANCE ACTUAL:* ${newCol < 0 ? 0 : newCol} Col
-`;
+            const slotText = `『 VOKER CASINO 』\n\n    [ ${x[0]} | ${x[1]} | ${x[2]} ]\n\n◈ ESTADO: ${status}\n✦ RESULTADO: ${resultCol > 0 ? '+' : ''}${formatCol(resultCol)} Col\n✧ BALANCE: ${formatCol(newCol)} Col\n──────────────────\n『 VOKER SYSTEMS 』`;
 
             await conn.sendMessage(m.chat, { 
                 text: slotText,
                 contextInfo: {
-                    forwardingScore: 1,
-                    isForwarded: true,
                     ...channelInfo
                 }
             }, { quoted: m });
