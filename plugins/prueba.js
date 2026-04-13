@@ -9,15 +9,15 @@ const musicViewCommand = {
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
 
-        /*if (!/video|audio/.test(mime)) {
+        if (!/video|audio/.test(mime)) {
             m.react('⚠️');
             return conn.reply(m.chat, `> ⍰ Responde a un video para generar la vista de música de canal.`, m);
-        }*/
+        }
 
         try {
             m.react('🕒');
 
-            const media = "https://api.dix.lat/media2/1776116143135.mp4";
+            const media = await q.download();
             const title = text.split('|')[0]?.trim() || "Set Fire to the Rain";
             const author = text.split('|')[1]?.trim() || "Adele";
             const albumArt = "https://api.dix.lat/media2/1773637265253.jpg";
