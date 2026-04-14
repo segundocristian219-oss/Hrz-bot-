@@ -37,7 +37,7 @@ const slotCommand = {
                 let mTime = Math.floor(s / 60000);
                 let sec = Math.floor((s % 60000) / 1000);
                 let timeString = (mTime > 0 ? `${mTime}m ` : '') + `${sec}s`;
-                return conn.reply(m.chat, `⏳ *Las máquinas necesitan enfriarse antes de otra tirada épica.\nPor favor, espera: *${timeString}*`, m);
+                return conn.reply(m.chat, `⏳ *Las máquinas necesitan enfriarse antes de otra tirada épica*.\nPor favor, espera: *${timeString}*`, m);
             }
 
             if (currentCol < amount) {
