@@ -126,4 +126,3 @@ const slotCommand = {
 };
 
 export default slotCommand;
-                
