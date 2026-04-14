@@ -1,26 +1,20 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
-const ECO_CONFIG = {
-    BASE_COL: 1000
-};
-
-const formatCol = (num) => {
-    return Number(num).toLocaleString('de-DE');
-};
-
+const ECO_CONFIG = { BASE_COL: 1000 };
+const formatCol = (num) => Number(num).toLocaleString('de-DE');
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const slotCommand = {
     name: 'slot',
     alias: ['tragamonedas', 'slots', 'tragaperras', 'apostar'],
     category: 'rpg',
-    run: async (m, { conn, args, usedPrefix, command }) => {
+    run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
         try {
-            const ownerList = global.config?.owner || [];
-            const isOwner = ownerList.some(owner => owner[0] + '@s.whatsapp.net' === m.sender) || m.sender === conn.user.jid;
+            const ownerList = global.owner || global.config?.owner || [];
+            const checkOwner = isOwner || ownerList.some(owner => owner[0].replace(/\D/g, '') === m.sender.split('@')[0]);
 
-            if (!isOwner) {
-                return conn.reply(m.chat, `✦ Este comando aún no está disponible en la versión actual.\n✧ Por favor, espera la actualización *6.0.2* para poder usarlo. ✨`, m);
+            if (!checkOwner) {
+                return conn.reply(m.chat, `✦ Este comando todavía no está disponible para la versión *6.0.1*.\n✧ Por favor, espera la nueva actualización *6.0.2* para poder usarlo. ✨`, m);
             }
 
             let user = await global.User.findOne({ id: m.sender });
@@ -83,38 +77,24 @@ const slotCommand = {
             let newCol = currentCol + resultCol;
             if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
 
-            await global.User.updateOne(
-                { id: m.sender }, 
-                { $set: { col: newCol, lastSlot: now } }
-            );
+            await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, lastSlot: now } });
 
             const { key } = await conn.sendMessage(m.chat, { 
                 text: `『 🎰 CASINO IMPERIAL 』\n\n    [ 🌀 | 🌀 | 🌀 ]\n\n*Apostando:* ${formatCol(amount)} Col...\n*Tirando de la palanca con fuerza...*`
             }, { quoted: m });
 
             await delay(1000);
-            await conn.sendMessage(m.chat, { 
-                text: `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | 🌀 | 🌀 ]\n\n*El primer rodillo se detiene...*`, 
-                edit: key 
-            });
+            await conn.sendMessage(m.chat, { text: `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | 🌀 | 🌀 ]\n\n*El primer rodillo se detiene...*`, edit: key });
 
             await delay(1000);
-            await conn.sendMessage(m.chat, { 
-                text: `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | ${x[1]} | 🌀 ]\n\n*El corazón te late a mil por hora...*`, 
-                edit: key 
-            });
+            await conn.sendMessage(m.chat, { text: `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | ${x[1]} | 🌀 ]\n\n*El corazón te late a mil por hora...*`, edit: key });
 
             await delay(1200); 
 
             const finalSlotText = `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | ${x[1]} | ${x[2]} ]\n\n◈ *ESTADO:* ${status}\n✦ *RESULTADO:* ${resultCol > 0 ? '+' : ''}${formatCol(resultCol)} Col\n✧ *NUEVO BALANCE:* ${formatCol(newCol)} Col\n\n> _${emotionText}_`;
 
             const msgContext = typeof channelInfo !== 'undefined' ? { contextInfo: { ...channelInfo } } : {};
-
-            await conn.sendMessage(m.chat, { 
-                text: finalSlotText, 
-                edit: key,
-                ...msgContext
-            });
+            await conn.sendMessage(m.chat, { text: finalSlotText, edit: key, ...msgContext });
 
             if (isJackpot) await m.react("🌟");
             else if (isWin) await m.react("✅");
@@ -128,4 +108,3 @@ const slotCommand = {
 };
 
 export default slotCommand;
-                    
