@@ -14,10 +14,10 @@ const loteriaCommand = {
             const checkOwner = isOwner || ownerList.some(owner => owner[0].replace(/\D/g, '') === m.sender.split('@')[0]);
 
             if (!checkOwner) {
-                return conn.reply(m.chat, `✦ Este comando todavía no está disponible para la versión *6.0.1*.\n✧ Por favor, espera la nueva actualización *6.0.2* para acceder al Sistema de Lotería.`, m);
+                return conn.reply(m.chat, `✦ Este comando todavía no está disponible para la versión *6.0.1*.\n✧ Por favor, espera la nueva actualización *6.0.2* para poder usarlo. ✨`, m);
             }
 
-            if (!m.isGroup) return m.reply("『 ❗ 』 El Sistema de Lotería solo está habilitado en terminales de Grupo.");
+            if (!m.isGroup) return m.reply("『 ❗ 』 El Sistema de Lotería solo está habilitado en Grupos.");
 
             let user = await global.User.findOne({ id: m.sender });
             if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
@@ -26,7 +26,7 @@ const loteriaCommand = {
             const num = parseInt(args[0]);
 
             if (isNaN(num) || num < 1 || num > 10) {
-                let menu = `『 🎰 LOTERÍA IMPERIAL 🎰 』\n\n> *ADQUISICIÓN DE BOLETOS*\nPara participar, selecciona un terminal digital (1-10).\n\n◈ *CÓDIGO:* ${usedPrefix + command} <1-10>\n◈ *VALOR:* ${formatCol(costo)} Col\n◈ *JACKPOT:* 50.000 - 100.000 Col\n\n✦ *TU BOLSA:* ${formatCol(user.col || 0)} Col\n────────────────────`;
+                let menu = `『 🎰 LOTERÍA KIRITO 🎰 』\n\n> *ADQUISICIÓN DE BOLETOS*\nPara participar, selecciona un ticket (1-10).\n\n◈ *CÓDIGO:* ${usedPrefix + command} <1-10>\n◈ *VALOR:* ${formatCol(costo)} Col\n◈ *JACKPOT:* 50.000 - 100.000 Col\n\n✦ *TU BOLSA:* ${formatCol(user.col || 0)} Col\n────────────────────`;
                 return conn.reply(m.chat, menu, m);
             }
 
