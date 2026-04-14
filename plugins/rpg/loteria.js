@@ -45,13 +45,35 @@ const loteriaCommand = {
 
             await global.User.updateOne({ id: m.sender }, { $set: { col: finalCol, lastLoteria: Date.now() } });
 
-            const { key } = await conn.sendMessage(m.chat, { text: `『 🎟️ BOLETO SELLADO 』\n\n👤 *CLIENTE:* ${m.pushName.toUpperCase()}\n🔢 *NÚMERO:* [ ${num} ]\n📦 *ESTADO:* Procesando compra...` }, { quoted: m });
+            const { key } = await conn.sendMessage(m.chat, { 
+                text: `『 🎟️ BOLETO SELLADO 』\n\n👤 *CLIENTE:* ${m.pushName.toUpperCase()}\n🔢 *NÚMERO:* [ ${num} ]\n📦 *ESTADO:* Procesando compra...` 
+            }, { quoted: m });
 
             await delay(1500);
-            await conn.sendMessage(m.chat, { text: `『 🎰 TÓMBOLA ACTIVA 』\n\nLos bombos están girando... 🌀\n[ 🔘 | 🔘 | 🔘 | 🔘 | 🔘 ]`, edit: key });
-            await delay(1500);
-            await conn.sendMessage(m.chat, { text: `『 🎰 TÓMBOLA ACTIVA 』\n\nExtrayendo esfera premiada... 🔮\n[ 🟢 | 🟡 | 🔴 | 🟡 | 🟢 ]`, edit: key });
-            await delay(2000);
+
+            await conn.sendMessage(m.chat, { 
+                text: `『 🎰 TÓMBOLA ACTIVA 』\n\nLos bombos están girando... 🌀\n[ 🔘 | 🔘 | 🔘 | 🔘 | 🔘 ]`, 
+                edit: key 
+            });
+
+            await delay(1200);
+
+            const bolas = ['🔘', '🔘', '🔘', '🔘', '🔘'];
+            const pool = ['🟢', '🟡', '🔴'];
+
+            for (let i = 0; i < bolas.length; i++) {
+                const colorRandom = pool[Math.floor(Math.random() * pool.length)];
+                bolas[i] = colorRandom;
+
+                await conn.sendMessage(m.chat, {
+                    text: `『 🎰 TÓMBOLA ACTIVA 』\n\nExtrayendo esfera premiada... 🔮\n[ ${bolas.join(' | ')} ]`,
+                    edit: key
+                });
+
+                await delay(600);
+            }
+
+            await delay(1200);
 
             let resTxt = `『 🏆 RESULTADO DEL SORTEO 🏆 』\n\n◈ *TU ELECCIÓN:* [ ${num} ]\n🎯 *NÚMERO GANADOR:* [ ${ganador} ]\n────────────────────\n\n`;
 
@@ -65,6 +87,7 @@ const loteriaCommand = {
             }
 
             resTxt += `\n✧ *NUEVO BALANCE:* ${formatCol(finalCol)} Col\n────────────────────`;
+
             await conn.sendMessage(m.chat, { text: resTxt, edit: key });
 
         } catch (e) {
