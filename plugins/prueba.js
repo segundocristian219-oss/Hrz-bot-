@@ -22,11 +22,11 @@ const musicViewCommand = {
             const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
             const author = text.split('|')[1]?.trim() || "Deylin Tech";
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
-            
             const instagramShortcode = "DXF25DKDZrN"; 
 
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
+            
             const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest();
 
             const messageContent = await generateWAMessageContent(
