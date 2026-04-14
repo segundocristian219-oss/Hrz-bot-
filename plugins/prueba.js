@@ -1,7 +1,6 @@
 import axios from 'axios';
-import { generateWAMessageContent, downloadMediaMessage, getContentType } from '@whiskeysockets/baileys';
+import { generateWAMessageContent } from '@whiskeysockets/baileys';
 import crypto from 'crypto';
-import fs from 'fs/promises'; // opcional, por si quieres guardar temporalmente
 
 const musicViewCommand = {
     name: 'musicview',
@@ -19,49 +18,34 @@ const musicViewCommand = {
         try {
             m.react('🕒');
 
-            // Descarga correcta y estable del video
-            const mediaBuffer = await downloadMediaMessage(
-                q,
-                'buffer',
-                {},
-                { 
-                    reuploadRequest: conn.updateMediaMessage 
-                }
-            );
-
+            const media = await q.download();
             const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
-            const author = text.split('|')[1]?.trim() || "VOKER SYSTEM";
+            const author = text.split('|')[1]?.trim() || "Deylin Tech";
+            const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
+            
+            const instagramShortcode = "DXF25DKDZrN"; 
 
-            // Descargar portada (álbum art)
-            const resp = await axios.get("https://api.dix.lat/media2/1773637265253.jpg", { 
-                responseType: 'arraybuffer' 
-            });
+            const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
+            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest();
 
-            const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest('base64');
-
-            // Generar el contenido del mensaje (esto cifra y prepara el video)
             const messageContent = await generateWAMessageContent(
                 { 
-                    video: mediaBuffer, 
-                    mimetype: 'video/mp4' 
+                    video: media, 
+                    mimetype: 'video/mp4',
+                    jpegThumbnail: albumArtBuffer 
                 },
-                { 
-                    upload: conn.waUploadToServer 
-                }
+                { upload: conn.waUploadToServer }
             );
 
             const videoMsg = messageContent.videoMessage;
 
-            const trackId = crypto.randomBytes(16).toString('hex');
-
-            // Enviar con relayMessage + annotations para el efecto Music View
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    jpegThumbnail: albumArtBuffer,        // Usamos la portada como thumbnail
+                    jpegThumbnail: albumArtBuffer,
                     contextInfo: {
-                        forwardingScore: 2,
+                        forwardingScore: 1,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '120363302772535780@newsletter',
@@ -72,27 +56,25 @@ const musicViewCommand = {
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.25, y: 0.42 },
-                                { x: 0.75, y: 0.42 },
-                                { x: 0.75, y: 0.58 },
-                                { x: 0.25, y: 0.58 }
+                                { x: 0.25, y: 0.41553908586502075 },
+                                { x: 0.75, y: 0.41553908586502075 },
+                                { x: 0.75, y: 0.5844531059265137 },
+                                { x: 0.25, y: 0.5844531059265137 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
                                 embeddedMusic: {
-                                    musicContentMediaId: trackId,
-                                    songId: trackId,
+                                    musicContentMediaId: instagramShortcode,
+                                    songId: instagramShortcode,
                                     author: author,
                                     title: title,
-                                    artistAttribution: author,
-                                    artworkDirectPath: "/o1/v/t24/f2/m233/AQMCVKtzxZNrCzCkWeOp0caplPmgYRHO8BnnpKJbRgLxIt4W_1OJcXi-rqs5KtAzohRoaLn5Aaw_Oq6Z5xLFIrcV6m9LS15X7evpnki3qw?ccb=9-4&oh=01_Q5Aa4QFKBPLxiAs_hmQ25ZYfblRTkdJvaa6K1BvwjZamGR2D5Q&oe=6A04E169&_nc_sid=e6ed6c",
+                                    artistAttribution: `https://www.instagram.com/p/${instagramShortcode}/`,
                                     artworkSha256: artworkSha256,
-                                    artworkEncSha256: "cjNby1GyeST6xELalOQtWAuaPm0/Ji4OvClEobUIFMA=",
-                                    artworkMediaKey: "oRGI3/6buCDH2zXNTMpvT8pn180LBfvhUwV5tSfPd5Y=",
+                                    artworkEncSha256: artworkSha256,
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
-                                    overlapDurationInMs: 30000   // 30 segundos de overlap (ajusta si quieres)
+                                    overlapDurationInMs: 30000
                                 }
                             },
                             embeddedAction: true
@@ -104,7 +86,6 @@ const musicViewCommand = {
             m.react('✅');
 
         } catch (error) {
-            console.error('Error en musicview:', error);
             m.react('❌');
             conn.reply(m.chat, `> ❌ *Error:* ${error.message}`, m);
         }
