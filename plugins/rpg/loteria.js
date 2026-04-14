@@ -1,91 +1,93 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
-const ECO_CONFIG = {
-    BASE_COL: 1000
-};
-
-const formatCol = (num) => {
-    return Number(num).toLocaleString('de-DE');
-};
+const ECO_CONFIG = { BASE_COL: 1000 };
+const formatCol = (num) => Number(num).toLocaleString('de-DE');
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const loteriaCommand = {
     name: 'loteria',
     alias: ['lotto', 'sorteo', 'ticket', 'casino'],
     category: 'economy',
-    run: async (m, { conn, args, usedPrefix, command }) => {
-        if (!m.isGroup) return m.reply("⨯ La tómbola solo gira en grupos.");
-
-        let user = await global.User.findOne({ id: m.sender });
-        if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
-
-        const ownerList = global.config?.owner || [];
-        const isOwner = ownerList.some(owner => owner[0] + '@s.whatsapp.net' === m.sender) || m.sender === conn.user.jid;
-
-        const ahora = Date.now();
-        const cooldown = 600000;
-        if (!isOwner && user.lastLoteria && (ahora - user.lastLoteria < cooldown)) {
-            const mins = Math.ceil((cooldown - (ahora - user.lastLoteria)) / 60000);
-            return m.reply(`⏳ La tómbola se está enfriando. Regresa en ${mins} minutos.`);
-        }
-
-        const costo = 50;
-        const premioBase = Math.floor(Math.random() * 25001) + 25000;
-        const probabilidadJackpot = Math.random() < 0.1;
-        const jackpotFinal = probabilidadJackpot ? (premioBase * 2) : premioBase;
-        const num = parseInt(args[0]);
-
-        if (isNaN(num) || num < 1 || num > 10) {
-            let menu = `『 🎰 MEGA LOTERÍA 🎰 』\n\n`;
-            menu += `🎫 CÓMO JUGAR\n`;
-            menu += `Elige un número del 1 al 10.\n\n`;
-            menu += `◈ Comando: ${usedPrefix + command} <1-10>\n`;
-            menu += `◈ Costo: ${formatCol(costo)} Col\n`;
-            menu += `◈ Premio: 25.000 - 50.000 Col\n\n`;
-            menu += `✦ BALANCE: ${formatCol(user.col)} Col\n──────────────────`;
-            return m.reply(menu);
-        }
-
-        if ((user.col || 0) < costo) return m.reply(`⨯ Fondos insuficientes. El boleto cuesta ${formatCol(costo)} Col.`);
-
-        const name = (await conn.getName(m.sender)).toUpperCase();
-        const ganador = Math.floor(Math.random() * 10) + 1;
-        const gano = num === ganador;
-        
-        let newCol = (user.col || ECO_CONFIG.BASE_COL) - costo;
-        if (gano) newCol += jackpotFinal;
-        
-        if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
-
-        await global.User.updateOne(
-            { id: m.sender }, 
-            { 
-                $set: { col: newCol, lastLoteria: ahora }
+    run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
+        try {
+            if (!isOwner) {
+                return conn.reply(m.chat, `✦ Este comando todavía no está disponible para la versión *6.0.1*.\n✧ Por favor, espera la nueva actualización *6.0.2* para acceder al Sistema de Lotería.`, m);
             }
-        );
 
-        let susTxt = `『 🎟️ BOLETO SELLADO 』\n\n👤 Jugador: ${name}\n🔢 Número: [ ${num} ]\n\n> Girando la tómbola...`;
-        await conn.sendMessage(m.chat, { text: susTxt }, { quoted: m });
+            if (!m.isGroup) return m.reply("『 ❗ 』 El Sistema de Lotería solo está habilitado en terminales de Grupo.");
 
-        await new Promise(resolve => setTimeout(resolve, 2500));
+            let user = await global.User.findOne({ id: m.sender });
+            if (!user) user = await global.User.create({ id: m.sender, col: ECO_CONFIG.BASE_COL });
 
-        let resTxt = `『 RESULTADO SORTEO 』\n\n`;
-        resTxt += `✦ Tu Número: [ ${num} ]\n`;
-        resTxt += `🎯 Ganador: [ ${ganador} ]\n`;
-        resTxt += `──────────────────\n\n`;
+            const costo = 500; 
+            const num = parseInt(args[0]);
 
-        if (gano) {
-            resTxt += probabilidadJackpot ? `🎉 ¡MEGA JACKPOT! 🎉\n` : `🎉 ¡ACERTASTE! 🎉\n`;
-            resTxt += `💰 Ganancia: +${formatCol(jackpotFinal)} Col\n`;
-        } else {
-            resTxt += `💀 PERDISTE\n`;
-            resTxt += `💸 Costo: -${formatCol(costo)} Col\n`;
+            if (isNaN(num) || num < 1 || num > 10) {
+                let menu = `『 🎰 LOTERÍA IMPERIAL 🎰 』\n\n`;
+                menu += `> *ADQUISICIÓN DE BOLETOS*\n`;
+                menu += `Para participar, selecciona un terminal digital (1-10).\n\n`;
+                menu += `◈ *CÓDIGO:* ${usedPrefix + command} <1-10>\n`;
+                menu += `◈ *VALOR:* ${formatCol(costo)} Col\n`;
+                menu += `◈ *JACKPOT:* 50.000 - 100.000 Col\n\n`;
+                menu += `✦ *TU BOLSA:* ${formatCol(user.col || 0)} Col\n`;
+                menu += `────────────────────`;
+                return conn.reply(m.chat, menu, m);
+            }
+
+            if ((user.col || 0) < costo) {
+                return conn.reply(m.chat, `『 💸 』 *TRANSACCIÓN FALLIDA*\n\nFondos insuficientes para procesar el boleto.\n✧ *Costo:* ${formatCol(costo)} Col\n✦ *Balance:* ${formatCol(user.col)} Col`, m);
+            }
+
+            const ahora = Date.now();
+            const ganador = Math.floor(Math.random() * 10) + 1;
+            const esJackpot = Math.random() < 0.05; 
+            const premio = esJackpot ? (Math.floor(Math.random() * 50000) + 100000) : (Math.floor(Math.random() * 25000) + 25000);
+            const gano = num === ganador;
+
+            let finalCol = (user.col || ECO_CONFIG.BASE_COL) - costo;
+            if (gano) finalCol += premio;
+            if (finalCol < ECO_CONFIG.BASE_COL) finalCol = ECO_CONFIG.BASE_COL;
+
+            await global.User.updateOne({ id: m.sender }, { $set: { col: finalCol, lastLoteria: ahora } });
+
+            const { key } = await conn.sendMessage(m.chat, { 
+                text: `『 🎟️ BOLETO SELLADO 』\n\n👤 *CLIENTE:* ${m.pushName.toUpperCase()}\n🔢 *NÚMERO:* [ ${num} ]\n📦 *ESTADO:* Procesando compra...` 
+            }, { quoted: m });
+
+            await delay(1500);
+            await conn.sendMessage(m.chat, { text: `『 🎰 TÓMBOLA ACTIVA 』\n\nLos bombos están girando... 🌀\n[ 🔘 | 🔘 | 🔘 | 🔘 | 🔘 ]`, edit: key });
+
+            await delay(1500);
+            await conn.sendMessage(m.chat, { text: `『 🎰 TÓMBOLA ACTIVA 』\n\nExtrayendo esfera premiada... 🔮\n[ 🟢 | 🟡 | 🔴 | 🟡 | 🟢 ]`, edit: key });
+
+            await delay(2000);
+
+            let resTxt = `『 🏆 RESULTADO DEL SORTEO 🏆 』\n\n`;
+            resTxt += `◈ *TU ELECCIÓN:* [ ${num} ]\n`;
+            resTxt += `🎯 *NÚMERO GANADOR:* [ ${ganador} ]\n`;
+            resTxt += `────────────────────\n\n`;
+
+            if (gano) {
+                resTxt += esJackpot ? `🌟 ¡JACKPOT LEGENDARIO! 🌟\n` : `✨ ¡HAS GANADO EL SORTEO! ✨\n`;
+                resTxt += `💰 *PREMIO:* +${formatCol(premio)} Col\n`;
+                await m.react("🔥");
+            } else {
+                resTxt += `🌑 *DERROTA*\n`;
+                resTxt += `💸 *PÉRDIDA:* -${formatCol(costo)} Col\n`;
+                resTxt += `> _La suerte no estuvo de tu lado esta vez._\n`;
+                await m.react("💀");
+            }
+
+            resTxt += `\n✧ *NUEVO BALANCE:* ${formatCol(finalCol)} Col\n────────────────────`;
+
+            await conn.sendMessage(m.chat, { text: resTxt, edit: key });
+
+        } catch (e) {
+            console.error(e);
+            await m.react("⚠️");
         }
-
-        resTxt += `\n✧ Balance: ${formatCol(newCol)} Col\n──────────────────`;
-
-        await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
-        await m.react(gano ? "🤑" : "💀");
     }
 };
 
 export default loteriaCommand;
+        
