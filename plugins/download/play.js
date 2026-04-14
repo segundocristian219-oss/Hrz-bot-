@@ -83,7 +83,7 @@ const youtubeCommand = {
                 [isAudio ? 'audio' : 'video']: buffer, 
                 mimetype: isAudio ? "audio/mpeg" : "video/mp4",
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`,
-                ptt: false 
+                ptt: true 
             }, { quoted: m });
 
             await m.react("✅");
