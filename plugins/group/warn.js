@@ -1,6 +1,6 @@
 const warnCommand = {
     name: 'warn',
-    alias: ['advertir', 'delwarn', 'quitarwarn', 'warnlist', 'advertencias', 'warnlimit'],
+    alias: ['advertir', 'delwarn', 'quitarwarn', 'warnlist', 'advertencias', 'warnlimit', 'warns'],
     category: 'group',
     group: true,
     run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
@@ -29,7 +29,7 @@ const warnCommand = {
             let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
             let warnDoc = who ? await global.Warns.findOne({ userId: who, groupId: m.chat }) : null;
 
-            if (['warnlist', 'advertencias'].includes(command)) {
+            if (['warnlist', 'advertencias', 'warns'].includes(command)) {
                 if (who) {
                     if (!warnDoc || warnDoc.warnCount === 0) {
                         return conn.reply(m.chat, `*─── [ ⚖ REGISTRO ] ───*\n\n_El usuario @${who.split`@`[0]} está limpio. No tiene advertencias._`, m, { mentions: [who] });
