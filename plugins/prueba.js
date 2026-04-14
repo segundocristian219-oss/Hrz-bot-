@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { generateWAMessageContent } from '@whiskeysockets/baileys';
+import { generateWAMessageContent, prepareWAMessageMedia } from '@whiskeysockets/baileys';
 import crypto from 'crypto';
 
 const musicViewCommand = {
@@ -21,19 +21,28 @@ const musicViewCommand = {
             m.react('🕒');
 
             const media = await q.download();
-            const title = text.split('|')[0]?.trim() || "KIRITO MUSIC";
+            const title  = text.split('|')[0]?.trim() || "KIRITO MUSIC";
             const author = text.split('|')[1]?.trim() || "Deylin Tech";
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
             const instagramShortcode = "DXF25DKDZrN";
 
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
-            const albumArtBase64 = albumArtBuffer.toString('base64');
 
-            const artworkSha256 = new Uint8Array(
-                crypto.createHash('sha256').update(albumArtBuffer).digest()
+            // ✅ Subimos la imagen del álbum a los servidores de WhatsApp
+            // igual que se sube cualquier imagen. Esto nos da directPath y mediaKey
+            const uploadedArt = await prepareWAMessageMedia(
+                { image: albumArtBuffer },
+                { upload: conn.waUploadToServer }
             );
 
+            // Extraemos los campos que WA necesita para mostrar la imagen
+            const artDirectPath    = uploadedArt.imageMessage.directPath;
+            const artMediaKey      = uploadedArt.imageMessage.mediaKey;
+            const artSha256        = uploadedArt.imageMessage.fileSha256;
+            const artEncSha256     = uploadedArt.imageMessage.fileEncSha256;
+
+            // Subimos el video
             const messageContent = await generateWAMessageContent(
                 {
                     video: media,
@@ -48,7 +57,7 @@ const musicViewCommand = {
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    jpegThumbnail: albumArtBase64,
+                    jpegThumbnail: albumArtBuffer.toString('base64'),
                     thumbnailWidth: 480,
                     thumbnailHeight: 480,
                     contextInfo: {
@@ -76,8 +85,11 @@ const musicViewCommand = {
                                     author: author,
                                     title: title,
                                     artistAttribution: `https://www.instagram.com/p/${instagramShortcode}/`,
-                                    artworkSha256: artworkSha256,
-                                    artworkEncSha256: artworkSha256,
+                                    // ✅ Estos 4 campos son los que faltaban para mostrar la imagen
+                                    artworkDirectPath: artDirectPath,
+                                    artworkMediaKey:   artMediaKey,
+                                    artworkSha256:     artSha256,
+                                    artworkEncSha256:  artEncSha256,
                                     isExplicit: false,
                                     musicSongStartTimeInMs: 0,
                                     derivedContentStartTimeInMs: 0,
