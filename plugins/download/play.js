@@ -22,21 +22,22 @@ const youtubeCommand = {
             })();
 
             if (!videoSearchResult) return conn.reply(m.chat, "No se hallaron resultados.", m);
-            
             const videoInfo = videoSearchResult;
             const videoUrl = 'https://www.youtube.com/watch?v=' + videoInfo.videoId;
 
-            const infoText = `\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*\n\n✰ *TÍTULO:* ${videoInfo.title}\n♛ *CANAL:* ${videoInfo.author?.name || '---'}\n✎ *TIEMPO:* ${videoInfo.timestamp || '---'}\n⌬ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *LINK:* ${videoUrl}`;
-
+            // Enviar Info
             await conn.sendMessage(m.chat, { 
                 image: { url: videoInfo.image || videoInfo.thumbnail }, 
-                caption: infoText,
+                caption: `*♬♫ YOUTUBE DOWNLOAD 𝄞*\n\n✰ *TÍTULO:* ${videoInfo.title}\n♛ *CANAL:* ${videoInfo.author?.name || '---'}\n▢ *LINK:* ${videoUrl}`,
                 contextInfo: { forwardingScore: 1, isForwarded: true }
             }, { quoted: m });
 
             let downloadUrl;
             if (isAudio) {
+                
                 const apiKey = "dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_Sys_00\u200B1.0.0_37080_159_0x%02X\u200B\u200C\u2060_%5B%22\u0024\u007B0x00A0\u007D\u221E\u2202\u2206%22%5D_%20\u200B\u200D\u2060_0x7F\u0000\u0001\u0007\u0008\u000B\u000C\u000E\u000F_S3R14L1Z3R_0x0D\u200B\u200D\u2060_%5B\u200B\u200C\u200B\u200C%5D_0x2026_03_28_UTC_0x00";
+                
+                
                 const apiUrl = `https://sylphyy.xyz/download/ytmp3?url=${encodeURIComponent(videoUrl)}&api_key=${encodeURIComponent(apiKey)}`;
                 
                 const responseApi = await fetch(apiUrl);
@@ -45,25 +46,18 @@ const youtubeCommand = {
                 if (apiRes.status && apiRes.result?.dl_url) {
                     downloadUrl = apiRes.result.dl_url;
                 } else {
-                    // Si falla, enviamos el JSON exacto de la API para diagnóstico
-                    throw new Error(`API_MP3_FAIL: ${JSON.stringify(apiRes)}`);
+                    throw new Error(`DEBUG_INFO: Status: ${apiRes.status} | Msg: ${apiRes.msg || 'No msg'} | Creator: ${apiRes.creator}`);
                 }
             } else {
                 const apiRes = await fetch(`https://api.dix.lat/mp4?url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
-                if (apiRes.status && apiRes.data?.dl) {
-                    downloadUrl = apiRes.data.dl;
-                } else {
-                    throw new Error(`API_MP4_FAIL: ${JSON.stringify(apiRes)}`);
-                }
+                if (apiRes.status) downloadUrl = apiRes.data.dl;
             }
 
-            if (!downloadUrl) throw new Error("URL_NOT_FOUND: No se obtuvo enlace de descarga.");
+            if (!downloadUrl) throw new Error("No se pudo obtener el enlace final.");
 
             const fileRes = await fetch(downloadUrl, {
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
             });
-
-            if (!fileRes.ok) throw new Error(`HTTP_ERROR: ${fileRes.status} en el servidor de descarga.`);
             const buffer = await fileRes.buffer();
 
             if (isAudio) {
@@ -89,8 +83,7 @@ const youtubeCommand = {
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
                                 newsletterJid: '120363302772535780@newsletter',
-                                newsletterName: 'Kirito ♕ — Official Channel ™',
-                                serverMessageId: 999999
+                                newsletterName: 'Kirito ♕ — Official Channel ™'
                             }
                         },
                         annotations: [{
@@ -112,12 +105,9 @@ const youtubeCommand = {
                     }
                 }, { quoted: m });
             }
-
             await m.react("✅");
         } catch (error) {
-            console.error(error);
-            
-            await conn.reply(m.chat, `❌ *DEBUG ERROR*\n\n${error.message || error}`, m);
+            await conn.reply(m.chat, `❌ *ERROR DETECTADO*\n\n${error.message}`, m);
             await m.react("❌");
         }
     }
