@@ -49,7 +49,10 @@ const youtubeCommand = {
             if (isAudio) {
                 const apiKey = "dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_Sys_00\u200B1.0.0_37080_159_0x%02X\u200B\u200C\u2060_%5B%22\u0024\u007B0x00A0\u007D\u221E\u2202\u2206%22%5D_%20\u200B\u200D\u2060_0x7F\u0000\u0001\u0007\u0008\u000B\u000C\u000E\u000F_S3R14L1Z3R_0x0D\u200B\u200D\u2060_%5B\u200B\u200C\u200B\u200C%5D_0x2026_03_28_UTC_0x00";
                 const apiUrl = `https://sylphyy.xyz/download/ytmp3?url=${encodeURIComponent(videoUrl)}&api_key=${encodeURIComponent(apiKey)}`;
-                const apiRes = await fetch(apiUrl).then(res => res.json());
+                
+                const responseApi = await fetch(apiUrl);
+                const apiRes = await responseApi.json();
+                
                 if (apiRes.status && apiRes.result) {
                     downloadUrl = apiRes.result.dl_url;
                 }
@@ -61,7 +64,11 @@ const youtubeCommand = {
             if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga.");
 
             const response = await fetch(downloadUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
+                headers: { 
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+                    'Accept': '*/*',
+                    'Connection': 'keep-alive'
+                }
             });
 
             if (!response.ok) throw new Error(`Error en la descarga: ${response.status}`);
