@@ -1,13 +1,7 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
-const ECO_CONFIG = {
-    BASE_COL: 1000
-};
-
-const formatCol = (num) => {
-    return Number(num).toLocaleString('de-DE');
-};
-
+const ECO_CONFIG = { BASE_COL: 1000 };
+const formatCol = (num) => Number(num).toLocaleString('de-DE');
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const shuffle = (str) => {
@@ -21,21 +15,8 @@ const shuffle = (str) => {
 
 const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-const wordsNormal = [
-    "computadora", "relampago", "mariposa", "escritorio", "universo", "aventura", "guitarra", 
-    "planeta", "perro", "gato", "hierro", "sapo", "oro", "tecnologia", "murcielago", "diamante", 
-    "elefante", "hamburguesa", "astronauta", "esmeralda", "fantasma", "galaxia", "biblioteca",
-    "zapato", "bosque", "cometa", "dinosaurio", "espejo", "fuego", "globo", "helado", "isla",
-    "jardin", "kilo", "limon", "manzana", "nube", "oceano", "puerta", "queso", "raton", "sol"
-];
-
-const wordsHard = [
-    "electroencefalografista", "esternocleidomastoideo", "desoxirribonucleico", "paralelepipedo",
-    "ovoviviparo", "constantinopla", "otorrinolaringologo", "electrocardiograma", "anticonstitucionalmente",
-    "caleidoscopio", "arquitectonico", "biotecnologia", "cinematografia", "espectroscopia",
-    "fotosintesis", "neurociencia", "paleontologia", "cuantificacion", "termorregulacion",
-    "electrodomestico", "infraestructura", "interdisciplinario", "metamorfosis", "reivindicacion"
-];
+const wordsNormal = ["computadora", "relampago", "mariposa", "escritorio", "universo", "aventura", "guitarra", "planeta", "perro", "gato", "hierro", "sapo", "oro", "tecnologia", "murcielago", "diamante", "elefante", "hamburguesa", "astronauta", "esmeralda", "fantasma", "galaxia", "biblioteca", "zapato", "bosque", "cometa", "dinosaurio", "espejo", "fuego", "globo", "helado", "isla", "jardin", "kilo", "limon", "manzana", "nube", "oceano", "puerta", "queso", "raton", "sol"];
+const wordsHard = ["electroencefalografista", "esternocleidomastoideo", "desoxirribonucleico", "paralelepipedo", "ovoviviparo", "constantinopla", "otorrinolaringologo", "electrocardiograma", "anticonstitucionalmente", "caleidoscopio", "arquitectonico", "biotecnologia", "cinematografia", "espectroscopia", "fotosintesis", "neurociencia", "paleontologia", "cuantificacion", "termorregulacion", "electrodomestico", "infraestructura", "interdisciplinario", "metamorfosis", "reivindicacion"];
 
 const scrambleGame = {
     name: 'adivina',
@@ -116,8 +97,11 @@ const scrambleGame = {
 
     run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
         try {
-            if (!isOwner) {
-                return conn.reply(m.chat, `✦ Este comando aún no está disponible en la versión actual.\n✧ Por favor, espera la actualización *6.0.2* para poder usarlo. ✨`, m);
+            const ownerList = global.owner || global.config?.owner || [];
+            const checkOwner = isOwner || ownerList.some(owner => owner[0].replace(/\D/g, '') === m.sender.split('@')[0]);
+
+            if (!checkOwner) {
+                return conn.reply(m.chat, `✦ Este comando todavía no está disponible para la versión *6.0.1*.\n✧ Por favor, espera la nueva actualización *6.0.2* para poder usarlo. ✨`, m);
             }
 
             global.wordGames = global.wordGames || {};
@@ -154,16 +138,9 @@ const scrambleGame = {
 
             await m.react("🧩");
 
-            const { key } = await conn.sendMessage(m.chat, { 
-                text: `『 🧩 SCRAMBLE 』\n\nPreparando el enigma... 🌀`
-            }, { quoted: m });
-
+            const { key } = await conn.sendMessage(m.chat, { text: `『 🧩 SCRAMBLE 』\n\nPreparando el enigma... 🌀` }, { quoted: m });
             await delay(800);
-            await conn.sendMessage(m.chat, { 
-                text: `『 🧩 SCRAMBLE 』\n\nMezclando las letras... 🎲`, 
-                edit: key 
-            });
-
+            await conn.sendMessage(m.chat, { text: `『 🧩 SCRAMBLE 』\n\nMezclando las letras... 🎲`, edit: key });
             await delay(800);
 
             global.wordGames[gameId] = {
@@ -182,11 +159,7 @@ const scrambleGame = {
 
             const startTxt = `『 🧠 ADIVINA LA PALABRA 』\n\n@${m.sender.split('@')[0]}, ordena las siguientes letras:\n\n◈ 🔠 *[ ${scrambledWord.toUpperCase().split('').join(' ')} ]*\n\n✦ *INTENTOS:* ${isBetting ? '5' : '3'}\n⏳ *TIEMPO:* 60 Segundos\n${isBetting ? `💰 *APUESTA:* ${formatCol(bet)} Col` : '✨ *MODO:* Normal'}\n\n> _Responde a este mensaje con la palabra correcta._`;
 
-            await conn.sendMessage(m.chat, { 
-                text: startTxt, 
-                edit: key,
-                contextInfo: { mentionedJid: [m.sender] } 
-            });
+            await conn.sendMessage(m.chat, { text: startTxt, edit: key, contextInfo: { mentionedJid: [m.sender] } });
 
         } catch (e) {
             console.error(e);
@@ -196,4 +169,4 @@ const scrambleGame = {
 };
 
 export default scrambleGame;
-    
+                    
