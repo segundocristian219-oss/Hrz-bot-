@@ -38,7 +38,10 @@ const youtubeCommand = {
             
             await conn.sendMessage(m.chat, { 
                 image: { url: videoInfo.image || videoInfo.thumbnail }, 
-                caption: infoText
+                caption: infoText,
+                contextInfo: {
+                    ...channelInfo
+               }
             }, { quoted: m });
 
             let downloadUrl;
@@ -83,7 +86,10 @@ const youtubeCommand = {
                 [isAudio ? 'audio' : 'video']: buffer, 
                 mimetype: isAudio ? "audio/mpeg" : "video/mp4",
                 fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`,
-                ptt: true 
+                ptt: true,
+                contextInfo: {
+                    ...channelInfo
+               }
             }, { quoted: m });
 
             await m.react("✅");
