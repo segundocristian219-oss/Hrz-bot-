@@ -1,115 +1,149 @@
-
 import axios from 'axios';
-import { generateWAMessageContent, prepareWAMessageMedia } from '@whiskeysockets/baileys';
-import crypto from 'crypto';
+import fs from 'fs';
+import { spawn } from 'child_process';
+import webpmux from 'node-webpmux';
 
-const musicViewCommand = {
-    name: 'musicview',
-    alias: ['testmusic', 'audioview'],
-    category: 'prueba',
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    run: async (m, { conn, text }) => {
-        let q = m.quoted ? m.quoted : m;
-        let mime = (q.msg || q).mimetype || '';
+const toBuffer = async (url) => {
+    const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 15000 });
+    return Buffer.from(res.data);
+};
 
-        if (!/video/.test(mime)) {
-            m.react('⚠️');
-            return conn.reply(m.chat, `> ⍰ Responde a un video.`, m);
+const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => {
+    const tmpIn = `./tmp/k-in-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const tmpOut = `./tmp/k-out-${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
+    fs.writeFileSync(tmpIn, buffer);
+    
+    const vf = 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba,format=yuva420p';
+    const codec = isAnimated ? 'libwebp_anim' : 'libwebp';
+    const args = ['-y', '-i', tmpIn, '-vf', vf, '-c:v', codec, '-q:v', '50', '-compression_level', '6'];
+    if (isAnimated) args.push('-loop', '0');
+    args.push(tmpOut);
+
+    const p = spawn('ffmpeg', args);
+    p.on('close', (code) => {
+        try { fs.unlinkSync(tmpIn); } catch {}
+        if (code === 0 && fs.existsSync(tmpOut)) {
+            const result = fs.readFileSync(tmpOut);
+            try { fs.unlinkSync(tmpOut); } catch {}
+            resolve(result);
+        } else {
+            reject(new Error('ffmpeg error'));
         }
+    });
+});
 
-        try {
-            m.react('🕒');
-
-            const media = await q.download();
-            const title  = text.split('|')[0]?.trim() || "KIRITO MUSIC";
-            const author = text.split('|')[1]?.trim() || "Deylin Tech";
-            const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
-            const instagramShortcode = "DXF25DKDZrN";
-
-            const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
-            const albumArtBuffer = Buffer.from(resp.data);
-
-            // ✅ Subimos la imagen del álbum a los servidores de WhatsApp
-            // igual que se sube cualquier imagen. Esto nos da directPath y mediaKey
-            const uploadedArt = await prepareWAMessageMedia(
-                { image: albumArtBuffer },
-                { upload: conn.waUploadToServer }
-            );
-
-            // Extraemos los campos que WA necesita para mostrar la imagen
-            const artDirectPath    = uploadedArt.imageMessage.directPath;
-            const artMediaKey      = uploadedArt.imageMessage.mediaKey;
-            const artSha256        = uploadedArt.imageMessage.fileSha256;
-            const artEncSha256     = uploadedArt.imageMessage.fileEncSha256;
-
-            // Subimos el video
-            const messageContent = await generateWAMessageContent(
-                {
-                    video: media,
-                    mimetype: 'video/mp4',
-                    jpegThumbnail: albumArtBuffer
-                },
-                { upload: conn.waUploadToServer }
-            );
-
-            const videoMsg = messageContent.videoMessage;
-
-            await conn.relayMessage(m.chat, {
-                videoMessage: {
-                    ...videoMsg,
-                    jpegThumbnail: albumArtBuffer.toString('base64'),
-                    thumbnailWidth: 480,
-                    thumbnailHeight: 480,
-                    contextInfo: {
-                        forwardingScore: 999,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363302772535780@newsletter',
-                            newsletterName: 'Kirito ♕ — Official Channel ™',
-                            serverMessageId: 999999
-                        }
-                    },
-                    annotations: [
-                        {
-                            polygonVertices: [
-                                { x: 0.25, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.5844531059265137  },
-                                { x: 0.25, y: 0.5844531059265137  }
-                            ],
-                            shouldSkipConfirmation: true,
-                            embeddedContent: {
-                                embeddedMusic: {
-                                    musicContentMediaId: instagramShortcode,
-                                    songId: instagramShortcode,
-                                    author: author,
-                                    title: title,
-                                    artistAttribution: `https://www.instagram.com/p/${instagramShortcode}/`,
-                                    // ✅ Estos 4 campos son los que faltaban para mostrar la imagen
-                                    artworkDirectPath: artDirectPath,
-                                    artworkMediaKey:   artMediaKey,
-                                    artworkSha256:     artSha256,
-                                    artworkEncSha256:  artEncSha256,
-                                    isExplicit: false,
-                                    musicSongStartTimeInMs: 0,
-                                    derivedContentStartTimeInMs: 0,
-                                    overlapDurationInMs: 30000
-                                }
-                            },
-                            embeddedAction: true
-                        }
-                    ]
-                }
-            }, { quoted: m });
-
-            m.react('✅');
-
-        } catch (error) {
-            m.react('❌');
-            conn.reply(m.chat, `> ❌ *Error:* ${error.message}`, m);
-            console.error('[musicview] Error:', error);
+const searchPacks = async (query, attempt = 1) => {
+    try {
+        const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/search', { 
+            params: { query, key: 'YukiWaBot' }, 
+            timeout: 10000 
+        });
+        return data;
+    } catch (e) {
+        if (e.response?.status === 429 && attempt <= 3) { 
+            await delay((e.response.headers['retry-after'] || 5) * 1000); 
+            return searchPacks(query, attempt + 1); 
         }
+        throw e;
     }
 };
 
-export default musicViewCommand;
+const downloadPack = async (url, attempt = 1) => {
+    try {
+        const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/detail', { 
+            params: { url, key: 'YukiWaBot' }, 
+            timeout: 10000 
+        });
+        return data;
+    } catch (e) {
+        if (e.response?.status === 429 && attempt <= 3) { 
+            await delay((e.response.headers['retry-after'] || 5) * 1000); 
+            return downloadPack(url, attempt + 1); 
+        }
+        return { status: false, error: e.response?.status || 500 };
+    }
+};
+
+export default {
+    name: 'stickerpack',
+    alias: ['spack', 'stickers', 'sly'],
+    category: 'stickers',
+    run: async (conn, m, { text, usedPrefix, command }) => {
+        try {
+            if (!text) return conn.reply(m.chat, `ᰔᩚ   *KIRITO STICKERS* ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda o link>`, m);
+            
+            await m.react('⏳');
+            
+            let packData;
+            const isUrl = /sticker\.ly\/s\//i.test(text);
+
+            if (isUrl) {
+                const detail = await downloadPack(text);
+                if (!detail?.status || !detail.detalles) throw new Error("Link no válido o pack privado.");
+                packData = detail.detalles;
+            } else {
+                const search = await searchPacks(text);
+                if (!search.status || !search.resultados?.length) throw new Error("No se hallaron resultados.");
+                
+                // Selección aleatoria de uno de los mejores resultados
+                const topPacks = search.resultados.slice(0, 5);
+                const randomPack = topPacks[Math.floor(Math.random() * topPacks.length)];
+                
+                const detail = await downloadPack(randomPack.url);
+                if (!detail?.status) throw new Error("Error al obtener detalles del pack.");
+                packData = detail.detalles;
+            }
+
+            const { name: packName, author, stickers, thumbnailUrl } = packData;
+            const selectedStickers = stickers.slice(0, 30); // Límite de 30 para evitar saturación de RAM
+
+            // Procesamiento en paralelo
+            const [cover, stickerResults] = await Promise.all([
+                (async () => {
+                    try {
+                        const buf = await toBuffer(thumbnailUrl);
+                        const converted = await toWebp(buf, false);
+                        const img = new webpmux.Image();
+                        await img.load(converted);
+                        return await img.save(null);
+                    } catch { return Buffer.alloc(0); }
+                })(),
+                Promise.all(selectedStickers.map(async (s) => {
+                    try {
+                        const buffer = await toBuffer(s.imageUrl);
+                        const sticker = await toWebp(buffer, s.isAnimated || false);
+                        const img = new webpmux.Image();
+                        await img.load(sticker);
+                        return { 
+                            sticker: await img.save(null), 
+                            isAnimated: s.isAnimated || false, 
+                            emojis: ['🎭'] 
+                        };
+                    } catch { return null; }
+                })).then(res => res.filter(r => r !== null))
+            ]);
+
+            if (!stickerResults.length) throw new Error("No se procesaron stickers.");
+
+            // Envío del paquete oficial
+            await conn.sendMessage(m.chat, { 
+                stickerPack: { 
+                    name: packName || 'Kirito Pack', 
+                    publisher: author?.name || 'Voker Systems', 
+                    description: 'Kɪʀɪᴛᴏ-Bᴏᴛ Sʏsᴛᴇᴍ', 
+                    cover, 
+                    stickers: stickerResults 
+                } 
+            }, { quoted: m });
+
+            await m.react('✅');
+
+        } catch (e) {
+            console.error(e);
+            await m.react('❌');
+            conn.reply(m.chat, `*Error:* ${e.message}`, m);
+        }
+    }
+};
