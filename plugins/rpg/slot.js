@@ -14,11 +14,13 @@ const slotCommand = {
     name: 'slot',
     alias: ['tragamonedas', 'slots', 'tragaperras', 'apostar'],
     category: 'rpg',
-    run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
+    run: async (m, { conn, args, usedPrefix, command }) => {
         try {
+            const ownerList = global.config?.owner || [];
+            const isOwner = ownerList.some(owner => owner[0] + '@s.whatsapp.net' === m.sender) || m.sender === conn.user.jid;
+
             if (!isOwner) {
-                const lockedMsg = `¡Alto ahí, viajero! ✋\n\nParece que has encontrado una zona restringida. Las puertas del Casino Imperial están cerradas por mantenimiento.\n\nEste comando aún no está disponible para la versión *6.0.1*. ¡Los ingenieros del gremio están ajustando las probabilidades! Espera la gran actualización *6.0.2* para probar tu suerte. 🚧✨`;
-                return conn.reply(m.chat, lockedMsg, m);
+                return conn.reply(m.chat, `✦ Este comando aún no está disponible en la versión actual.\n✧ Por favor, espera la actualización *6.0.2* para poder usarlo. ✨`, m);
             }
 
             let user = await global.User.findOne({ id: m.sender });
@@ -126,3 +128,4 @@ const slotCommand = {
 };
 
 export default slotCommand;
+                    
