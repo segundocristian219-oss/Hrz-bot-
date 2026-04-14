@@ -49,7 +49,7 @@ const wmCommand = {
                 ? text.split('|').map(v => v.trim()) 
                 : [text.trim() || 'Pack', aut];
 
-            let exifSticker = await addExif(buffer, pack, aut);
+            let exifSticker = await addExif(buffer, pack);
 
             await conn.sendMessage(m.chat, { 
                 sticker: exifSticker,
