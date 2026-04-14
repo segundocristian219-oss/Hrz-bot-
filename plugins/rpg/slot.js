@@ -24,7 +24,7 @@ const slotCommand = {
             let currentCol = user.col || ECO_CONFIG.BASE_COL;
 
             if (!amount || isNaN(amount) || amount <= 0) {
-                let guia = `『 🎰 CASINO IMPERIAL DE KIRITO 』\n\n✦ *USO:* ${usedPrefix + command} <cantidad>\n✧ *TU BOLSA:* ${formatCol(currentCol)} Col\n\n『 TABLA DE RECOMPENSAS 』\n👑 👑 👑 ➔ Jackpot Divino (x10)\n💎 💎 ✦ ➔ Ganancia Táctica (x2)\n\n*¿Tienes el valor para desafiar a la suerte?*`;
+                let guia = `『 🎰 CASINO DE KIRITO 』\n\n✦ *USO:* ${usedPrefix + command} <cantidad>\n✧ *TU BOLSA:* ${formatCol(currentCol)} Col\n\n『 TABLA DE RECOMPENSAS 』\n👑 👑 👑 ➔ Jackpot (x10)\n💎 💎 ✦ ➔ Ganancia Táctica (x2)\n\n*¿Tienes el valor para desafiar a la suerte?*`;
                 return conn.reply(m.chat, guia, m);
             }
 
@@ -37,11 +37,11 @@ const slotCommand = {
                 let mTime = Math.floor(s / 60000);
                 let sec = Math.floor((s % 60000) / 1000);
                 let timeString = (mTime > 0 ? `${mTime}m ` : '') + `${sec}s`;
-                return conn.reply(m.chat, `⏳ *¡Los engranajes están ardiendo!*\n\nLas máquinas necesitan enfriarse antes de otra tirada épica.\nPor favor, espera: *${timeString}*`, m);
+                return conn.reply(m.chat, `⏳ *Las máquinas necesitan enfriarse antes de otra tirada épica.\nPor favor, espera: *${timeString}*`, m);
             }
 
             if (currentCol < amount) {
-                return conn.reply(m.chat, `💸 *¡Fondos insuficientes!*\n\nTu bolsa se siente demasiado ligera... Intenta apostar una cantidad menor o consigue más recursos.\n✧ *Bolsa actual:* ${formatCol(currentCol)} Col`, m);
+                return conn.reply(m.chat, `💸 *¡Fondos insuficientes!*\n\nTu bolsa se siente demasiado ligera... Intenta apostar una cantidad menor o consigue más recursos.\n✧ *Dinero actual:* ${formatCol(currentCol)} Col`, m);
             }
 
             await m.react("🎰");
@@ -67,7 +67,7 @@ const slotCommand = {
             } else if (isWin) {
                 resultCol = amount * 2;
                 status = "✨ GANANCIA MEDIA ✨";
-                emotionText = "¡La suerte te sonríe! Una victoria digna de un guerrero.";
+                emotionText = "¡La suerte te sonríe! Una victoria digna.";
             } else {
                 resultCol = -amount;
                 status = "🌑 DERROTA ABSOLUTA 🌑";
@@ -80,18 +80,18 @@ const slotCommand = {
             await global.User.updateOne({ id: m.sender }, { $set: { col: newCol, lastSlot: now } });
 
             const { key } = await conn.sendMessage(m.chat, { 
-                text: `『 🎰 CASINO IMPERIAL 』\n\n    [ 🌀 | 🌀 | 🌀 ]\n\n*Apostando:* ${formatCol(amount)} Col...\n*Tirando de la palanca con fuerza...*`
+                text: `『 🎰 CASINO KIRITO 』\n\n    [ 🌀 | 🌀 | 🌀 ]\n\n*Apostando:* ${formatCol(amount)} Col...\n*Tirando de la palanca con fuerza...*`
             }, { quoted: m });
 
             await delay(1000);
-            await conn.sendMessage(m.chat, { text: `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | 🌀 | 🌀 ]\n\n*El primer rodillo se detiene...*`, edit: key });
+            await conn.sendMessage(m.chat, { text: `『 🎰 CASINO KIRITO 』\n\n    [ ${x[0]} | 🌀 | 🌀 ]\n\n*El primer rodillo se detiene...*`, edit: key });
 
             await delay(1000);
-            await conn.sendMessage(m.chat, { text: `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | ${x[1]} | 🌀 ]\n\n*El corazón te late a mil por hora...*`, edit: key });
+            await conn.sendMessage(m.chat, { text: `『 🎰 CASINO KIRITO 』\n\n    [ ${x[0]} | ${x[1]} | 🌀 ]\n\n*El corazón te late a mil por hora...*`, edit: key });
 
             await delay(1200); 
 
-            const finalSlotText = `『 🎰 CASINO IMPERIAL 』\n\n    [ ${x[0]} | ${x[1]} | ${x[2]} ]\n\n◈ *ESTADO:* ${status}\n✦ *RESULTADO:* ${resultCol > 0 ? '+' : ''}${formatCol(resultCol)} Col\n✧ *NUEVO BALANCE:* ${formatCol(newCol)} Col\n\n> _${emotionText}_`;
+            const finalSlotText = `『 🎰 CASINO KIRITO 』\n\n    [ ${x[0]} | ${x[1]} | ${x[2]} ]\n\n◈ *ESTADO:* ${status}\n✦ *RESULTADO:* ${resultCol > 0 ? '+' : ''}${formatCol(resultCol)} Col\n✧ *NUEVO BALANCE:* ${formatCol(newCol)} Col\n\n> _${emotionText}_`;
 
             const msgContext = typeof channelInfo !== 'undefined' ? { contextInfo: { ...channelInfo } } : {};
             await conn.sendMessage(m.chat, { text: finalSlotText, edit: key, ...msgContext });
