@@ -18,15 +18,8 @@ const pinterestCommand = {
             }
 
             const maxImages = Math.min(res.results.length, 7);
-            const medias = [];
             const randomPick = res.results[Math.floor(Math.random() * maxImages)];
-
-            for (let i = 0; i < maxImages; i++) {
-                medias.push({
-                    type: 'image',
-                    data: { url: res.results[i].url }
-                });
-            }
+            const imageUrls = res.results.slice(0, maxImages).map(r => r.url);
 
             const caption = `\t\t*── 「 PINTEREST ALBUM 」 ──*\n\n` +
                              `▢ *BÚSQUEDA:* ${text}\n` +
@@ -34,37 +27,27 @@ const pinterestCommand = {
                              `▢ *AUTOR:* ${randomPick.author || 'Desconocido'}\n` +
                              `▢ *CANTIDAD:* ${maxImages}\n\n`;
 
-            await sendAlbum(conn, m.chat, medias, {
+            await sendAlbum(conn, m.chat, imageUrls, {
                 caption: caption,
-                quoted: m,
-                delay: 500
+                quoted: m
             });
 
             await m.react('✅');
 
         } catch (error) {
             await m.react('❌');
-            
-            if (error.response && error.response.status === 404) {
-                return conn.reply(m.chat, `> ⍰ No se encontraron imágenes para: *${text}*`, m);
-            }
-
             console.error(`> [ERROR PINTEREST]: ${error.message}`);
             conn.reply(m.chat, '> ⚔ Error al conectar con el servidor de búsqueda.', m);
         }
     }
 };
 
-async function sendAlbum(conn, jid, medias, options = {}) {
+async function sendAlbum(conn, jid, urls, options = {}) {
     const album = conn.generateWAMessageFromContent(jid, {
-        messageContextInfo: {},
         albumMessage: {
-            expectedImageCount: medias.filter(m => m.type === "image").length,
-            expectedVideoCount: medias.filter(m => m.type === "video").length,
+            expectedImageCount: urls.length,
             ...(options.quoted ? {
                 contextInfo: {
-                    remoteJid: options.quoted.key.remoteJid,
-                    fromMe: options.quoted.key.fromMe,
                     stanzaId: options.quoted.key.id,
                     participant: options.quoted.key.participant || options.quoted.key.remoteJid,
                     quotedMessage: options.quoted.message,
@@ -73,21 +56,20 @@ async function sendAlbum(conn, jid, medias, options = {}) {
         }
     }, {});
 
-    await conn.relayMessage(album.key.remoteJid, album.message, { messageId: album.key.id });
+    await conn.relayMessage(jid, album.message, { messageId: album.key.id });
 
-    for (let i = 0; i < medias.length; i++) {
-        const { type, data } = medias[i];
-        const msg = await conn.generateWAMessage(album.key.remoteJid, {
-            [type]: data,
+    await Promise.all(urls.map(async (url, i) => {
+        const msg = await conn.generateWAMessage(jid, {
+            image: { url: url },
             ...(i === 0 ? { caption: options.caption || "" } : {})
         }, { upload: conn.waUploadToServer });
 
         msg.message.messageContextInfo = {
             messageAssociation: { associationType: 1, parentMessageKey: album.key }
         };
-        await conn.relayMessage(msg.key.remoteJid, msg.message, { messageId: msg.key.id });
-        await conn.delay(options.delay || 300);
-    }
+
+        return conn.relayMessage(jid, msg.message, { messageId: msg.key.id });
+    }));
 }
 
 export default pinterestCommand;
