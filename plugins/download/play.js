@@ -26,12 +26,23 @@ const youtubeCommand = {
             const videoId = videoInfo.videoId;
             const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
 
-            const infoText = `\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*\n\n✰ *TÍTULO:* ${videoInfo.title}\n♛ *CANAL:* ${videoInfo.author?.name || '---'}\n✎ *TIEMPO:* ${videoInfo.timestamp || '---'}\n⌬ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}\n▢ *LINK:* ${videoUrl}`;
+            const infoText = `
+\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*
+
+✰ *TÍTULO:* ${videoInfo.title}
+♛ *CANAL:* ${videoInfo.author?.name || '---'}
+✎ *TIEMPO:* ${videoInfo.timestamp || '---'}
+⌬ *VISTAS:* ${videoInfo.views?.toLocaleString() || '---'}
+▢ *LINK:* ${videoUrl}
+`;
 
             await conn.sendMessage(m.chat, { 
                 image: { url: videoInfo.image || videoInfo.thumbnail }, 
                 caption: infoText,
-                contextInfo: { forwardingScore: 1, isForwarded: true }
+                contextInfo: {
+                    forwardingScore: 1,
+                    isForwarded: true
+                }
             }, { quoted: m });
 
             let downloadUrl;
@@ -41,16 +52,12 @@ const youtubeCommand = {
                 
                 const apiRes = await fetch(apiUrl).then(res => res.json());
                 
-                if (apiRes && apiRes.status && apiRes.result?.dl_url) {
+                if (apiRes.status && apiRes.result) {
                     downloadUrl = apiRes.result.dl_url;
-                } else {
-                    console.log('Estructura API MP3 inesperada:', JSON.stringify(apiRes, null, 2));
                 }
             } else {
                 const apiRes = await fetch(`https://api.dix.lat/mp4?url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
-                if (apiRes.status && apiRes.data?.dl) {
-                    downloadUrl = apiRes.data.dl;
-                }
+                if (apiRes.status) downloadUrl = apiRes.data.dl;
             }
 
             if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga.");
@@ -59,7 +66,7 @@ const youtubeCommand = {
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36' }
             });
 
-            if (!response.ok) throw new Error(`Error en el servidor de archivos: ${response.status}`);
+            if (!response.ok) throw new Error(`Error en la descarga: ${response.status}`);
             const buffer = await response.buffer();
 
             if (isAudio) {
@@ -73,8 +80,19 @@ const youtubeCommand = {
                 const artResp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
                 const albumArtBuffer = Buffer.from(artResp.data);
 
-                const uploadedArt = await prepareWAMessageMedia({ image: albumArtBuffer }, { upload: conn.waUploadToServer });
-                const messageContent = await generateWAMessageContent({ video: buffer, mimetype: 'video/mp4', jpegThumbnail: albumArtBuffer }, { upload: conn.waUploadToServer });
+                const uploadedArt = await prepareWAMessageMedia(
+                    { image: albumArtBuffer },
+                    { upload: conn.waUploadToServer }
+                );
+
+                const messageContent = await generateWAMessageContent(
+                    {
+                        video: buffer,
+                        mimetype: 'video/mp4',
+                        jpegThumbnail: albumArtBuffer
+                    },
+                    { upload: conn.waUploadToServer }
+                );
 
                 await conn.relayMessage(m.chat, {
                     videoMessage: {
@@ -89,22 +107,29 @@ const youtubeCommand = {
                                 serverMessageId: 999999
                             }
                         },
-                        annotations: [{
-                            polygonVertices: [{ x: 0.25, y: 0.41 }, { x: 0.75, y: 0.41 }, { x: 0.75, y: 0.58 }, { x: 0.25, y: 0.58 }],
-                            shouldSkipConfirmation: true,
-                            embeddedContent: {
-                                embeddedMusic: {
-                                    musicContentMediaId: "DXF25DKDZrN",
-                                    author: videoInfo.author?.name || 'Deylin Tech',
-                                    title: videoInfo.title || 'KIRITO MUSIC',
-                                    artworkDirectPath: uploadedArt.imageMessage.directPath,
-                                    artworkMediaKey: uploadedArt.imageMessage.mediaKey,
-                                    artworkSha256: uploadedArt.imageMessage.fileSha256,
-                                    artworkEncSha256: uploadedArt.imageMessage.fileEncSha256
-                                }
-                            },
-                            embeddedAction: true
-                        }]
+                        annotations: [
+                            {
+                                polygonVertices: [
+                                    { x: 0.25, y: 0.41 },
+                                    { x: 0.75, y: 0.41 },
+                                    { x: 0.75, y: 0.58 },
+                                    { x: 0.25, y: 0.58 }
+                                ],
+                                shouldSkipConfirmation: true,
+                                embeddedContent: {
+                                    embeddedMusic: {
+                                        musicContentMediaId: "DXF25DKDZrN",
+                                        author: videoInfo.author?.name || 'Deylin Tech',
+                                        title: videoInfo.title || 'KIRITO MUSIC',
+                                        artworkDirectPath: uploadedArt.imageMessage.directPath,
+                                        artworkMediaKey:   uploadedArt.imageMessage.mediaKey,
+                                        artworkSha256:     uploadedArt.imageMessage.fileSha256,
+                                        artworkEncSha256:  uploadedArt.imageMessage.fileEncSha256
+                                    }
+                                },
+                                embeddedAction: true
+                            }
+                        ]
                     }
                 }, { quoted: m });
             }
