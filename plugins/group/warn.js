@@ -5,12 +5,10 @@ const warnCommand = {
     group: true,
     run: async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
         try {
-            // 1. OBTENER CONFIGURACIÓN DEL GRUPO (MongoDB)
-            // Buscamos si el grupo ya tiene un límite configurado, si no, usamos 3 por defecto.
+        
             let chatData = await global.Chat.findOne({ chatId: m.chat }) || {};
             let limit = chatData.warnLimit || 3;
 
-            // 2. LÓGICA: CAMBIAR LÍMITE (.warnlimit [1-10])
             if (command === 'warnlimit') {
                 if (!isAdmin) return global.dfail('admin', m, conn);
                 let newLimit = parseInt(text.trim());
@@ -19,7 +17,6 @@ const warnCommand = {
                     return conn.reply(m.chat, `*─── [ ⚙️ CONFIG ] ───*\n\n*Límite actual:* ${limit}\n\n> *♛ USO CORRECTO*\n*${usedPrefix + command}* [1-10]\n\n_Establece el tope de advertencias antes de la expulsión._`, m);
                 }
                 
-                // Guardamos el nuevo límite en la base de datos del chat
                 await global.Chat.findOneAndUpdate(
                     { chatId: m.chat },
                     { $set: { warnLimit: newLimit } },
@@ -29,11 +26,9 @@ const warnCommand = {
                 return conn.reply(m.chat, `*─── [ ✅ AJUSTE ] ───*\n\n*Nuevo límite establecido en:* ${newLimit}\n\n_Los usuarios serán expulsados al llegar a ${newLimit} advertencias._`, m);
             }
 
-            // 3. IDENTIFICAR AL USUARIO
             let who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
             let warnDoc = who ? await global.Warns.findOne({ userId: who, groupId: m.chat }) : null;
 
-            // 4. LÓGICA: CONSULTAR LISTA (.warnlist / .advertencias)
             if (['warnlist', 'advertencias'].includes(command)) {
                 if (who) {
                     if (!warnDoc || warnDoc.warnCount === 0) {
@@ -64,15 +59,13 @@ const warnCommand = {
                 return conn.reply(m.chat, list, m, { mentions: allWarns.map(w => w.userId) });
             }
 
-            // 5. VERIFICAR PERMISOS PARA DAR/QUITAR
             if (!isAdmin) return global.dfail('admin', m, conn);
             if (!who) return conn.reply(m.chat, `> *♛ USO CORRECTO*\n\nEtiqueta o responde a alguien:\n*${usedPrefix + command}* @user [motivo]`, m);
 
             let d = new Date();
             let date = d.toLocaleDateString('es-HN');
             let time = d.toLocaleTimeString('es-HN', { hour: 'numeric', minute: 'numeric', hour12: true });
-
-            // 6. LÓGICA: DAR ADVERTENCIA (.warn / .advertir)
+ 
             if (command === 'warn' || command === 'advertir') {
                 if (!isBotAdmin) return global.dfail('botAdmin', m, conn);
                 
@@ -97,7 +90,7 @@ const warnCommand = {
                     txt += `_Advertencia registrada correctamente._`;
                     await conn.reply(m.chat, txt, m, { mentions: [who] });
                 } else {
-                    // Límite alcanzado
+                    
                     await global.Warns.deleteOne({ userId: who, groupId: m.chat });
                     let txt = `*─── [ ×᷼× EXPULSADO ] ───*\n\n`;
                     txt += `*♛ Usuario:* @${who.split`@`[0]}\n`;
@@ -108,7 +101,7 @@ const warnCommand = {
                 }
             }
 
-            // 7. LÓGICA: QUITAR ADVERTENCIA (.delwarn / .quitarwarn)
+            
             else if (command === 'delwarn' || command === 'quitarwarn') {
                 if (!warnDoc || warnDoc.warnCount === 0) {
                     return conn.reply(m.chat, `*─── [ ✅ INFO ] ───*\n\nEl usuario @${who.split`@`[0]} no tiene advertencias.`, m, { mentions: [who] });
@@ -126,7 +119,7 @@ const warnCommand = {
                     warnDoc.reasons.splice(num - 1, 1);
                     warnDoc.warnCount -= 1;
                 } else {
-                    // Por defecto quita la última
+                    
                     warnDoc.warnCount -= 1;
                     warnDoc.reasons.pop();
                 }
