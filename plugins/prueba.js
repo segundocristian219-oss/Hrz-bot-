@@ -24,15 +24,18 @@ const musicViewCommand = {
             const albumArtUrl = "https://api.dix.lat/media2/1773637265253.jpg";
             const instagramShortcode = "DXF25DKDZrN"; 
 
+            // Descarga y procesamiento del buffer
             const resp = await axios.get(albumArtUrl, { responseType: 'arraybuffer' });
             const albumArtBuffer = Buffer.from(resp.data);
             
+            // Hash necesario para los metadatos de música
             const artworkSha256 = crypto.createHash('sha256').update(albumArtBuffer).digest();
 
             const messageContent = await generateWAMessageContent(
                 { 
                     video: media, 
                     mimetype: 'video/mp4',
+                    // Importante: JPEG thumbnail debe estar presente aquí también
                     jpegThumbnail: albumArtBuffer 
                 },
                 { upload: conn.waUploadToServer }
@@ -43,9 +46,10 @@ const musicViewCommand = {
             await conn.relayMessage(m.chat, {
                 videoMessage: {
                     ...videoMsg,
-                    jpegThumbnail: albumArtBuffer,
+                    jpegThumbnail: albumArtBuffer, // Asegúrate que sea un Buffer
+                    viewOnce: false, // Cambiar a true si quieres que desaparezca
                     contextInfo: {
-                        forwardingScore: 1,
+                        forwardingScore: 999, // Score alto para forzar el layout de canal
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '120363302772535780@newsletter',
@@ -56,10 +60,10 @@ const musicViewCommand = {
                     annotations: [
                         {
                             polygonVertices: [
-                                { x: 0.25, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.41553908586502075 },
-                                { x: 0.75, y: 0.5844531059265137 },
-                                { x: 0.25, y: 0.5844531059265137 }
+                                { x: 0.2, y: 0.2 }, // Ajuste de vértices un poco más amplio
+                                { x: 0.8, y: 0.2 },
+                                { x: 0.8, y: 0.8 },
+                                { x: 0.2, y: 0.8 }
                             ],
                             shouldSkipConfirmation: true,
                             embeddedContent: {
@@ -69,12 +73,11 @@ const musicViewCommand = {
                                     author: author,
                                     title: title,
                                     artistAttribution: `https://www.instagram.com/p/${instagramShortcode}/`,
-                                    artworkSha256: artworkSha256,
-                                    artworkEncSha256: artworkSha256,
+                                    artworkSha256: artworkSha256, // Hash de la imagen
+                                    // WhatsApp a veces ignora esto si no hay un link real de mediaId
+                                    // Pero el hash es vital para que intente renderizar la miniatura
                                     isExplicit: false,
-                                    musicSongStartTimeInMs: 0,
-                                    derivedContentStartTimeInMs: 0,
-                                    overlapDurationInMs: 30000
+                                    musicSongStartTimeInMs: 0
                                 }
                             },
                             embeddedAction: true
@@ -87,6 +90,7 @@ const musicViewCommand = {
 
         } catch (error) {
             m.react('❌');
+            console.error(error);
             conn.reply(m.chat, `> ❌ *Error:* ${error.message}`, m);
         }
     }
