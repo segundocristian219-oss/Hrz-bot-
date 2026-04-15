@@ -12,7 +12,7 @@ Si deseas tener todas mis funciones en tu propio número de forma gratuita, util
 Tu privacidad es nuestra prioridad. Somos un equipo de desarrollo responsable: no recopilamos ni almacenamos información de tus interacciones. Todas tus conversaciones permanecen protegidas por el cifrado de extremo a extremo de WhatsApp.`
 
      await conn.sendMessage(m.chat, {
-      imagen: { url: ing() },
+      image: { url: global.img2() },
       text: txt
     }, { quoted: m });
    }
