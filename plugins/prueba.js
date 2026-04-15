@@ -59,7 +59,7 @@ export default {
 
             if (!text) return conn.reply(m.chat, `ᰔᩚ *KIRITO STICKERS*\n\nUso: ${usedPrefix + command} <nombre o link>`, m);
             
-            await m.react('⏳');
+            
             let packData;
 
             if (/sticker\.ly\/s\//i.test(text)) {
@@ -82,10 +82,10 @@ export default {
                 await delay(1500);
             }
 
-            await m.react('✅');
+            
         } catch (e) {
             console.error(e);
-            await m.react('❌');
+            
             conn.reply(m.chat, `*Error:* ${e.message}`, m);
         }
     }
