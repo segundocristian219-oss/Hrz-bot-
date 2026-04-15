@@ -7,37 +7,47 @@ const handler = {
             if (!isROwner) return;
 
             const isUnban = /unban|desbanear/i.test(command);
-            
-            let target = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : (text.split('|')[0] || '').replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+            let target;
 
-            if (!target || target.length < 15) {
-                return m.reply(`> ⚠️ Indica a quién ${isUnban ? 'desbloquear' : 'bloquear'}.`);
+            if (m.quoted) {
+                target = m.quoted.sender;
+            } else if (m.mentionedJid && m.mentionedJid.length > 0) {
+                target = m.mentionedJid[0];
+            } else if (text) {
+                let num = text.split('|')[0].replace(/[^0-9]/g, '');
+                if (num.length >= 8) target = num + '@s.whatsapp.net';
             }
 
-            if (!isUnban && target === conn.user.id) return;
+            if (!target) {
+                return m.reply(`> ⚠️ *Falta objetivo*\nUso: ${command} [@mención / responder / número]`);
+            }
+
+            if (!isUnban && (target === conn.user.id.split(':')[0] + '@s.whatsapp.net' || target === conn.user.id)) {
+                return m.reply("> ❌ No puedes banear al propio bot.");
+            }
 
             let reason = m.quoted ? text : (text.split('|')[1] || 'Infracción de las reglas del sistema').trim();
 
-            if (!global.User) throw new Error("La variable global.User no está definida. Revisa tu conexión a la DB.");
+            if (!global.User) throw new Error("DB_NOT_FOUND: global.User no existe.");
+
+            const update = { 
+                $set: { 
+                    banned: !isUnban, 
+                    banReason: isUnban ? '' : reason 
+                } 
+            };
 
             const result = await global.User.findOneAndUpdate(
-                { $or: [{ id: target }, { lid: target }] },
-                { $set: { banned: !isUnban, banReason: isUnban ? '' : reason } },
+                { id: target }, 
+                update, 
                 { upsert: true, new: true }
             );
 
-            if (!result) throw new Error("No se pudo actualizar el usuario en MongoDB.");
-
-            const status = isUnban ? '✅ Usuario desbloqueado' : '🚫 Usuario bloqueado';
-            await m.reply(`${status}: @${target.split('@')[0]}${!isUnban ? '\n📝 Razón: ' + reason : ''}`, null, { mentions: [target] });
+            const status = isUnban ? '✅ USUARIO DESBLOQUEADO' : '🚫 USUARIO BLOQUEADO';
+            await conn.reply(m.chat, `${status}\n\n*👤 ID:* @${target.split('@')[0]}${!isUnban ? '\n*📝 Razón:* ' + reason : ''}`, m, { mentions: [target] });
 
         } catch (e) {
-            let errorMsg = `*─── [ ❌ ERROR DE COMANDO ] ───*\n\n`;
-            errorMsg += `*📍 Comando:* ${command}\n`;
-            errorMsg += `*⚠️ Error:* ${e.message}\n\n`;
-            errorMsg += `_El error ha sido capturado y enviado al chat para depuración._`;
-            
-            await conn.reply(m.chat, errorMsg, m);
+            await conn.reply(m.chat, `*─── [ ❌ ERROR CRÍTICO ] ───*\n\n*Detalle:* ${e.message}`, m);
         }
     }
 };
