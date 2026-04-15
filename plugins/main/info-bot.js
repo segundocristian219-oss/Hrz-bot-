@@ -5,8 +5,9 @@ const info = {
     run: async (m, { conn, text, isROwner, command }) => {
      let txt = 'hola'
      await conn.sendMessage(m.chat, {
-      text: txt
+      caption: txt
     }, { quoted: m });
+};
 
 
 export default info;
