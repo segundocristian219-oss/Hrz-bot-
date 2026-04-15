@@ -51,8 +51,12 @@ export default {
     name: 'stickerpack',
     alias: ['spack', 'stickers'],
     category: 'stickers',
-    run: async (conn, m, { text, usedPrefix, command }) => {
+    run: async (conn, m, opts) => {
         try {
+            const usedPrefix = opts?.usedPrefix || '.';
+            const command = opts?.command || 'spack';
+            const text = opts?.text || m.text || '';
+
             if (!text) return conn.reply(m.chat, `ᰔᩚ *KIRITO STICKERS*\n\nUso: ${usedPrefix + command} <nombre o link>`, m);
             
             await m.react('⏳');
