@@ -3,14 +3,20 @@ const info = {
     alias: ['info'],
     category: 'owner',
     run: async (m, { conn, text, command }) => {
-     let txt = `hola, soy *${name()}* un bot desarrollado para WhatsApp actualmente tengo mas de 100 funciones activas estoy en constante desarrollo y puedo tener fallas menores si detectas errores usá el comando #report para reportar los errores usá el comando #code para convertirte en sub-bot y tener el bot completamente gratis en tu grupo sin costo alguno el bot operará bajo tu número nota importante nosotros somos un equipo de desarrolladores legales y ponemos tu privacidad primero no recopilamos ni almacenamos información de los usuarios que interactúan con nuestro sistema tus conversaciones están cifrada de extremo extremo........`
+     let txt = `Hola, soy *${name()}*, un bot desarrollado para WhatsApp.
+
+Actualmente cuento con más de 100 funciones activas y me encuentro en constante evolución. Si detectas algún error en mi funcionamiento, puedes informarlo directamente usando el comando *#report*.
+
+Si deseas tener todas mis funciones en tu propio número de forma gratuita, utiliza el comando *#code* para convertirte en sub-bot. El sistema operará directamente bajo tu cuenta sin costo alguno.
+
+Tu privacidad es nuestra prioridad. Somos un equipo de desarrollo responsable: no recopilamos ni almacenamos información de tus interacciones. Todas tus conversaciones permanecen protegidas por el cifrado de extremo a extremo de WhatsApp.`
+
      await conn.sendMessage(m.chat, {
+      imagen: { url: ing() },
       text: txt
     }, { quoted: m });
    }
   };
-
-
 
 
 export default info;
