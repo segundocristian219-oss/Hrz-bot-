@@ -37,18 +37,14 @@ const downloadPack = async (url) => {
     try {
         const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/detail', { params: { url, key: 'YukiWaBot' }, timeout: 10000 });
         return data;
-    } catch {
-        return { status: false };
-    }
+    } catch { return { status: false }; }
 };
 
 const searchPacks = async (query) => {
     try {
         const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/search', { params: { query, key: 'YukiWaBot' }, timeout: 10000 });
         return data;
-    } catch {
-        return { status: false };
-    }
+    } catch { return { status: false }; }
 };
 
 export default {
@@ -57,12 +53,15 @@ export default {
     category: 'stickers',
     run: async (client, m) => {
         const socket = client.sendMessage ? client : client.conn ? client.conn : m.conn;
+        const chat = m.chat || m.remoteJid || (m.key && m.key.remoteJid);
         
         try {
+            if (!chat) throw new Error("No se pudo detectar el JID del chat.");
+            
             const text = m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '';
             const query = text.split(' ').slice(1).join(' ');
 
-            if (!query) return socket.sendMessage(m.chat, { text: 'ᰔᩚ *KIRITO STICKERS*\n\nEscribe el nombre de un pack o un link de Sticker.ly.' }, { quoted: m });
+            if (!query) return socket.sendMessage(chat, { text: 'ᰔᩚ *KIRITO STICKERS*\n\nEscribe el nombre de un pack o un link de Sticker.ly.' }, { quoted: m });
 
             if (m.react) await m.react('⏳');
             let packData;
@@ -83,15 +82,15 @@ export default {
             for (let s of stickers) {
                 const buffer = await toBuffer(s.imageUrl);
                 const webp = await toWebp(buffer, s.isAnimated);
-                await socket.sendMessage(m.chat, { sticker: webp }, { quoted: m });
-                await delay(2000);
+                await socket.sendMessage(chat, { sticker: webp }, { quoted: m });
+                await delay(1500);
             }
 
             if (m.react) await m.react('✅');
         } catch (e) {
             console.error(e);
             if (m.react) await m.react('❌');
-            socket.sendMessage(m.chat, { text: `*Error:* ${e.message}` }, { quoted: m });
+            if (chat) socket.sendMessage(chat, { text: `*Error:* ${e.message}` }, { quoted: m });
         }
     }
 };
