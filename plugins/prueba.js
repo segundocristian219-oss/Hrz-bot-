@@ -13,6 +13,7 @@ const toBuffer = async (url) => {
 const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => {
     const tmpIn = `./tmp/k-in-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const tmpOut = `./tmp/k-out-${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
+    if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp');
     fs.writeFileSync(tmpIn, buffer);
     const vf = 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba,format=yuva420p';
     const codec = isAnimated ? 'libwebp_anim' : 'libwebp';
@@ -60,26 +61,34 @@ const downloadPack = async (url, attempt = 1) => {
 
 export default {
     name: 'stickerpack',
-    alias: ['spack', 'stickers', 'sly'],
+    alias: ['spack', 'stickers'],
     category: 'stickers',
-    run: async (conn, m, { text, usedPrefix, command }) => {
+    run: async (conn, m) => {
         try {
-            if (!text) return conn.reply(m.chat, `ᰔᩚ   *KIRITO STICKERS* ᥫᩣ\n\n*Uso:* ${usedPrefix + command} <búsqueda o link>`, m);
-            await m.react('⏳');
+            const text = m.text || m.body || (m.message?.conversation) || (m.message?.extendedTextMessage?.text) || "";
+            const args = text.trim().split(/ +/).slice(1);
+            const query = args.join(" ");
+
+            if (!query) return conn.sendMessage(m.chat, { text: `ᰔᩚ   *KIRITO STICKERS* ᥫᩣ\n\nEscribe el nombre de un pack o pega un link de Sticker.ly.` }, { quoted: m });
+
+            await m.react?.('⏳');
             let packData;
-            if (/sticker\.ly\/s\//i.test(text)) {
-                const detail = await downloadPack(text);
+
+            if (/sticker\.ly\/s\//i.test(query)) {
+                const detail = await downloadPack(query);
                 if (!detail?.status || !detail.detalles) throw new Error("Pack no disponible.");
                 packData = detail.detalles;
             } else {
-                const search = await searchPacks(text);
+                const search = await searchPacks(query);
                 if (!search.status || !search.resultados?.length) throw new Error("Sin resultados.");
                 const randomPack = search.resultados[Math.floor(Math.random() * Math.min(search.resultados.length, 5))];
                 const detail = await downloadPack(randomPack.url);
                 if (!detail?.status) throw new Error("Error al obtener pack.");
                 packData = detail.detalles;
             }
+
             const { name: packName, author, stickers, thumbnailUrl } = packData;
+
             const [cover, stickerResults] = await Promise.all([
                 (async () => {
                     try {
@@ -90,7 +99,7 @@ export default {
                         return await img.save(null);
                     } catch { return Buffer.alloc(0); }
                 })(),
-                Promise.all(stickers.slice(0, 30).map(async (s) => {
+                Promise.all(stickers.slice(0, 15).map(async (s) => {
                     try {
                         const buffer = await toBuffer(s.imageUrl);
                         const sticker = await toWebp(buffer, s.isAnimated || false);
@@ -100,12 +109,19 @@ export default {
                     } catch { return null; }
                 })).then(res => res.filter(r => r !== null))
             ]);
+
             if (!stickerResults.length) throw new Error("No se procesaron stickers.");
-            await conn.sendMessage(m.chat, { stickerPack: { name: packName || 'Kirito Pack', publisher: author?.name || 'Voker Systems', description: 'Kɪʀɪᴛᴏ-Bᴏᴛ Sʏsᴛᴇᴍ', cover, stickers: stickerResults } }, { quoted: m });
-            await m.react('✅');
+
+            for (let st of stickerResults) {
+                await conn.sendMessage(m.chat, { sticker: st.sticker }, { quoted: m });
+                await delay(1500);
+            }
+
+            await m.react?.('✅');
         } catch (e) {
-            await m.react('❌');
-            conn.reply(m.chat, `*Error:* ${e.message}`, m);
+            console.error(e);
+            await m.react?.('❌');
+            if (m.chat) conn.sendMessage(m.chat, { text: `*Error:* ${e.message}` }, { quoted: m });
         }
     }
 };
