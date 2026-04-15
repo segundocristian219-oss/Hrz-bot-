@@ -1,14 +1,31 @@
 const handler = {
     name: 'ban/unban',
-    alias: ['banuser', 'ban', 'unbanuser', 'unban', 'desbanear'],
+    alias: ['banuser', 'ban', 'unbanuser', 'unban', 'desbanear', 'listban', 'banlist'],
     category: 'owner',
     run: async (m, { conn, text, isROwner, command }) => {
         try {
             if (!isROwner) return;
 
+            if (['listban', 'banlist'].includes(command)) {
+                if (!global.User) throw new Error("DB_NOT_FOUND");
+                
+                const bannedUsers = await global.User.find({ banned: true });
+                
+                if (bannedUsers.length === 0) {
+                    return m.reply('-- LISTA DE USUARIOS BLOQUEADOS --\n\nNo hay usuarios restringidos en el sistema.');
+                }
+
+                let list = '-- LISTA DE USUARIOS BLOQUEADOS --\n\n';
+                bannedUsers.forEach((u, i) => {
+                    list += `${i + 1}. @${u.id.split('@')[0]}\nRAZON: ${u.banReason || 'Sin motivo'}\n\n`;
+                });
+                
+                return conn.reply(m.chat, list, m, { mentions: bannedUsers.map(u => u.id) });
+            }
+
             const isUnban = /unban|desbanear/i.test(command);
             let target;
-            let reason = 'Infracción de las reglas del sistema';
+            let reason = 'Infraccion de las reglas del sistema';
 
             if (m.quoted) {
                 target = m.quoted.sender;
@@ -26,10 +43,11 @@ const handler = {
             }
 
             if (!target) {
-                return m.reply(`> ✰ *Falta objetivo*\nUso: ${command} [@mención / responder / número] [razón]`);
+                return m.reply(`USO CORRECTO: ${command} [@mencion / responder / numero] [razon]\n\nPara ver la lista usa: .listban`);
             }
 
-            if (!isUnban && (target === conn.user.id.split(':')[0] + '@s.whatsapp.net' || target === conn.user.id)) {
+            const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+            if (!isUnban && (target === botId || target === conn.user.id)) {
                 return;
             }
 
@@ -41,11 +59,11 @@ const handler = {
                 { upsert: true }
             );
 
-            const status = isUnban ? '♛ USUARIO DESBLOQUEADO' : '✘ USUARIO BLOQUEADO';
-            await conn.reply(m.chat, `${status}\n\n*✰ ID:* @${target.split('@')[0]}${!isUnban ? '\n*➠ Razón:* ' + reason : ''}`, m, { mentions: [target] });
+            const status = isUnban ? 'USUARIO DESBLOQUEADO' : 'USUARIO BLOQUEADO';
+            await conn.reply(m.chat, `${status}\n\nID: @${target.split('@')[0]}${!isUnban ? '\nRAZON: ' + reason : ''}`, m, { mentions: [target] });
 
         } catch (e) {
-            await conn.reply(m.chat, `*─── [ ❌ ERROR ] ───*\n\n${e.message}`, m);
+            await conn.reply(m.chat, `ERROR: ${e.message}`, m);
         }
     }
 };
