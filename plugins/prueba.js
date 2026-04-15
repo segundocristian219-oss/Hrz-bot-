@@ -2,6 +2,10 @@ import axios from 'axios';
 import fs from 'fs';
 import { spawn } from 'child_process';
 
+const API_KEY = 'dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_Sys_00\u200B1.0.0_37080_159_0x\u0025\u0058\u200B\u200C\u2060_\u005B\u0022\u0024\u007B0x00A0\u007D\u221E\u2202\u2206\u0022\u005D_\u0020\u200B\u200D\u2060_0x7F\u0000\u0001\u0007\u0008\u000B\u000C\u000E\u000F_S3R14L1Z3R_0x0D\u200B\u200D\u2060_\u005B\u200B\u200C\u200B\u200C\u005D_0x2026_03_28_UTC_0x00';
+const SEARCH_URL = 'https://sylphyy.xyz/search/stickerly';
+const DOWNLOAD_URL = 'https://sylphyy.xyz/download/stickerly';
+
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const toBuffer = async (url) => {
@@ -58,27 +62,27 @@ const isValidWebP = (buf) =>
     buf.slice(0, 4).toString() === 'RIFF' &&
     buf.slice(8, 12).toString() === 'WEBP';
 
-const downloadPack = async (url) => {
+const searchPacks = async (query) => {
     try {
-        const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/detail', {
-            params: { url, key: 'YukiWaBot' },
+        const { data } = await axios.get(SEARCH_URL, {
+            params: { q: query, api_key: API_KEY },
             timeout: 10000,
         });
-        return data;
+        return data?.status ? data.result : [];
     } catch {
-        return { status: false };
+        return [];
     }
 };
 
-const searchPacks = async (query) => {
+const getPackDetail = async (url) => {
     try {
-        const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/search', {
-            params: { query, key: 'YukiWaBot' },
-            timeout: 10000,
+        const { data } = await axios.get(DOWNLOAD_URL, {
+            params: { url, api_key: API_KEY },
+            timeout: 15000,
         });
-        return data;
+        return data?.status ? data.result : null;
     } catch {
-        return { status: false };
+        return null;
     }
 };
 
@@ -94,44 +98,56 @@ export default {
 
             await m.react('⏳');
 
-            let packData;
+            let packName, packAuthor, stickers;
 
             if (/sticker\.ly\/s\//i.test(text)) {
-                const detail = await downloadPack(text);
-                if (!detail?.status) throw new Error('Pack no encontrado.');
-                packData = detail.detalles;
+                const detail = await getPackDetail(text);
+                if (!detail) throw new Error('Pack no encontrado o error en la API.');
+                packName = detail.name || 'Pack';
+                packAuthor = typeof detail.author === 'object' ? detail.author.name : (detail.author || 'Bot');
+                stickers = (detail.stickers || []).slice(0, 10).map(s => ({
+                    url: s.imageUrl,
+                    animated: s.isAnimated,
+                }));
             } else {
-                const search = await searchPacks(text);
-                if (!search?.status || !search.resultados?.length) throw new Error('Sin resultados para: ' + text);
-                const res = await downloadPack(search.resultados[0].url);
-                if (!res?.status) throw new Error('No se pudo obtener el pack.');
-                packData = res.detalles;
+                const results = await searchPacks(text);
+                if (!results.length) throw new Error('Sin resultados para: ' + text);
+
+                const pack = results[0];
+                const detail = await getPackDetail(pack.url);
+
+                if (!detail) throw new Error('No se pudo obtener detalles del pack.');
+
+                packName = detail.name || pack.name || 'Pack';
+                packAuthor = typeof detail.author === 'object' ? detail.author.name : (detail.author || pack.author || 'Bot');
+                
+                stickers = (detail.stickers || []).slice(0, 10).map(s => ({
+                    url: s.imageUrl,
+                    animated: s.isAnimated,
+                }));
             }
 
-            const stickers = packData.stickers.slice(0, 10);
-            const packName = packData.name || 'Pack';
-            const packAuthor = packData.author || 'Bot';
+            if (!stickers || !stickers.length) throw new Error('No se encontraron stickers en este pack.');
 
-            await m.reply(`📦 Enviando *${stickers.length}* stickers de *${packName}*...`);
+            await m.reply(`📦 *${packName}*\n👤 ${packAuthor}\n🖼️ Enviando ${stickers.length} sticker(s)...`);
 
             let sent = 0;
 
             for (const [i, s] of stickers.entries()) {
                 try {
-                    const buffer = await toBuffer(s.imageUrl);
-                    const webp = await toWebp(buffer, s.isAnimated);
-                    if (!isValidWebP(webp)) throw new Error('WebP inválido');
+                    const buffer = await toBuffer(s.url);
+                    const webp = await toWebp(buffer, s.animated);
+                    if (!isValidWebP(webp)) continue;
                     const final = await addExif(webp, packName, packAuthor);
                     await conn.sendMessage(m.chat, { sticker: final }, { quoted: m });
                     sent++;
-                    await delay(1200);
+                    await delay(1500);
                 } catch (err) {
-                    console.warn(`[stickerpack] Sticker ${i + 1} falló:`, err.message);
+                    console.warn(`[stickerpack] Error en sticker ${i + 1}:`, err.message);
                 }
             }
 
-            if (sent === 0) throw new Error('Ningún sticker pudo enviarse.');
-
+            if (sent === 0) throw new Error('Ningún sticker pudo procesarse correctamente.');
             await m.react('✅');
 
         } catch (e) {
