@@ -13,7 +13,7 @@ const toBuffer = async (url) => {
 const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => {
     const tmpIn = `./tmp/k-in-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const tmpOut = `./tmp/k-out-${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
-    if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp');
+    if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp', { recursive: true });
     fs.writeFileSync(tmpIn, buffer);
     const vf = 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba,format=yuva420p';
     const codec = isAnimated ? 'libwebp_anim' : 'libwebp';
@@ -33,28 +33,20 @@ const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => 
     });
 });
 
-const searchPacks = async (query, attempt = 1) => {
-    try {
-        const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/search', { params: { query, key: 'YukiWaBot' }, timeout: 10000 });
-        return data;
-    } catch (e) {
-        if (e.response?.status === 429 && attempt <= 3) {
-            await delay((e.response.headers['retry-after'] || 5) * 1000);
-            return searchPacks(query, attempt + 1);
-        }
-        throw e;
-    }
-};
-
-const downloadPack = async (url, attempt = 1) => {
+const downloadPack = async (url) => {
     try {
         const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/detail', { params: { url, key: 'YukiWaBot' }, timeout: 10000 });
         return data;
-    } catch (e) {
-        if (e.response?.status === 429 && attempt <= 3) {
-            await delay((e.response.headers['retry-after'] || 5) * 1000);
-            return downloadPack(url, attempt + 1);
-        }
+    } catch {
+        return { status: false };
+    }
+};
+
+const searchPacks = async (query) => {
+    try {
+        const { data } = await axios.get('https://api.stellarwa.xyz/stickerly/search', { params: { query, key: 'YukiWaBot' }, timeout: 10000 });
+        return data;
+    } catch {
         return { status: false };
     }
 };
@@ -63,65 +55,43 @@ export default {
     name: 'stickerpack',
     alias: ['spack', 'stickers'],
     category: 'stickers',
-    run: async (conn, m) => {
+    run: async (client, m) => {
+        const socket = client.sendMessage ? client : client.conn ? client.conn : m.conn;
+        
         try {
-            const text = m.text || m.body || (m.message?.conversation) || (m.message?.extendedTextMessage?.text) || "";
-            const args = text.trim().split(/ +/).slice(1);
-            const query = args.join(" ");
+            const text = m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '';
+            const query = text.split(' ').slice(1).join(' ');
 
-            if (!query) return conn.sendMessage(m.chat, { text: `ᰔᩚ   *KIRITO STICKERS* ᥫᩣ\n\nEscribe el nombre de un pack o pega un link de Sticker.ly.` }, { quoted: m });
+            if (!query) return socket.sendMessage(m.chat, { text: 'ᰔᩚ *KIRITO STICKERS*\n\nEscribe el nombre de un pack o un link de Sticker.ly.' }, { quoted: m });
 
-            await m.react?.('⏳');
+            if (m.react) await m.react('⏳');
             let packData;
 
             if (/sticker\.ly\/s\//i.test(query)) {
                 const detail = await downloadPack(query);
-                if (!detail?.status || !detail.detalles) throw new Error("Pack no disponible.");
+                if (!detail?.status) throw new Error("Pack no encontrado.");
                 packData = detail.detalles;
             } else {
                 const search = await searchPacks(query);
-                if (!search.status || !search.resultados?.length) throw new Error("Sin resultados.");
-                const randomPack = search.resultados[Math.floor(Math.random() * Math.min(search.resultados.length, 5))];
-                const detail = await downloadPack(randomPack.url);
-                if (!detail?.status) throw new Error("Error al obtener pack.");
-                packData = detail.detalles;
+                if (!search?.status || !search.resultados?.length) throw new Error("Sin resultados.");
+                const res = await downloadPack(search.resultados[0].url);
+                packData = res.detalles;
             }
 
-            const { name: packName, author, stickers, thumbnailUrl } = packData;
-
-            const [cover, stickerResults] = await Promise.all([
-                (async () => {
-                    try {
-                        const buf = await toBuffer(thumbnailUrl);
-                        const converted = await toWebp(buf, false);
-                        const img = new webpmux.Image();
-                        await img.load(converted);
-                        return await img.save(null);
-                    } catch { return Buffer.alloc(0); }
-                })(),
-                Promise.all(stickers.slice(0, 15).map(async (s) => {
-                    try {
-                        const buffer = await toBuffer(s.imageUrl);
-                        const sticker = await toWebp(buffer, s.isAnimated || false);
-                        const img = new webpmux.Image();
-                        await img.load(sticker);
-                        return { sticker: await img.save(null), isAnimated: s.isAnimated || false, emojis: ['🎭'] };
-                    } catch { return null; }
-                })).then(res => res.filter(r => r !== null))
-            ]);
-
-            if (!stickerResults.length) throw new Error("No se procesaron stickers.");
-
-            for (let st of stickerResults) {
-                await conn.sendMessage(m.chat, { sticker: st.sticker }, { quoted: m });
-                await delay(1500);
+            const stickers = packData.stickers.slice(0, 10);
+            
+            for (let s of stickers) {
+                const buffer = await toBuffer(s.imageUrl);
+                const webp = await toWebp(buffer, s.isAnimated);
+                await socket.sendMessage(m.chat, { sticker: webp }, { quoted: m });
+                await delay(2000);
             }
 
-            await m.react?.('✅');
+            if (m.react) await m.react('✅');
         } catch (e) {
             console.error(e);
-            await m.react?.('❌');
-            if (m.chat) conn.sendMessage(m.chat, { text: `*Error:* ${e.message}` }, { quoted: m });
+            if (m.react) await m.react('❌');
+            socket.sendMessage(m.chat, { text: `*Error:* ${e.message}` }, { quoted: m });
         }
     }
 };
