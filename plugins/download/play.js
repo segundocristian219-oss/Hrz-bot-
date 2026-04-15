@@ -22,10 +22,25 @@ const youtubeCommand = {
             })();
 
             if (!videoSearchResult) return conn.reply(m.chat, "No se hallaron resultados.", m);
-            
+
             const videoId = videoSearchResult.videoId;
             const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
             const thumbUrl = videoSearchResult.image || videoSearchResult.thumbnail;
+
+            const infoText = `
+\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*
+
+✰ *TÍTULO:* ${videoSearchResult.title}
+♛ *CANAL:* ${videoSearchResult.author?.name || '---'}
+✎ *TIEMPO:* ${videoSearchResult.timestamp || '---'}
+⌬ *VISTAS:* ${videoSearchResult.views?.toLocaleString() || '---'}
+▢ *LINK:* ${videoUrl}
+`;
+
+            await conn.sendMessage(m.chat, { 
+                image: { url: thumbUrl }, 
+                caption: infoText 
+            }, { quoted: m });
 
             const thumbResp = await axios.get(thumbUrl, { responseType: 'arraybuffer' });
             const thumbBuffer = Buffer.from(thumbResp.data);
@@ -58,7 +73,7 @@ const youtubeCommand = {
                 }, { quoted: m });
             } else {
                 const upload = await conn.waUploadToServer(mediaBuffer, { mimetype: 'video/mp4' });
-                
+
                 await conn.relayMessage(m.chat, {
                     videoMessage: {
                         url: upload.url,
