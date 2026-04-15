@@ -1,219 +1,171 @@
-import { jidNormalizedUser } from '@whiskeysockets/baileys';
+```js
+import { jidNormalizedUser } from '@whiskeysockets/baileys'
 
-const format = n => Number(n).toLocaleString('de-DE');
-const delay = ms => new Promise(r => setTimeout(r, ms));
+const delay = ms => new Promise(r => setTimeout(r, ms))
+const format = n => Number(n).toLocaleString('de-DE')
 
 global.$casino = global.$casino || {
-    locks: new Map(),
-    pvp: {},
-    market: [],
-    logs: []
-};
-
-const symbolsMap = {
-    classic: ["💀","🔔","💎","👑","🌠","7️⃣"],
-    neon: ["🟣","🔵","🟢","🟡","🔴","⚡"],
-    gold: ["👑","💎","🏆","🥇","💰","🪙"],
-    galaxy: ["🌌","✨","🪐","🌠","💫","⭐"]
-};
-
-const shop = {
-    skins: { neon:15000, gold:30000, galaxy:50000 }
-};
-
-const missions = [
-    { id:"play", goal:5, reward:5000 },
-    { id:"win", goal:3, reward:7000 },
-    { id:"bet", goal:10000, reward:10000 }
-];
-
-const roll = arr => arr[Math.floor(Math.random()*arr.length)];
-
-const lock = id => {
-    if (global.$casino.locks.has(id)) return false;
-    global.$casino.locks.set(id, true);
-    return true;
-};
-
-const unlock = id => global.$casino.locks.delete(id);
-
-const cmd = {
-name:'slot',
-alias:['casino'],
-category:'rpg',
-
-run: async (m,{conn,args,usedPrefix,command})=>{
-try{
-
-let sub = (args[0]||'').toLowerCase();
-
-let user = await global.User.findOne({id:m.sender});
-if(!user) user = await global.User.create({
-id:m.sender,col:1000,xp:0,level:1,skin:'classic',
-ownedSkins:['classic'],inv:[],clan:null,last:0,
-daily:{prog:{}}
-});
-
-let s = await global.Settings.findOne({id:'casino'});
-if(!s) s = await global.Settings.create({
-id:'casino',jackpot:0,mega:0,season:1,reset:Date.now()+604800000
-});
-
-if(Date.now()>s.reset){
-s.season++;
-s.reset=Date.now()+604800000;
-await global.User.updateMany({},{$set:{col:1000}});
+locks: new Set(),
+pvp: {},
+market: [],
+logs: []
 }
 
-if(sub==='shop'){
-let t='';
-for(let k in shop.skins) t+=`${k}: ${format(shop.skins[k])}\n`;
-return m.reply(t);
-}
+const symbols = ["💀","🔔","💎","👑","🌠","7️⃣"]
 
-if(sub==='buy'){
-let item=args[1];
-if(!shop.skins[item]) return m.reply("No existe");
-if(user.col<shop.skins[item]) return m.reply("No dinero");
-user.col-=shop.skins[item];
-if(!user.ownedSkins.includes(item)) user.ownedSkins.push(item);
-await user.save();
-return m.reply("Comprado");
-}
+let handler = async (m, { conn, args, usedPrefix, command }) => {
+try {
 
-if(sub==='skin'){
-let sk=args[1];
-if(!symbolsMap[sk]) return m.reply("No existe");
-if(!user.ownedSkins.includes(sk)) return m.reply("No tienes");
-user.skin=sk;
-await user.save();
-return m.reply("Equipado");
-}
+let users = global.db.data.users
+if (!users) global.db.data.users = {}
 
-if(sub==='top'){
-let top=await global.User.find().sort({col:-1}).limit(5);
-let txt='';
-let i=1;
-for(let u of top){
-txt+=`${i}. ${u.id.split('@')[0]} ${format(u.col)}\n`; i++;
-}
-return m.reply(txt);
-}
+let settings = global.db.data.settings
+if (!settings) global.db.data.settings = {}
 
-if(sub==='pvp'){
-let t=m.mentionedJid?.[0];
-let a=parseInt(args[2]);
-if(!t||!a) return m.reply("Uso");
-if(user.col<a) return m.reply("No dinero");
-global.$casino.pvp[m.sender]={t,a};
-return m.reply("Desafío enviado");
-}
-
-if(sub==='accept'){
-let k=Object.keys(global.$casino.pvp).find(x=>global.$casino.pvp[x].t===m.sender);
-if(!k) return m.reply("Nada");
-let duel=global.$casino.pvp[k];
-
-let u1=await global.User.findOne({id:k});
-let u2=user;
-
-let w=Math.random()>0.5?u1:u2;
-let l=w===u1?u2:u1;
-
-w.col+=duel.a;
-l.col-=duel.a;
-
-await w.save(); await l.save();
-
-delete global.$casino.pvp[k];
-
-return m.reply(`Ganador ${w.id.split('@')[0]}`);
-}
-
-let amount = args[0]==='all'?user.col:parseInt(args[0]);
-
-if(!amount||amount<=0) return m.reply(`Uso: ${usedPrefix+command} <cantidad>`);
-if(user.col<amount) return m.reply("No dinero");
-if(Date.now()-user.last<3000) return m.reply("Cooldown");
-if(!lock(m.sender)) return m.reply("Procesando...");
-
-user.last=Date.now();
-
-s.jackpot+=Math.floor(amount*0.1);
-s.mega+=Math.floor(amount*0.05);
-
-const symbols=symbolsMap[user.skin];
-
-let r1=roll(symbols);
-let r2=roll(symbols);
-let r3=roll(symbols);
-
-const {key}=await conn.sendMessage(m.chat,{text:`[ 🌀 | 🌀 | 🌀 ]`},{quoted:m});
-
-await delay(300);
-await conn.sendMessage(m.chat,{text:`[ ${roll(symbols)} | 🌀 | 🌀 ]`,edit:key});
-await delay(300);
-await conn.sendMessage(m.chat,{text:`[ ${r1} | ${roll(symbols)} | 🌀 ]`,edit:key});
-await delay(500);
-await conn.sendMessage(m.chat,{text:`[ ${r1} | ${r2} | ${r3} ]`,edit:key});
-
-let triple=r1===r2&&r2===r3;
-let double=r1===r2||r2===r3||r1===r3;
-
-let res=0,st="LOSE";
-
-if(triple){
-if(Math.random()<0.01){res+=s.mega; s.mega=0; st="MEGA";}
-else if(Math.random()<0.05){res+=s.jackpot; s.jackpot=0; st="GLOBAL";}
-else{res=amount*5; st="WIN";}
-}else if(double){
-res=amount*2; st="OK";
-}else res=-amount;
-
-user.col+=res;
-user.xp+=Math.floor(amount/100);
-
-if(user.xp>=user.level*100){
-user.xp=0;
-user.level++;
-user.inv.push('box');
-}
-
-user.daily.prog.play=(user.daily.prog.play||0)+1;
-user.daily.prog.bet=(user.daily.prog.bet||0)+amount;
-if(res>0) user.daily.prog.win=(user.daily.prog.win||0)+1;
-
-for(let d of missions){
-if(user.daily.prog[d.id]>=d.goal){
-user.col+=d.reward;
-user.daily.prog[d.id]=0;
+if (!global.db.data.settings.casino) {
+global.db.data.settings.casino = {
+jackpot: 0,
+mega: 0,
+season: 1,
+reset: Date.now() + 604800000
 }
 }
 
-global.$casino.logs.push({u:m.sender,a:amount,r:res});
+let casino = global.db.data.settings.casino
 
-await user.save();
-await s.save();
+let user = users[m.sender]
+if (!user) {
+users[m.sender] = {
+money: 1000,
+exp: 0,
+level: 1,
+lastSlot: 0
+}
+user = users[m.sender]
+}
 
-let txt=`[ ${r1} | ${r2} | ${r3} ]
-${st}
-${res>0?'+':''}${format(res)}
-💰 ${format(user.col)}
-🎰 ${format(s.jackpot)}
-🌋 ${format(s.mega)}
-🏆 S${s.season} Lv${user.level}`;
+if (typeof user.money !== 'number') user.money = 1000
+if (typeof user.exp !== 'number') user.exp = 0
+if (typeof user.level !== 'number') user.level = 1
+if (typeof user.lastSlot !== 'number') user.lastSlot = 0
 
-await delay(300);
-await conn.sendMessage(m.chat,{text:txt,edit:key});
+if (Date.now() > casino.reset) {
+casino.season++
+casino.reset = Date.now() + 604800000
+}
 
-unlock(m.sender);
+let sub = (args[0] || '').toLowerCase()
 
-}catch(e){
-console.error(e);
-unlock(m.sender);
-await m.react("⚠️");
+if (sub === 'top') {
+let top = Object.entries(users)
+.sort((a,b)=> (b[1].money||0) - (a[1].money||0))
+.slice(0,5)
+
+let txt = top.map((x,i)=>`${i+1}. ${x[0].split('@')[0]} ${format(x[1].money||0)}`).join('\n')
+return m.reply(txt)
+}
+
+let amount = args[0] === 'all'
+? user.money
+: parseInt(args[0])
+
+if (!amount || isNaN(amount) || amount <= 0)
+return m.reply(`Uso: ${usedPrefix + command} <cantidad>`)
+
+if (user.money < amount)
+return m.reply("No tienes suficiente dinero")
+
+if (Date.now() - user.lastSlot < 3000)
+return m.reply("Espera 3 segundos")
+
+if (global.$casino.locks.has(m.sender))
+return m.reply("Procesando...")
+
+global.$casino.locks.add(m.sender)
+
+user.lastSlot = Date.now()
+
+casino.jackpot += Math.floor(amount * 0.1)
+casino.mega += Math.floor(amount * 0.05)
+
+const roll = () => symbols[Math.floor(Math.random()*symbols.length)]
+
+let r1 = roll()
+let r2 = roll()
+let r3 = roll()
+
+const { key } = await conn.sendMessage(m.chat, { text: `[ 🌀 | 🌀 | 🌀 ]` }, { quoted: m })
+
+await delay(300)
+await conn.sendMessage(m.chat,{text:`[ ${roll()} | 🌀 | 🌀 ]`,edit:key})
+
+await delay(300)
+await conn.sendMessage(m.chat,{text:`[ ${r1} | ${roll()} | 🌀 ]`,edit:key})
+
+await delay(400)
+await conn.sendMessage(m.chat,{text:`[ ${r1} | ${r2} | ${r3} ]`,edit:key})
+
+let triple = r1===r2 && r2===r3
+let double = r1===r2 || r2===r3 || r1===r3
+
+let result = 0
+let status = "LOSE"
+
+if (triple) {
+if (Math.random() < 0.01) {
+result = casino.mega
+casino.mega = 0
+status = "MEGA JACKPOT"
+} else if (Math.random() < 0.05) {
+result = casino.jackpot
+casino.jackpot = 0
+status = "JACKPOT"
+} else {
+result = amount * 5
+status = "WIN"
+}
+} else if (double) {
+result = amount * 2
+status = "OK"
+} else {
+result = -amount
+}
+
+user.money += result
+if (user.money < 0) user.money = 0
+
+user.exp += Math.floor(amount / 10)
+
+if (user.exp >= user.level * 100) {
+user.exp = 0
+user.level++
+}
+
+let txt = `
+[ ${r1} | ${r2} | ${r3} ]
+${status}
+${result > 0 ? '+' : ''}${format(result)}
+💰 ${format(user.money)}
+🎰 ${format(casino.jackpot)}
+🌋 ${format(casino.mega)}
+🏆 Nivel ${user.level}
+`.trim()
+
+await delay(300)
+await conn.sendMessage(m.chat, { text: txt, edit: key })
+
+global.$casino.locks.delete(m.sender)
+
+} catch (e) {
+console.error(e)
+global.$casino.locks.delete(m.sender)
+await m.reply("Error en slot")
 }
 }
-};
 
-export default cmd;
+handler.help = ['slot <cantidad>']
+handler.tags = ['game']
+handler.command = ['slot','casino']
+
+export default handler
+```
