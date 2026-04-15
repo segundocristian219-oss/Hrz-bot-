@@ -51,27 +51,19 @@ export default {
     name: 'stickerpack',
     alias: ['spack', 'stickers'],
     category: 'stickers',
-    run: async (client, m) => {
-        const socket = client.sendMessage ? client : client.conn ? client.conn : m.conn;
-        const chat = m.chat || m.remoteJid || (m.key && m.key.remoteJid);
-        
+    run: async (conn, m, { text, usedPrefix, command }) => {
         try {
-            if (!chat) throw new Error("No se pudo detectar el JID del chat.");
+            if (!text) return conn.reply(m.chat, `ᰔᩚ *KIRITO STICKERS*\n\nUso: ${usedPrefix + command} <nombre o link>`, m);
             
-            const text = m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '';
-            const query = text.split(' ').slice(1).join(' ');
-
-            if (!query) return socket.sendMessage(chat, { text: 'ᰔᩚ *KIRITO STICKERS*\n\nEscribe el nombre de un pack o un link de Sticker.ly.' }, { quoted: m });
-
-            if (m.react) await m.react('⏳');
+            await m.react('⏳');
             let packData;
 
-            if (/sticker\.ly\/s\//i.test(query)) {
-                const detail = await downloadPack(query);
+            if (/sticker\.ly\/s\//i.test(text)) {
+                const detail = await downloadPack(text);
                 if (!detail?.status) throw new Error("Pack no encontrado.");
                 packData = detail.detalles;
             } else {
-                const search = await searchPacks(query);
+                const search = await searchPacks(text);
                 if (!search?.status || !search.resultados?.length) throw new Error("Sin resultados.");
                 const res = await downloadPack(search.resultados[0].url);
                 packData = res.detalles;
@@ -82,15 +74,15 @@ export default {
             for (let s of stickers) {
                 const buffer = await toBuffer(s.imageUrl);
                 const webp = await toWebp(buffer, s.isAnimated);
-                await socket.sendMessage(chat, { sticker: webp }, { quoted: m });
+                await conn.sendMessage(m.chat, { sticker: webp }, { quoted: m });
                 await delay(1500);
             }
 
-            if (m.react) await m.react('✅');
+            await m.react('✅');
         } catch (e) {
             console.error(e);
-            if (m.react) await m.react('❌');
-            if (chat) socket.sendMessage(chat, { text: `*Error:* ${e.message}` }, { quoted: m });
+            await m.react('❌');
+            conn.reply(m.chat, `*Error:* ${e.message}`, m);
         }
     }
 };
