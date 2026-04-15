@@ -1,7 +1,8 @@
 import axios from 'axios';
 import fs from 'fs';
 import { spawn } from 'child_process';
-import { Image } from 'node-webpmux';
+import webpmux from 'node-webpmux';
+const { Image } = webpmux;
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
