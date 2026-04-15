@@ -52,7 +52,7 @@ const youtubeCommand = {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
-                        'x-api-key': 'anttbtji9b6bd' 
+                        'x-api-key': key
                     },
                     body: JSON.stringify({ url: videoUrl })
                 }).then(r => r.json());
