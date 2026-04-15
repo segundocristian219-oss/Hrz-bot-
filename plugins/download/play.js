@@ -39,7 +39,10 @@ const youtubeCommand = {
 
             await conn.sendMessage(m.chat, { 
                 image: { url: thumbUrl }, 
-                caption: infoText 
+                caption: infoText,
+                contextInfo: {
+                    ...channelInfo
+               }
             }, { quoted: m });
 
             let downloadUrl;
@@ -56,7 +59,10 @@ const youtubeCommand = {
                 await conn.sendMessage(m.chat, { 
                     audio: mediaBuffer, 
                     mimetype: "audio/mpeg",
-                    fileName: `${videoSearchResult.title}.mp3`
+                    fileName: `${videoSearchResult.title}.mp3`,
+                contextInfo: {
+                    ...channelInfo
+               }
                 }, { quoted: m });
             } else {
                 const instagramShortcode = "DXF25DKDZrN";
