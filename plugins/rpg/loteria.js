@@ -29,7 +29,7 @@ const loteriaCommand = {
             let apuesta = args[1] === 'all' ? (user.col || 0) : parseInt(args[1]) || 500;
 
             if (isNaN(num) || num < 1 || num > 10) {
-                let menu = `╭━━━〔 🎰 LOTERÍA PRO 〕━━━╮\n`;
+                let menu = `╭━━━〔 🎰 LOTERÍA MENU 〕━━━╮\n`;
                 menu += `┃ Uso: ${usedPrefix + command} <1-10> [apuesta]\n`;
                 menu += `┃ Ej: ${usedPrefix + command} 7 2000\n`;
                 menu += `┃ Ej: ${usedPrefix + command} 3 all\n`;
