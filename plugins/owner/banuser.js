@@ -1,44 +1,28 @@
-const banCommand = {
-    name: 'banuser',
-    alias: ['ban', 'banned', 'bloquear'],
+const handler = {
+    name: 'ban/unban',
+    alias: ['banuser', 'ban', 'unbanuser', 'unban', 'desbanear'],
     category: 'owner',
-    run: async (m, { conn, text, isROwner }) => {
+    run: async (m, { conn, text, isROwner, command }) => {
         if (!isROwner) return;
 
-        let target = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-        let reason = m.quoted ? text : text.split('|')[1] || 'Infracción de las reglas del sistema';
+        const isUnban = /unban|desbanear/i.test(command);
+        let target = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : (text.split('|')[0] || '').replace(/[^0-9]/g, '') + '@s.whatsapp.net';
 
-        if (!target || target.length < 10) return m.reply('⚠️ Indica a quién banear.');
+        if (!target || target.length < 15) return m.reply(`> ⚠️ Indica a quién ${isUnban ? 'desbloquear' : 'bloquear'}.`);
+
+        if (!isUnban && target === conn.user.jid) return;
+
+        let reason = m.quoted ? text : (text.split('|')[1] || 'Infracción de las reglas del sistema').trim();
 
         await global.User.findOneAndUpdate(
             { $or: [{ id: target }, { lid: target }] },
-            { $set: { banned: true, banReason: reason.trim() } },
+            { $set: { banned: !isUnban, banReason: isUnban ? '' : reason } },
             { upsert: true }
         );
 
-        await m.reply(`✅ Usuario bloqueado: @${target.split('@')[0]}\n📝 Razón: ${reason.trim()}`, null, { mentions: [target] });
+        const status = isUnban ? '✅ Usuario desbloqueado' : '🚫 Usuario bloqueado';
+        m.reply(`${status}: @${target.split('@')[0]}${!isUnban ? '\n📝 Razón: ' + reason : ''}`, null, { mentions: [target] });
     }
 };
 
-const unbanCommand = {
-    name: 'unbanuser',
-    alias: ['unban', 'desbanear', 'desbloquear'],
-    category: 'owner',
-    run: async (m, { conn, text, isROwner }) => {
-        if (!isROwner) return;
-
-        let target = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-
-        if (!target || target.length < 10) return m.reply('⚠️ Indica a quién desbloquear.');
-
-        await global.User.findOneAndUpdate(
-            { $or: [{ id: target }, { lid: target }] },
-            { $set: { banned: false, banReason: '' } },
-            { upsert: true }
-        );
-
-        await m.reply(`✅ Usuario desbloqueado: @${target.split('@')[0]}`, null, { mentions: [target] });
-    }
-};
-
-export { banCommand, unbanCommand };
+export default handler;
