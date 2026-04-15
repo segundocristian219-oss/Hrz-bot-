@@ -6,7 +6,7 @@ const info = {
      let txt = 'hola'
      await conn.sendMessage(m.chat, {
       text: txt
-    }, { quoted: me });
+    }, { quoted: m });
 
 
 export default info;
