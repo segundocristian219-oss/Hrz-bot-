@@ -29,17 +29,21 @@ const loteriaCommand = {
             const num = parseInt(args[0]);
 
             if (isNaN(num) || num < 1 || num > 10) {
-                let menu = `『 LOTERÍA 』\n\n`;
-                menu += `Uso: ${usedPrefix + command} <1-10>\n`;
-                menu += `Costo: ${formatCol(costo)} Col\n`;
-                menu += `Premio: 25,000 - 150,000 Col\n\n`;
-                menu += `Balance: ${formatCol(user.col || 0)} Col`;
+                let menu = `╭━━━〔 🎰 LOTERÍA 〕━━━╮\n`;
+                menu += `┃ Uso: ${usedPrefix + command} <1-10>\n`;
+                menu += `┃ Costo: ${formatCol(costo)} Col\n`;
+                menu += `┃ Premio: 25K - 150K Col\n`;
+                menu += `┃\n`;
+                menu += `┃ 💰 Balance: ${formatCol(user.col || 0)} Col\n`;
+                menu += `╰━━━━━━━━━━━━━━╯`;
                 return conn.reply(m.chat, menu, m);
             }
 
             if ((user.col || 0) < costo) {
-                return conn.reply(m.chat, `Fondos insuficientes\nCosto: ${formatCol(costo)} Col\nSaldo: ${formatCol(user.col)} Col`, m);
+                return conn.reply(m.chat, `💸 Fondos insuficientes\nCosto: ${formatCol(costo)} Col\nSaldo: ${formatCol(user.col || 0)} Col`, m);
             }
+
+            let saldo = (user.col || 0) - costo;
 
             const ganador = Math.floor(Math.random() * 10) + 1;
             const esJackpot = Math.random() < 0.05; 
@@ -50,61 +54,55 @@ const loteriaCommand = {
 
             const gano = num === ganador;
 
-            let finalCol = (user.col || ECO_CONFIG.BASE_COL) - costo;
-
-            if (gano) finalCol += premio;
-            if (finalCol < ECO_CONFIG.BASE_COL) finalCol = ECO_CONFIG.BASE_COL;
+            if (gano) saldo += premio;
 
             await global.User.updateOne(
                 { id: m.sender },
-                { $set: { col: finalCol, lastLoteria: Date.now() } }
+                { $set: { col: saldo, lastLoteria: Date.now() } }
             );
 
             const { key } = await conn.sendMessage(m.chat, { 
-                text: `『 BOLETO 』\n\nUsuario: ${m.pushName}\nNúmero: ${num}\nProcesando...`
+                text: `🎟️ BOLETO\n\n👤 ${m.pushName}\n🎯 Número: ${num}\n⏳ Procesando...`
             }, { quoted: m });
-
-            await delay(1500);
-
-            await conn.sendMessage(m.chat, { 
-                text: `『 SORTEO 』\n\nGirando...\n[ 🔘 | 🔘 | 🔘 | 🔘 | 🔘 ]`,
-                edit: key
-            });
 
             await delay(1200);
 
-            const bolas = ['🔘', '🔘', '🔘', '🔘', '🔘'];
-            const pool = ['🟢', '🟡', '🔴'];
+            let bolas = ['🔘','🔘','🔘','🔘','🔘'];
+            const pool = ['🟢','🟡','🔴','🟣','🔵'];
 
             for (let i = 0; i < bolas.length; i++) {
                 bolas[i] = pool[Math.floor(Math.random() * pool.length)];
 
                 await conn.sendMessage(m.chat, {
-                    text: `『 SORTEO 』\n\n[ ${bolas.join(' | ')} ]`,
+                    text: `🎰 SORTEO\n\n[ ${bolas.join(' | ')} ]`,
                     edit: key
                 });
 
-                await delay(600);
+                await delay(450);
             }
 
-            await delay(1200);
+            await delay(900);
 
-            let resTxt = `『 RESULTADO 』\n\n`;
-            resTxt += `Tu número: ${num}\n`;
-            resTxt += `Ganador: ${ganador}\n`;
-            resTxt += `──────────────\n\n`;
+            let barra = '▰▰▰▰▰▰▰▰▰▰';
+
+            let resTxt = `╭━━━〔 🎰 RESULTADO 〕━━━╮\n`;
+            resTxt += `┃ 🎯 Tu número: ${num}\n`;
+            resTxt += `┃ 🎲 Ganador: ${ganador}\n`;
+            resTxt += `┃ ${barra}\n`;
 
             if (gano) {
-                resTxt += esJackpot ? `JACKPOT\n` : `GANASTE\n`;
-                resTxt += `+${formatCol(premio)} Col\n`;
+                resTxt += esJackpot ? `┃ 💎 JACKPOT\n` : `┃ 🎉 GANASTE\n`;
+                resTxt += `┃ +${formatCol(premio)} Col\n`;
                 await m.react("🔥");
             } else {
-                resTxt += `PERDISTE\n`;
-                resTxt += `-${formatCol(costo)} Col\n`;
-                await m.react("💀");
+                resTxt += `┃ 💀 PERDISTE\n`;
+                resTxt += `┃ -${formatCol(costo)} Col\n`;
+                await m.react("❌");
             }
 
-            resTxt += `\nSaldo: ${formatCol(finalCol)} Col`;
+            resTxt += `┃ ${barra}\n`;
+            resTxt += `┃ 💰 Saldo: ${formatCol(saldo)} Col\n`;
+            resTxt += `╰━━━━━━━━━━━━━━╯`;
 
             await conn.sendMessage(m.chat, { text: resTxt, edit: key });
 
