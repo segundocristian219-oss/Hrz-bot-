@@ -12,7 +12,17 @@ const ruletaCommand = {
     name: 'ruleta',
     alias: ['rt', 'roulette'],
     category: 'economy',
-    run: async (m, { conn, args, usedPrefix, command }) => {
+    run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
+
+        /*
+        const ownerList = global.owner || global.config?.owner || [];
+        const checkOwner = isOwner || ownerList.some(owner => owner[0].replace(/\D/g, '') === m.sender.split('@')[0]);
+
+        if (!checkOwner) {
+            return m.reply("Este comando aún no está disponible.");
+        }
+        */
+
         if (!m.isGroup) return m.reply("⨯ Comando exclusivo para grupos.");
 
         let user = await global.User.findOne({ id: m.sender });
@@ -26,25 +36,30 @@ const ruletaCommand = {
         const isNumber = !isNaN(choice) && parseInt(choice) >= 0 && parseInt(choice) <= 36;
 
         if (!choice || (!isColor && !isParity && !isNumber) || isNaN(bet) || bet < 10) {
-            let help = "『 CASINO: RULETA 』\n\n";
-            help += `◈ USO: ${usedPrefix + command} [opcion] [cantidad]\n\n`;
-            help += `✦ APUESTAS DISPONIBLES:\n`;
-            help += `➭ Colores: rojo | negro (x2)\n`;
-            help += `➭ Paridad: par | impar (x2)\n`;
-            help += `➭ Numero: 1 - 36 (x36)\n`;
-            help += `➭ El Cero: 0 (x50)\n\n`;
-            help += `──────────────────\n`;
-            help += `✦ BALANCE: ${formatCol(user.col)} Col`;
+            let help = "『 RULETA 』\n\n";
+            help += `Uso: ${usedPrefix + command} [opcion] [cantidad]\n\n`;
+            help += `Apuestas:\n`;
+            help += `• rojo | negro (x2)\n`;
+            help += `• par | impar (x2)\n`;
+            help += `• numero 1-36 (x36)\n`;
+            help += `• 0 (x50)\n\n`;
+            help += `Balance: ${formatCol(user.col)} Col`;
             return m.reply(help);
         }
 
-        if (user.col < bet) return m.reply(`⨯ Fondos insuficientes. Tienes: ${formatCol(user.col)} Col`);
+        if (user.col < bet) {
+            return m.reply(`⨯ Fondos insuficientes\nSaldo: ${formatCol(user.col)} Col`);
+        }
 
         const now = Date.now();
         const cooldown = 5000;
-        if (now - (user.lastRt || 0) < cooldown) return m.reply(`⨯ Espera unos segundos para volver a girar.`);
+
+        if (now - (user.lastRt || 0) < cooldown) {
+            return m.reply(`⨯ Espera unos segundos para volver a jugar.`);
+        }
 
         const result = Math.floor(Math.random() * 37);
+
         let colorResult = result === 0 ? 'verde' : (result % 2 === 0 ? 'negro' : 'rojo');
         let parityResult = result === 0 ? 'ninguno' : (result % 2 === 0 ? 'par' : 'impar');
 
@@ -64,7 +79,7 @@ const ruletaCommand = {
 
         let newCol = user.col - bet;
         let profit = 0;
-        
+
         if (win) {
             profit = bet * multiplier;
             newCol += profit;
@@ -73,27 +88,29 @@ const ruletaCommand = {
         if (newCol < ECO_CONFIG.BASE_COL) newCol = ECO_CONFIG.BASE_COL;
 
         await global.User.updateOne(
-            { id: m.sender }, 
+            { id: m.sender },
             { $set: { col: newCol, lastRt: now } }
         );
 
-        let resTxt = "『 R E S U L T A D O 』\n\n";
-        resTxt += `✦ Giro: ${result} [ ${colorResult.toUpperCase()} ]\n`;
-        resTxt += `✦ Tu Apuesta: ${choice.toUpperCase()} (${formatCol(bet)})\n`;
-        resTxt += `──────────────────\n\n`;
+        let resTxt = "『 RESULTADO RULETA 』\n\n";
+        resTxt += `• Giro: ${result} [ ${colorResult.toUpperCase()} ]\n`;
+        resTxt += `• Apuesta: ${choice.toUpperCase()} (${formatCol(bet)})\n`;
+        resTxt += `──────────────\n\n`;
 
         if (win) {
-            resTxt += `『 ¡GANASTE! 』\n`;
-            resTxt += `◈ Recompensa: +${formatCol(profit)} Col\n`;
+            resTxt += `GANASTE\n`;
+            resTxt += `+${formatCol(profit)} Col\n`;
         } else {
-            resTxt += `『 PERDISTE 』\n`;
-            resTxt += `◈ Perdida: -${formatCol(bet)} Col\n`;
+            resTxt += `PERDISTE\n`;
+            resTxt += `-${formatCol(bet)} Col\n`;
         }
 
-        resTxt += `\n✦ Saldo: ${formatCol(newCol)} Col\n──────────────────`;
+        resTxt += `\nSaldo: ${formatCol(newCol)} Col`;
 
         await conn.sendMessage(m.chat, { text: resTxt }, { quoted: m });
+
         if (win) await m.react("💰");
+        else await m.react("❌");
     }
 };
 
