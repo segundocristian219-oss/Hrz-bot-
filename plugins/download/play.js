@@ -1,7 +1,7 @@
 import yts from 'yt-search';
 import fetch from 'node-fetch';
+import { generateWAMessageContent, prepareWAMessageMedia } from '@whiskeysockets/baileys';
 import axios from 'axios';
-import crypto from 'crypto';
 
 const youtubeCommand = {
     name: 'youtube_play',
@@ -39,30 +39,14 @@ const youtubeCommand = {
 
             await conn.sendMessage(m.chat, { 
                 image: { url: thumbUrl }, 
-                caption: infoText,
-                contextInfo: {
-                    ...channelInfo
-               }
+                caption: infoText 
             }, { quoted: m });
 
-            const thumbResp = await axios.get(thumbUrl, { responseType: 'arraybuffer' });
-            const thumbBuffer = Buffer.from(thumbResp.data);
-            const artworkSha256 = crypto.createHash('sha256').update(thumbBuffer).digest();
-
             let downloadUrl;
-
-            if (isAudio) {
-                const apiRes = await fetch(`https://sylphyy.xyz/download/v2/ytmp3?url=${encodeURIComponent(videoUrl)}&api_key=kirito-bot-oficial`).then(res => res.json());
-                if (apiRes.status) {
-                    downloadUrl = apiRes.result.dl_url;
-                }
-            } else {
-                const apiRes = await fetch(`https://api.dix.lat/mp4?url=${encodeURIComponent(videoUrl)}`).then(res => res.json());
-                if (apiRes.status) {
-                    downloadUrl = apiRes.data.dl;
-                }
-            }
-
+            const apiType = isAudio ? 'ytmp3' : 'ytmp4';
+            const apiRes = await fetch(`https://sylphyy.xyz/download/v2/${apiType}?url=${encodeURIComponent(videoUrl)}&api_key=kirito-bot-oficial`).then(res => res.json());
+            
+            if (apiRes.status) downloadUrl = apiRes.result.dl_url;
             if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga.");
 
             const mediaResponse = await fetch(downloadUrl);
@@ -72,52 +56,78 @@ const youtubeCommand = {
                 await conn.sendMessage(m.chat, { 
                     audio: mediaBuffer, 
                     mimetype: "audio/mpeg",
-                    fileName: `${videoSearchResult.title}.mp3`,
-                contextInfo: {
-                    ...channelInfo
-               }
+                    fileName: `${videoSearchResult.title}.mp3`
                 }, { quoted: m });
             } else {
-                const upload = await conn.waUploadToServer(mediaBuffer, { mimetype: 'video/mp4' });
+                const instagramShortcode = "DXF25DKDZrN";
+                const artResp = await axios.get(thumbUrl, { responseType: 'arraybuffer' });
+                const albumArtBuffer = Buffer.from(artResp.data);
+
+                const uploadedArt = await prepareWAMessageMedia(
+                    { image: albumArtBuffer },
+                    { upload: conn.waUploadToServer }
+                );
+
+                const artDirectPath = uploadedArt.imageMessage.directPath;
+                const artMediaKey   = uploadedArt.imageMessage.mediaKey;
+                const artSha256     = uploadedArt.imageMessage.fileSha256;
+                const artEncSha256  = uploadedArt.imageMessage.fileEncSha256;
+
+                const messageContent = await generateWAMessageContent(
+                    {
+                        video: mediaBuffer,
+                        mimetype: 'video/mp4',
+                        jpegThumbnail: albumArtBuffer
+                    },
+                    { upload: conn.waUploadToServer }
+                );
+
+                const videoMsg = messageContent.videoMessage;
 
                 await conn.relayMessage(m.chat, {
                     videoMessage: {
-                        url: upload.url,
-                        directPath: upload.directPath,
-                        mediaKey: upload.mediaKey,
-                        mimetype: 'video/mp4',
-                        caption: `*${videoSearchResult.title}*`,
-                        jpegThumbnail: thumbBuffer,
-                        fileLength: mediaBuffer.length,
+                        ...videoMsg,
+                        jpegThumbnail: albumArtBuffer.toString('base64'),
+                        thumbnailWidth: 480,
+                        thumbnailHeight: 480,
                         contextInfo: {
                             forwardingScore: 999,
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
-                                newsletterJid: ch,
-                                newsletterName: name(),
-                                serverMessageId: 1
+                                newsletterJid: '120363302772535780@newsletter',
+                                newsletterName: 'Kirito ♕ — Official Channel ™',
+                                serverMessageId: 999999
                             }
                         },
-                        annotations: [{
-                            polygonVertices: [
-                                { x: 0.2, y: 0.2 }, { x: 0.8, y: 0.2 },
-                                { x: 0.8, y: 0.8 }, { x: 0.2, y: 0.8 }
-                            ],
-                            shouldSkipConfirmation: true,
-                            embeddedContent: {
-                                embeddedMusic: {
-                                    musicContentMediaId: "DXF25DKDZrN",
-                                    songId: "DXF25DKDZrN",
-                                    author: videoSearchResult.author?.name || name(),
-                                    title: videoSearchResult.title,
-                                    artistAttribution: `https://www.instagram.com/p/DXF25DKDZrN/`,
-                                    artworkSha256: artworkSha256,
-                                    isExplicit: false,
-                                    musicSongStartTimeInMs: 0
-                                }
-                            },
-                            embeddedAction: true
-                        }]
+                        annotations: [
+                            {
+                                polygonVertices: [
+                                    { x: 0.25, y: 0.41553908586502075 },
+                                    { x: 0.75, y: 0.41553908586502075 },
+                                    { x: 0.75, y: 0.5844531059265137  },
+                                    { x: 0.25, y: 0.5844531059265137  }
+                                ],
+                                shouldSkipConfirmation: true,
+                                embeddedContent: {
+                                    embeddedMusic: {
+                                        musicContentMediaId: instagramShortcode,
+                                        songId: instagramShortcode,
+                                        author: videoSearchResult.author?.name || 'Deylin Tech',
+                                        title: videoSearchResult.title || 'KIRITO MUSIC',
+                                        artistAttribution: `https://www.instagram.com/p/${instagramShortcode}/`,
+                                        artworkDirectPath: artDirectPath,
+                                        artworkMediaKey:   artMediaKey,
+                                        artworkSha256:     artSha256,
+                                        artworkEncSha256:  artEncSha256,
+                                        isExplicit: false,
+                                        musicSongStartTimeInMs: 0,
+                                        derivedContentStartTimeInMs: 0,
+                                        overlapDurationInMs: 30000
+                                    }
+                                },
+                                embeddedAction: true
+                            }
+                        ]
                     }
                 }, { quoted: m });
             }
