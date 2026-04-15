@@ -85,11 +85,7 @@ const youtubeCommand = {
             await conn.sendMessage(m.chat, { 
                 [isAudio ? 'audio' : 'video']: buffer, 
                 mimetype: isAudio ? "audio/mpeg" : "video/mp4",
-                fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`,
-                ptt: false,
-                contextInfo: {
-                    ...channelInfo
-               }
+                fileName: `${videoInfo.title}.${isAudio ? 'mp3' : 'mp4'}`
             }, { quoted: m });
 
             await m.react("✅");
