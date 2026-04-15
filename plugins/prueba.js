@@ -1,8 +1,6 @@
 import axios from 'axios';
 import fs from 'fs';
 import { spawn } from 'child_process';
-import webpmux from 'node-webpmux';
-const { Image } = webpmux;
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -36,17 +34,23 @@ const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => 
 });
 
 const addExif = async (webpBuffer, packname = 'Bot', author = 'YukiWa') => {
-    const img = new Image();
-    await img.load(webpBuffer);
-    const json = {
-        'sticker-pack-id': `com.${author}.${packname}`.replace(/\s+/g, '').toLowerCase(),
-        'sticker-pack-name': packname,
-        'sticker-pack-publisher': author,
-    };
-    const exifAttr = Buffer.from([0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00]);
-    const jsonBuf = Buffer.from(JSON.stringify(json), 'utf-8');
-    img.exif = Buffer.concat([exifAttr, jsonBuf]);
-    return await img.save(null);
+    try {
+        const webpmux = await import('node-webpmux');
+        const Image = webpmux.default?.Image || webpmux.Image;
+        const img = new Image();
+        await img.load(webpBuffer);
+        const json = {
+            'sticker-pack-id': `com.${author}.${packname}`.replace(/\s+/g, '').toLowerCase(),
+            'sticker-pack-name': packname,
+            'sticker-pack-publisher': author,
+        };
+        const exifAttr = Buffer.from([0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00]);
+        const jsonBuf = Buffer.from(JSON.stringify(json), 'utf-8');
+        img.exif = Buffer.concat([exifAttr, jsonBuf]);
+        return await img.save(null);
+    } catch {
+        return webpBuffer;
+    }
 };
 
 const isValidWebP = (buf) =>
@@ -82,14 +86,10 @@ export default {
     name: 'stickerpack',
     alias: ['spack', 'stickers'],
     category: 'stickers',
-    run: async (conn, m, opts) => {
+    run: async function (m, { usedPrefix, command, text, conn }) {
         try {
-            const usedPrefix = opts?.usedPrefix || '.';
-            const command = opts?.command || 'spack';
-            const text = opts?.text || m.text || '';
-
             if (!text) {
-                return conn.reply(m.chat, `ᰔᩚ *KIRITO STICKERS*\n\nUso: ${usedPrefix + command} <nombre o link>`, m);
+                return m.reply(`ᰔᩚ *KIRITO STICKERS*\n\nUso: ${usedPrefix + command} <nombre o link>`);
             }
 
             await m.react('⏳');
@@ -112,7 +112,7 @@ export default {
             const packName = packData.name || 'Pack';
             const packAuthor = packData.author || 'Bot';
 
-            await conn.reply(m.chat, `📦 Enviando *${stickers.length}* stickers de *${packName}*...`, m);
+            await m.reply(`📦 Enviando *${stickers.length}* stickers de *${packName}*...`);
 
             let sent = 0;
 
@@ -130,14 +130,14 @@ export default {
                 }
             }
 
-            await m.react('✅');
-
             if (sent === 0) throw new Error('Ningún sticker pudo enviarse.');
+
+            await m.react('✅');
 
         } catch (e) {
             console.error('[stickerpack]', e);
             await m.react('❌');
-            conn.reply(m.chat, `*❌ Error:* ${e.message}`, m);
+            m.reply(`*❌ Error:* ${e.message}`);
         }
     },
 };
