@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { ffmpeg, extractMessageContent, generateWAMessageContent } from '@whiskeysockets/baileys';
+import { generateWAMessageContent } from '@whiskeysockets/baileys';
+import { spawn } from 'child_process';
 import crypto from 'crypto';
 
 const API_KEY = 'kirito-bot-oficial';
@@ -7,6 +8,25 @@ const SEARCH_URL = 'https://sylphyy.xyz/search/stickerly';
 const DOWNLOAD_URL = 'https://sylphyy.xyz/download/stickerly';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const toWebp = (buffer) => new Promise((resolve, reject) => {
+    const p = spawn('ffmpeg', [
+        '-i', 'pipe:0',
+        '-vcodec', 'libwebp',
+        '-vf', 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000',
+        '-lossless', '1',
+        '-loop', '0',
+        '-an',
+        '-vsync', '0',
+        '-f', 'webp',
+        'pipe:1'
+    ]);
+    let bufs = [];
+    p.stdout.on('data', chunk => bufs.push(chunk));
+    p.stdin.write(buffer);
+    p.stdin.end();
+    p.on('close', code => code === 0 ? resolve(Buffer.concat(bufs)) : reject(new Error('ffmpeg_fail')));
+});
 
 const addExif = async (webpBuffer, packname, author) => {
     try {
@@ -23,9 +43,7 @@ const addExif = async (webpBuffer, packname, author) => {
         const jsonBuf = Buffer.from(JSON.stringify(json), 'utf-8');
         img.exif = Buffer.concat([exifAttr, jsonBuf]);
         return await img.save(null);
-    } catch {
-        return webpBuffer;
-    }
+    } catch { return webpBuffer; }
 };
 
 export default {
@@ -34,10 +52,7 @@ export default {
     category: 'stickers',
     run: async function (m, { usedPrefix, command, text, conn }) {
         if (!text) return m.reply(`Uso: ${usedPrefix + command} <nombre o link>`);
-        
         await m.react('⏳');
-        let report = "";
-
         try {
             let detail;
             if (/sticker\.ly\/s\//i.test(text)) {
@@ -45,72 +60,37 @@ export default {
                 detail = data.result;
             } else {
                 const { data: sData } = await axios.get(SEARCH_URL, { params: { q: text, api_key: API_KEY } });
-                if (!sData.status) throw new Error('No se encontraron resultados en la búsqueda.');
+                if (!sData.status) throw new Error('Sin resultados.');
                 const { data: dData } = await axios.get(DOWNLOAD_URL, { params: { url: sData.result[0].url, api_key: API_KEY } });
                 detail = dData.result;
             }
 
             const stickers = (detail.stickers || []).slice(0, 5);
-            const pack = detail.name || 'Pack';
-            const auth = detail.author?.name || 'Voker';
+            await m.reply(`📦 Enviando stickers de: *${detail.name}*`);
 
-            await m.reply(`📦 Intentando envío múltiple para: *${pack}*`);
-
-            for (const [i, s] of stickers.entries()) {
-                let success = false;
-                let stickerErrors = [];
-
+            for (const s of stickers) {
                 try {
-                    const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer', headers: { 'User-Agent': 'Mozilla/5.0' } });
+                    const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer' });
                     const buffer = Buffer.from(res.data);
-
+                    
+                    let final;
                     try {
-                        let webp = await ffmpeg(buffer, ['-vf', 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba', '-q:v', '50'], 'png', 'webp');
-                        const final = await addExif(webp, pack, auth);
-                        await conn.sendMessage(m.chat, { sticker: final }, { quoted: m });
-                        success = true;
-                    } catch (e) {
-                        stickerErrors.push(`Metodo 1 (FFMPEG): ${e.message}`);
+                        const webp = await toWebp(buffer);
+                        final = await addExif(webp, detail.name, detail.author?.name || 'Voker');
+                    } catch {
+                        final = buffer; 
                     }
 
-                    if (!success) {
-                        try {
-                            await conn.sendMessage(m.chat, { sticker: { url: s.imageUrl } }, { quoted: m });
-                            success = true;
-                        } catch (e) {
-                            stickerErrors.push(`Metodo 2 (URL Directa): ${e.message}`);
-                        }
-                    }
-
-                    if (!success) {
-                        try {
-                            const { imageMessage } = await generateWAMessageContent({ image: buffer }, { upload: conn.waUploadToServer });
-                            await conn.relayMessage(m.chat, { stickerMessage: { ...imageMessage, mimetype: 'image/webp' } }, { quoted: m });
-                            success = true;
-                        } catch (e) {
-                            stickerErrors.push(`Metodo 3 (Relay): ${e.message}`);
-                        }
-                    }
-
+                    await conn.sendMessage(m.chat, { sticker: final }, { quoted: m });
+                    await delay(1200);
                 } catch (e) {
-                    stickerErrors.push(`Descarga: ${e.message}`);
-                }
-
-                if (!success) {
-                    report += `❌ Sticker ${i + 1}:\n${stickerErrors.join('\n')}\n\n`;
-                } else {
-                    await delay(1000);
+                    m.reply(`Error en sticker: ${e.message}`);
                 }
             }
-
-            if (report) {
-                await conn.sendMessage(m.chat, { text: `⚠️ *REPORTE DE FALLOS:*\n\n${report}` }, { quoted: m });
-            }
-            
             await m.react('✅');
         } catch (e) {
             await m.react('❌');
-            m.reply(`*⚠️ ERROR CRÍTICO:* ${e.message}`);
+            m.reply(`⚠️ Error: ${e.message}`);
         }
     }
 };
