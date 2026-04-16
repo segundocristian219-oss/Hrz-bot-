@@ -7,7 +7,7 @@ const pfpCommand = {
 
         try {
             const name = await conn.getName(who);
-            const pp = await conn.profilePictureUrl(who, 'image').catch(() => 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771018082759_bwnA5OM5c.jpeg');
+            const pp = await conn.profilePictureUrl(who, 'image').catch(() => 'https://api.dix.lat/media2/1776379459477.png');
 
             await conn.sendMessage(m.chat, { 
                 image: { url: pp }, 
