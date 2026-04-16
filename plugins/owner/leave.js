@@ -4,6 +4,7 @@ const leaveCommand = {
     category: 'owner',
     run: async (m, { conn, text }) => {
         try {
+            if (!isROwner) return;
             let id = text ? text.trim() : m.chat;
 
             if (!id.endsWith('@g.us')) {
