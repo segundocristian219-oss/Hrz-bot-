@@ -59,10 +59,7 @@ const youtubeCommand = {
                 await conn.sendMessage(m.chat, { 
                     audio: mediaBuffer, 
                     mimetype: "audio/mpeg",
-                    fileName: `${videoSearchResult.title}.mp3`,
-                contextInfo: {
-                    ...channelInfo
-               }
+                    fileName: `${videoSearchResult.title}.mp3`
                 }, { quoted: m });
             } else {
                 const instagramShortcode = "DXF25DKDZrN";
