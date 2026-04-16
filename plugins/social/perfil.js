@@ -1,4 +1,7 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys'
+import phoneNumber from 'google-libphonenumber'
+
+const phoneUtil = phoneNumber.PhoneNumberUtil.getInstance()
 
 const comandoPerfil = {
     name: 'perfil',
@@ -6,7 +9,7 @@ const comandoPerfil = {
     category: 'social',
     run: async (m, { conn, isROwner, participants }) => {
         let quien = m.quoted ? m.quoted.sender : m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender
-        let nombreUsuario = m.pushName || 'Jugador'
+        let nombreUsuario = m.pushName || 'Usuario'
 
         let fotoPerfil
         try {
@@ -18,7 +21,16 @@ const comandoPerfil = {
         let datos = await global.User.findOne({ $or: [{ id: quien }, { lid: quien }] }).lean()
 
         if (!datos) {
-            datos = { name: nombreUsuario, exp: 0, col: 10, marry: '', age: 0, gender: '', identity: '' }
+            datos = { name: nombreUsuario, exp: 0, col: 10, marry: '', age: 0, gender: '', identity: '', description: '' }
+        }
+
+        let pais = 'Desconocido'
+        try {
+            const parsedNumber = phoneUtil.parse('+' + quien.split('@')[0])
+            const regionCode = phoneUtil.getRegionCodeForNumber(parsedNumber)
+            pais = new Intl.DisplayNames(['es'], { type: 'region' }).of(regionCode) || 'Desconocido'
+        } catch (e) {
+            pais = 'Desconocido'
         }
 
         let infoPareja = 'ESTADO CIVIL: Soltero/a'
@@ -44,6 +56,7 @@ const comandoPerfil = {
 
 |  NOMBRE: ${datos.name || nombreUsuario}
 |  EDAD: ${datos.age || '--'} años
+|  PAIS: ${pais}
 |  ID: @${quien.split('@')[0]}
 |
 |  GENERO: ${datos.gender || 'No definido'}
@@ -53,6 +66,9 @@ const comandoPerfil = {
 |  EXPERIENCIA: ${datos.exp ?? 0} EXP
 |  ${infoPareja}
 |  RANGO: ${rango}
+|
+|  DESCRIPCION:
+|  ${datos.description || 'Sin descripcion configurada.'}
 
 `
 
@@ -68,4 +84,4 @@ const comandoPerfil = {
     }
 }
 
-export default comandoPerfil;
+export default comandoPerfil
