@@ -1,6 +1,6 @@
 const setSocialProfile = {
     name: 'setperfil',
-    alias: ['configperfil', 'identidad'],
+    alias: ['configperfil', 'identidad', 'setp'],
     category: 'social',
     run: async (m, { conn, text, usedPrefix, command }) => {
         const genders = ['Hombre', 'Mujer', 'No binario', 'Otro'];
@@ -8,15 +8,15 @@ const setSocialProfile = {
 
         if (!text) {
             return conn.reply(m.chat, `
-📝 *CONFIGURA TU CARTA DE PRESENTACIÓN*
+--- CONFIGURACION DE IDENTIDAD ---
 
-Uso: *${usedPrefix + command} [Edad] [Num Género] [Num Orientación]*
-Ejemplo: *${usedPrefix + command} 19 1 2*
+Uso: ${usedPrefix + command} [Edad] [Num Genero] [Num Orientacion]
+Ejemplo: ${usedPrefix + command} 19 1 2
 
-*GÉNEROS:*
+LISTA DE GENEROS:
 ${genders.map((g, i) => `${i + 1}. ${g}`).join(' | ')}
 
-*ORIENTACIÓN:*
+LISTA DE ORIENTACION:
 ${identities.map((id, i) => `${i + 1}. ${id}`).join(' | ')}
 `.trim(), m);
         }
@@ -25,8 +25,8 @@ ${identities.map((id, i) => `${i + 1}. ${id}`).join(' | ')}
         const finalG = genders[gIdx - 1];
         const finalI = identities[iIdx - 1];
 
-        if (isNaN(age) || age < 5 || age > 99) return conn.reply(m.chat, '⚠️ Por favor ingresa una edad válida (5-99).', m);
-        if (!finalG || !finalI) return conn.reply(m.chat, '⚠️ Selección de género u orientación inválida.', m);
+        if (isNaN(age) || age < 5 || age > 99) return conn.reply(m.chat, '> Error: Ingresa una edad valida (5-99).', m);
+        if (!finalG || !finalI) return conn.reply(m.chat, '> Error: Seleccion de genero u orientacion invalida.', m);
 
         await global.User.findOneAndUpdate(
             { $or: [{ id: m.sender }, { lid: m.sender }] },
@@ -34,8 +34,7 @@ ${identities.map((id, i) => `${i + 1}. ${id}`).join(' | ')}
             { upsert: true }
         );
 
-        await m.react("👤");
-        conn.reply(m.chat, `✅ *DATOS GUARDADOS*\n\nAhora cuando alguien use *${usedPrefix}perfil*, verá tu información actualizada.`, m);
+        conn.reply(m.chat, `> Datos actualizados correctamente.\n> Usa ${usedPrefix}perfil para ver los cambios.`, m);
     }
 };
 
