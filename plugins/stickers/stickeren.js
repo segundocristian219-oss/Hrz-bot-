@@ -47,7 +47,7 @@ const wmCommand = {
 
             let [pack, auth] = text.includes('|') 
                 ? text.split('|').map(v => v.trim()) 
-                : [text.trim() || 'Pack', aut];
+                : [text.trim() || aut];
 
             let exifSticker = await addExif(buffer, pack);
 
