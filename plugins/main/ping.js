@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks';
 
 export default {
     name: 'ping',
-    alias: ['status', 'p'],
+    alias: ['status'],
     category: 'system',
     run: async function (m, { conn }) {
         const start = performance.now();
