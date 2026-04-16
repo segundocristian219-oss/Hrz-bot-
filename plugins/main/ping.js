@@ -47,3 +47,4 @@ export default {
         await conn.sendMessage(m.chat, { text: response }, { quoted: m });
     }
 };
+
