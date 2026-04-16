@@ -13,6 +13,12 @@ const matrimonio = {
         const llaveChat = m.chat
         const cmd = command.trim().toLowerCase()
 
+        const getList = (u) => {
+            if (!u.marry) return []
+            if (Array.isArray(u.marry)) return u.marry
+            return u.marry ? [u.marry] : []
+        }
+
         const buscarJuego = () => {
             const keys = Object.keys(global.weddingGames)
             for (let k of keys) {
@@ -32,14 +38,21 @@ const matrimonio = {
                 clearTimeout(juego.timeout)
 
                 if (juego.tipo === 'divorcio') {
-                    await global.User.updateOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] }, { $set: { marry: '', marryDate: 0 } })
-                    await global.User.updateOne({ $or: [{ id: juego.receptor }, { lid: juego.receptor }] }, { $set: { marry: '', marryDate: 0 } })
+                    await global.User.updateOne(
+                        { $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] },
+                        { $pull: { marry: juego.receptor } }
+                    )
+                    await global.User.updateOne(
+                        { $or: [{ id: juego.receptor }, { lid: juego.receptor }] },
+                        { $pull: { marry: juego.solicitante } }
+                    )
+
                     delete global.weddingGames[idJuego]
                     return m.reply('*♛ DIVORCIO FINALIZADO ✧*')
                 }
 
                 const checkS = await global.User.findOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] })
-                if (!checkS || (checkS.marry && checkS.marry !== "")) {
+                if (!checkS) {
                     delete global.weddingGames[idJuego]
                     return m.reply('*♛ ERROR ✧*\n\n╰❒ La propuesta ya no es válida.')
                 }
@@ -47,8 +60,16 @@ const matrimonio = {
                 const idSol = checkS.lid || checkS.id
                 const miId = emisorReal
 
-                await global.User.updateOne({ _id: user._id }, { $set: { marry: idSol, marryDate: Date.now() } })
-                await global.User.updateOne({ _id: checkS._id }, { $set: { marry: miId, marryDate: Date.now() } })
+                await global.User.updateOne(
+                    { _id: user._id },
+                    { $addToSet: { marry: idSol }, $set: { marryDate: Date.now() } }
+                )
+
+                await global.User.updateOne(
+                    { _id: checkS._id },
+                    { $addToSet: { marry: miId }, $set: { marryDate: Date.now() } }
+                )
+
                 delete global.weddingGames[idJuego]
 
                 return conn.sendMessage(m.chat, {
@@ -65,26 +86,29 @@ const matrimonio = {
         }
 
         if (cmd === 'divorce' || cmd === 'divorcio') {
-            if (!user.marry || user.marry === "") return m.reply('*♛ ERROR ✧*\n\n╰❒ No estás casado.')
+            const lista = getList(user)
+            if (!lista.length) return m.reply('*♛ ERROR ✧*\n\n╰❒ No estás casado.')
 
-            const idPareja = user.marry
+            let quien = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null
+            if (!quien || !lista.includes(quien)) return m.reply('*♛ ERROR ✧*\n\n╰❒ Menciona a tu pareja para divorciarte.')
+
             const idJuegoDiv = `${llaveChat}-${Date.now()}`
 
             global.weddingGames[idJuegoDiv] = {
                 tipo: 'divorcio',
                 solicitante: emisorReal,
-                receptor: idPareja,
+                receptor: quien,
                 timeout: setTimeout(() => {
                     if (global.weddingGames[idJuegoDiv]) {
                         delete global.weddingGames[idJuegoDiv]
-                        conn.reply(m.chat, `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ @${idPareja.split('@')[0]} no respondió al divorcio.`, null, { mentionedJid: [idPareja] })
+                        conn.reply(m.chat, `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ @${quien.split('@')[0]} no respondió al divorcio.`, null, { mentionedJid: [quien] })
                     }
                 }, 20000)
             }
 
             return conn.sendMessage(m.chat, {
-                text: `*♛ SOLICITUD DE DIVORCIO ✧*\n\n╰❒ @${emisorReal.split('@')[0]} pide divorcio a @${idPareja.split('@')[0]}.\n\n> Tienes 20 segundos.\n> Escribe ${usedPrefix}aceptar`,
-                contextInfo: { mentionedJid: [emisorReal, idPareja] }
+                text: `*♛ SOLICITUD DE DIVORCIO ✧*\n\n╰❒ @${emisorReal.split('@')[0]} pide divorcio a @${quien.split('@')[0]}.\n\n> Tienes 20 segundos.\n> Escribe ${usedPrefix}aceptar`,
+                contextInfo: { mentionedJid: [emisorReal, quien] }
             }, { quoted: m })
         }
 
@@ -93,10 +117,12 @@ const matrimonio = {
         if (!quien || quien === m.sender || quien === conn.user.jid) return m.reply(`*♛ ERROR ✧*\n\n╰❒ Menciona o responde a alguien para casarte.`)
 
         let objetivo = await global.User.findOne({ $or: [{ id: quien }, { lid: quien }] })
-        if (!objetivo) return m.reply(`*♛ ERROR ✧*\n\n╰❒ El usuario no está registrado en la base de datos tiene que usar el comando *(#menu)* para iniciar el registro automático.`)
+        if (!objetivo) return m.reply(`*♛ ERROR ✧*\n\n╰❒ El usuario no está registrado.`)
 
-        if (user.marry) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Ya estás casado.`)
-        if (objetivo.marry) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Esa persona ya está casada.`)
+        const listaUser = getList(user)
+        const listaObj = getList(objetivo)
+
+        if (listaUser.includes(quien)) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Ya estás casado con esa persona.`)
 
         const idObjetivo = objetivo.lid || objetivo.id
         const idJuegoBoda = `${llaveChat}-${Date.now()}`
