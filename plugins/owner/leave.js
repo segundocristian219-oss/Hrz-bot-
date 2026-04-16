@@ -2,7 +2,7 @@ const leaveCommand = {
     name: 'salir',
     alias: ['leavegc', 'salirdelgrupo', 'leave'],
     category: 'owner',
-    run: async (m, { conn, text }) => {
+    run: async (m, { conn, text, isROwner }) => {
         try {
             if (!isROwner) return;
             let id = text ? text.trim() : m.chat;
