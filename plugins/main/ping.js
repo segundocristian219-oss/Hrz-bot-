@@ -3,7 +3,7 @@ import { performance, monitorEventLoopDelay } from 'perf_hooks';
 
 export default {
     name: 'ping',
-    alias: ['status'],
+    alias: ['speed', 'status'],
     category: 'system',
     run: async function (m, { conn }) {
         const hld = monitorEventLoopDelay();
@@ -12,41 +12,38 @@ export default {
         const start = performance.now();
         await m.react('✅');
         const end = performance.now();
-        const latency = (end - start).toFixed(3);
         
         hld.disable();
-        const elpDelay = (hld.mean / 1e6).toFixed(3);
+        const speed = (end - start).toFixed(0);
+        const loopDelay = (hld.mean / 1e6).toFixed(2);
 
-        const usedMem = process.memoryUsage();
+        const cpus = os.cpus();
+        const cpuModel = cpus[0].model.replace(/\s+/g, ' ').trim();
+        const cpuSpeed = cpus[0].speed;
         const load = os.loadavg();
-        const cpuCount = os.cpus().length;
-        const loadRatio = (load[0] / cpuCount).toFixed(2);
+        
+        const totalRam = (os.totalmem() / (1024 ** 3)).toFixed(2);
+        const freeRam = (os.freemem() / (1024 ** 3)).toFixed(2);
+        const usedRam = (totalRam - freeRam).toFixed(2);
 
-        const statusReport = `
-[ MONITOR VOKER PRO ]
----------------------------------------
-> LATENCIA RED: ${latency} ms
-> DELAY HILO: ${elpDelay} ms
-> UPTIME: ${Math.floor(process.uptime() / 60)}m ${Math.floor(process.uptime() % 60)}s
+        const uptime = process.uptime();
+        const days = Math.floor(uptime / 86400);
+        const hours = Math.floor((uptime % 86400) / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        const seconds = Math.floor(uptime % 60);
 
-[ CARGA DE PROCESAMIENTO ]
-+ CORES: ${cpuCount}
-+ CARGA 1M: ${load[0].toFixed(2)}
-+ USO RELATIVO: ${(loadRatio * 100).toFixed(2)}%
-+ ESTADO I/O: ${load[0] > cpuCount ? 'CONGESTIONADO' : 'FLUIDO'}
-
-[ MEMORIA DINAMICA ]
-- RSS: ${(usedMem.rss / 1024 / 1024).toFixed(2)} MB
-- HEAP USADO: ${(usedMem.heapUsed / 1024 / 1024).toFixed(2)} MB
-- HEAP TOTAL: ${(usedMem.heapTotal / 1024 / 1024).toFixed(2)} MB
-
-[ INFRAESTRUCTURA ]
-- DB: MONGODB CLOUD (REMOTE)
-- STORAGE: FS_PLUGINS_MAP
----------------------------------------
-DIAGNOSTICO: ${loadRatio > 0.8 ? 'ADVERTENCIA_POR_CARGA' : 'SISTEMA_OPERATIVO'}
+        const response = `
+*» Speed* : ${speed} _ms_
+*» Latency* : ${loopDelay} _ms_
+*» Processor* : ${cpuModel}
+*» CPU* : ${cpuSpeed} MHz
+*» Cores* : ${cpus.length}
+*» Load* : ${((load[0] / cpus.length) * 100).toFixed(1)}%
+*» RAM* : ${usedRam} GB / ${totalRam} GB
+*» Platform* : ${os.platform()} ${os.arch()}
+*» Active time* : ${days} days, ${hours} hour, ${minutes} minutes, ${seconds} seconds
 `.trim();
 
-        await conn.sendMessage(m.chat, { text: statusReport }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: response }, { quoted: m });
     }
 };
