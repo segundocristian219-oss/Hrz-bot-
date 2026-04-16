@@ -39,7 +39,10 @@ const happy = {
                 video: { url: videoUrl },
                 caption: textoFinal,
                 gifPlayback: true,
-                mentions: menciones
+                mentions: menciones,
+                contextInfo: {
+                    ...channelInfo
+               }
             }, { quoted: m })
         } catch (e) {
             console.error(e)
