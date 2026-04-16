@@ -1,47 +1,43 @@
-let audioBufferCache = null;
-
 const gayCommand = {
     name: 'gay',
     alias: ['marica', 'trolo'],
     category: 'fun',
     run: async (m, { conn }) => {
-        const audioUrl = 'https://api.dix.lat/media2/1776379459477.png';
         const who = m.mentionedJid?.[0] || m.quoted?.sender || m.sender;
+        const percent = Math.floor(Math.random() * (100 - 20 + 1)) + 20;
+        const pushname = conn.getName(who) || 'Usuario';
+        const userNumber = who.split('@')[0];
+        
+        const styles = [
+            `🚀 *RESULTADOS DE LA NASA* 🚀\n\nAnalizando a: *${pushname}* (@${userNumber})\n\nLos satélites confirman un *${percent}%* de tendencia Gay.\n\n¡El universo no miente! 🏳️‍🌈`,
+            `📊 *ESTADÍSTICAS GLOBALES* 📊\n\nIdentidad confirmada: *${pushname}* (${userNumber})\n\nEl mundo ha votado y el veredicto es un imbatible *${percent}%*.\n\n¡Es oficial, no hay duda! 🌈`,
+            `⚖️ *EL GAYÓMETRO INVISIBLE* ⚖️\n\nEscaneando a: *${pushname}* (@${userNumber})\n\n*RESULTADO:* ${percent}%\n*NIVEL:* Altamente sospechoso.\n\n🏳️‍🌈 ¡Miren a este Gay! 🏳️‍🌈`,
+            `🧬 *ANÁLISIS DE ADN* 🧬\n\nSujeto: *${pushname}* (${userNumber})\n\nSe ha detectado el gen arcoíris activado al *${percent}%*.\n\n¡La ciencia lo confirma! 🏳️‍🌈`
+        ];
+
+        const selectedStyle = styles[Math.floor(Math.random() * styles.length)];
 
         try {
-            const avatarUrl = await conn.profilePictureUrl(who, 'image').catch(() => 'https://ik.imagekit.io/pm10ywrf6f/bot_by_deylin/1771018082759_bwnA5OM5c.jpeg');
-            const processedImageUrl = `https://some-random-api.com/canvas/gay?avatar=${encodeURIComponent(avatarUrl)}`;
-
-            
-            await conn.sendMessage(m.chat, {
-                image: { url: processedImageUrl },
-                caption: '🏳️‍🌈 𝑴𝒊𝒓𝒆𝒏 𝒂 𝒆𝒔𝒕𝒆 𝑮𝒂𝒚 🏳️‍🌈',
-                mentions: [who]
-            }, { quoted: m });
-
-            if (!audioBufferCache) {
-                const response = await fetch(audioUrl, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-                    }
-                });
-                
-                if (!response.ok) throw new Error(`Error al descargar: ${response.statusText}`);
-                
-                const arrayBuffer = await response.arrayBuffer();
-                audioBufferCache = Buffer.from(arrayBuffer);
+            let avatarUrl;
+            try {
+                avatarUrl = await conn.profilePictureUrl(who, 'image');
+            } catch {
+                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(pushname)}&background=random&color=fff&size=512&font-size=0.33&length=20&text=${userNumber}`;
             }
 
+            const processedImageUrl = `https://some-random-api.com/canvas/overlay/gay?avatar=${encodeURIComponent(avatarUrl)}`;
+
             await conn.sendMessage(m.chat, {
-                audio: audioBufferCache,
-                mimetype: 'audio/mp4',
+                image: { url: processedImageUrl },
+                caption: selectedStyle,
                 mentions: [who]
             }, { quoted: m });
 
         } catch (error) {
-            console.error('Error en gayCommand:', error);
-            
-            // await conn.sendMessage(m.chat, { text: 'No pude cargar el audio, intenta más tarde.' }, { quoted: m });
+            await conn.sendMessage(m.chat, { 
+                text: `🌈 *GAYÓMETRO*\n\nUsuario: *${pushname}* (@${userNumber})\nResultado: *${percent}%* Gay.`, 
+                mentions: [who] 
+            }, { quoted: m });
         }
     }
 };
