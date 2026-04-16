@@ -2,7 +2,7 @@ import axios from 'axios';
 import fs from 'fs';
 import { spawn } from 'child_process';
 
-const API_KEY = 'kirito-bot-oficial'; 
+const API_KEY = 'kirito-bot-oficial';
 const SEARCH_URL = 'https://sylphyy.xyz/search/stickerly';
 const DOWNLOAD_URL = 'https://sylphyy.xyz/download/stickerly';
 
@@ -10,35 +10,52 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const toBuffer = async (url) => {
     try {
-        const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 15000 });
-        return Buffer.from(res.data);
+        const res = await axios.get(url, { 
+            responseType: 'arraybuffer', 
+            timeout: 15000,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+        const buffer = Buffer.from(res.data);
+        if (buffer.length === 0) throw new Error('El buffer descargado está vacío.');
+        return buffer;
     } catch (e) {
-        throw new Error(`Error al descargar buffer (URL: ${url.substring(0, 30)}...): ${e.message}`);
+        throw new Error(`Error de red: ${e.message}`);
     }
 };
 
 const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const tmpIn = `./tmp/k-in-${id}`;
-    const tmpOut = `./tmp/k-out-${id}.webp`;
-    if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp', { recursive: true });
+    const tmpDir = './tmp';
+    const tmpIn = `${tmpDir}/k-in-${id}`;
+    const tmpOut = `${tmpDir}/k-out-${id}.webp`;
+
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    
     fs.writeFileSync(tmpIn, buffer);
+
+    if (fs.statSync(tmpIn).size === 0) {
+        reject(new Error('El archivo temporal de entrada está vacío (0 bytes).'));
+        return;
+    }
+
     const vf = 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba,format=yuva420p';
     const codec = isAnimated ? 'libwebp_anim' : 'libwebp';
     const args = ['-y', '-i', tmpIn, '-vf', vf, '-c:v', codec, '-q:v', '50', '-compression_level', '6'];
     if (isAnimated) args.push('-loop', '0', '-t', '8');
     args.push(tmpOut);
+
     const p = spawn('ffmpeg', args);
     let errLog = '';
     p.stderr.on('data', (data) => errLog += data);
+    
     p.on('close', (code) => {
-        try { fs.unlinkSync(tmpIn); } catch {}
+        try { if (fs.existsSync(tmpIn)) fs.unlinkSync(tmpIn); } catch {}
         if (code === 0 && fs.existsSync(tmpOut)) {
             const result = fs.readFileSync(tmpOut);
             try { fs.unlinkSync(tmpOut); } catch {}
             resolve(result);
         } else {
-            reject(new Error(`FFMPEG fallo (Cod: ${code}). Log: ${errLog.slice(-100)}`));
+            reject(new Error(`FFMPEG fallo. Log: ${errLog.slice(-80)}`));
         }
     });
 });
@@ -58,40 +75,21 @@ const addExif = async (webpBuffer, packname = 'Bot', author = 'YukiWa') => {
         const jsonBuf = Buffer.from(JSON.stringify(json), 'utf-8');
         img.exif = Buffer.concat([exifAttr, jsonBuf]);
         return await img.save(null);
-    } catch (e) {
+    } catch {
         return webpBuffer;
     }
 };
 
-const isValidWebP = (buf) =>
-    buf.length > 12 &&
-    buf.slice(0, 4).toString() === 'RIFF' &&
-    buf.slice(8, 12).toString() === 'WEBP';
-
 const searchPacks = async (query) => {
-    try {
-        const { data } = await axios.get(SEARCH_URL, {
-            params: { q: query, api_key: API_KEY },
-            timeout: 10000,
-        });
-        if (!data.status) throw new Error(data.message || 'API de búsqueda respondió status: false');
-        return data.result || [];
-    } catch (e) {
-        throw new Error(`Error en búsqueda: ${e.response?.data?.message || e.message}`);
-    }
+    const { data } = await axios.get(SEARCH_URL, { params: { q: query, api_key: API_KEY } });
+    if (!data.status) throw new Error('Sin resultados en la búsqueda.');
+    return data.result;
 };
 
 const getPackDetail = async (url) => {
-    try {
-        const { data } = await axios.get(DOWNLOAD_URL, {
-            params: { url, api_key: API_KEY },
-            timeout: 15000,
-        });
-        if (!data.status) throw new Error(data.message || 'API de descarga respondió status: false');
-        return data.result;
-    } catch (e) {
-        throw new Error(`Error en detalles del pack: ${e.response?.data?.message || e.message}`);
-    }
+    const { data } = await axios.get(DOWNLOAD_URL, { params: { url, api_key: API_KEY } });
+    if (!data.status) throw new Error('No se pudo obtener el detalle del pack.');
+    return data.result;
 };
 
 export default {
@@ -100,60 +98,38 @@ export default {
     category: 'stickers',
     run: async function (m, { usedPrefix, command, text, conn }) {
         try {
-            if (!text) return m.reply(`ᰔᩚ *KIRITO STICKERS*\n\nUso: ${usedPrefix + command} <nombre o link>`);
-
+            if (!text) return m.reply(`Uso: ${usedPrefix + command} <nombre o link>`);
             await m.react('⏳');
 
-            let packName, packAuthor, stickers;
-
+            let detail;
             if (/sticker\.ly\/s\//i.test(text)) {
-                const detail = await getPackDetail(text);
-                packName = detail.name || 'Pack';
-                packAuthor = typeof detail.author === 'object' ? detail.author.name : (detail.author || 'Bot');
-                stickers = (detail.stickers || []).slice(0, 10);
+                detail = await getPackDetail(text);
             } else {
                 const results = await searchPacks(text);
-                if (!results.length) throw new Error('No se encontraron paquetes con ese nombre.');
-
-                const detail = await getPackDetail(results[0].url);
-                packName = detail.name || results[0].name || 'Pack';
-                packAuthor = typeof detail.author === 'object' ? detail.author.name : (detail.author || results[0].author || 'Bot');
-                stickers = (detail.stickers || []).slice(0, 10);
+                detail = await getPackDetail(results[0].url);
             }
 
-            if (!stickers.length) throw new Error('El paquete está vacío o no tiene stickers procesables.');
+            const stickers = (detail.stickers || []).slice(0, 10);
+            const packName = detail.name || 'Pack';
+            const packAuthor = detail.author?.name || detail.author || 'Bot';
 
-            await m.reply(`📦 *${packName}*\n👤 ${packAuthor}\n🖼️ Intentando enviar ${stickers.length} sticker(s)...`);
+            await m.reply(`📦 Enviando stickers de: *${packName}*`);
 
-            let sent = 0;
-            let errors = [];
-
-            for (const [i, s] of stickers.entries()) {
+            for (const s of stickers) {
                 try {
                     const buffer = await toBuffer(s.imageUrl);
                     const webp = await toWebp(buffer, s.isAnimated);
-                    if (!isValidWebP(webp)) throw new Error('Buffer WebP inválido');
                     const final = await addExif(webp, packName, packAuthor);
                     await conn.sendMessage(m.chat, { sticker: final }, { quoted: m });
-                    sent++;
-                    await delay(1000);
-                } catch (err) {
-                    errors.push(`Sticker ${i + 1}: ${err.message}`);
+                    await delay(1200);
+                } catch (e) {
+                    console.error(e.message);
                 }
             }
-
-            if (sent === 0) {
-                throw new Error(`Fallo total. Errores detectados:\n\n${errors.join('\n')}`);
-            } else if (errors.length > 0) {
-                await m.reply(`✅ Enviados: ${sent}\n❌ Fallidos: ${errors.length}\n\nDetalle del último error:\n${errors[errors.length - 1]}`);
-            }
-
             await m.react('✅');
-
         } catch (e) {
-            console.error('[stickerpack]', e);
             await m.react('❌');
-            m.reply(`*⚠️ INFORME DE ERROR:*\n\n${e.message}`);
+            m.reply(`*⚠️ ERROR:* ${e.message}`);
         }
-    },
+    }
 };
