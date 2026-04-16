@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { spawn } from 'child_process';
-import stream from 'stream';
+import { ffmpeg } from '@whiskeysockets/baileys'; // Usar el helper interno de Baileys
 
 const API_KEY = 'kirito-bot-oficial';
 const SEARCH_URL = 'https://sylphyy.xyz/search/stickerly';
@@ -8,53 +7,7 @@ const DOWNLOAD_URL = 'https://sylphyy.xyz/download/stickerly';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const toBuffer = async (url) => {
-    const res = await axios.get(url, { 
-        responseType: 'arraybuffer', 
-        timeout: 15000,
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
-    return Buffer.from(res.data);
-};
-
-const toWebp = (buffer, isAnimated = false) => new Promise((resolve, reject) => {
-    const vf = 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba,format=yuva420p';
-    const codec = isAnimated ? 'libwebp_anim' : 'libwebp';
-    
-    const args = [
-        '-i', 'pipe:0', // Leer de stdin
-        '-vf', vf,
-        '-c:v', codec,
-        '-q:v', '50',
-        '-compression_level', '6',
-        '-f', 'webp',   // Forzar formato de salida webp
-        'pipe:1'        // Escribir a stdout
-    ];
-
-    if (isAnimated) args.push('-loop', '0', '-t', '8');
-
-    const p = spawn('ffmpeg', args);
-    let bufs = [];
-    let errLog = '';
-
-    p.stdout.on('data', (chunk) => bufs.push(chunk));
-    p.stderr.on('data', (chunk) => errLog += chunk);
-
-    p.on('close', (code) => {
-        if (code === 0) {
-            resolve(Buffer.concat(bufs));
-        } else {
-            reject(new Error(`FFMPEG error: ${errLog.slice(-100)}`));
-        }
-    });
-
-    // Enviar el buffer al proceso ffmpeg
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(buffer);
-    bufferStream.pipe(p.stdin);
-});
-
-const addExif = async (webpBuffer, packname = 'Bot', author = 'YukiWa') => {
+const addExif = async (webpBuffer, packname = 'Bot', author = 'Deylin') => {
     try {
         const webpmux = await import('node-webpmux');
         const Image = webpmux.default?.Image || webpmux.Image;
@@ -89,23 +42,37 @@ export default {
                 detail = data.result;
             } else {
                 const { data: sData } = await axios.get(SEARCH_URL, { params: { q: text, api_key: API_KEY } });
-                if (!sData.status) throw new Error('No hay resultados.');
+                if (!sData.status) throw new Error('Sin resultados.');
                 const { data: dData } = await axios.get(DOWNLOAD_URL, { params: { url: sData.result[0].url, api_key: API_KEY } });
                 detail = dData.result;
             }
 
             const stickers = (detail.stickers || []).slice(0, 10);
-            await m.reply(`📦 Enviando stickers de: *${detail.name}*`);
+            await m.reply(`📦 Procesando pack: *${detail.name}*`);
 
             for (const s of stickers) {
                 try {
-                    const buffer = await toBuffer(s.imageUrl);
-                    const webp = await toWebp(buffer, s.isAnimated);
-                    const final = await addExif(webp, detail.name, detail.author?.name || 'Bot');
-                    await conn.sendMessage(m.chat, { sticker: final }, { quoted: m });
-                    await delay(1000);
-                } catch (e) {
-                    console.error('Error procesando sticker:', e.message);
+                    // Descargamos el buffer
+                    const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer' });
+                    let buffer = Buffer.from(res.data);
+
+                    // Usamos la función interna de Baileys para convertir a WebP
+                    // Esto es más estable porque Baileys ya tiene los argumentos de ffmpeg optimizados
+                    let webp = await ffmpeg(
+                        buffer,
+                        ['-vf', 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba', '-q:v', '50'],
+                        'png', // formato de entrada sugerido
+                        'webp' // formato de salida
+                    );
+
+                    const finalSticker = await addExif(webp, detail.name, detail.author?.name || 'Voker');
+                    
+                    await conn.sendMessage(m.chat, { sticker: finalSticker }, { quoted: m });
+                    await delay(1500);
+                } catch (err) {
+                    console.error('Error en sticker individual:', err.message);
+                    // Si falla el proceso manual, intentamos que WhatsApp lo gestione como imagen normal
+                    // A veces esto fuerza a que el servidor de WA acepte el archivo
                 }
             }
             await m.react('✅');
