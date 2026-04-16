@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { generateWAMessageContent } from '@whiskeysockets/baileys';
 import { spawn } from 'child_process';
 import crypto from 'crypto';
 
@@ -35,7 +34,7 @@ const addExif = async (webpBuffer, packname, author) => {
         const img = new Image();
         await img.load(webpBuffer);
         const json = {
-            'sticker-pack-id': crypto.randomBytes(8).toString('hex'),
+            'sticker-pack-id': `kirito-${crypto.randomBytes(4).toString('hex')}`,
             'sticker-pack-name': packname,
             'sticker-pack-publisher': author,
         };
@@ -53,6 +52,7 @@ export default {
     run: async function (m, { usedPrefix, command, text, conn }) {
         if (!text) return m.reply(`Uso: ${usedPrefix + command} <nombre o link>`);
         await m.react('⏳');
+
         try {
             let detail;
             if (/sticker\.ly\/s\//i.test(text)) {
@@ -65,26 +65,34 @@ export default {
                 detail = dData.result;
             }
 
-            const stickers = (detail.stickers || []).slice(0, 5);
-            await m.reply(`📦 Enviando stickers de: *${detail.name}*`);
+            const stickers = (detail.stickers || []).slice(0, 10);
+            const packName = detail.name || 'Kirito Pack';
+            const packAuthor = detail.author?.name || 'Voker Systems';
+
+            await m.reply(`📦 Generando paquete: *${packName}*\nTotal: ${stickers.length} stickers.`);
 
             for (const s of stickers) {
                 try {
                     const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer' });
-                    const buffer = Buffer.from(res.data);
-                    
-                    let final;
-                    try {
-                        const webp = await toWebp(buffer);
-                        final = await addExif(webp, detail.name, detail.author?.name || 'Voker');
-                    } catch {
-                        final = buffer; 
-                    }
+                    const webp = await toWebp(Buffer.from(res.data));
+                    const final = await addExif(webp, packName, packAuthor);
 
-                    await conn.sendMessage(m.chat, { sticker: final }, { quoted: m });
-                    await delay(1200);
-                } catch (e) {
-                    m.reply(`Error en sticker: ${e.message}`);
+                    await conn.sendMessage(m.chat, { 
+                        sticker: final,
+                        contextInfo: {
+                            externalAdReply: {
+                                title: packName,
+                                body: packAuthor,
+                                mediaType: 1,
+                                thumbnail: final,
+                                sourceUrl: 'https://dix.lat'
+                            }
+                        }
+                    }, { quoted: m });
+                    
+                    await delay(800);
+                } catch (err) {
+                    console.error('Fallo en sticker del pack:', err.message);
                 }
             }
             await m.react('✅');
