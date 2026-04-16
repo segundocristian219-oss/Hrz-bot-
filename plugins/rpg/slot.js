@@ -35,16 +35,18 @@ export default {
       }, { quoted: m })
 
       let a = '❔', b = '❔', c = '❔'
-      let speeds = [60, 80, 100, 130, 170, 220]
+      let speeds = [80, 100, 140, 180, 240]
+
+      const edit = async (text) => {
+        await conn.sendMessage(m.chat, { text }, { edit: msg.key })
+      }
 
       for (let s of speeds) {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 2; i++) {
           a = roll()
           b = roll()
           c = roll()
-          await conn.sendMessage(m.chat, {
-            text: `🎰 Girando...\n\n${a} | ${b} | ${c}`
-          }, { edit: msg.key })
+          await edit(`🎰 Girando...\n\n${a} | ${b} | ${c}`)
           await sleep(s)
         }
       }
@@ -53,18 +55,14 @@ export default {
       for (let s of speeds) {
         b = roll()
         c = roll()
-        await conn.sendMessage(m.chat, {
-          text: `🎰\n\n${a} | ${b} | ${c}`
-        }, { edit: msg.key })
+        await edit(`🎰\n\n${a} | ${b} | ${c}`)
         await sleep(s)
       }
 
       b = roll()
       for (let s of speeds) {
         c = roll()
-        await conn.sendMessage(m.chat, {
-          text: `🎰\n\n${a} | ${b} | ${c}`
-        }, { edit: msg.key })
+        await edit(`🎰\n\n${a} | ${b} | ${c}`)
         await sleep(s)
       }
 
@@ -85,9 +83,7 @@ export default {
 
       await global.User.updateOne({ id: m.sender }, { $set: user })
 
-      await conn.sendMessage(m.chat, {
-        text: `🎰 RESULTADO\n\n${a} | ${b} | ${c}\n\n${result}\n💰 +${reward}\n💳 ${user.col}`
-      }, { edit: msg.key })
+      await edit(`🎰 RESULTADO\n\n${a} | ${b} | ${c}\n\n${result}\n💰 +${reward}\n💳 ${user.col}`)
 
     } catch (e) {
       console.error(e)
