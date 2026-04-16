@@ -33,39 +33,47 @@ export default {
             
             const preparedStickers = [];
             for (const s of stickersData) {
-                const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer' });
-                const sticker = new Sticker(res.data, {
-                    pack: packName,
-                    author: packAuthor,
-                    type: StickerTypes.FULL,
-                    id: packId,
-                    quality: 50
-                });
-                const buffer = await sticker.toBuffer();
-                
-                const { stickerMessage } = await conn.prepareWAMessageMedia({ sticker: buffer }, { upload: conn.waUploadToServer });
-                preparedStickers.push(stickerMessage);
+                try {
+                    const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer' });
+                    const sticker = new Sticker(res.data, {
+                        pack: packName,
+                        author: packAuthor,
+                        type: StickerTypes.FULL,
+                        id: packId,
+                        quality: 50
+                    });
+                    const buffer = await sticker.toBuffer();
+                    
+                    // Preparamos el contenido multimedia para subirlo a los servidores de WA
+                    const media = await conn.prepareWAMessageMedia({ sticker: buffer }, { upload: conn.waUploadToServer });
+                    if (media.stickerMessage) {
+                        preparedStickers.push(media.stickerMessage);
+                    }
+                } catch (e) {
+                    console.error('Fallo al preparar sticker:', e.message);
+                }
             }
 
-            const trayIcon = preparedStickers[0];
+            if (preparedStickers.length === 0) throw new Error('No se pudo preparar ningún sticker.');
 
-            const stickerPackMsg = {
+            const msg = {
                 stickerPackMessage: {
                     stickerPackId: packId,
                     name: packName,
                     publisher: packAuthor,
                     stickers: preparedStickers,
-                    trayIconFileName: trayIcon.fileSha256.toString('base64') + '.png',
-                    thumbnailSha256: trayIcon.fileSha256,
-                    stickerPackOrigin: 1 // USER_CREATED
+                    trayIconFileName: "tray_" + packId + ".png",
+                    thumbnailSha256: preparedStickers[0].fileSha256,
+                    stickerPackOrigin: 1
                 }
             };
 
-            await conn.relayMessage(m.chat, stickerPackMsg, { quoted: m });
+            // Intentamos enviar usando la estructura de mensaje compatible con Baileys
+            await conn.relayMessage(m.chat, msg, { messageId: conn.generateMessageTag() });
+            
             await m.react('✅');
 
         } catch (e) {
-            console.error(e);
             await m.react('❌');
             m.reply(`⚠️ Error: ${e.message}`);
         }
