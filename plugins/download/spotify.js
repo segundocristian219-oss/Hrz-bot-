@@ -4,7 +4,7 @@ const spotifyCommand = {
     name: 'spotify',
     alias: ['spt', 'sp', 'music'],
     category: 'download',
-    col: 10,
+    col: 0,
     run: async (m, { conn, text, usedPrefix, command }) => {
         if (!text) return m.reply(`> ✎ USO: ${usedPrefix + command} <nombre de la canción o URL>`);
 
