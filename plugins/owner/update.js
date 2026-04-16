@@ -1,56 +1,57 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+
+const runCmd = (cmd) => new Promise((resolve, reject) => {
+    exec(cmd, (err, stdout, stderr) => {
+        if (err) return reject(stderr || err.message);
+        resolve(stdout);
+    });
+});
 
 const updateCommand = {
     name: 'update',
     alias: ['actualizar', 'up', 'sync'],
     category: 'owner',
     rowner: true,
-    run: async (m, { conn, args, usedPrefix, command }) => {
+    run: async (m, { conn, args }) => {
         try {
             await m.react("🔄");
-            
-            // Ejecutamos el git pull
-            const output = execSync('git pull ' + (args[0] || '')).toString();
 
-            // Si no hay cambios, avisamos y cortamos la ejecución
-            if (output.includes('Already up to date')) {
+            const output = await runCmd(`git pull ${args[0] || ''}`);
+
+            if (/Already up[ -]to[ -]date/i.test(output)) {
                 await m.react("✅");
-                return await conn.sendMessage(m.chat, { text: '✧ *[ ✓ ] El sistema ya está en su versión más reciente.*' }, { quoted: m });
+                return conn.sendMessage(m.chat, { text: '✧ *[ ✓ ] El sistema ya está en su versión más reciente.*' }, { quoted: m });
             }
 
-            // Avisamos que estamos procesando los cambios y que habrá un reinicio
             const updateMsg = `
 \t\t\t\t♛  *SISTEMA ACTUALIZADO* ♛
 
 ✦ *[ 📦 ] Cambios detectados:*\n\`\`\`${output.trim()}\`\`\`
 
 ◈ *APLICANDO CAMBIOS...*
-✧ *NOTA:* Reiniciando el sistema para cargar los nuevos comandos desde cero. El bot volverá en unos segundos.
+✧ *Reiniciando sistema...*
 `;
+
             await conn.sendMessage(m.chat, { text: updateMsg }, { quoted: m });
             await m.react("⚙️");
 
-            // Le damos 2 segundos de respiro al bot para que alcance a enviar el mensaje 
-            // de WhatsApp antes de "suicidarse" para reiniciarse.
             setTimeout(() => {
-                if (process.send) {
-                    process.send('reset');
-                } else {
-                    process.exit(1); 
-                }
-            }, 2000);
+                if (process.send) process.send('reset');
+                else process.exit(0);
+            }, 3500);
 
         } catch (error) {
             let status = '';
             try {
-                // Si el pull falla, revisamos el status del git
-                status = execSync('git status --porcelain').toString().trim();
-            } catch { 
-                status = 'Error al obtener estado del repositorio.'; 
+                status = await runCmd('git status --porcelain');
+            } catch {
+                status = 'Error al obtener estado del repositorio.';
             }
 
-            const conflictMsg = status ? `◈ *⚠️ Conflictos detectados (posibles cambios locales):*\n\n\`\`\`${status}\`\`\`\n\n✦ *Sugerencia:* Usa un reset forzado para solucionarlo.` : error.message;
-            
+            const conflictMsg = status.trim()
+                ? `◈ *⚠️ Conflictos detectados:*\n\n\`\`\`${status.trim()}\`\`\`\n\n✦ Usa reset forzado.`
+                : error.toString();
+
             await conn.sendMessage(m.chat, { text: `💀 *ERROR CRÍTICO:* \n\n${conflictMsg}` }, { quoted: m });
             await m.react("❌");
         }
