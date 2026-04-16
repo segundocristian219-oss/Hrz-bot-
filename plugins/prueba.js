@@ -1,81 +1,69 @@
-import axios from 'axios';
-import { Sticker, StickerTypes } from 'wa-sticker-formatter';
-import crypto from 'crypto';
-
-const API_KEY = 'kirito-bot-oficial';
-const SEARCH_URL = 'https://sylphyy.xyz/search/stickerly';
-const DOWNLOAD_URL = 'https://sylphyy.xyz/download/stickerly';
+import os from 'os';
+import fs from 'fs';
+import { performance, monitorEventLoopDelay } from 'perf_hooks';
 
 export default {
-    name: 'stickerpack',
-    alias: ['spack'],
-    category: 'stickers',
-    run: async function (m, { usedPrefix, command, text, conn }) {
-        if (!text) return m.reply(`Uso: ${usedPrefix + command} <nombre o link>`);
-        await m.react('⏳');
+    name: 'ping',
+    alias: ['status', 'm', 'voker'],
+    category: 'system',
+    run: async function (m, { conn }) {
+        const hld = monitorEventLoopDelay();
+        hld.enable();
+        
+        const start = performance.now();
+        await m.react('✅');
+        const end = performance.now();
+        const redLatency = (end - start).toFixed(3);
+        
+        hld.disable();
+        const cpuDelay = (hld.mean / 1e6).toFixed(3);
 
+        const usedMem = process.memoryUsage();
+        const load = os.loadavg();
+        const cpuCount = os.cpus().length;
+        
+        let openFiles = 'N/A';
         try {
-            let detail;
-            if (/sticker\.ly\/s\//i.test(text)) {
-                const { data } = await axios.get(DOWNLOAD_URL, { params: { url: text, api_key: API_KEY } });
-                detail = data.result;
-            } else {
-                const { data: sData } = await axios.get(SEARCH_URL, { params: { q: text, api_key: API_KEY } });
-                if (!sData?.status) throw new Error('Sin resultados.');
-                const { data: dData } = await axios.get(DOWNLOAD_URL, { params: { url: sData.result[0].url, api_key: API_KEY } });
-                detail = dData.result;
-            }
-
-            const packName = detail.name || 'Kirito Pack';
-            const packAuthor = detail.author?.name || 'Voker';
-            const packId = crypto.randomUUID();
-            const stickersData = (detail.stickers || []).slice(0, 10);
-            
-            const preparedStickers = [];
-            for (const s of stickersData) {
-                try {
-                    const res = await axios.get(s.imageUrl, { responseType: 'arraybuffer' });
-                    const sticker = new Sticker(res.data, {
-                        pack: packName,
-                        author: packAuthor,
-                        type: StickerTypes.FULL,
-                        id: packId,
-                        quality: 50
-                    });
-                    const buffer = await sticker.toBuffer();
-                    
-                    // Preparamos el contenido multimedia para subirlo a los servidores de WA
-                    const media = await conn.prepareWAMessageMedia({ sticker: buffer }, { upload: conn.waUploadToServer });
-                    if (media.stickerMessage) {
-                        preparedStickers.push(media.stickerMessage);
-                    }
-                } catch (e) {
-                    console.error('Fallo al preparar sticker:', e.message);
-                }
-            }
-
-            if (preparedStickers.length === 0) throw new Error('No se pudo preparar ningún sticker.');
-
-            const msg = {
-                stickerPackMessage: {
-                    stickerPackId: packId,
-                    name: packName,
-                    publisher: packAuthor,
-                    stickers: preparedStickers,
-                    trayIconFileName: "tray_" + packId + ".png",
-                    thumbnailSha256: preparedStickers[0].fileSha256,
-                    stickerPackOrigin: 1
-                }
-            };
-
-            // Intentamos enviar usando la estructura de mensaje compatible con Baileys
-            await conn.relayMessage(m.chat, msg, { messageId: conn.generateMessageTag() });
-            
-            await m.react('✅');
-
+            openFiles = fs.readdirSync('/proc/self/fd').length;
         } catch (e) {
-            await m.react('❌');
-            m.reply(`⚠️ Error: ${e.message}`);
+            openFiles = 'ERR';
         }
+
+        const uptime = process.uptime();
+        const hrs = Math.floor(uptime / 3600);
+        const mins = Math.floor((uptime % 3600) / 60);
+
+        const statusReport = `
+[ REPORTE TECNICO ]
+---------------------------------------
+> LATENCIA RED: ${redLatency} ms
+> DELAY HILO: ${cpuDelay} ms
+> UPTIME: ${hrs}h ${mins}m
+
+[ RECURSOS DEL SERVIDOR ]
++ CARGA 1M: ${load[0].toFixed(2)}
++ CARGA 5M: ${load[1].toFixed(2)}
++ USO DE CORES: ${((load[0] / cpuCount) * 100).toFixed(2)}%
++ TOTAL CORES: ${cpuCount}
+
+[ GESTION DE ARCHIVOS Y SOCKETS ]
+- SOCKETS ABIERTOS: ${openFiles}
+- LIMITE SISTEMA: 524288
+- ESTADO FD: ${openFiles > 1000 ? 'FUGA_DETECTADA' : 'NORMAL'}
+
+[ MEMORIA RAM ]
+- RSS (REAL): ${(usedMem.rss / 1024 / 1024).toFixed(2)} MB
+- HEAP TOTAL: ${(usedMem.heapTotal / 1024 / 1024).toFixed(2)} MB
+- HEAP USADO: ${(usedMem.heapUsed / 1024 / 1024).toFixed(2)} MB
+
+[ INFRAESTRUCTURA ]
+- INSTANCIAS: 34 SUB-BOTS
+- DB: MONGODB_REMOTE
+- PLATAFORMA: ${os.platform()}
+---------------------------------------
+DIAGNOSTICO: ${load[0] > cpuCount ? 'CRITICAL_LOAD' : 'SYSTEM_STABLE'}
+`.trim();
+
+        await conn.sendMessage(m.chat, { text: statusReport }, { quoted: m });
     }
 };
