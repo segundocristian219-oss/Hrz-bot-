@@ -34,21 +34,30 @@ export default {
         text: '🎰\n\n❔ | ❔ | ❔'
       }, { quoted: m })
 
-      let a = '❔', b = '❔', c = '❔'
-      let speeds = [80, 100, 140, 180, 240]
-
       const edit = async (text) => {
-        await conn.sendMessage(m.chat, { text }, { edit: msg.key })
+        await conn.relayMessage(
+          m.chat,
+          {
+            protocolMessage: {
+              key: msg.key,
+              type: 14,
+              editedMessage: { conversation: text }
+            }
+          },
+          {}
+        )
       }
 
+      let a = '❔', b = '❔', c = '❔'
+
+      let speeds = [90, 120, 160, 220]
+
       for (let s of speeds) {
-        for (let i = 0; i < 2; i++) {
-          a = roll()
-          b = roll()
-          c = roll()
-          await edit(`🎰 Girando...\n\n${a} | ${b} | ${c}`)
-          await sleep(s)
-        }
+        a = roll()
+        b = roll()
+        c = roll()
+        await edit(`🎰 Girando...\n\n${a} | ${b} | ${c}`)
+        await sleep(s)
       }
 
       a = roll()
