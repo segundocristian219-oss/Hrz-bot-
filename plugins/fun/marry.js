@@ -13,14 +13,24 @@ const matrimonio = {
         const llaveChat = m.chat
         const cmd = command.trim().toLowerCase()
 
-        if (cmd === 'aceptar' || cmd === 'rechazar') {
-            const idJuego = `${llaveChat}-${emisorReal}`
-            const juego = global.weddingGames[idJuego]
+        const buscarJuego = () => {
+            const keys = Object.keys(global.weddingGames)
+            for (let k of keys) {
+                const j = global.weddingGames[k]
+                if (j && (j.receptor === emisorReal || j.solicitante === emisorReal) && k.startsWith(llaveChat)) return { key: k, data: j }
+            }
+            return null
+        }
 
-            if (!juego) return m.reply('*♛ AVISO ✧*\n\n╰❒ No tienes peticiones pendientes o el tiempo expiró.')
+        if (cmd === 'aceptar' || cmd === 'rechazar') {
+            const found = buscarJuego()
+            if (!found) return m.reply('*♛ AVISO ✧*\n\n╰❒ No tienes peticiones pendientes o el tiempo expiró.')
+
+            const { key: idJuego, data: juego } = found
 
             if (cmd === 'aceptar') {
                 clearTimeout(juego.timeout)
+
                 if (juego.tipo === 'divorcio') {
                     await global.User.updateOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] }, { $set: { marry: '', marryDate: 0 } })
                     await global.User.updateOne({ $or: [{ id: juego.receptor }, { lid: juego.receptor }] }, { $set: { marry: '', marryDate: 0 } })
@@ -56,10 +66,9 @@ const matrimonio = {
 
         if (cmd === 'divorce' || cmd === 'divorcio') {
             if (!user.marry || user.marry === "") return m.reply('*♛ ERROR ✧*\n\n╰❒ No estás casado.')
-            const idPareja = user.marry
-            const idJuegoDiv = `${llaveChat}-${idPareja}`
 
-            if (global.weddingGames[idJuegoDiv]) clearTimeout(global.weddingGames[idJuegoDiv].timeout)
+            const idPareja = user.marry
+            const idJuegoDiv = `${llaveChat}-${Date.now()}`
 
             global.weddingGames[idJuegoDiv] = {
                 tipo: 'divorcio',
@@ -90,9 +99,7 @@ const matrimonio = {
         if (objetivo.marry) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Esa persona ya está casada.`)
 
         const idObjetivo = objetivo.lid || objetivo.id
-        const idJuegoBoda = `${llaveChat}-${idObjetivo}`
-
-        if (global.weddingGames[idJuegoBoda]) clearTimeout(global.weddingGames[idJuegoBoda].timeout)
+        const idJuegoBoda = `${llaveChat}-${Date.now()}`
 
         global.weddingGames[idJuegoBoda] = {
             tipo: 'boda',
