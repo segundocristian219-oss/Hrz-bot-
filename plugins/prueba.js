@@ -2,7 +2,7 @@ import axios from 'axios';
 import fs from 'fs';
 import { spawn } from 'child_process';
 
-const API_KEY = 'dx_lat_0x7B\u200B\u001B[38;5;214m\u2060\u200D\u200B\u200C_Voker_Sys_00\u200B1.0.0_37080_159_0x\u0025\u0058\u200B\u200C\u2060_\u005B\u0022\u0024\u007B0x00A0\u007D\u221E\u2202\u2206\u0022\u005D_\u0020\u200B\u200D\u2060_0x7F\u0000\u0001\u0007\u0008\u000B\u000C\u000E\u000F_S3R14L1Z3R_0x0D\u200B\u200D\u2060_\u005B\u200B\u200C\u200B\u200C\u005D_0x2026_03_28_UTC_0x00';
+const API_KEY = key;
 const SEARCH_URL = 'https://sylphyy.xyz/search/stickerly';
 const DOWNLOAD_URL = 'https://sylphyy.xyz/download/stickerly';
 
