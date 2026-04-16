@@ -1,48 +1,66 @@
 import os from 'os';
-import { performance } from 'perf_hooks';
+import { performance, monitorEventLoopDelay } from 'perf_hooks';
+
+const hrduration = (ms) => {
+    const s = Math.floor((ms / 1000) % 60);
+    const m = Math.floor((ms / (1000 * 60)) % 60);
+    const h = Math.floor(ms / (1000 * 60 * 60));
+    return `${h}h ${m}m ${s}s`;
+};
 
 export default {
     name: 'ping',
     alias: ['status'],
     category: 'system',
     run: async function (m, { conn }) {
+        const hld = monitorEventLoopDelay();
+        hld.enable();
+        
         const start = performance.now();
         await m.react('✅');
         const end = performance.now();
         const latency = (end - start).toFixed(3);
+        
+        hld.disable();
+        const elpDelay = (hld.mean / 1e6).toFixed(3);
 
         const usedMem = process.memoryUsage();
         const totalMem = os.totalmem();
         const freeMem = os.freemem();
+        const heapPct = ((usedMem.heapUsed / usedMem.heapTotal) * 100).toFixed(2);
         
         const load = os.loadavg();
         const cpuCount = os.cpus().length;
-        const cpuUsage = ((load[0] * 100) / cpuCount).toFixed(2);
+        const loadRatio = (load[0] / cpuCount).toFixed(2);
 
-        const uptime = process.uptime();
-        const hours = Math.floor(uptime / 3600);
-        const minutes = Math.floor((uptime % 3600) / 60);
-        const seconds = Math.floor(uptime % 60);
+        let systemStatus = 'OPTIMAL';
+        if (loadRatio > 0.7 || elpDelay > 100) systemStatus = 'CONGESTED';
+        if (loadRatio > 1.0 || elpDelay > 500) systemStatus = 'CRITICAL_OVERLOAD';
 
         const statusReport = `
-[ SISTEMA VOKER | MONITOREO ]
+[ REPORTE DE SALUD VOKER ]
 ---------------------------------------
-> LATENCIA: ${latency} ms
-> UPTIME: ${hours}h ${minutes}m ${seconds}s
-> CARGA CPU: ${cpuUsage}% (${cpuCount} Cores)
+> LATENCIA RED: ${latency} ms
+> RETRASO HILO: ${elpDelay} ms
+> UPTIME: ${hrduration(process.uptime() * 1000)}
 
-[ ESTADO DE MEMORIA RAM ]
-+ RSS ACTUAL: ${(usedMem.rss / 1024 / 1024).toFixed(2)} MB
-+ HEAP TOTAL: ${(usedMem.heapTotal / 1024 / 1024).toFixed(2)} MB
-+ HEAP USADO: ${(usedMem.heapUsed / 1024 / 1024).toFixed(2)} MB
-+ DISPONIBLE: ${(freeMem / 1024 / 1024 / 1024).toFixed(2)} GB
+[ ANALISIS DE CARGA ]
++ CORES DETECTADOS: ${cpuCount}
++ CARGA 1M: ${load[0].toFixed(2)}
++ RATIO DE CARGA: ${loadRatio}
++ NIVEL DE TRABAJO: ${(loadRatio * 100).toFixed(2)}%
 
-[ DETALLES TECNICOS ]
-- PLATAFORMA: ${os.platform()} ${os.arch()}
-- NODE VERSION: ${process.version}
-- SERVER LOAD (1M): ${load[0].toFixed(2)}
+[ GESTION DE MEMORIA ]
+- RSS (FISICA): ${(usedMem.rss / 1024 / 1024).toFixed(2)} MB
+- HEAP TOTAL: ${(usedMem.heapTotal / 1024 / 1024).toFixed(2)} MB
+- HEAP USADO: ${(usedMem.heapUsed / 1024 / 1024).toFixed(2)} MB (${heapPct}%)
+- DISPONIBLE SRV: ${(freeMem / 1024 / 1024 / 1024).toFixed(2)} GB
+
+[ ENTORNO ]
+- NODE: ${process.version}
+- PLATAFORMA: ${os.platform()}
 ---------------------------------------
-STATUS: ${cpuUsage > 80 ? 'CRITICAL_LOAD' : 'STABLE_SYSTEM'}
+DIAGNOSTICO: ${systemStatus}
 `.trim();
 
         await conn.sendMessage(m.chat, { text: statusReport }, { quoted: m });
