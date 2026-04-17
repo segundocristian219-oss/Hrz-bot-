@@ -6,28 +6,29 @@ const primaryCommand = {
     category: 'group',
     group: true,
 
-    run: async (m, { conn, command, isROwner }) => {
+    run: async (m, { conn, isROwner }) => {
         try {
             const chat = m.chat
             const botId = conn.user.id
 
             /* if (!isROwner) return */
 
-            if (command === 'setprimary') {
-                primaryGroups.set(chat, botId)
+            const text = (m.text || '').trim()
+            const cmd = text.slice(1).split(' ')[0].toLowerCase()
 
-                return conn.reply(chat, `*✰ Primary activado en este grupo*`, m)
+            if (cmd === 'setprimary') {
+                primaryGroups.set(chat, botId)
+                return conn.reply(chat, '*✰ Primary activado*', m)
             }
 
-            if (command === 'delprimary') {
+            if (cmd === 'delprimary') {
                 primaryGroups.delete(chat)
-
-                return conn.reply(chat, `*✰ Primary desactivado*`, m)
+                return conn.reply(chat, '*✰ Primary desactivado*', m)
             }
 
         } catch (e) {
             console.error(e)
-            conn.reply(m.chat, `Error`, m)
+            return conn.reply(m.chat, 'Error', m)
         }
     }
 }
