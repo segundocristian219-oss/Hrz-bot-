@@ -67,7 +67,7 @@ console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...arg
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
 
-const mongoURI = process.env.MONGODB_URL;
+const dbUrlEncoded = process.env.MONGODB_URL;
 const dbUrlDecoded = Buffer.from(dbUrlEncoded, 'base64').toString('utf-8');
 
 const logDB = (type, status) => {
