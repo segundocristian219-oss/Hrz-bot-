@@ -27,30 +27,46 @@ const youtubeCommand = {
             const videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
             const thumbUrl = videoSearchResult.image || videoSearchResult.thumbnail;
 
-            const infoText = `
-\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*
-
-✰ *TÍTULO:* ${videoSearchResult.title}
-♛ *CANAL:* ${videoSearchResult.author?.name || '---'}
-✎ *TIEMPO:* ${videoSearchResult.timestamp || '---'}
-⌬ *VISTAS:* ${videoSearchResult.views?.toLocaleString() || '---'}
-▢ *LINK:* ${videoUrl}
-`;
+            const infoText = `\n\t\t\t\t*♬♫ YOUTUBE DOWNLOAD 𝄞*\n\n✰ *TÍTULO:* ${videoSearchResult.title}\n♛ *CANAL:* ${videoSearchResult.author?.name || '---'}\n✎ *TIEMPO:* ${videoSearchResult.timestamp || '---'}\n⌬ *VISTAS:* ${videoSearchResult.views?.toLocaleString() || '---'}\n▢ *LINK:* ${videoUrl}\n`;
 
             await conn.sendMessage(m.chat, { 
                 image: { url: thumbUrl }, 
                 caption: infoText,
-                contextInfo: {
-                    ...channelInfo
-               }
+                contextInfo: { ...global.channelInfo }
             }, { quoted: m });
 
             let downloadUrl;
-            const apiType = isAudio ? 'ytmp3' : 'ytmp4';
-            const apiRes = await fetch(`https://sylphyy.xyz/download/v2/${apiType}?url=${encodeURIComponent(videoUrl)}&api_key=kirito-bot-oficial`).then(res => res.json());
-            
-            if (apiRes.status) downloadUrl = apiRes.result.dl_url;
-            if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga.");
+            const apiKey = 'kirito-bot-oficial';
+
+            try {
+                const apiType = isAudio ? 'ytmp3' : 'ytmp4';
+                const res = await fetch(`https://sylphyy.xyz/download/v2/${apiType}?url=${encodeURIComponent(videoUrl)}&api_key=${apiKey}`);
+                const data = await res.json();
+                if (data.status && data.result?.dl_url) {
+                    downloadUrl = data.result.dl_url;
+                }
+            } catch (e) {
+                console.error("API 1 Fallida, intentando Nexus...");
+            }
+
+            if (!downloadUrl) {
+                try {
+                    const nexusType = isAudio ? 'mp3' : 'mp4';
+                    const res = await fetch(`https://panel.apinexus.fun/api/youtube/v2/${nexusType}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+                        body: JSON.stringify({ url: videoUrl })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        downloadUrl = isAudio ? data.data.audio : data.data.video;
+                    }
+                } catch (e) {
+                    console.error("API Nexus Fallida");
+                }
+            }
+
+            if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga de ninguna API.");
 
             const mediaResponse = await fetch(downloadUrl);
             const mediaBuffer = await mediaResponse.buffer();
