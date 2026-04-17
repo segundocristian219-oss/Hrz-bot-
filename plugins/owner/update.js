@@ -15,7 +15,6 @@ const updateCommand = {
     run: async (m, { conn, args }) => {
         try {
             await m.react("🔄");
-
             const output = await runCmd(`git pull ${args[0] || ''}`);
 
             if (/Already up[ -]to[ -]date/i.test(output)) {
@@ -23,19 +22,10 @@ const updateCommand = {
                 return conn.sendMessage(m.chat, { text: '✧ *[ ✓ ] El sistema ya está en su versión más reciente.*' }, { quoted: m });
             }
 
-            const updateMsg = `
-\t\t\t\t♛  *SISTEMA ACTUALIZADO* ♛
-
-✦ *[ 📦 ] Cambios detectados:*\n\`\`\`${output.trim()}\`\`\`
-
-◈ *APLICANDO CAMBIOS...*
-✧ *Los cambios se aplicarán en caliente sin reiniciar sockets.*
-`;
+            const updateMsg = `♛  *SISTEMA ACTUALIZADO* ♛\n\n✦ *[ 📦 ] Cambios detectados:*\n\`\`\`${output.trim()}\`\`\`\n\n◈ *APLICANDO CAMBIOS...*\n✧ *Los cambios se aplicarán en caliente sin reiniciar sockets.*`;
 
             await conn.sendMessage(m.chat, { text: updateMsg }, { quoted: m });
             await m.react("⚙️");
-
-            
 
         } catch (error) {
             let status = '';
@@ -46,7 +36,7 @@ const updateCommand = {
             }
 
             const conflictMsg = status.trim()
-                ? `◈ *⚠️ Conflictos detectados:*\n\n\`\`\`${status.trim()}\`\`\`\n\n✦ Resuelve los conflictos manualmente o usa git reset.`
+                ? `◈ *⚠️ Conflictos detectados:*\n\n\`\`\`${status.trim()}\`\`\`\n\n✦ Resuelve los conflictos manualmente.`
                 : error.toString();
 
             await conn.sendMessage(m.chat, { text: `💀 *ERROR CRÍTICO:* \n\n${conflictMsg}` }, { quoted: m });
