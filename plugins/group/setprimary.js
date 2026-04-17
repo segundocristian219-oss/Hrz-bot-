@@ -40,7 +40,7 @@ export const getActiveBot = async (conn, chatId) => {
         } catch {}
     }
 
-    if (chat.backupBots?.length) {
+    if (Array.isArray(chat.backupBots)) {
         for (const b of chat.backupBots) {
             if (valid(b)) {
                 await global.Chat.updateOne({ id: chatId }, { $set: { primaryBot: b } })
@@ -62,19 +62,23 @@ export const getActiveBot = async (conn, chatId) => {
 const setprimary = {
     name: 'setprimary',
     alias: ['primary', 'mainbot'],
-    category: 'config',
+    category: 'group',
     admin: true,
     group: true,
 
-    run: async function (m, { conn, isOwner }) {
+    run: async (m, { conn, isOwner }) => {
         try {
 
             /*
-            if (!isOwner) return m.reply('Solo owners.')
+            if (!isOwner) {
+                return m.reply('✦ Solo el owner puede usar este comando.')
+            }
             */
 
             const target = m.mentionedJid?.[0] || m.quoted?.sender
-            if (!target) return m.reply('Menciona un bot.')
+            if (!target) {
+                return m.reply(`✦ Menciona o responde a un bot.\n✧ Ejemplo: *.setprimary @bot*`)
+            }
 
             const who = await getRealJid(target, conn, m.chat)
 
@@ -84,8 +88,13 @@ const setprimary = {
             const main = conn.user.id.split(':')[0] + '@s.whatsapp.net'
             const bots = [...new Set([main, ...getBots()])]
 
-            if (!bots.includes(who)) return m.reply('Bot inválido.')
-            if (!users.includes(who)) return m.reply('No está en el grupo.')
+            if (!bots.includes(who)) {
+                return m.reply(`✖ Ese usuario no es un bot válido del sistema.`)
+            }
+
+            if (!users.includes(who)) {
+                return m.reply(`✖ Ese bot no está dentro del grupo.`)
+            }
 
             const backups = bots.filter(b => b !== who && users.includes(b))
 
@@ -97,20 +106,23 @@ const setprimary = {
 
             await conn.sendMessage(m.chat, {
                 text:
-`❯❯ 𝗠𝗨𝗟𝗧𝗜 𝗕𝗢𝗧
-
-❖ Principal:
-@${who.split('@')[0]}
-
-❖ Backups: ${backups.length}
-
-✔ Fallback activo`,
+`╭─〔 🤖 𝗠𝗨𝗟𝗧𝗜 𝗕𝗢𝗧 〕─⬣
+│
+│ ✦ 𝗣𝗿𝗶𝗻𝗰𝗶𝗽𝗮𝗹:
+│   @${who.split('@')[0]}
+│
+│ ✧ 𝗕𝗮𝗰𝗸𝘂𝗽𝘀: ${backups.length}
+│
+│ ✔ Sistema de reemplazo automático activo
+│ ✔ Si el bot cae, otro tomará el control
+│
+╰────────────────⬣`,
                 mentions: [who, ...backups]
             }, { quoted: m })
 
         } catch (e) {
             console.error(e)
-            m.reply('Error.')
+            m.reply('✖ Error al configurar el bot principal.')
         }
     }
 }
