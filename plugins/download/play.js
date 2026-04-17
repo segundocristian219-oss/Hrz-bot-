@@ -47,7 +47,7 @@ const youtubeCommand = {
 
             let downloadUrl;
             const apiType = isAudio ? 'ytmp3' : 'ytmp4';
-            const apiRes = await fetch(`https://sylphyy.xyz/download/v2/${apiType}?url=${encodeURIComponent(videoUrl)}&api_key=sylphy-ICspJCM`).then(res => res.json());
+            const apiRes = await fetch(`https://sylphyy.xyz/download/v2/${apiType}?url=${encodeURIComponent(videoUrl)}&api_key=kirito-bot-oficial`).then(res => res.json());
             
             if (apiRes.status) downloadUrl = apiRes.result.dl_url;
             if (!downloadUrl) throw new Error("No se pudo obtener el enlace de descarga.");
