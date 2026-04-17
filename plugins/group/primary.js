@@ -6,19 +6,14 @@ const primaryCommand = {
     category: 'group',
     group: true,
 
-    run: async (m, { conn }) => {
+    run: async (m, { conn, command, isROwner }) => {
         try {
             const chat = m.chat
-            const botId = conn.user.jid
-            const text = m.text || ''
+            const botId = conn.user.id
 
-            /* 
-            const sender = m.sender.split('@')[0]
-            const isOwner = global.owner.some(([num]) => sender.includes(num))
-            if (!isOwner) return 
-            */
+            /* if (!isROwner) return */
 
-            if (text.startsWith('.setprimary')) {
+            if (command === 'setprimary') {
                 primaryGroups.set(chat, botId)
 
                 let txt = `*─── [ ♛ PRIMARY ] ───*\n\n`
@@ -28,7 +23,7 @@ const primaryCommand = {
                 return conn.reply(chat, txt, m)
             }
 
-            if (text.startsWith('.delprimary')) {
+            if (command === 'delprimary') {
                 primaryGroups.delete(chat)
 
                 let txt = `*─── [ ♛ PRIMARY ] ───*\n\n`
@@ -46,13 +41,14 @@ const primaryCommand = {
 
     before: async (m, { conn }) => {
         const chat = m.chat
-        const botId = conn.user.jid
+        const botId = conn.user.id
 
-        if (!primaryGroups.has(chat)) return
+        if (!primaryGroups.has(chat)) return false
 
         const primary = primaryGroups.get(chat)
 
-        if (primary !== botId) return false
+        if (primary !== botId) return true
+        return false
     }
 }
 
