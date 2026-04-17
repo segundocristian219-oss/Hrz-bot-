@@ -14,36 +14,40 @@ const getBots = () => {
         const dir = path.join(__dirname, '../../Sessions', f)
         if (!fs.existsSync(dir)) continue
 
-        bots.push(...fs.readdirSync(dir)
-            .filter(d => fs.existsSync(path.join(dir, d, 'creds.json')))
-            .map(id => id.replace(/\D/g, '') + '@s.whatsapp.net'))
+        const list = fs.readdirSync(dir)
+        for (const d of list) {
+            const creds = path.join(dir, d, 'creds.json')
+            if (fs.existsSync(creds)) {
+                bots.push(d.replace(/\D/g, '') + '@s.whatsapp.net')
+            }
+        }
     }
 
     return bots
 }
 
 export const getActiveBot = async (conn, chatId) => {
-    let chat = await global.Chat.findOne({ id: chatId }) || await global.Chat.create({ id: chatId })
+    let chat = await global.Chat.findOne({ id: chatId })
+    if (!chat) {
+        chat = new global.Chat({ id: chatId })
+        await chat.save()
+    }
 
     const meta = await conn.groupMetadata(chatId).catch(() => null)
-    const users = meta?.participants?.map(p => p.id || p.jid) || []
+    const users = (meta?.participants || []).map(p => p.id || p.jid)
 
     const main = conn.user.id.split(':')[0] + '@s.whatsapp.net'
     const bots = [...new Set([main, ...getBots()])]
 
-    const valid = jid => jid && bots.includes(jid) && users.includes(jid)
+    const valid = (jid) => jid && bots.includes(jid) && users.includes(jid)
 
-    if (valid(chat.primaryBot)) {
-        try {
-            await conn.sendPresenceUpdate('available', chat.primaryBot)
-            return chat.primaryBot
-        } catch {}
-    }
+    if (valid(chat.primaryBot)) return chat.primaryBot
 
     if (Array.isArray(chat.backupBots)) {
         for (const b of chat.backupBots) {
             if (valid(b)) {
-                await global.Chat.updateOne({ id: chatId }, { $set: { primaryBot: b } })
+                chat.primaryBot = b
+                await chat.save()
                 return b
             }
         }
@@ -51,7 +55,8 @@ export const getActiveBot = async (conn, chatId) => {
 
     for (const b of bots) {
         if (valid(b)) {
-            await global.Chat.updateOne({ id: chatId }, { $set: { primaryBot: b } })
+            chat.primaryBot = b
+            await chat.save()
             return b
         }
     }
@@ -77,44 +82,47 @@ const setprimary = {
 
             const target = m.mentionedJid?.[0] || m.quoted?.sender
             if (!target) {
-                return m.reply(`✦ Menciona o responde a un bot.\n✧ Ejemplo: *.setprimary @bot*`)
+                return m.reply('✦ Menciona o responde a un bot.')
             }
 
             const who = await getRealJid(target, conn, m.chat)
 
             const meta = await conn.groupMetadata(m.chat).catch(() => null)
-            const users = meta?.participants?.map(p => p.id || p.jid) || []
+            const users = (meta?.participants || []).map(p => p.id || p.jid)
 
             const main = conn.user.id.split(':')[0] + '@s.whatsapp.net'
             const bots = [...new Set([main, ...getBots()])]
 
             if (!bots.includes(who)) {
-                return m.reply(`✖ Ese usuario no es un bot válido del sistema.`)
+                return m.reply('✖ Ese no es un bot válido.')
             }
 
             if (!users.includes(who)) {
-                return m.reply(`✖ Ese bot no está dentro del grupo.`)
+                return m.reply('✖ Ese bot no está en el grupo.')
+            }
+
+            let chat = await global.Chat.findOne({ id: m.chat })
+            if (!chat) {
+                chat = new global.Chat({ id: m.chat })
             }
 
             const backups = bots.filter(b => b !== who && users.includes(b))
 
-            await global.Chat.findOneAndUpdate(
-                { id: m.chat },
-                { $set: { primaryBot: who, backupBots: backups } },
-                { upsert: true }
-            )
+            chat.primaryBot = who
+            chat.backupBots = backups
+
+            await chat.save()
 
             await conn.sendMessage(m.chat, {
                 text:
-`╭─〔 🤖 𝗠𝗨𝗟𝗧𝗜 𝗕𝗢𝗧 〕─⬣
+`╭─〔 🤖 MULTI BOT 〕─⬣
 │
-│ ✦ 𝗣𝗿𝗶𝗻𝗰𝗶𝗽𝗮𝗹:
+│ ✦ Principal:
 │   @${who.split('@')[0]}
 │
-│ ✧ 𝗕𝗮𝗰𝗸𝘂𝗽𝘀: ${backups.length}
+│ ✧ Backups: ${backups.length}
 │
-│ ✔ Sistema de reemplazo automático activo
-│ ✔ Si el bot cae, otro tomará el control
+│ ✔ Reemplazo automático activo
 │
 ╰────────────────⬣`,
                 mentions: [who, ...backups]
@@ -122,7 +130,7 @@ const setprimary = {
 
         } catch (e) {
             console.error(e)
-            m.reply('✖ Error al configurar el bot principal.')
+            m.reply('✖ Error al configurar el bot.')
         }
     }
 }
