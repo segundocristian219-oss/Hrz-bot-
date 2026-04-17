@@ -52,7 +52,7 @@ const youtubeCommand = {
             if (!downloadUrl) {
                 try {
                     const nexusType = isAudio ? 'mp3' : 'mp4';
-                    const res = await fetch(`https://panel.apinexus.fun/api/youtube/v2/${nexusType}`, {
+                    const res = await fetch(`https://panel.apinexus.fun/api/youtube/${nexusType}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
                         body: JSON.stringify({ url: videoUrl })
