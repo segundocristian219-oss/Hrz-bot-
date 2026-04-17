@@ -10,7 +10,6 @@ import path from 'path'
 
 global.owner = [['50432955554'], ['584228028583']]
 
-global.bots_free = ['50488198573']
 
 
 global.botNames = [
