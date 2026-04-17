@@ -1,15 +1,21 @@
 import 'dotenv/config';
 process.removeAllListeners('warning');
 
-const _stderr = process.stderr.write.bind(process.stderr);
-process.stderr.write = function(chunk, encoding, callback) {
-    if (chunk?.toString?.().includes('Closing session')) {
+const maskLogs = (chunk, encoding, callback, originalWrite) => {
+    const msg = chunk?.toString?.() || '';
+    if (msg.includes('Closing session') || msg.includes('Bad MAC') || msg.includes('Failed to decrypt')) {
         if (typeof encoding === 'function') encoding();
         else if (typeof callback === 'function') callback();
         return true;
     }
-    return _stderr(chunk, encoding, callback);
+    return originalWrite(chunk, encoding, callback);
 };
+
+const _stdout = process.stdout.write.bind(process.stdout);
+process.stdout.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stdout);
+
+const _stderr = process.stderr.write.bind(process.stderr);
+process.stderr.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stderr);
 
 import './config.js';
 import { platform } from 'process';
@@ -33,13 +39,13 @@ EventEmitter.defaultMaxListeners = 0;
 
 process.on('uncaughtException', (err) => {
     const msg = err?.message || '';
-    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
+    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed') || msg.includes('decrypt')) return;
     console.error('⚠️ ERROR NO CONTROLADO:', err);
 });
 
 process.on('unhandledRejection', (reason) => {
     const msg = String(reason?.message || reason || '');
-    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed')) return;
+    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed') || msg.includes('decrypt')) return;
     console.error('⚠️ PROMESA NO CONTROLADA:', reason);
 });
 
@@ -299,4 +305,4 @@ async function readRecursive(folder) {
     }
   }
 }
-await readRecursive(join(process.cwd(), './plugins'));
+await readRecursive(join(process.cwd(), './plugins'));```
