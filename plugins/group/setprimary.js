@@ -3,7 +3,7 @@ const primaryGroups = global.primaryGroups || (global.primaryGroups = new Map())
 const primaryCommand = {
     name: 'setprimary',
     alias: ['delprimary'],
-    category: 'owner',
+    category: 'group',
     group: true,
     run: async (m, { conn, command }) => {
         try {
