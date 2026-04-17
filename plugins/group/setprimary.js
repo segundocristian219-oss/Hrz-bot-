@@ -1,138 +1,56 @@
-import { getRealJid } from '../../lib/identifier.js'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+const primaryGroups = global.primaryGroups || (global.primaryGroups = new Map())
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const getBots = () => {
-    const folders = ['Subs', 'Mods']
-    let bots = []
-
-    for (const f of folders) {
-        const dir = path.join(__dirname, '../../Sessions', f)
-        if (!fs.existsSync(dir)) continue
-
-        const list = fs.readdirSync(dir)
-        for (const d of list) {
-            const creds = path.join(dir, d, 'creds.json')
-            if (fs.existsSync(creds)) {
-                bots.push(d.replace(/\D/g, '') + '@s.whatsapp.net')
-            }
-        }
-    }
-
-    return bots
-}
-
-export const getActiveBot = async (conn, chatId) => {
-    let chat = await global.Chat.findOne({ id: chatId })
-    if (!chat) {
-        chat = new global.Chat({ id: chatId })
-        await chat.save()
-    }
-
-    const meta = await conn.groupMetadata(chatId).catch(() => null)
-    const users = (meta?.participants || []).map(p => p.id || p.jid)
-
-    const main = conn.user.id.split(':')[0] + '@s.whatsapp.net'
-    const bots = [...new Set([main, ...getBots()])]
-
-    const valid = (jid) => jid && bots.includes(jid) && users.includes(jid)
-
-    if (valid(chat.primaryBot)) return chat.primaryBot
-
-    if (Array.isArray(chat.backupBots)) {
-        for (const b of chat.backupBots) {
-            if (valid(b)) {
-                chat.primaryBot = b
-                await chat.save()
-                return b
-            }
-        }
-    }
-
-    for (const b of bots) {
-        if (valid(b)) {
-            chat.primaryBot = b
-            await chat.save()
-            return b
-        }
-    }
-
-    return main
-}
-
-const setprimary = {
+const primaryCommand = {
     name: 'setprimary',
-    alias: ['primary', 'mainbot'],
-    category: 'group',
-    admin: true,
+    alias: ['delprimary'],
+    category: 'owner',
     group: true,
-
-    run: async (m, { conn, isOwner }) => {
+    run: async (m, { conn, command }) => {
         try {
+            const chat = m.chat
+            const botId = conn.user.jid
 
-            /*
-            if (!isOwner) {
-                return m.reply('✦ Solo el owner puede usar este comando.')
-            }
+            /* 
+            const isOwner = global.owner.some(([num]) => botId.includes(num))
+            if (!isOwner) return 
             */
 
-            const target = m.mentionedJid?.[0] || m.quoted?.sender
-            if (!target) {
-                return m.reply('✦ Menciona o responde a un bot.')
+            if (command === 'setprimary') {
+                primaryGroups.set(chat, botId)
+
+                let txt = `*─── [ ♛ PRIMARY ] ───*\n\n`
+                txt += `*✰ Estado:* Activado\n`
+                txt += `*➠ Bot:* Este subbot ahora es el principal\n\n`
+
+                await conn.reply(chat, txt, m)
             }
 
-            const who = await getRealJid(target, conn, m.chat)
+            if (command === 'delprimary') {
+                primaryGroups.delete(chat)
 
-            const meta = await conn.groupMetadata(m.chat).catch(() => null)
-            const users = (meta?.participants || []).map(p => p.id || p.jid)
+                let txt = `*─── [ ♛ PRIMARY ] ───*\n\n`
+                txt += `*✰ Estado:* Desactivado\n`
+                txt += `*➠ Modo:* Todos los bots responderán\n\n`
 
-            const main = conn.user.id.split(':')[0] + '@s.whatsapp.net'
-            const bots = [...new Set([main, ...getBots()])]
-
-            if (!bots.includes(who)) {
-                return m.reply('✖ Ese no es un bot válido.')
+                await conn.reply(chat, txt, m)
             }
-
-            if (!users.includes(who)) {
-                return m.reply('✖ Ese bot no está en el grupo.')
-            }
-
-            let chat = await global.Chat.findOne({ id: m.chat })
-            if (!chat) {
-                chat = new global.Chat({ id: m.chat })
-            }
-
-            const backups = bots.filter(b => b !== who && users.includes(b))
-
-            chat.primaryBot = who
-            chat.backupBots = backups
-
-            await chat.save()
-
-            await conn.sendMessage(m.chat, {
-                text:
-`╭─〔 🤖 MULTI BOT 〕─⬣
-│
-│ ✦ Principal:
-│   @${who.split('@')[0]}
-│
-│ ✧ Backups: ${backups.length}
-│
-│ ✔ Reemplazo automático activo
-│
-╰────────────────⬣`,
-                mentions: [who, ...backups]
-            }, { quoted: m })
 
         } catch (e) {
             console.error(e)
-            m.reply('✖ Error al configurar el bot.')
+            conn.reply(m.chat, `> ❌ *_Error en primary._*`, m)
         }
+    },
+
+    before: async (m, { conn }) => {
+        const chat = m.chat
+        const botId = conn.user.jid
+
+        if (!primaryGroups.has(chat)) return
+
+        const primary = primaryGroups.get(chat)
+
+        if (primary !== botId) return true
     }
 }
 
-export default setprimary
+export default primaryCommand
