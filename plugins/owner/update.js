@@ -29,16 +29,13 @@ const updateCommand = {
 ✦ *[ 📦 ] Cambios detectados:*\n\`\`\`${output.trim()}\`\`\`
 
 ◈ *APLICANDO CAMBIOS...*
-✧ *Reiniciando sistema...*
+✧ *Los cambios se aplicarán en caliente sin reiniciar sockets.*
 `;
 
             await conn.sendMessage(m.chat, { text: updateMsg }, { quoted: m });
             await m.react("⚙️");
 
-            setTimeout(() => {
-                if (process.send) process.send('reset');
-                else process.exit(0);
-            }, 3500);
+            
 
         } catch (error) {
             let status = '';
@@ -49,7 +46,7 @@ const updateCommand = {
             }
 
             const conflictMsg = status.trim()
-                ? `◈ *⚠️ Conflictos detectados:*\n\n\`\`\`${status.trim()}\`\`\`\n\n✦ Usa reset forzado.`
+                ? `◈ *⚠️ Conflictos detectados:*\n\n\`\`\`${status.trim()}\`\`\`\n\n✦ Resuelve los conflictos manualmente o usa git reset.`
                 : error.toString();
 
             await conn.sendMessage(m.chat, { text: `💀 *ERROR CRÍTICO:* \n\n${conflictMsg}` }, { quoted: m });
