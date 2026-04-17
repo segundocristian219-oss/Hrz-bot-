@@ -101,8 +101,26 @@ const matrimonio = {
             const lista = getList(user)
             if (!lista.length) return m.reply('*♛ ERROR ✧*\n\n╰❒ No estás casado.')
 
-            let quien = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null
-            if (!quien || !lista.includes(quien)) return m.reply('*♛ ERROR ✧*\n\n╰❒ Menciona a tu pareja para divorciarte.')
+            let quien = null
+
+            if (m.mentionedJid && m.mentionedJid[0]) {
+                quien = m.mentionedJid[0]
+            } else if (m.quoted) {
+                quien = m.quoted.sender
+            } else if (text) {
+                const num = text.replace(/[^0-9]/g, '')
+                if (num) quien = num + '@s.whatsapp.net'
+            }
+
+            if (!quien) {
+                if (lista.length === 1) {
+                    quien = lista[0]
+                }
+            }
+
+            if (!quien || !lista.includes(quien)) {
+                return m.reply('*♛ ERROR ✧*\n\n╰❒ Menciona, responde o usa el número de tu pareja.')
+            }
 
             const idJuegoDiv = `${llaveChat}-${Date.now()}`
 
@@ -138,7 +156,6 @@ const matrimonio = {
         if (!objetivo) return m.reply(`*♛ ERROR ✧*\n\n╰❒ El usuario no está registrado.`)
 
         const listaUser = getList(user)
-        const listaObj = getList(objetivo)
 
         if (listaUser.includes(quien)) return m.reply(`*♛ AVISO ✧*\n\n╰❒ Ya estás casado con esa persona.`)
 
