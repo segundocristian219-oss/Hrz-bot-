@@ -4,7 +4,7 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys'
 const demoteCommand = {
     name: 'demote',
     alias: ['quitaradmin', 'unadmin'],
-    category: 'owner',
+    category: 'group',
     group: true,
     botAdmin: true,
     admin: true,
