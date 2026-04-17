@@ -3,13 +3,19 @@ process.removeAllListeners('warning');
 
 const maskLogs = (chunk, encoding, callback, originalWrite) => {
     const msg = chunk?.toString?.() || '';
-    if (msg.includes('Closing session') || msg.includes('Bad MAC') || msg.includes('Failed to decrypt')) {
+    if (
+        msg.includes('Closing session') || 
+        msg.includes('Removing old closed session') || 
+        msg.includes('Bad MAC') || 
+        msg.includes('Failed to decrypt')
+    ) {
         if (typeof encoding === 'function') encoding();
         else if (typeof callback === 'function') callback();
         return true;
     }
     return originalWrite(chunk, encoding, callback);
 };
+
 
 const _stdout = process.stdout.write.bind(process.stdout);
 process.stdout.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stdout);
