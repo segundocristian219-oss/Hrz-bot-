@@ -13,8 +13,7 @@ const primaryCommand = {
 
             /* if (!isROwner) return */
 
-            const text = (m.text || '').trim()
-            const cmd = text.slice(1).split(' ')[0].toLowerCase()
+            const cmd = m.command
 
             if (cmd === 'setprimary') {
                 primaryGroups.set(chat, botId)
@@ -27,7 +26,7 @@ const primaryCommand = {
             }
 
         } catch (e) {
-            console.error(e)
+            console.error('PRIMARY ERROR:', e)
             return conn.reply(m.chat, 'Error', m)
         }
     }
