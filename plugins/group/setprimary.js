@@ -1,7 +1,7 @@
+import { getRealJid } from '../../lib/identifier.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { resolveLidToRealJid } from '../../lib/utils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -33,21 +33,19 @@ export const getActiveBot = async (conn, chatId) => {
 
     const valid = jid => jid && bots.includes(jid) && users.includes(jid)
 
-    try {
-        if (valid(chat.primaryBot)) {
+    if (valid(chat.primaryBot)) {
+        try {
             await conn.sendPresenceUpdate('available', chat.primaryBot)
             return chat.primaryBot
-        }
-    } catch {}
+        } catch {}
+    }
 
     if (chat.backupBots?.length) {
         for (const b of chat.backupBots) {
-            try {
-                if (valid(b)) {
-                    await global.Chat.updateOne({ id: chatId }, { $set: { primaryBot: b } })
-                    return b
-                }
-            } catch {}
+            if (valid(b)) {
+                await global.Chat.updateOne({ id: chatId }, { $set: { primaryBot: b } })
+                return b
+            }
         }
     }
 
@@ -69,7 +67,6 @@ const setprimary = {
     group: true,
 
     run: async function (m, { conn, isOwner }) {
-
         try {
 
             /*
@@ -79,7 +76,7 @@ const setprimary = {
             const target = m.mentionedJid?.[0] || m.quoted?.sender
             if (!target) return m.reply('Menciona un bot.')
 
-            const who = await resolveLidToRealJid(target, conn, m.chat)
+            const who = await getRealJid(target, conn, m.chat)
 
             const meta = await conn.groupMetadata(m.chat).catch(() => null)
             const users = meta?.participants?.map(p => p.id || p.jid) || []
@@ -98,19 +95,22 @@ const setprimary = {
                 { upsert: true }
             )
 
-            return m.reply(
+            await conn.sendMessage(m.chat, {
+                text:
 `❯❯ 𝗠𝗨𝗟𝗧𝗜 𝗕𝗢𝗧
 
-❖ Principal: @${who.split('@')[0]}
-❖ Backup: ${backups.length}
+❖ Principal:
+@${who.split('@')[0]}
 
-✔ Fallback activo`, null, {
+❖ Backups: ${backups.length}
+
+✔ Fallback activo`,
                 mentions: [who, ...backups]
-            })
+            }, { quoted: m })
 
         } catch (e) {
             console.error(e)
-            return m.reply('Error.')
+            m.reply('Error.')
         }
     }
 }
