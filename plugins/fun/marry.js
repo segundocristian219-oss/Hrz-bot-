@@ -11,7 +11,7 @@ const matrimonio = {
 
         const emisorReal = user.lid || user.id || m.sender
         const llaveChat = m.chat
-        const cmd = command.trim().toLowerCase()
+        const cmd = (command || m.command || '').toLowerCase()
 
         const getList = (u) => {
             if (!u.marry) return []
@@ -22,8 +22,17 @@ const matrimonio = {
         const buscarJuego = () => {
             const keys = Object.keys(global.weddingGames)
             for (let k of keys) {
+                if (!k.startsWith(llaveChat)) continue
                 const j = global.weddingGames[k]
-                if (j && (j.receptor === emisorReal || j.solicitante === emisorReal) && k.startsWith(llaveChat)) return { key: k, data: j }
+                if (!j) continue
+                if (
+                    j.receptor === emisorReal ||
+                    j.solicitante === emisorReal ||
+                    j.receptor === m.sender ||
+                    j.solicitante === m.sender
+                ) {
+                    return { key: k, data: j }
+                }
             }
             return null
         }
@@ -51,7 +60,10 @@ const matrimonio = {
                     return m.reply('*♛ DIVORCIO FINALIZADO ✧*')
                 }
 
-                const checkS = await global.User.findOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] })
+                const checkS = await global.User.findOne({
+                    $or: [{ id: juego.solicitante }, { lid: juego.solicitante }]
+                })
+
                 if (!checkS) {
                     delete global.weddingGames[idJuego]
                     return m.reply('*♛ ERROR ✧*\n\n╰❒ La propuesta ya no es válida.')
@@ -112,7 +124,13 @@ const matrimonio = {
             }, { quoted: m })
         }
 
-        let quien = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') !== '' ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null
+        let quien = m.mentionedJid && m.mentionedJid[0]
+            ? m.mentionedJid[0]
+            : m.quoted
+            ? m.quoted.sender
+            : text && text.replace(/[^0-9]/g, '') !== ''
+            ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+            : null
 
         if (!quien || quien === m.sender || quien === conn.user.jid) return m.reply(`*♛ ERROR ✧*\n\n╰❒ Menciona o responde a alguien para casarte.`)
 
