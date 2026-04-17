@@ -100,7 +100,7 @@ if (mongoURI && !process.argv.includes('--local')) {
     warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
     global.Warns = mongoose.model('Warns', warnSchema);
     global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
-    const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
+    const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
     global.Stats = mongoose.model('Stats', statsSchema);
 } else {
     activateLocalDB();
@@ -214,10 +214,6 @@ global.reload = async function(restatConn) {
     try {
         const m = await smsg(conn, msg);
         if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
-        if (m?.isGroup && !global.groupCache.has(m.chat)) {
-            const metadata = await conn.groupMetadata(m.chat).catch(() => null);
-            if (metadata) global.groupCache.set(m.chat, metadata);
-        }
     } catch (e) { if (!e.message?.includes('decrypt')) console.error(e); }
   });
 
@@ -226,67 +222,27 @@ global.reload = async function(restatConn) {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-        if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
-            setTimeout(() => global.reload(true), 3000);
-        } else if (reason === DisconnectReason.loggedOut || reason === DisconnectReason.forbidden) {
-            console.error(chalk.red(`┃ STATUS: LOGGED OUT - ELIMINANDO SESIÓN`));
+        if (reason === DisconnectReason.loggedOut) {
             exec(`rm -rf ${sessionPath}/*`);
             process.exit(1);
         } else setTimeout(() => global.reload(true), 5000);
     }
     if (connection === 'open') {
-        global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
-        console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
-        const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
-        for (const id in groups) global.groupCache.set(id, groups[id]);
-        console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
                 await loadSubBots(global.conn);
             } catch (e) {}
         }, 1000);
-        const updateStatus = async () => {
-            try {
-                const time = new Date().toLocaleString('es-HN', { hour12: true });
-                await conn.query({
-                    tag: 'iq',
-                    attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`KIRITO BOT MD | ${time}`, 'utf-8') }]
-                });
-            } catch {}
-        };
-        updateStatus();
-        if (global.keepAlive) clearInterval(global.keepAlive);
-        global.keepAlive = setInterval(updateStatus, 600000);
     }
   });
 
   global.conn.ev.on('creds.update', saveCreds);
-
-  global.conn.ev.on('groups.update', async (updates) => {
-    for (const update of updates) {
-        global.groupCache.delete(update.id);
-        const metadata = await conn.groupMetadata(update.id).catch(() => null);
-        if (metadata) global.groupCache.set(update.id, metadata);
-    }
-  });
-
-  global.conn.ev.on('group-participants.update', async (update) => {
-    global.groupCache.delete(update.id);
-    const metadata = await conn.groupMetadata(update.id).catch(() => null);
-    if (metadata) global.groupCache.set(update.id, metadata);
-  });
 };
 
 await global.reload();
-
-import('./lib/event/antiStatus.js').then(module => module.default(global.conn)).catch(() => {});
-
-global.plugins = new Map();
-global.aliases = new Map();
 
 async function readRecursive(folder) {
   const files = await fsP.readdir(folder);
@@ -298,11 +254,9 @@ async function readRecursive(folder) {
       try {
         const module = await import(`file://${file}`);
         const plugin = module.default || module;
-        const name = plugin.name || basename(filename, '.js');
-        global.plugins.set(name, plugin);
-        if (plugin.alias) (Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias]).forEach(a => global.aliases.set(a, name));
+        global.plugins.set(plugin.name || basename(filename, '.js'), plugin);
       } catch (e) { console.error(e); }
     }
   }
 }
-await readRecursive(join(process.cwd(), './plugins'));```
+await readRecursive(join(process.cwd(), './plugins'));
