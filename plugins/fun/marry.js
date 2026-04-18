@@ -83,20 +83,6 @@ const matrimonio = {
         if (cmd === 'divorce' || cmd === 'divorcio') {
             if (!user.marry || user.marry === "") return m.reply('*♛ ERROR ✧*\n\n╰❒ No estás casado.')
 
-            let quien = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null
-
-            if (!quien) return m.reply('*♛ ERROR ✧*\n\n╰❒ Debes mencionar a tu pareja.')
-
-            const baseQuien = quien.split('@')[0].split(':')[0]
-            const baseMarry = user.marry.split('@')[0].split(':')[0]
-
-            if (baseQuien !== baseMarry) {
-                return conn.sendMessage(m.chat, {
-                    text: `*♛ SEGURIDAD ✧*\n\n╰❒ Debes mencionar a tu pareja @${user.marry.split('@')[0]} para pedir el divorcio.`,
-                    contextInfo: { mentionedJid: [user.marry] }
-                }, { quoted: m })
-            }
-
             const idPareja = user.marry
             const idJuegoDiv = `${llaveChat}-${idPareja}`
 
@@ -155,7 +141,7 @@ const matrimonio = {
             timeout: setTimeout(() => { 
                 if (global.weddingGames[idJuegoBoda]) {
                     delete global.weddingGames[idJuegoBoda]
-                    conn.sendMessage(m.chat, { text: `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ La propuesta para @${idObjetivo.split('@')[0]} expiró.`, mentionedJid: [idObjetivo] })
+                    conn.sendMessage(m.chat, { text: `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ La propuesta para @${idObjetivo.split('@')[0]} expiró.`, mentions: [idObjetivo] })
                 }
             }, 15000)
         }
