@@ -93,6 +93,7 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
         family: 4
     }).then(() => {
         logDB('CLOUD', 'CONNECTED');
+        global.db = mongoose.connection.db;
     }).catch(() => {
         logDB('CLOUD', 'ERROR');
         activateLocalDB();
@@ -240,50 +241,53 @@ global.reload = async function(restatConn) {
             process.exit(1);
         } else setTimeout(() => global.reload(true), 5000);
     }
-    if (connection === 'open') {
+        if (connection === 'open') {
         global.botNumber = conn.user.id;
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
         for (const id in groups) global.groupCache.set(id, groups[id]);
-        console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
-        
-        const reportsCollection = mongoose.connection.collection('reports');
-        const devGroupId = '120363424997886266@g.us'; 
-        reportsCollection.watch().on('change', async (change) => {
-            if (change.operationType === 'insert') {
-                const data = change.fullDocument;
-                let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
-                                `┃ ⊛ Sub-Bot: ${data.subBotName}\n` +
-                                `┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n` +
-                                `┃ ⊛ Tipo: ${data.type}\n` +
-                                `┃ ⊛ Mensaje: ${data.message}\n` +
-                                `┃ ⌬ Chat ID: ${data.chatId}\n` +
-                                `┃ ◈ MSG ID: ${data.msgId}\n` +
-                                `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
-                const opt = { 
-                    mentions: [data.sender],
-                    contextInfo: {
-                        mentionedJid: [data.sender],
-                        externalAdReply: {
-                            title: `CENTRAL DE REPORTES`,
-                            body: `Remitente: ${data.pushName}`,
-                            mediaType: 1,
-                            thumbnailUrl: 'https://dix.lat/logo.png',
-                            sourceUrl: 'https://dix.lat'
+
+        const db = mongoose.connection.db;
+        if (db) {
+            const reportsCollection = db.collection('reports');
+            const devGroupId = '120363424997886266@g.us'; 
+            reportsCollection.watch().on('change', async (change) => {
+                if (change.operationType === 'insert') {
+                    const data = change.fullDocument;
+                    let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
+                                    `┃ ⊛ Sub-Bot: ${data.subBotName}\n` +
+                                    `┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n` +
+                                    `┃ ⊛ Tipo: ${data.type}\n` +
+                                    `┃ ⊛ Mensaje: ${data.message}\n` +
+                                    `┃ ⌬ Chat ID: ${data.chatId}\n` +
+                                    `┃ ◈ MSG ID: ${data.msgId}\n` +
+                                    `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+                    const opt = { 
+                        mentions: [data.sender],
+                        contextInfo: {
+                            mentionedJid: [data.sender],
+                            externalAdReply: {
+                                title: `CENTRAL DE REPORTES`,
+                                body: `Remitente: ${data.pushName}`,
+                                mediaType: 1,
+                                thumbnailUrl: 'https://dix.lat/logo.png',
+                                sourceUrl: 'https://dix.lat'
+                            }
                         }
+                    };
+                    if (data.media) {
+                        const buffer = Buffer.from(data.media, 'base64');
+                        await conn.sendMessage(devGroupId, { [/image/.test(data.mime) ? 'image' : 'video']: buffer, caption: reportMsg, ...opt });
+                    } else {
+                        await conn.sendMessage(devGroupId, { text: reportMsg, ...opt });
                     }
-                };
-                if (data.media) {
-                    const buffer = Buffer.from(data.media, 'base64');
-                    await conn.sendMessage(devGroupId, { [/image/.test(data.mime) ? 'image' : 'video']: buffer, caption: reportMsg, ...opt });
-                } else {
-                    await conn.sendMessage(devGroupId, { text: reportMsg, ...opt });
+                    await reportsCollection.deleteOne({ _id: data._id });
                 }
-                await reportsCollection.deleteOne({ _id: data._id });
-            }
-        });
+            });
+        }
+       
 
         setTimeout(async () => {
             try {
