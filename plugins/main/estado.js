@@ -1,9 +1,9 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const botToggleCommand = {
-    name: 'estado',
+    name: 'bot',
     alias: ['subbot', 'estado', 'sistema'],
-    category: 'main',
+    category: 'owner',
     run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
         try {
             /*
@@ -19,8 +19,8 @@ const botToggleCommand = {
                 return conn.reply(m.chat, `『 ❗ 』 El Sistema de Suspensión solo opera en terminales de Grupo.`, m);
             }
 
-            let chat = global.db.data.chats[m.chat];
-            if (!chat) chat = global.db.data.chats[m.chat] = {};
+            let chat = await global.Chat.findOne({ id: m.chat });
+            if (!chat) chat = await global.Chat.create({ id: m.chat });
 
             const action = args[0]?.toLowerCase();
 
@@ -39,7 +39,7 @@ const botToggleCommand = {
                     return conn.reply(m.chat, `『 ⚠️ 』 El subbot ya se encuentra *suspendido* en este grupo.`, m);
                 }
                 
-                chat.isBanned = true;
+                await global.Chat.updateOne({ id: m.chat }, { $set: { isBanned: true } });
                 await m.react("🔴");
                 return conn.reply(m.chat, `『 🛑 SISTEMA SUSPENDIDO 』\n\nEl subbot ha sido desconectado exitosamente de este grupo.\n\n> _Ignoraré todos los comandos aquí hasta que un Owner restaure la conexión con ${usedPrefix + command} on._`, m);
             }
@@ -49,7 +49,7 @@ const botToggleCommand = {
                     return conn.reply(m.chat, `『 ⚠️ 』 El subbot ya se encuentra *activo* y operando normalmente en este grupo.`, m);
                 }
                 
-                chat.isBanned = false;
+                await global.Chat.updateOne({ id: m.chat }, { $set: { isBanned: false } });
                 await m.react("🟢");
                 return conn.reply(m.chat, `『 ✅ SISTEMA RESTAURADO 』\n\nConexión restablecida con éxito. El subbot vuelve a estar operativo en este grupo.\n\n> _Esperando nuevas órdenes..._ ✨`, m);
             }
@@ -62,4 +62,3 @@ const botToggleCommand = {
 };
 
 export default botToggleCommand;
-                  
