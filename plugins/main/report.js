@@ -4,7 +4,7 @@ const reportSystem = {
     name: 'reporte',
     alias: ['report', 'bug', 'idea', 'responder', 'reply', 'r'],
     run: async (m, { conn, text, usedPrefix, command, isROwner }) => {
-        const owners = (global.owner || []).map(owner => owner[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+        const reportsCollection = global.db.collection('reports');
 
         if (['responder', 'reply', 'r'].includes(command)) {
             if (!isROwner) return m.reply('solo desarrolladores');
@@ -27,40 +27,19 @@ const reportSystem = {
                 const header = `⌬ RESPUESTA DEL DESARROLLADOR\n\n`;
                 const body = text || '';
 
-                let content = { 
-                    text: header + body,
-                    mentions: [userJid] 
-                };
+                let content = { text: header + body, mentions: [userJid] };
 
                 if (/image/.test(mime)) {
-                    content = { 
-                        image: await q.download(), 
-                        caption: header + body, 
-                        mentions: [userJid] 
-                    };
+                    content = { image: await q.download(), caption: header + body, mentions: [userJid] };
                 } else if (/video/.test(mime)) {
-                    content = { 
-                        video: await q.download(), 
-                        caption: header + body, 
-                        mentions: [userJid] 
-                    };
+                    content = { video: await q.download(), caption: header + body, mentions: [userJid] };
                 } else if (/audio/.test(mime)) {
-                    content = { 
-                        audio: await q.download(), 
-                        mimetype: 'audio/mp4', 
-                        ptt: true,
-                        mentions: [userJid]
-                    };
+                    content = { audio: await q.download(), mimetype: 'audio/mp4', ptt: true, mentions: [userJid] };
                 }
 
                 await conn.sendMessage(chatId, content, { 
                     quoted: { 
-                        key: { 
-                            remoteJid: chatId, 
-                            fromMe: false, 
-                            id: msgId, 
-                            participant: userJid 
-                        }, 
+                        key: { remoteJid: chatId, fromMe: false, id: msgId, participant: userJid }, 
                         message: { conversation: quotedContent.split('⊛ Mensaje: ')[1]?.split('\n')[0] || "Reporte" } 
                     } 
                 });
@@ -76,49 +55,32 @@ const reportSystem = {
         let reportText = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
 
         if (!reportText && !/image|video/.test(mime)) {
-            return m.reply(`⚠ USO INCORRECTO\n\nEscribe el reporte o etiqueta un mensaje/imagen con texto.`);
+            return m.reply(`⚠ USO INCORRECTO\n\nEscribe el reporte o etiqueta un mensaje.`);
         }
 
-        let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
-                        `┃ ⊛ Usuario: @${m.sender.split('@')[0]}\n` +
-                        `┃ ⊛ Tipo: ${command.toUpperCase()}\n` +
-                        `┃ ⊛ Mensaje: ${reportText || '(Sin descripción)'}\n` +
-                        `┃ ⌬ Chat ID: ${m.chat}\n` +
-                        `┃ ◈ MSG ID: ${m.key.id}\n` +
-                        `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
-
         try {
-            let media = (mime && /image|video/.test(mime)) ? await q.download() : null;
-            
-            for (const jid of owners) {
-                const opt = { 
-                    mentions: [m.sender],
-                    contextInfo: {
-                        mentionedJid: [m.sender],
-                        externalAdReply: {
-                            title: `REPORTE`,
-                            body: `Reporte de: ${m.pushName || 'Usuario'}`,
-                            mediaType: 1,
-                            thumbnailUrl: img(),
-                            renderLargerThumbnail: false,
-                            sourceUrl: 'https://dix.lat'
-                        }
-                    }
-                };
-
-                if (media) {
-                    await conn.sendMessage(jid, { 
-                        [/image/.test(mime) ? 'image' : 'video']: media, 
-                        caption: reportMsg, 
-                        ...opt 
-                    });
-                } else {
-                    await conn.sendMessage(jid, { text: reportMsg, ...opt });
-                }
+            let mediaBase64 = null;
+            if (mime && /image|video/.test(mime)) {
+                mediaBase64 = (await q.download()).toString('base64');
             }
-            await m.reply('✓ Su reporte ha sido enviado a los desarrolladores.');
+
+            await reportsCollection.insertOne({
+                subBotName: conn.user.name || 'Sub-Bot',
+                sender: m.sender,
+                pushName: m.pushName || 'Usuario',
+                type: command.toUpperCase(),
+                message: reportText || '(Sin descripción)',
+                chatId: m.chat,
+                msgId: m.key.id,
+                mime: mime,
+                media: mediaBase64,
+                status: 'pending',
+                timestamp: new Date()
+            });
+
+            await m.reply('✓ Su reporte ha sido enviado al Centro de Control.');
         } catch (err) {
-            await m.reply('☒ Fallo al procesar el envío del reporte.');
+            await m.reply('☒ Error al procesar el reporte en base de datos.');
         }
     }
 };
