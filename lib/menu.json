@@ -51,6 +51,7 @@
     { "cmd": ".kill", "desc": "GIF de matar estilo anime." },
     { "cmd": ".kiss", "desc": "GIF de beso anime." },
     { "cmd": ".kiss2", "desc": "GIF de beso anime (variante)." },
+    { "cmd": ".kiss3", "desc": "GIF de beso anime (variante)." },
     { "cmd": ".hug", "desc": "GIF de abrazo anime." },
     { "cmd": ".hello", "desc": "GIF de saludo anime." },
     { "cmd": ".coffee", "desc": "GIF de café anime." },
