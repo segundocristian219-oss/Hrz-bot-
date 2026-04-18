@@ -14,7 +14,6 @@ const reportSystem = {
             if (!quotedContent.includes('「 NUEVO REPORTE RECIBIDO 」')) return m.reply('⚠ No es un reporte válido.');
 
             try {
-                
                 const userJid = quotedContent.split('⊛ Usuario: @')[1]?.split('\n')[0] + '@s.whatsapp.net';
                 const chatId = quotedContent.split('⌬ Chat ID: ')[1]?.split('\n')[0];
                 const msgId = quotedContent.split('◈ MSG ID: ')[1]?.split('\n')[0];
@@ -32,13 +31,10 @@ const reportSystem = {
                     content = { [mime.split('/')[0]]: await q.download(), caption: header + body, mentions: [userJid] };
                 }
 
-                
                 let targetConn = global.conn; 
                 if (botJid && botJid !== global.conn.user.id) {
                     const subBot = global.conns.find(c => c.user && (c.user.id.split(':')[0] === botJid.split(':')[0]));
-                    if (subBot) {
-                        targetConn = subBot;
-                    }
+                    if (subBot) targetConn = subBot;
                 }
 
                 await targetConn.sendMessage(chatId, content, { 
@@ -54,10 +50,22 @@ const reportSystem = {
             }
         }
 
-        
         let q = m.quoted ? m.quoted : m;
         let mime = (q.msg || q).mimetype || '';
-        let reportText = text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '');
+        let reportText = (text || (m.quoted ? (m.quoted.text || m.quoted.caption || '') : '')).trim();
+
+        if (!reportText || reportText.length === 0) {
+            return m.reply('⚠ El reporte no puede estar vacío.');
+        }
+
+        if (reportText.length < 10) {
+            return m.reply('⚠ Reporte muy corto. Describe mejor el problema (mínimo 10 caracteres).');
+        }
+
+        const isOnlyNumber = /^\+?[\d\s-]+$/.test(reportText);
+        if (isOnlyNumber) {
+            return m.reply('⚠ No envíes solo números de teléfono. Explica el reporte con texto.');
+        }
 
         try {
             let mediaBase64 = null;
@@ -71,7 +79,7 @@ const reportSystem = {
                 sender: m.sender,
                 pushName: m.pushName || 'Usuario',
                 type: command.toUpperCase(),
-                message: reportText || '(Sin descripción)',
+                message: reportText,
                 chatId: m.chat,
                 msgId: m.key.id,
                 mime: mime,
