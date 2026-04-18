@@ -250,7 +250,7 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
         
         const reportsCollection = mongoose.connection.collection('reports');
-        const devGroupId = '120363212345678@g.us'; 
+        const devGroupId = '120363424997886266@g.us'; 
         reportsCollection.watch().on('change', async (change) => {
             if (change.operationType === 'insert') {
                 const data = change.fullDocument;
