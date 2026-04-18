@@ -1,7 +1,7 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const botToggleCommand = {
-    name: 'bot',
+    name: 'estado',
     alias: ['subbot', 'estado', 'sistema'],
     category: 'main',
     run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
