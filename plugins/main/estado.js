@@ -2,23 +2,17 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const botControl = {
     name: 'estado',
-    alias: ['switch'],
-    category: 'main',
+    alias: ['switch', 'bot'],
+    category: 'owner',
     run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
         try {
-            /*
-            const ownerList = global.owner || [];
-            const isOwnerCustom = isOwner || ownerList.some(owner => owner[0] === m.sender.split('@')[0]);
-
-            if (!isOwnerCustom) {
-                return conn.reply(m.chat, `『 ❌ 』 Acceso denegado. Este comando es exclusivo para la administración del sistema.`, m);
-            }
-            */
-
             if (!m.isGroup) return m.reply("『 ❗ 』 Esta función solo puede ejecutarse en terminales de Grupo.");
 
             let chat = await global.Chat.findOne({ id: m.chat });
-            if (!chat) chat = await global.Chat.create({ id: m.chat, isBanned: false });
+            
+            if (!chat) {
+                chat = await global.Chat.create({ id: m.chat, isBanned: false });
+            }
 
             const action = args[0]?.toLowerCase();
 
@@ -37,6 +31,7 @@ const botControl = {
                 
                 await global.Chat.updateOne({ id: m.chat }, { $set: { isBanned: true } });
                 await m.react("💤");
+                
                 return conn.sendMessage(m.chat, { 
                     text: `『 🛑 SISTEMA SUSPENDIDO 』\n\nEste terminal ha sido desconectado. El bot dejará de responder a comandos en este grupo.\n\n✦ *Protocolo activado por:* @${m.sender.split('@')[0]}`,
                     mentions: [m.sender],
@@ -49,6 +44,7 @@ const botControl = {
                 
                 await global.Chat.updateOne({ id: m.chat }, { $set: { isBanned: false } });
                 await m.react("⚡");
+                
                 return conn.sendMessage(m.chat, { 
                     text: `『 ✅ SISTEMA RESTAURADO 』\n\nConexión restablecida con éxito. El subbot vuelve a estar operativo para todos los usuarios.`,
                     contextInfo: { ...global.channelInfo }
@@ -56,7 +52,7 @@ const botControl = {
             }
 
         } catch (e) {
-            console.error(e);
+            console.error("Error en comando estado:", e);
         }
     }
 };
