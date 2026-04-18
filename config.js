@@ -8,7 +8,7 @@ import axios from 'axios'
 import moment from 'moment-timezone'
 import path from 'path'
 
-global.owner = [['50432955554'], ['584228028583']]
+global.owner = [['50432955554']]
 
 
 
