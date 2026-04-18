@@ -256,14 +256,15 @@ global.reload = async function(restatConn) {
             reportsCollection.watch().on('change', async (change) => {
                 if (change.operationType === 'insert') {
                     const data = change.fullDocument;
-                    let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
+                    let reportMsg = `┏━━ 「 NUEVO REPORTE RECIBIDO 」 ━━┓\n` +
                                     `┃ ⊛ Sub-Bot: ${data.subBotName}\n` +
                                     `┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n` +
                                     `┃ ⊛ Tipo: ${data.type}\n` +
                                     `┃ ⊛ Mensaje: ${data.message}\n` +
                                     `┃ ⌬ Chat ID: ${data.chatId}\n` +
                                     `┃ ◈ MSG ID: ${data.msgId}\n` +
-                                    `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+                                    `┃ 🤖 Bot JID: ${data.botJid}\n` +
+                                    `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
                     const opt = { 
                         mentions: [data.sender],
                         contextInfo: {
