@@ -16,7 +16,6 @@ const maskLogs = (chunk, encoding, callback, originalWrite) => {
     return originalWrite(chunk, encoding, callback);
 };
 
-
 const _stdout = process.stdout.write.bind(process.stdout);
 process.stdout.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stdout);
 
@@ -249,6 +248,43 @@ global.reload = async function(restatConn) {
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
         for (const id in groups) global.groupCache.set(id, groups[id]);
         console.log(chalk.cyan('┃ ') + chalk.greenBright(`Caché inicializada: ${Object.keys(groups).length} grupos`));
+        
+        const reportsCollection = mongoose.connection.collection('reports');
+        const devGroupId = '120363212345678@g.us'; 
+        reportsCollection.watch().on('change', async (change) => {
+            if (change.operationType === 'insert') {
+                const data = change.fullDocument;
+                let reportMsg = `┏━━━━ 「 NUEVO REPORTE RECIBIDO 」 ━━━━┓\n` +
+                                `┃ ⊛ Sub-Bot: ${data.subBotName}\n` +
+                                `┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n` +
+                                `┃ ⊛ Tipo: ${data.type}\n` +
+                                `┃ ⊛ Mensaje: ${data.message}\n` +
+                                `┃ ⌬ Chat ID: ${data.chatId}\n` +
+                                `┃ ◈ MSG ID: ${data.msgId}\n` +
+                                `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+                const opt = { 
+                    mentions: [data.sender],
+                    contextInfo: {
+                        mentionedJid: [data.sender],
+                        externalAdReply: {
+                            title: `CENTRAL DE REPORTES`,
+                            body: `Remitente: ${data.pushName}`,
+                            mediaType: 1,
+                            thumbnailUrl: 'https://dix.lat/logo.png',
+                            sourceUrl: 'https://dix.lat'
+                        }
+                    }
+                };
+                if (data.media) {
+                    const buffer = Buffer.from(data.media, 'base64');
+                    await conn.sendMessage(devGroupId, { [/image/.test(data.mime) ? 'image' : 'video']: buffer, caption: reportMsg, ...opt });
+                } else {
+                    await conn.sendMessage(devGroupId, { text: reportMsg, ...opt });
+                }
+                await reportsCollection.deleteOne({ _id: data._id });
+            }
+        });
+
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
@@ -312,4 +348,4 @@ async function readRecursive(folder) {
     }
   }
 }
-await readRecursive(join(process.cwd(), './plugins'));
+await readRecursive(join(process.cwd(), './plugins'))
