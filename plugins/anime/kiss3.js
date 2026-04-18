@@ -49,4 +49,4 @@ const kiss3 = {
     }
 }
 
-export default kiss2
+export default kiss3
