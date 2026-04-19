@@ -62,14 +62,18 @@ global.jadi = conf.sessions.sub
 global.ch = conf.social.channel
 global.rmr = more.repeat(850)
 global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
-    const settings = conn.settings || {};
-    
-    global.name = () => settings.botName || global.botNames[Math.floor(Math.random() * global.botNames.length)];
-    global.img = () => settings.botImage || global.botImages[Math.floor(Math.random() * global.botImages.length)];
-    
 
-global.img2 = () => global.botImages2[Math.floor(Math.random() * global.botImages2.length)]
-global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
+    export async function message(m, chatUpdate) {
+    this.uptime = this.uptime || Date.now();
+    const conn = this;
+    if (!m) return;
+
+    const settings = conn.settings || {};
+    global.name = () => settings.botName || (global.botNames && global.botNames.length > 0 ? global.botNames[Math.floor(Math.random() * global.botNames.length)] : 'Kirito');
+    global.img = () => settings.botImage || (global.botImages && global.botImages.length > 0 ? global.botImages[Math.floor(Math.random() * global.botImages.length)] : '');
+
+    const chatJid = m.chat;
+
 
 
 
