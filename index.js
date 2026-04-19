@@ -107,6 +107,16 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
     global.Warns = mongoose.model('Warns', warnSchema);
     global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
+const subBotSettingsSchema = new mongoose.Schema({
+    botId: { type: String, unique: true },
+    prefix: { type: String, default: '.' },
+    botName: { type: String, default: 'Kirito - SubBot' },
+    botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
+    status: { type: Boolean, default: true }
+}, { strict: false });
+
+global.SubBotSettings = mongoose.model('SubBotSettings', subBotSettingsSchema);
+
     const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
     global.Stats = mongoose.model('Stats', statsSchema);
 } else {
