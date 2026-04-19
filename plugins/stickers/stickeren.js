@@ -30,7 +30,7 @@ async function addExif(webpSticker, packname, author, categories = ["🤩"], ext
 
 const wmCommand = {
     name: 'wm',
-    alias: ['take', 'robar', 'stickerwm'],
+    alias: ['take', 'quitar'. 'stickerwm'],
     category: 'sticker',
     run: async (m, { conn, text }) => {
         try {
