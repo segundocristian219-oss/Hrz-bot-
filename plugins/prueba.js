@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { proto } from '@whiskeysockets/baileys';
 
 const stickerPackSearch = {
     name: 'stickerpack',
@@ -9,32 +9,31 @@ const stickerPackSearch = {
 
         try {
             await m.react('🕒');
-            const { data } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
 
-            if (!data.status || !data.result || data.result.length === 0) {
-                await m.react('✖️');
-                return m.reply('No se encontraron resultados.');
-            }
+            // Generamos una key única para el mensaje
+            const id = Math.random().toString(36).slice(2, 12).toUpperCase();
+            const key = {
+                remoteJid: m.chat,
+                fromMe: true,
+                id: id,
+            };
 
-            const pack = data.result[0];
-            const response = await axios.get(pack.thumbnailUrl, { responseType: 'arraybuffer' });
-            const buffer = Buffer.from(response.data);
-
-            await conn.sendMessage(m.chat, {
-                stickerPack: {
-                    name: pack.name.trim() || 'Pack',
-                    publisher: pack.author.trim() || 'Bot',
-                    cover: buffer,
-                    stickers: [
-                        {
-                            data: buffer,
-                            mimetype: 'image/webp'
-                        }
-                    ],
-                    packId: pack.url.split('/').pop() || 'baileys-pack',
-                    description: pack.name || 'Sticker Pack'
+            // Construimos el proto raw del stickerPackMessage vacío
+            const message = {
+                stickerPackMessage: {
+                    title: text.trim() || 'Pack de Prueba',
+                    publisherName: 'Bot',
+                    stickerPackId: 'test-pack-001',
+                    stickers: [],   // vacío por ahora
+                    caption: null,
                 }
-            }, { quoted: m });
+            };
+
+            // Enviamos con relayMessage (bypass de sendMessage)
+            await conn.relayMessage(m.chat, message, {
+                messageId: id,
+                quoted: m,
+            });
 
             await m.react('✅');
 
