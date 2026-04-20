@@ -10,7 +10,7 @@ const reaction = {
 'https://media.tenor.com/sJATVEhZ_VMAAAPo/max-and-kaylee-profile-picture.mp4',
 'https://media.tenor.com/ApfJHef4J1UAAAPo/love-anime.mp4',
 'https://media.tenor.com/c6nworIweBYAAAPo/cuddle-love.mp4',
-'https://media.tenor.com/RXbJCXFnwIwAAAPo/hugs-anime.mp4'
+'https://media.tenor.com/RXbJCXFnwIwAAAPo/hugs-anime.mp4',
 'https://media.tenor.com/SYsRdiK-T7gAAAPo/hug-anime.mp4',
 'https://media.tenor.com/9y-c-mXuJUoAAAPo/hug-anime.mp4',
 'https://media.tenor.com/hYja0d71ss4AAAPo/these-guys.mp4',
