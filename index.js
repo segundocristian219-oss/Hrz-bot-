@@ -114,7 +114,7 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
     global.Warns = mongoose.model('Warns', warnSchema);
     global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
-    
+
     const subBotSettingsSchema = new mongoose.Schema({
         botId: { type: String, unique: true },
         prefix: { type: String, default: '.' },
@@ -217,16 +217,25 @@ const cleanSessions = async () => {
     } catch (e) {}
 };
 
-let messageHandler;
-const loadHandler = async () => {
+let messageHandlerMain;
+let messageHandlerSub;
+
+const loadHandlers = async () => {
     try {
-        const Path = path.join(process.cwd(), 'lib/message.js');
-        const module = await import(`file://${Path}?update=${Date.now()}`);
-        messageHandler = module.message || module.default?.message || module.default;
+        const PathMain = path.join(process.cwd(), 'lib/message.js');
+        const PathSub = path.join(process.cwd(), 'lib/messagesub.js');
+        
+        const moduleMain = await import(`file://${PathMain}?update=${Date.now()}`);
+        messageHandlerMain = moduleMain.message || moduleMain.default?.message || moduleMain.default;
+        
+        const moduleSub = await import(`file://${PathSub}?update=${Date.now()}`);
+        messageHandlerSub = moduleSub.message || moduleSub.default?.message || moduleSub.default;
     } catch (e) { console.error(e); }
 };
-await loadHandler();
-watch(path.join(process.cwd(), 'lib/message.js'), loadHandler);
+
+await loadHandlers();
+watch(path.join(process.cwd(), 'lib/message.js'), loadHandlers);
+watch(path.join(process.cwd(), 'lib/messagesub.js'), loadHandlers);
 
 global.reload = async function(restatConn) {
   if (restatConn) {
@@ -240,7 +249,7 @@ global.reload = async function(restatConn) {
     if (!msg || (!msg.message && !msg.messageStubType)) return;
     try {
         const m = await smsg(conn, msg);
-        if (messageHandler) await messageHandler.call(conn, m, chatUpdate);
+        if (messageHandlerMain) await messageHandlerMain.call(conn, m, chatUpdate);
         if (m?.isGroup && !global.groupCache.has(m.chat)) {
             const metadata = await conn.groupMetadata(m.chat).catch(() => null);
             if (metadata) global.groupCache.set(m.chat, metadata);
@@ -265,16 +274,16 @@ global.reload = async function(restatConn) {
     }
 
     if (connection === 'open') {
-        
+
         global.botNumber = sId(conn.user.id);
-        
+
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
         for (const id in groups) global.groupCache.set(id, groups[id]);
 
-       
+
         if (global.SubBotSettings) {
             const allSettings = await global.SubBotSettings.find({ status: true });
             allSettings.forEach(s => {
@@ -386,4 +395,8 @@ async function readRecursive(folder) {
     }
   }
 }
-await readRecursive(join(process.cwd(), './plugins'))
+await readRecursive(join(process.cwd(), './plugins'));
+
+global.subHandler = async (...args) => {
+    if (messageHandlerSub) return await messageHandlerSub.call(...args);
+};
