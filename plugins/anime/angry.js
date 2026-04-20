@@ -11,6 +11,12 @@ const reaction = {
 'https://media.tenor.com/hkoyf1VeaZ4AAAPo/anime-angry.mp4',
 'https://media.tenor.com/3oYh5_W_Fd8AAAPo/brat-annoying.mp4',
 'https://media.tenor.com/DGfqf7xX7YQAAAPo/leonardo-watch-leo.mp4'
+'https://media.tenor.com/Rxjl-XIiekMAAAPo/angry.mp4'
+'https://media.tenor.com/6IJb6BzvI0YAAAPo/cat-kitty.mp4',
+'https://media.tenor.com/ZC06_nwVVMQAAAPo/nok-wink.mp4',
+'https://media.tenor.com/4iF2iAKPJOkAAAPo/angry-fire.mp4',
+'https://media.tenor.com/5UYP6KqnkXYAAAPo/enojada-burbuja.mp4',
+'https://media.tenor.com/RZzU2_IbHDEAAAPo/cat-side-eye.mp4'
 ]
 }
 
