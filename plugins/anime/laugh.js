@@ -10,7 +10,13 @@ const reaction = {
 'https://media.tenor.com/4-naM7LyYJAAAAPo/goon-tuah.mp4',
 'https://media.tenor.com/BP9vMzwRSZwAAAPo/laughing-lol.mp4',
 'https://media.tenor.com/mzIscFHY8L0AAAPo/blue-box-ao-no-hako.mp4',
-'https://media.tenor.com/CXsIEWMlv6kAAAPo/funny-mio-mio-mio-ni.mp4'
+'https://media.tenor.com/CXsIEWMlv6kAAAPo/funny-mio-mio-mio-ni.mp4',
+'https://media.tenor.com/CG8uhh9CoJcAAAPo/shikimori-shikimoris-not-just-cute.mp4',
+'https://media.tenor.com/cHJdBVQE2gIAAAPo/shachiku-san-anime-laugh.mp4',
+'https://media.tenor.com/BP9vMzwRSZwAAAPo/laughing-lol.mp4',
+'https://media.tenor.com/qCO6eDOltLwAAAPo/utena-hiiragi.mp4',
+'https://media.tenor.com/CCTYyxh2OXoAAAPo/s.mp4',
+'https://media.tenor.com/74Win7VdWDoAAAPo/anime-laughing.mp4'
 ]
 }
 
