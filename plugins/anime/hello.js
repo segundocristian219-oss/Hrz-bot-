@@ -10,9 +10,13 @@ const reaction = {
 'https://media.tenor.com/KM3VNP5d1FIAAAPo/miku-hello.mp4',
 'https://media.tenor.com/RbxWkq_RdQAAAAPo/hello-chat-hello.mp4',
 'https://media.tenor.com/_cIbOsCtx_sAAAPo/reze-chainsaw-man.mp4',
-'https://media.tenor.com/4ovOqrgVbTMAAAPo/hi-anime.mp4'
-'https://media.tenor.com/dfY9kBsTIEsAAAPo/chamoi-hola.mp4',
-'https://media.tenor.com/72PTDe72ejgAAAPo/manhiu.mp4'
+'https://media.tenor.com/4ovOqrgVbTMAAAPo/hi-anime.mp4',
+'https://media.tenor.com/2hBSkJhJarMAAAPo/hi.mp4',
+'https://media.tenor.com/KM3VNP5d1FIAAAPo/miku-hello.mp4',
+'https://media.tenor.com/dxwWkT10bmoAAAPo/wind-breaker-wind-breaker-togame.mp4',
+'https://media.tenor.com/wBumfyondqsAAAPo/anime-girl-waves-anime-girl.mp4',
+'https://media.tenor.com/Ch4VFEjuI7IAAAPo/anime-boy.mp4',
+'https://media.tenor.com/nQOSTbcTKZcAAAPo/anime-waves-hi.mp4'
 ]
 }
 
