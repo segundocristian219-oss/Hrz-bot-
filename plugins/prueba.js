@@ -1,78 +1,54 @@
 import fs from 'fs';
 import path from 'path';
-import * as acorn from 'acorn';
 
 const checkSyntax = {
-    name: 'checksyntax',
-    alias: ['debugcode'],
+    name: 'errores',
+    alias: ['checkall', 'debug'],
     category: 'owner',
     run: async (m, { conn }) => {
         const rootDir = process.cwd();
         let reports = [];
         let filesChecked = 0;
 
-        const validateFile = (fullPath) => {
-            const relativePath = path.relative(rootDir, fullPath);
+        const validateFile = async (fullPath) => {
+            const relPath = path.relative(rootDir, fullPath);
             try {
-                const code = fs.readFileSync(fullPath, 'utf8');
-                if (!code.trim()) return;
-
-                acorn.parse(code, {
-                    ecmaVersion: 'latest',
-                    sourceType: 'module'
-                });
+                const fileUrl = `file://${path.resolve(fullPath)}?update=${Date.now()}`;
+                await import(fileUrl);
             } catch (err) {
-                const code = fs.readFileSync(fullPath, 'utf8');
-                const lines = code.split('\n');
-                const errorLine = err.loc ? err.loc.line : 0;
-                
-                let snippet = '';
-                if (errorLine > 0) {
-                    const start = Math.max(0, errorLine - 2);
-                    const end = Math.min(lines.length, errorLine + 1);
-                    snippet = lines.slice(start, end)
-                        .map((l, i) => `${start + i + 1 === errorLine ? '➔ ' : '  '}${start + i + 1} | ${l}`)
-                        .join('\n');
-                }
-
-                reports.push(`📄 *ARCHIVO:* \`${relativePath}\`
+                reports.push(`📄 *ARCHIVO:* \`${relPath}\`
 ⚠️ *ERROR:* \`${err.message}\`
-📍 *Línea:* ${errorLine}
-
-\`\`\`javascript
-${snippet}
-\`\`\``);
+📍 *TIPO:* Fallo de Importación/Sintaxis`);
             }
         };
 
-        const walk = (dir) => {
+        const walk = async (dir) => {
             const files = fs.readdirSync(dir);
             for (const file of files) {
                 const fullPath = path.join(dir, file);
                 const stat = fs.statSync(fullPath);
-
                 if (stat.isDirectory()) {
                     if (['node_modules', '.git', 'sessions', 'tmp', '.npm'].includes(file)) continue;
-                    walk(fullPath);
+                    await walk(fullPath);
                 } else if (file.endsWith('.js') || file.endsWith('.mjs')) {
                     filesChecked++;
-                    validateFile(fullPath);
+                    await validateFile(fullPath);
                 }
             }
         };
 
         try {
-            await m.reply(`🔍 *Escaneando:* \`${path.basename(rootDir)}\`...`);
-            
-            walk(rootDir);
+            await m.react('🕒');
+            await walk(rootDir);
 
             if (reports.length === 0) {
+                await m.react('✅');
                 return await conn.sendMessage(m.chat, { 
-                    text: `✅ *PROYECTO LIMPIO*\n\nArchivos revisados: *${filesChecked}*` 
+                    text: `✅ *PROYECTO LIMPIO*\n\nSe revisaron *${filesChecked}* archivos en todo el sistema y no se detectaron fallos.` 
                 }, { quoted: m });
             }
 
-            let header = `🚨 *ERRORES ENCONTRADOS (${reports.length})*\n\n`;
+            let header = `🚨 *REPORTE DE ERRORES (${reports.length})*\n\n`;
             let chunks = [];
             let currentChunk = header;
 
@@ -81,16 +57,18 @@ ${snippet}
                     chunks.push(currentChunk);
                     currentChunk = '';
                 }
-                currentChunk += report + '\n' + '─'.repeat(10) + '\n';
+                currentChunk += report + '\n' + '─'.repeat(15) + '\n';
             }
-            chunks.push(currentChunk + `\nTotal revisado: ${filesChecked}`);
+            chunks.push(currentChunk + `\n*Total revisado:* ${filesChecked} archivos.`);
 
             for (let text of chunks) {
                 await conn.sendMessage(m.chat, { text }, { quoted: m });
             }
+            await m.react('⚠️');
 
         } catch (e) {
-            await m.reply('❌ Error: ' + e.message);
+            await m.react('✖️');
+            await m.reply('❌ Error en el escáner: ' + e.message);
         }
     }
 };
