@@ -167,6 +167,7 @@ const connectionOptions = {
   syncFullHistory: false,
   msgRetryCounterCache,
   connectTimeoutMs: 60000,
+  defaultQueryTimeoutMs: 0, 
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
   getMessage: async (key) => { return undefined; },
@@ -178,6 +179,7 @@ const connectionOptions = {
       return message;
   }
 };
+
 
 global.conn = makeWASocket(connectionOptions);
 global.conn.isMain = true;
@@ -249,16 +251,19 @@ global.reload = async function(restatConn) {
   global.conn.ev.removeAllListeners('connection.update');
   global.conn.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
-    if (connection === 'close') {
+        if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-        if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
-            setTimeout(() => global.reload(true), 3000);
-        } else if (reason === DisconnectReason.loggedOut || reason === DisconnectReason.forbidden) {
-            console.error(chalk.red(`┃ STATUS: LOGGED OUT - ELIMINANDO SESIÓN`));
+        if (reason === DisconnectReason.loggedOut || reason === 403) { 
+            console.error(chalk.red(`┃ STATUS: SESIÓN INVALIDADA O FORBIDDEN`));
             exec(`rm -rf ${sessionPath}/*`);
             process.exit(1);
-        } else setTimeout(() => global.reload(true), 5000);
+        } else if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
+            setTimeout(() => global.reload(true), 10000); 
+        } else {
+            setTimeout(() => global.reload(true), 15000); 
+        }
     }
+
     if (connection === 'open') {
         
         global.botNumber = sId(conn.user.id);
