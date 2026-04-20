@@ -42,13 +42,11 @@ import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
 
-// Limpiador de JID Global
 const sId = (jid) => {
     if (!jid) return jid;
     return jid.includes('@') ? jid.split('@')[0].split(':')[0] + '@s.whatsapp.net' : jid.split(':')[0] + '@s.whatsapp.net';
 };
 
-// Caché global para configuraciones de sub-bots
 global.subbotConfig = {};
 
 process.on('uncaughtException', (err) => {
@@ -262,7 +260,7 @@ global.reload = async function(restatConn) {
         } else setTimeout(() => global.reload(true), 5000);
     }
     if (connection === 'open') {
-        // ID Limpio para el bot principal
+        
         global.botNumber = sId(conn.user.id);
         
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
@@ -271,7 +269,7 @@ global.reload = async function(restatConn) {
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
         for (const id in groups) global.groupCache.set(id, groups[id]);
 
-        // Cargar configuraciones de sub-bots a caché global
+       
         if (global.SubBotSettings) {
             const allSettings = await global.SubBotSettings.find({ status: true });
             allSettings.forEach(s => {
