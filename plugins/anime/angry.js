@@ -11,12 +11,13 @@ const reaction = {
 'https://media.tenor.com/hkoyf1VeaZ4AAAPo/anime-angry.mp4',
 'https://media.tenor.com/3oYh5_W_Fd8AAAPo/brat-annoying.mp4',
 'https://media.tenor.com/DGfqf7xX7YQAAAPo/leonardo-watch-leo.mp4'
-'https://media.tenor.com/Rxjl-XIiekMAAAPo/angry.mp4'
-'https://media.tenor.com/6IJb6BzvI0YAAAPo/cat-kitty.mp4',
-'https://media.tenor.com/ZC06_nwVVMQAAAPo/nok-wink.mp4',
-'https://media.tenor.com/4iF2iAKPJOkAAAPo/angry-fire.mp4',
-'https://media.tenor.com/5UYP6KqnkXYAAAPo/enojada-burbuja.mp4',
-'https://media.tenor.com/RZzU2_IbHDEAAAPo/cat-side-eye.mp4'
+'httpss//media.tenor.com/Rxjl-XIiekMAAAPo/angry.mp4',
+'https://media.tenor.com/qiOZauqDU8gAAAPo/mad-angry.mp4',
+'https://media.tenor.com/9JjBiqaxzdAAAAPo/anime-angry.mp4',
+'https://media.tenor.com/tx3x8ANgbBwAAAPo/the-dreaming-boy-is-a-realist-yumemiru-danshi.mp4',
+'https://media.tenor.com/U8vM8y9oJjUAAAPo/nisekoi-chitoge-kirisaki.mp4',
+'https://media.tenor.com/5hCo-bxm3mUAAAPo/gojo-gojo-annoyed.mp4',
+'https://media.tenor.com/z2iFD-hLYnAAAAPo/anime-girl-anime.mp4'
 ]
 }
 
