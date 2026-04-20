@@ -11,6 +11,8 @@ const reaction = {
 'https://media.tenor.com/RbxWkq_RdQAAAAPo/hello-chat-hello.mp4',
 'https://media.tenor.com/_cIbOsCtx_sAAAPo/reze-chainsaw-man.mp4',
 'https://media.tenor.com/4ovOqrgVbTMAAAPo/hi-anime.mp4'
+'https://media.tenor.com/dfY9kBsTIEsAAAPo/chamoi-hola.mp4',
+'https://media.tenor.com/72PTDe72ejgAAAPo/manhiu.mp4'
 ]
 }
 
