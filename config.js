@@ -178,10 +178,8 @@ global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
 global.name = (c) => {
   const connection = c || global.conn;
   if (!connection?.user) return global.botNames[0];
-
   const id = jidNormalizedUser(connection.user.id);
   if (connection.settings?.botName) return connection.settings.botName;
-
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botName || global.botNames[0];
   }
@@ -191,10 +189,8 @@ global.name = (c) => {
 global.img = (c) => {
   const connection = c || global.conn;
   if (!connection?.user) return global.botImages[0];
-
   const id = jidNormalizedUser(connection.user.id);
   if (connection.settings?.botImage) return connection.settings.botImage;
-
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botImage || global.botImages[0];
   }
@@ -204,10 +200,8 @@ global.img = (c) => {
 global.img2 = (c) => {
   const connection = c || global.conn;
   if (!connection?.user) return global.botImages2[0];
-
   const id = jidNormalizedUser(connection.user.id);
   if (connection.settings?.botImage) return connection.settings.botImage;
-
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botImage || global.botImages2[0];
   }
