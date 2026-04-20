@@ -176,10 +176,9 @@ global.ch = conf.social.channel
 global.rmr = more.repeat(850)
 global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
 
-
-
 global.name = (conn) => {
   const id = conn?.user?.id?.split(':')[0] + '@s.whatsapp.net'
+  if (conn?.settings?.botName) return conn.settings.botName
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botName || global.botNames[0]
   }
@@ -188,15 +187,23 @@ global.name = (conn) => {
 
 global.img = (conn) => {
   const id = conn?.user?.id?.split(':')[0] + '@s.whatsapp.net'
+  if (conn?.settings?.botImage) return conn.settings.botImage
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botImage || global.botImages[0]
   }
   return global.botImages[Math.floor(Math.random() * global.botImages.length)]
 }
 
-global.img2 = () => global.botImages2[Math.floor(Math.random() * global.botImages2.length)]
-global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
+global.img2 = (conn) => {
+  const id = conn?.user?.id?.split(':')[0] + '@s.whatsapp.net'
+  if (conn?.settings?.botImage) return conn.settings.botImage
+  if (global.subbotConfig && global.subbotConfig[id]) {
+    return global.subbotConfig[id].botImage || global.botImages2[0]
+  }
+  return global.botImages2[Math.floor(Math.random() * global.botImages2.length)]
+}
 
+global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 global.key = "kirito-bot-oficial"
 
 global.channelInfo = {
@@ -234,3 +241,10 @@ const hour = new Intl.DateTimeFormat('es-HN', {
 global.saludo = hour >= 6 && hour < 12 ? 'Lɪɴᴅᴀ Mᴀɴ̃ᴀɴᴀ 🌅' : 
                  hour >= 12 && hour < 19 ? 'Lɪɴᴅᴀ Tᴀʀᴅᴇ 🌆' : 
                  'Lɪɴᴅᴀ Nᴏᴄʜᴇ 🌃';
+
+let file = fileURLToPath(import.meta.url)
+watchFile(file, () => {
+  unwatchFile(file)
+  console.log(chalk.redBright("Update 'config.js'"))
+  import(`${file}?update=${Date.now()}`)
+})
