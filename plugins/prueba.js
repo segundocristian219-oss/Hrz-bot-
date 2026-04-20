@@ -1,76 +1,42 @@
-import fs from 'fs';
-import path from 'path';
+import axios from 'axios';
 
-const checkSyntax = {
-    name: 'errores',
-    alias: ['checkall', 'debug'],
-    category: 'owner',
-    run: async (m, { conn }) => {
-        const rootDir = process.cwd();
-        let reports = [];
-        let filesChecked = 0;
-
-        const validateFile = async (fullPath) => {
-            const relPath = path.relative(rootDir, fullPath);
-            try {
-                const fileUrl = `file://${path.resolve(fullPath)}?update=${Date.now()}`;
-                await import(fileUrl);
-            } catch (err) {
-                reports.push(`📄 *ARCHIVO:* \`${relPath}\`
-⚠️ *ERROR:* \`${err.message}\`
-📍 *TIPO:* Fallo de Importación/Sintaxis`);
-            }
-        };
-
-        const walk = async (dir) => {
-            const files = fs.readdirSync(dir);
-            for (const file of files) {
-                const fullPath = path.join(dir, file);
-                const stat = fs.statSync(fullPath);
-                if (stat.isDirectory()) {
-                    if (['node_modules', '.git', 'sessions', 'tmp', '.npm'].includes(file)) continue;
-                    await walk(fullPath);
-                } else if (file.endsWith('.js') || file.endsWith('.mjs')) {
-                    filesChecked++;
-                    await validateFile(fullPath);
-                }
-            }
-        };
+const stickerPackSearch = {
+    name: 'stickerpack',
+    alias: ['spack', 'stickerly'],
+    category: 'search',
+    run: async (m, { conn, text }) => {
+        if (!text) return m.reply('Ingresa el nombre de un paquete de stickers.');
 
         try {
-            await m.react('🕒');
-            await walk(rootDir);
+            await m.react('🔍');
+            const { data } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
 
-            if (reports.length === 0) {
-                await m.react('✅');
-                return await conn.sendMessage(m.chat, { 
-                    text: `✅ *PROYECTO LIMPIO*\n\nSe revisaron *${filesChecked}* archivos en todo el sistema y no se detectaron fallos.` 
-                }, { quoted: m });
+            if (!data.status || !data.result || data.result.length === 0) {
+                await m.react('✖️');
+                return m.reply('No se encontraron resultados.');
             }
 
-            let header = `🚨 *REPORTE DE ERRORES (${reports.length})*\n\n`;
-            let chunks = [];
-            let currentChunk = header;
+            const pack = data.result[0];
+            const buffer = await axios.get(pack.thumbnailUrl, { responseType: 'arraybuffer' }).then(res => res.data);
 
-            for (let report of reports) {
-                if ((currentChunk + report).length > 3500) {
-                    chunks.push(currentChunk);
-                    currentChunk = '';
+            await conn.sendMessage(m.chat, {
+                stickerPack: {
+                    name: pack.name || 'Pack',
+                    publisher: pack.author || 'Bot',
+                    cover: buffer,
+                    stickers: [{ data: buffer }],
+                    packId: pack.url.split('/').pop() || 'baileys-pack',
+                    description: `Pack: ${pack.name} - Autor: ${pack.author}`
                 }
-                currentChunk += report + '\n' + '─'.repeat(15) + '\n';
-            }
-            chunks.push(currentChunk + `\n*Total revisado:* ${filesChecked} archivos.`);
+            }, { quoted: m });
 
-            for (let text of chunks) {
-                await conn.sendMessage(m.chat, { text }, { quoted: m });
-            }
-            await m.react('⚠️');
+            await m.react('✅');
 
         } catch (e) {
             await m.react('✖️');
-            await m.reply('❌ Error en el escáner: ' + e.message);
+            m.reply('Error: ' + e.message);
         }
     }
 };
 
-export default checkSyntax;
+export default stickerPackSearch;
