@@ -1,4 +1,24 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
+import fetch from 'node-fetch';
+import { FormData, Blob } from 'formdata-node';
+import { fileTypeFromBuffer } from 'file-type';
+
+const uploadToDeylinApi = async (buffer, fileName, mime) => {
+    try {
+        const formData = new FormData();
+        const blob = new Blob([buffer], { type: mime });
+        formData.append('file', blob, fileName);
+        const response = await fetch('https://api.dix.lat/upload2', {
+            method: 'POST',
+            body: formData,
+            headers: { 'User-Agent': 'Drive-Client' }
+        });
+        const json = await response.json();
+        return (json.status && json.data) ? json.data : null;
+    } catch (e) {
+        return null;
+    }
+};
 
 const settingsSubBot = {
     name: 'settings-subbot',
@@ -6,7 +26,7 @@ const settingsSubBot = {
     category: 'owner',
     run: async (m, { conn, text, command, usedPrefix }) => {
         const botJid = jidNormalizedUser(conn.user.id);
-        
+
         if (!conn.isSub) {
             return conn.sendMessage(m.chat, { text: '> ❒ Este comando solo puede ser ejecutado por un Sub-Bot.' }, { quoted: m });
         }
@@ -37,9 +57,18 @@ const settingsSubBot = {
             let url = text;
 
             if (/image/.test(mime)) {
-                let media = await q.download();
-                let { data } = await global.api.upload(media); 
-                url = data.url;
+                await m.react('🕓');
+                let buffer = await q.download();
+                const type = await fileTypeFromBuffer(buffer);
+                const fileName = `img_${Date.now()}.${type?.ext || 'png'}`;
+                const result = await uploadToDeylinApi(buffer, fileName, mime);
+                
+                if (!result || !result.url) {
+                    await m.react('✖️');
+                    return conn.sendMessage(m.chat, { text: '> ⚔ Error al subir la imagen a la API.' }, { quoted: m });
+                }
+                url = result.url;
+                await m.react('✅');
             } else if (!/^https?:\/\//.test(text)) {
                 return conn.sendMessage(m.chat, { text: `> ✎ Responde a una imagen o proporciona un enlace directo (URL).` }, { quoted: m });
             }
