@@ -15,7 +15,9 @@ const serbot = {
             return await conn.sendMessage(m.chat, {
                 image: { url: global.img() },
                 caption: donationMsg,
-                contextInfo: { ...global.info }
+                  contextInfo: {
+                    ...channelInfo
+               }
             }, { quoted: m });
         }
 
@@ -29,7 +31,9 @@ const serbot = {
             image: { url: global.img() },
             caption: instructions,
             mentions: [targetJid],
-            contextInfo: { ...global.info }
+                 contextInfo: {
+                    ...channelInfo
+               }
         }, { quoted: m });
 
         await startSubBot(m, conn, targetNum);
