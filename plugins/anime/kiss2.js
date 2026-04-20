@@ -11,11 +11,12 @@ const reaction = {
 'https://media.tenor.com/h1ISd1PmG0sAAAPo/surrender-kiss.mp4',
 'https://media.tenor.com/QO7bPmYK8mEAAAPo/yaoi-sasaki-and-miyano.mp4',
 'https://media.tenor.com/pzdArdE6WIMAAAPo/gay-anime.mp4',
-'https://media.tenor.com/PSh5JTcJxUkAAAPo/utena-tenjou.mp4',
-'https://media.tenor.com/vYvKFU1SNV8AAAPo/lesbian-anime.mp4',
-'https://media.tenor.com/iuAtLtpRcgwAAAPo/anime-girl-hug-lesbians.mp4',
-'https://media.tenor.com/yuJWwHaMBh0AAAPo/anime-girls-kissing-anime.mp4',
-'https://media.tenor.com/Zr86O9xJF3QAAAPo/anime-kiss-anime.mp4'
+'https://media.tenor.com/-P82knPil4oAAAPo/girls-lesbian.mp4',
+'https://media.tenor.com/CB5uchdYqMgAAAPo/ppmemer69-aoba.mp4',
+'https://media.tenor.com/7YX74UHF4kYAAAPo/sensei-no-ojikan-kudo-yuichi.mp4',
+'https://media.tenor.com/mbTPYJEt_C8AAAPo/anime-gay-kiss.mp4',
+'https://media.tenor.com/de3RUS-5V-EAAAPo/rp-roblox.mp4',
+'https://media.tenor.com/mqRJWadHNj8AAAPo/gaming-hop-on-growtopia.mp4'
 ]
 }
 
