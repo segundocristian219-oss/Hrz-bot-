@@ -10,7 +10,12 @@ const reaction = {
 'https://media.tenor.com/XiYuU9h44-AAAAPo/anime-slap-mad.mp4',
 'https://media.tenor.com/6K-2Qflhb4IAAAPo/barakamon-kid.mp4',
 'https://media.tenor.com/s8rSKVbvcZUAAAPo/anime-anime-slap.mp4',
-'https://media.tenor.com/awwbHH-cEB4AAAPo/slap-angry.mp4'
+'https://media.tenor.com/awwbHH-cEB4AAAPo/slap-angry.mp4',
+'https://media.tenor.com/MXZGFeabIIwAAAPo/taiga-toradora.mp4',
+'https://media.tenor.com/cVLuvX_L7e0AAAPo/azumanga-daioh-azumanga.mp4',
+'https://media.tenor.com/HueTCrExODkAAAPo/slap.mp4',
+'https://media.tenor.com/5jBuDXkDsjYAAAPo/slap.mp4',
+'https://media.tenor.com/dHNqRCJQSnIAAAPo/slap-%E0%B8%99%E0%B8%8A.mp4'
 ]
 }
 
