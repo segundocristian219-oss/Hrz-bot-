@@ -45,7 +45,7 @@ const conf = {
   },
   api: {
     url: 'https://api.dix.lat',
-    key: 'VOKER_FREE_2026'
+    key: 'VOKER_FREE_20
   },
   sessions: {
     main: 'sessions',
@@ -58,7 +58,6 @@ const conf = {
 var more = String.fromCharCode(8206)
 Object.assign(global, conf.utils)
 global.url_api = conf.api.url
-global.key = conf.api.key
 global.sessions = conf.sessions.main
 global.jadi = conf.sessions.sub
 global.ch = conf.social.channel
@@ -161,7 +160,7 @@ global.botImages2 = [
 
 const conf = {
   utils: { cheerio, fs, fetch, axios, moment },
-  api: { url: 'https://api.dix.lat', key: 'VOKER_FREE_2026' },
+  api: { url: 'https://api.dix.lat' },
   sessions: { main: 'sessions', sub: 'sessions_sub_assistant' },
   social: { channel: '120363406846602793@newsletter' }
 }
@@ -170,7 +169,6 @@ var more = String.fromCharCode(8206)
 Object.assign(global, conf.utils)
 
 global.url_api = conf.api.url
-global.key = conf.api.key
 global.sessions = conf.sessions.main
 global.jadi = conf.sessions.sub
 global.ch = conf.social.channel
