@@ -10,7 +10,7 @@ const reaction = {
 'https://media.tenor.com/cYRAeQqpaUMAAAPo/anime-angry-slow-loop.mp4',
 'https://media.tenor.com/hkoyf1VeaZ4AAAPo/anime-angry.mp4',
 'https://media.tenor.com/3oYh5_W_Fd8AAAPo/brat-annoying.mp4',
-'https://media.tenor.com/DGfqf7xX7YQAAAPo/leonardo-watch-leo.mp4'
+'https://media.tenor.com/DGfqf7xX7YQAAAPo/leonardo-watch-leo.mp4',
 'httpss//media.tenor.com/Rxjl-XIiekMAAAPo/angry.mp4',
 'https://media.tenor.com/qiOZauqDU8gAAAPo/mad-angry.mp4',
 'https://media.tenor.com/9JjBiqaxzdAAAAPo/anime-angry.mp4',
