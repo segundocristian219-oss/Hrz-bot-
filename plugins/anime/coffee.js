@@ -20,7 +20,7 @@ const reaction = {
 'https://media.tenor.com/JLsBtfuVmh4AAAPo/frieren-anime.mp4'
 ]
 }
-}
+
 
 const coffee = {
     name: 'coffee',
