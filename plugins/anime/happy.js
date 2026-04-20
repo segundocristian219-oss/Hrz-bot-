@@ -10,12 +10,13 @@ const reaction = {
 'https://media.tenor.com/UuGHB-dCG_gAAAPo/konata-happy.mp4',
 'https://media.tenor.com/uXIogZmtfiYAAAPo/haru-yoshida-tonari-no-kaibutsu-kun.mp4',
 'https://media.tenor.com/V8f3qPS23LgAAAPo/ao-sorakado-summer-pockets.mp4',
-'https://media.tenor.com/myCsjxxbtXAAAAPo/anime-happy.mp4'
-'https://media.tenor.com/lfDATg4Bhc0AAAPo/happy-cat.mp4',
-'https://media.tenor.com/gotOLnyvy4YAAAPo/bubu-dancing-dance.mp4',
-'https://media.tenor.com/-gjcOyhsUacAAAPo/cat-kitty.mp4',
-'https://media.tenor.com/SgpVPRo_19AAAAPo/goku-happy.mp4',
-'https://media.tenor.com/WtVnnj9BBpsAAAPo/xmas-happy.mp4'
+'https://media.tenor.com/myCsjxxbtXAAAAPo/anime-happy.mp4',
+'https://media.tenor.com/D05kuhjm9rUAAAPo/jjk-anime.mp4',
+'https://media.tenor.com/rUIua9SkTS0AAAPo/kanikou-sister.mp4',
+'https://media.tenor.com/1aBS7cK51DgAAAPo/anime-apothecary-diaries.mp4',
+'https://media.tenor.com/V5wT9INjE_YAAAPo/cute-anime-girl-phone-yuri-crowsbo.mp4',
+'https://media.tenor.com/_bLABH7uwtoAAAPo/mono-anime-hype.mp4',
+'https://media.tenor.com/YshuKhlqBz4AAAPo/buddy-daddies-anime-happy.mp4'
 ]
 }
 
