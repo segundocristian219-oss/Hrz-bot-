@@ -9,7 +9,13 @@ const reaction = {
 'https://media.tenor.com/yuJWwHaMBh0AAAPo/anime-girls-kissing-anime.mp4',
 'https://media.tenor.com/Wy7VLl0Zn6MAAAPo/love-and-deepspace-kiss.mp4',
 'https://media.tenor.com/FDQSeLwjEW0AAAPo/kanamemo-girls-love.mp4',
-'https://media.tenor.com/NONQCK-3XZYAAAPo/anime-kiss.mp4'
+'https://media.tenor.com/NONQCK-3XZYAAAPo/anime-kiss.mp4',
+'https://media.tenor.com/OoQ6ABYZ8b0AAAPo/lesbian.mp4',
+'https://media.tenor.com/8cagn3dRZ5gAAAPo/lesbian.mp4',
+'https://media.tenor.com/vYvKFU1SNV8AAAPo/lesbian-anime.mp4',
+'https://media.tenor.com/PSh5JTcJxUkAAAPo/utena-tenjou.mp4',
+'https://media.tenor.com/Zr86O9xJF3QAAAPo/anime-kiss-anime.mp4',
+'https://media.tenor.com/jOJlPnkaNk8AAAPo/anime-girl-anime.mp4'
 ]
 }
 
