@@ -22,7 +22,7 @@ const menuCommand = {
             let totalchats = await global.Chat.countDocuments();
             const rmrText = typeof global.rmr === 'string' ? global.rmr : 'Sʏsᴛᴇᴍ V5.8.0';
 
-            let menuText = `> ╭─〔 ${name()} 〕─╮\n`;
+            let menuText = `> ╭─〔 ${name(conn)} 〕─╮\n`;
                 menuText += `> │ ⋄ 𝚄𝚜𝚞𝚊𝚛𝚒𝚘 : @${m.sender.split('@')[0]}\n`;
                 menuText += `> │ ⋄ 𝚄𝚜𝚞𝚊𝚛𝚒𝚘𝚜: ${totalreg}\n`;
                 menuText += `> │ ⋄ 𝙶𝚛𝚞𝚙𝚘𝚜  : ${totalchats}\n`;
@@ -54,7 +54,7 @@ const menuCommand = {
             menuText += `> © Powered by ${developer}.`;
 
             await conn.sendMessage(m.chat, {
-                image: { url: global.img2() },
+                image: { url: global.img2(conn) },
                 caption: menuText,
                 mentions: [m.sender],
                 contextInfo: {
