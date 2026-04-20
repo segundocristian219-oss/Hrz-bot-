@@ -42,6 +42,15 @@ import { exec } from "child_process";
 
 EventEmitter.defaultMaxListeners = 0;
 
+// Limpiador de JID Global
+const sId = (jid) => {
+    if (!jid) return jid;
+    return jid.includes('@') ? jid.split('@')[0].split(':')[0] + '@s.whatsapp.net' : jid.split(':')[0] + '@s.whatsapp.net';
+};
+
+// Caché global para configuraciones de sub-bots
+global.subbotConfig = {};
+
 process.on('uncaughtException', (err) => {
     const msg = err?.message || '';
     if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed') || msg.includes('decrypt')) return;
@@ -107,15 +116,16 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
     global.Warns = mongoose.model('Warns', warnSchema);
     global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
-const subBotSettingsSchema = new mongoose.Schema({
-    botId: { type: String, unique: true },
-    prefix: { type: String, default: '.' },
-    botName: { type: String, default: 'Kirito - SubBot' },
-    botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
-    status: { type: Boolean, default: true }
-}, { strict: false });
+    
+    const subBotSettingsSchema = new mongoose.Schema({
+        botId: { type: String, unique: true },
+        prefix: { type: String, default: '.' },
+        botName: { type: String, default: 'Kirito - SubBot' },
+        botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
+        status: { type: Boolean, default: true }
+    }, { strict: false });
 
-global.SubBotSettings = mongoose.model('SubBotSettings', subBotSettingsSchema);
+    global.SubBotSettings = mongoose.model('SubBotSettings', subBotSettingsSchema);
 
     const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
     global.Stats = mongoose.model('Stats', statsSchema);
@@ -251,13 +261,23 @@ global.reload = async function(restatConn) {
             process.exit(1);
         } else setTimeout(() => global.reload(true), 5000);
     }
-        if (connection === 'open') {
-        global.botNumber = conn.user.id;
+    if (connection === 'open') {
+        // ID Limpio para el bot principal
+        global.botNumber = sId(conn.user.id);
+        
         console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
         for (const id in groups) global.groupCache.set(id, groups[id]);
+
+        // Cargar configuraciones de sub-bots a caché global
+        if (global.SubBotSettings) {
+            const allSettings = await global.SubBotSettings.find({ status: true });
+            allSettings.forEach(s => {
+                global.subbotConfig[s.botId] = s;
+            });
+        }
 
         const db = mongoose.connection.db;
         if (db) {
@@ -273,7 +293,7 @@ global.reload = async function(restatConn) {
                                     `┃ ⊛ Mensaje: ${data.message}\n` +
                                     `┃ ⌬ Chat ID: ${data.chatId}\n` +
                                     `┃ ◈ MSG ID: ${data.msgId}\n` +
-                                    `┃ 🤖 Bot JID: ${data.botJid}\n` +
+                                    `┃ 🤖 Bot JID: ${sId(data.botJid)}\n` +
                                     `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
                     const opt = { 
                         mentions: [data.sender],
