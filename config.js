@@ -125,4 +125,9 @@ global.saludo = hour >= 6 && hour < 12 ? 'Lɪɴᴅᴀ Mᴀɴ̃ᴀɴᴀ 🌅' :
                  hour >= 12 && hour < 19 ? 'Lɪɴᴅᴀ Tᴀʀᴅᴇ 🌆' : 
                  'Lɪɴᴅᴀ Nᴏᴄʜᴇ 🌃';
 
-
+let file = fileURLToPath(import.meta.url)
+watchFile(file, () => {
+  unwatchFile(file)
+  console.log(chalk.redBright(`Update 'config.js'`))
+  import(`${file}?update=${Date.now()}`)
+})
