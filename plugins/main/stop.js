@@ -8,7 +8,7 @@ const stopSubBot = {
     category: 'main',
     run: async (m, { conn }) => {
         const id = m.sender.split('@')[0];
-        const authFolder = path.join(process.cwd(), 'sessions/jadibts', id);
+        const authFolder = path.join(process.cwd(), 'jadibts', id);
 
         const subBot = global.conns.find(c => jidNormalizedUser(c.user?.id) === jidNormalizedUser(m.sender));
 
