@@ -21,6 +21,13 @@
     { "cmd": ".marry", "desc": "Cásate con alguien." },
     { "cmd": ".meme", "desc": "Envía un meme aleatorio." }
   ],
+  "SOCIAL": [
+    { "cmd": ".perfil/.p", "desc": "Perfil de usuario." },
+    { "cmd": ".setdesc", "desc": "Añade una descripción a tu perfil" },
+    { "cmd": ".setage", "desc": "Añade tu edad a tu perfil." },
+    { "cmd": ".setgenero", "desc": "Específica tu género." },
+    { "cmd": ".setorientacion", "desc": "Define tu orientación sexual." }
+  ],
   "DOWNLOAD": [
     { "cmd": ".play", "desc": "Descarga audio de YouTube." },
     { "cmd": ".spotify", "desc": "Descarga música de Spotify." },
