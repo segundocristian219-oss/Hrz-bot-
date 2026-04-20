@@ -11,6 +11,12 @@ const reaction = {
 'https://media.tenor.com/ApfJHef4J1UAAAPo/love-anime.mp4',
 'https://media.tenor.com/c6nworIweBYAAAPo/cuddle-love.mp4',
 'https://media.tenor.com/RXbJCXFnwIwAAAPo/hugs-anime.mp4'
+'https://media.tenor.com/SYsRdiK-T7gAAAPo/hug-anime.mp4',
+'https://media.tenor.com/9y-c-mXuJUoAAAPo/hug-anime.mp4',
+'https://media.tenor.com/hYja0d71ss4AAAPo/these-guys.mp4',
+'https://media.tenor.com/EX0f-orgGwoAAAPo/love.mp4',
+'https://media.tenor.com/FCBl9L-SO9QAAAPo/anime-lycoris-recoil.mp4',
+'https://media.tenor.com/I77M4aWAGk8AAAPo/hug.mp4'
 ]
 }
 
