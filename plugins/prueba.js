@@ -1,59 +1,65 @@
-import fs from 'fs';
-import path from 'path';
-import vm from 'node:vm';
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
-const checkSyntax = {
-    name: 'checksyntax',
-    alias: ['debugcode'],
+const settingsSubBot = {
+    name: 'settings-subbot',
+    alias: ['setnamebot', 'setimgbot', 'setprefix'],
     category: 'owner',
-    run: async (m, { conn }) => {
-        const rootDir = process.cwd();
-        let reports = [];
-        let filesChecked = 0;
+    run: async (m, { conn, text, command, usedPrefix }) => {
+        const botJid = jidNormalizedUser(conn.user.id);
+        
+        if (!conn.isSub) {
+            return conn.sendMessage(m.chat, { text: '> ❒ Este comando solo puede ser ejecutado por un Sub-Bot.' }, { quoted: m });
+        }
 
-        const walk = (dir) => {
-            const files = fs.readdirSync(dir);
-            for (const file of files) {
-                const fullPath = path.join(dir, file);
-                const stat = fs.statSync(fullPath);
+        let settings = await global.SubBotSettings.findOne({ botId: botJid });
+        if (!settings) {
+            settings = await global.SubBotSettings.create({ 
+                botId: botJid, 
+                botName: global.name(), 
+                botImage: global.img(), 
+                prefix: '.' 
+            });
+        }
 
-                if (stat.isDirectory()) {
-                    if (file !== 'node_modules' && file !== '.git' && file !== 'sessions') {
-                        walk(fullPath);
-                    }
-                } else if (file.endsWith('.js') || file.endsWith('.mjs')) {
-                    filesChecked++;
-                    try {
-                        const code = fs.readFileSync(fullPath, 'utf8');
-                        new vm.Script(code, { 
-                            filename: file,
-                            displayErrors: true 
-                        });
-                    } catch (err) {
-                        const relativePath = path.relative(rootDir, fullPath);
-                        reports.push(`❌ *Archivo:* ${relativePath}\n⚠️ *Error:* ${err.message}`);
-                    }
-                }
+        if (command === 'setnamebot') {
+            if (!text) return conn.sendMessage(m.chat, { text: `> ✎ Ingresa el nuevo nombre.\n\n*Ejemplo:* ${usedPrefix + command} Kirito-Bot` }, { quoted: m });
+            settings.botName = text;
+            await settings.save();
+            global.subbotConfig[botJid] = settings;
+            conn.settings = settings;
+            await conn.updateProfileStatus(`${text} | Activo`).catch(() => null);
+            return conn.sendMessage(m.chat, { text: `✅ Nombre actualizado a: *${text}*` }, { quoted: m });
+        }
+
+        if (command === 'setimgbot') {
+            let q = m.quoted ? m.quoted : m;
+            let mime = (q.msg || q).mimetype || '';
+            let url = text;
+
+            if (/image/.test(mime)) {
+                let media = await q.download();
+                let { data } = await global.api.upload(media); 
+                url = data.url;
+            } else if (!/^https?:\/\//.test(text)) {
+                return conn.sendMessage(m.chat, { text: `> ✎ Responde a una imagen o proporciona un enlace directo (URL).` }, { quoted: m });
             }
-        };
 
-        try {
-            await m.reply('🔍 *Escaneando archivos en busca de errores de sintaxis...*');
-            walk(rootDir);
+            settings.botImage = url;
+            await settings.save();
+            global.subbotConfig[botJid] = settings;
+            conn.settings = settings;
+            return conn.sendMessage(m.chat, { text: `✅ Imagen del bot actualizada con éxito.` }, { quoted: m });
+        }
 
-            if (reports.length === 0) {
-                return await conn.sendMessage(m.chat, { 
-                    text: `✅ *Sin errores de sintaxis.*\n\nSe revisaron *${filesChecked}* archivos correctamente.` 
-                }, { quoted: m });
-            }
-
-            const message = `🚨 *ERRORES ENCONTRADOS*\n\n${reports.join('\n\n---\n\n')}\n\nTotal revisado: ${filesChecked} archivos.`;
-            await conn.sendMessage(m.chat, { text: message }, { quoted: m });
-
-        } catch (e) {
-            await m.reply('❌ Error en el comando: ' + e.message);
+        if (command === 'setprefix') {
+            if (!text || text.length > 3) return conn.sendMessage(m.chat, { text: `> ✎ Ingresa un prefijo válido (máximo 3 caracteres).` }, { quoted: m });
+            settings.prefix = text.trim();
+            await settings.save();
+            global.subbotConfig[botJid] = settings;
+            conn.settings = settings;
+            return conn.sendMessage(m.chat, { text: `✅ Prefijo actualizado a: *${text}*` }, { quoted: m });
         }
     }
 };
 
-export default checkSyntax;
+export default settingsSubBot;
