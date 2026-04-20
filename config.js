@@ -176,32 +176,42 @@ global.ch = conf.social.channel
 global.rmr = more.repeat(850)
 global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
 
-global.name = (conn) => {
-  const id = conn?.user?.id?.split(':')[0] + '@s.whatsapp.net'
-  if (conn?.settings?.botName) return conn.settings.botName
+global.name = (c) => {
+  const connection = c || global.conn; // Si no pasas 'c', usa la conexión global del momento
+  const id = connection?.user?.id?.split(':')[0] + '@s.whatsapp.net';
+  
+  if (connection?.settings?.botName) return connection.settings.botName;
+  
   if (global.subbotConfig && global.subbotConfig[id]) {
-    return global.subbotConfig[id].botName || global.botNames[0]
+    return global.subbotConfig[id].botName || global.botNames[0];
   }
-  return global.botNames[Math.floor(Math.random() * global.botNames.length)]
-}
+  return global.botNames[Math.floor(Math.random() * global.botNames.length)];
+};
 
-global.img = (conn) => {
-  const id = conn?.user?.id?.split(':')[0] + '@s.whatsapp.net'
-  if (conn?.settings?.botImage) return conn.settings.botImage
-  if (global.subbotConfig && global.subbotConfig[id]) {
-    return global.subbotConfig[id].botImage || global.botImages[0]
-  }
-  return global.botImages[Math.floor(Math.random() * global.botImages.length)]
-}
+global.img = (c) => {
+  const connection = c || global.conn;
+  const id = connection?.user?.id?.split(':')[0] + '@s.whatsapp.net';
 
-global.img2 = (conn) => {
-  const id = conn?.user?.id?.split(':')[0] + '@s.whatsapp.net'
-  if (conn?.settings?.botImage) return conn.settings.botImage
+  if (connection?.settings?.botImage) return connection.settings.botImage;
+
   if (global.subbotConfig && global.subbotConfig[id]) {
-    return global.subbotConfig[id].botImage || global.botImages2[0]
+    return global.subbotConfig[id].botImage || global.botImages[0];
   }
-  return global.botImages2[Math.floor(Math.random() * global.botImages2.length)]
-}
+  return global.botImages[Math.floor(Math.random() * global.botImages.length)];
+};
+
+global.img2 = (c) => {
+  const connection = c || global.conn;
+  const id = connection?.user?.id?.split(':')[0] + '@s.whatsapp.net';
+
+  if (connection?.settings?.botImage) return connection.settings.botImage;
+
+  if (global.subbotConfig && global.subbotConfig[id]) {
+    return global.subbotConfig[id].botImage || global.botImages2[0];
+  }
+  return global.botImages2[Math.floor(Math.random() * global.botImages2.length)];
+};
+
 
 global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 global.key = "kirito-bot-oficial"
