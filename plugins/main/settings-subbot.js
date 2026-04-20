@@ -1,9 +1,11 @@
-const settings-subbot = {
-    name: 'setsubbot',
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
+
+const settingsSubBot = {
+    name: 'settings-subbot',
     alias: ['setnamebot', 'setimgbot', 'setprefix'],
     category: 'owner',
     run: async (m, { conn, text, command, usedPrefix }) => {
-        const botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+        const botJid = jidNormalizedUser(conn.user.id);
         
         if (!conn.isSub) {
             return conn.sendMessage(m.chat, { text: '> ❒ Este comando solo puede ser ejecutado por un Sub-Bot.' }, { quoted: m });
@@ -60,4 +62,4 @@ const settings-subbot = {
     }
 };
 
-export default settings-subbot;
+export default settingsSubBot;
