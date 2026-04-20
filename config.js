@@ -131,6 +131,7 @@ import fetch from 'node-fetch'
 import axios from 'axios'
 import moment from 'moment-timezone'
 import path from 'path'
+import { jidNormalizedUser } from '@whiskeysockets/baileys'
 
 global.owner = [['50432955554'], ['584228028583']]
 
@@ -177,11 +178,12 @@ global.rmr = more.repeat(850)
 global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
 
 global.name = (c) => {
-  const connection = c || global.conn; // Si no pasas 'c', usa la conexión global del momento
-  const id = connection?.user?.id?.split(':')[0] + '@s.whatsapp.net';
+  const connection = c || global.conn;
+  if (!connection?.user) return global.botNames[0];
   
-  if (connection?.settings?.botName) return connection.settings.botName;
-  
+  const id = jidNormalizedUser(connection.user.id);
+  if (connection.settings?.botName) return connection.settings.botName;
+
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botName || global.botNames[0];
   }
@@ -190,9 +192,10 @@ global.name = (c) => {
 
 global.img = (c) => {
   const connection = c || global.conn;
-  const id = connection?.user?.id?.split(':')[0] + '@s.whatsapp.net';
+  if (!connection?.user) return global.botImages[0];
 
-  if (connection?.settings?.botImage) return connection.settings.botImage;
+  const id = jidNormalizedUser(connection.user.id);
+  if (connection.settings?.botImage) return connection.settings.botImage;
 
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botImage || global.botImages[0];
@@ -202,16 +205,16 @@ global.img = (c) => {
 
 global.img2 = (c) => {
   const connection = c || global.conn;
-  const id = connection?.user?.id?.split(':')[0] + '@s.whatsapp.net';
+  if (!connection?.user) return global.botImages2[0];
 
-  if (connection?.settings?.botImage) return connection.settings.botImage;
+  const id = jidNormalizedUser(connection.user.id);
+  if (connection.settings?.botImage) return connection.settings.botImage;
 
   if (global.subbotConfig && global.subbotConfig[id]) {
     return global.subbotConfig[id].botImage || global.botImages2[0];
   }
   return global.botImages2[Math.floor(Math.random() * global.botImages2.length)];
 };
-
 
 global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 global.key = "kirito-bot-oficial"
@@ -258,4 +261,3 @@ watchFile(file, () => {
   console.log(chalk.redBright("Update 'config.js'"))
   import(`${file}?update=${Date.now()}`)
 })
-
