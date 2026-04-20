@@ -10,12 +10,16 @@ const reaction = {
 'https://media.tenor.com/Ny0Es5mpN5MAAAPo/coffee-ashita-no-joe.mp4',
 'https://media.tenor.com/mLofbKJoHzYAAAPo/kirby-kirby-right-back-at-ya.mp4',
 'https://media.tenor.com/-FuVAsEDlZcAAAPo/aesthetic-coffee.mp4',
-'https://media.tenor.com/YlOvlmcMs-0AAAPo/cat-anime.mp4'
-'https://media.tenor.com/HLAX13jg9L8AAAPo/chougne-pamela-chougne.mp4',
-'https://media.tenor.com/6Ee2LpsFM8kAAAPo/coffee-man.mp4',
-'https://media.tenor.com/qe0ed_wtAzYAAAPo/cappuccino-coffee.mp4',
-'https://media.tenor.com/udM8gNJzvMYAAAPo/coffee-time-coffee-cup.mp4'
+'https://media.tenor.com/YlOvlmcMs-0AAAPo/cat-anime.mp4',
+'https://media.tenor.com/URqa84QMS4EAAAPo/watamote-sip.mp4',
+'https://media.tenor.com/K3Lv8LPprCYAAAPo/meh.mp4',
+'https://media.tenor.com/V3JPeuA9YYIAAAPo/anime-drinking.mp4',
+'https://media.tenor.com/pfttuQ3GQR0AAAPo/konata-izumi-lucky-star.mp4',
+'https://media.tenor.com/xsy1eMSNR6QAAAPo/minamike-chiaki-minami.mp4',
+'https://media.tenor.com/MpCcg8u5LlAAAAPo/yui-hirasawa-k-on.mp4',
+'https://media.tenor.com/JLsBtfuVmh4AAAPo/frieren-anime.mp4'
 ]
+}
 }
 
 const coffee = {
