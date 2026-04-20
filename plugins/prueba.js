@@ -1,16 +1,49 @@
 import fs from 'fs';
 import path from 'path';
 import * as acorn from 'acorn';
-import chalk from 'chalk';
 
 const checkSyntax = {
     name: 'checksyntax',
-    alias: ['debugcode', 'revisar'],
+    alias: ['debugcode'],
     category: 'owner',
     run: async (m, { conn }) => {
         const rootDir = process.cwd();
         let reports = [];
         let filesChecked = 0;
+
+        const validateFile = (fullPath) => {
+            const relativePath = path.relative(rootDir, fullPath);
+            try {
+                const code = fs.readFileSync(fullPath, 'utf8');
+                if (!code.trim()) return;
+
+                acorn.parse(code, {
+                    ecmaVersion: 'latest',
+                    sourceType: 'module'
+                });
+            } catch (err) {
+                const code = fs.readFileSync(fullPath, 'utf8');
+                const lines = code.split('\n');
+                const errorLine = err.loc ? err.loc.line : 0;
+                
+                let snippet = '';
+                if (errorLine > 0) {
+                    const start = Math.max(0, errorLine - 2);
+                    const end = Math.min(lines.length, errorLine + 1);
+                    snippet = lines.slice(start, end)
+                        .map((l, i) => `${start + i + 1 === errorLine ? '➔ ' : '  '}${start + i + 1} | ${l}`)
+                        .join('\n');
+                }
+
+                reports.push(`📄 *ARCHIVO:* \`${relativePath}\`
+⚠️ *ERROR:* \`${err.message}\`
+📍 *Línea:* ${errorLine}
+
+\`\`\`javascript
+${snippet}
+\`\`\``);
+            }
+        };
 
         const walk = (dir) => {
             const files = fs.readdirSync(dir);
@@ -19,72 +52,45 @@ const checkSyntax = {
                 const stat = fs.statSync(fullPath);
 
                 if (stat.isDirectory()) {
-                    if (['node_modules', '.git', 'sessions', 'tmp'].includes(file)) continue;
+                    if (['node_modules', '.git', 'sessions', 'tmp', '.npm'].includes(file)) continue;
                     walk(fullPath);
                 } else if (file.endsWith('.js') || file.endsWith('.mjs')) {
                     filesChecked++;
-                    const code = fs.readFileSync(fullPath, 'utf8');
-                    try {
-                        acorn.parse(code, {
-                            ecmaVersion: 'latest',
-                            sourceType: 'module'
-                        });
-                    } catch (err) {
-                        const relativePath = path.relative(rootDir, fullPath);
-                        const lines = code.split('\n');
-                        const errorLine = err.loc ? err.loc.line : 0;
-                        
-                        // Extraer el fragmento del error para mostrarlo
-                        let snippet = '';
-                        if (errorLine > 0) {
-                            const start = Math.max(0, errorLine - 2);
-                            const end = Math.min(lines.length, errorLine + 1);
-                            snippet = lines.slice(start, end)
-                                .map((l, i) => `${start + i + 1 === errorLine ? '➔ ' : '  '}${start + i + 1} | ${l}`)
-                                .join('\n');
-                        }
-
-                        reports.push(`📄 *ARCHIVO:* \`${relativePath}\`
-⚠️ *ERROR:* \`${err.message}\`
-📍 *POSICIÓN:* Línea ${err.loc?.line}, Columna ${err.loc?.column}
-
-💻 *EXTRACTO:*
-\`\`\`javascript
-${snippet}
-\`\`\``);
-                    }
+                    validateFile(fullPath);
                 }
             }
         };
 
         try {
-            await m.reply('🔍 *Escaneando archivos en busca de SyntaxErrors...*');
+            await m.reply(`🔍 *Escaneando:* \`${path.basename(rootDir)}\`...`);
+            
             walk(rootDir);
 
             if (reports.length === 0) {
                 return await conn.sendMessage(m.chat, { 
-                    text: `✅ *PROYECTO LIMPIO*\n\nSe revisaron *${filesChecked}* archivos sin errores de sintaxis.` 
+                    text: `✅ *PROYECTO LIMPIO*\n\nArchivos revisados: *${filesChecked}*` 
                 }, { quoted: m });
             }
 
-            // Dividir en varios mensajes si el reporte es muy largo
-            const header = `🚨 *ERRORES ENCONTRADOS (${reports.length})*\n\n`;
-            let currentMessage = header;
+            let header = `🚨 *ERRORES ENCONTRADOS (${reports.length})*\n\n`;
+            let chunks = [];
+            let currentChunk = header;
 
             for (let report of reports) {
-                if ((currentMessage + report).length > 4000) {
-                    await conn.sendMessage(m.chat, { text: currentMessage }, { quoted: m });
-                    currentMessage = '';
+                if ((currentChunk + report).length > 3500) {
+                    chunks.push(currentChunk);
+                    currentChunk = '';
                 }
-                currentMessage += report + '\n\n' + '─'.repeat(15) + '\n\n';
+                currentChunk += report + '\n' + '─'.repeat(10) + '\n';
             }
+            chunks.push(currentChunk + `\nTotal revisado: ${filesChecked}`);
 
-            if (currentMessage) {
-                await conn.sendMessage(m.chat, { text: currentMessage }, { quoted: m });
+            for (let text of chunks) {
+                await conn.sendMessage(m.chat, { text }, { quoted: m });
             }
 
         } catch (e) {
-            await m.reply('❌ Error crítico en el escáner: ' + e.message);
+            await m.reply('❌ Error: ' + e.message);
         }
     }
 };
