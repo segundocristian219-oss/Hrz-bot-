@@ -10,51 +10,40 @@ import path from 'path'
 
 global.owner = [['50432955554'], ['584228028583']]
 
-
-
 global.botNames = [
   '𝐊𝐈𝐑𝐈𝐓𝐎 ♛',       
-  '𝒌𝒂𝒛𝒖𝒕𝒐 𝒌𝒊𝒓𝒊𝒈𝒂𝒚 ✰', 
+  '𝒌𝒂𝒛𝒖𝒕𝒐 𝒌𝒊𝒓𝒊𝒈𝒂ʏ ✰', 
   '⧫ ᴋɪʀɪᴛᴏ - ᴋᴀᴢᴜᴛᴏ ᴋɪʀɪɢᴀʏ ⧫',   
-  '⌬ 🄺🄸🅁🄸🅃🄾 ⌬'       
+  '偏移 🄺🄸🅁🄸🅃🄾 偏移'       
 ]
 
+global.botImages = [ 
+  'https://api.dix.lat/media2/1773637281084.jpg',
+  'https://api.dix.lat/media2/1773637276760.jpg',
+  'https://api.dix.lat/media2/1773637265253.jpg',
+  'https://api.dix.lat/media2/1773637270663.jpg',
+  'https://api.dix.lat/media2/1773637244306.jpg'
+]
 
-global.botImages = [ 'https://api.dix.lat/media2/1773637281084.jpg',
-'https://api.dix.lat/media2/1773637276760.jpg',
-'https://api.dix.lat/media2/1773637265253.jpg',
-'https://api.dix.lat/media2/1773637270663.jpg',
-'https://api.dix.lat/media2/1773637244306.jpg']
-
-global.botImages2 = [ 'https://api.dix.lat/media2/1773638458604.jpg',
-'https://api.dix.lat/media2/1773638453930.jpg',
-'https://api.dix.lat/media2/1773638443955.jpg',
-'https://api.dix.lat/media2/1773638448409.jpg',
-'https://api.dix.lat/media2/1773638462741.jpg',
-'https://api.dix.lat/media2/1773638468052.jpg']
+global.botImages2 = [ 
+  'https://api.dix.lat/media2/1773638458604.jpg',
+  'https://api.dix.lat/media2/1773638453930.jpg',
+  'https://api.dix.lat/media2/1773638443955.jpg',
+  'https://api.dix.lat/media2/1773638448409.jpg',
+  'https://api.dix.lat/media2/1773638462741.jpg',
+  'https://api.dix.lat/media2/1773638468052.jpg'
+]
 
 const conf = {
-  utils: {
-    cheerio,
-    fs,
-    fetch,
-    axios,
-    moment
-  },
-  api: {
-    url: 'https://api.dix.lat',
-    key: 'VOKER_FREE_2026'
-  },
-  sessions: {
-    main: 'sessions',
-    sub: 'sessions_sub_assistant'
-  },
-  social: {
-    channel: '120363406846602793@newsletter'
-  }
+  utils: { cheerio, fs, fetch, axios, moment },
+  api: { url: 'https://api.dix.lat', key: 'VOKER_FREE_2026' },
+  sessions: { main: 'sessions', sub: 'sessions_sub_assistant' },
+  social: { channel: '120363406846602793@newsletter' }
 }
+
 var more = String.fromCharCode(8206)
 Object.assign(global, conf.utils)
+
 global.url_api = conf.api.url
 global.key = conf.api.key
 global.sessions = conf.sessions.main
@@ -63,44 +52,27 @@ global.ch = conf.social.channel
 global.rmr = more.repeat(850)
 global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
 
-    export async function message(m, chatUpdate) {
-    this.uptime = this.uptime || Date.now();
-    const conn = this;
-    if (!m) return;
-
-    const settings = conn.settings || {};
-    global.name = () => settings.botName || (global.botNames && global.botNames.length > 0 ? global.botNames[Math.floor(Math.random() * global.botNames.length)] : 'Kirito');
-    global.img = () => settings.botImage || (global.botImages && global.botImages.length > 0 ? global.botImages[Math.floor(Math.random() * global.botImages.length)] : '');
-
-    const chatJid = m.chat;
-
-
-
-
+global.name = () => global.botNames[Math.floor(Math.random() * global.botNames.length)]
+global.img = () => global.botImages[Math.floor(Math.random() * global.botImages.length)]
+global.img2 = () => global.botImages2[Math.floor(Math.random() * global.botImages2.length)]
 
 global.key = "kirito-bot-oficial"
-
-
 
 global.channelInfo = {
     forwardingScore: 1,
     isForwarded: true,
     forwardedNewsletterMessageInfo: {
-        newsletterJid: ch, 
-        newsletterName: name()
+        newsletterJid: global.ch, 
+        newsletterName: global.name()
     }
-};
-
+}
 
 global.getBuffer = async (url, options = {}) => {
   try {
     const res = await axios({
       method: "get",
       url,
-      headers: {
-        'DNT': 1,
-        'User-Agent': 'GoogleBot'
-      },
+      headers: { 'DNT': 1, 'User-Agent': 'GoogleBot' },
       ...options,
       responseType: 'arraybuffer'
     })
@@ -109,7 +81,6 @@ global.getBuffer = async (url, options = {}) => {
     return null
   }
 }
-
 
 const d = new Date(new Date().getTime() + 3600000)
 global.fecha = d.toLocaleDateString('es', { day: 'numeric', month: 'numeric', year: 'numeric' })
