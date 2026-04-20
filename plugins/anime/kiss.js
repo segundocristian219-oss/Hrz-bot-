@@ -10,7 +10,13 @@ const reaction = {
 'https://media.tenor.com/sbMBW4a-VN4AAAPo/anime-kiss.mp4',
 'https://media.tenor.com/YHxJ9NvLYKsAAAPo/anime-kiss.mp4',
 'https://media.tenor.com/9u2vmryDP-cAAAPo/horimiya-animes.mp4',
-'https://media.tenor.com/xDCr6DNYcZEAAAPo/sealyx-frieren-beyond-journey%27s-end.mp4'
+'https://media.tenor.com/xDCr6DNYcZEAAAPo/sealyx-frieren-beyond-journey%27s-end.mp4'.
+'https://media.tenor.com/1fNT0SY5cjwAAAPo/nene-nene-amano.mp4',
+'https://media.tenor.com/9u2vmryDP-cAAAPo/horimiya-animes.mp4',
+'https://media.tenor.com/ZDqsYLDQzIUAAAPo/shirayuki-zen-kiss-anime.mp4',
+'https://media.tenor.com/lJPu85pBQLEAAAPo/kiss.mp4',
+'https://media.tenor.com/_JqioiurJwIAAAPo/amor-anime-kiss.mp4',
+'https://media.tenor.com/JmphmnN1y3kAAAPo/kiss.mp4'
 ]
 }
 
