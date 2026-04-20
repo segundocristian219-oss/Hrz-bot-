@@ -18,7 +18,6 @@
     { "cmd": ".font/.fuente", "desc": "Cambia el estilo de fuente de tu texto." },
     { "cmd": ".consejo", "desc": "Consejos aleatorios." },
     { "cmd": ".meme2", "desc": "Envía un vídeo meme aleatorio." },
-    { "cmd": ".marry", "desc": "Cásate con alguien." },
     { "cmd": ".meme", "desc": "Envía un meme aleatorio." }
   ],
   "SOCIAL": [
@@ -26,6 +25,7 @@
     { "cmd": ".setdesc", "desc": "Añade una descripción a tu perfil" },
     { "cmd": ".setage", "desc": "Añade tu edad a tu perfil." },
     { "cmd": ".setgenero", "desc": "Específica tu género." },
+    { "cmd": ".marry", "desc": "Cásate con alguien." },
     { "cmd": ".setorientacion", "desc": "Define tu orientación sexual." }
   ],
   "DOWNLOAD": [
