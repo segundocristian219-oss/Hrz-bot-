@@ -178,7 +178,7 @@ global.developer = '𝙳𝚎𝚢𝚕𝚒𝚗 𝙴𝚕𝚒𝚊𝚌'
 global.name = (c) => {
   const connection = c || global.conn;
   if (!connection?.user) return global.botNames[0];
-  
+
   const id = jidNormalizedUser(connection.user.id);
   if (connection.settings?.botName) return connection.settings.botName;
 
@@ -213,6 +213,7 @@ global.img2 = (c) => {
   }
   return global.botImages2[Math.floor(Math.random() * global.botImages2.length)];
 };
+
 
 global.v = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version
 global.key = "kirito-bot-oficial"
