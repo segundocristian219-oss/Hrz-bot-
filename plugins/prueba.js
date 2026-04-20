@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { vm } from 'node:vm';
+import vm from 'node:vm';
 
 const checkSyntax = {
     name: 'checksyntax',
-    alias: ['checkfix', 'debugcode'],
+    alias: ['debugcode'],
     category: 'owner',
     run: async (m, { conn }) => {
         const rootDir = process.cwd();
@@ -25,37 +25,33 @@ const checkSyntax = {
                     filesChecked++;
                     try {
                         const code = fs.readFileSync(fullPath, 'utf8');
-                        new vm.Script(code, { filename: file });
+                        new vm.Script(code, { 
+                            filename: file,
+                            displayErrors: true 
+                        });
                     } catch (err) {
-                        if (err instanceof SyntaxError) {
-                            const relativePath = path.relative(rootDir, fullPath);
-                            const stack = err.stack.split('\n');
-                            const lineInfo = stack[0] || 'Desconocida';
-                            
-                            reports.push(`❌ *Archivo:* ${relativePath}\n⚠️ *Error:* ${err.message}\n📍 *Info:* ${lineInfo}`);
-                        }
+                        const relativePath = path.relative(rootDir, fullPath);
+                        reports.push(`❌ *Archivo:* ${relativePath}\n⚠️ *Error:* ${err.message}`);
                     }
                 }
             }
         };
 
         try {
-            await m.reply('🔍 *Iniciando escaneo de sintaxis en todo el proyecto...*');
+            await m.reply('🔍 *Escaneando archivos en busca de errores de sintaxis...*');
             walk(rootDir);
 
             if (reports.length === 0) {
                 return await conn.sendMessage(m.chat, { 
-                    text: `✅ *Escaneo completado.*\n\nSe revisaron *${filesChecked}* archivos y no se encontraron errores de sintaxis.` 
+                    text: `✅ *Sin errores de sintaxis.*\n\nSe revisaron *${filesChecked}* archivos correctamente.` 
                 }, { quoted: m });
             }
 
-            const message = `🚨 *ERRORES DE SINTAXIS DETECTADOS*\n\n${reports.join('\n\n---\n\n')}\n\nTotal revisado: ${filesChecked} archivos.`;
-            
+            const message = `🚨 *ERRORES ENCONTRADOS*\n\n${reports.join('\n\n---\n\n')}\n\nTotal revisado: ${filesChecked} archivos.`;
             await conn.sendMessage(m.chat, { text: message }, { quoted: m });
 
         } catch (e) {
-            console.error(e);
-            await m.reply('❌ Error durante el escaneo: ' + e.message);
+            await m.reply('❌ Error en el comando: ' + e.message);
         }
     }
 };
