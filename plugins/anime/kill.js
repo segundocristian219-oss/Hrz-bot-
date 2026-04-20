@@ -10,7 +10,13 @@ const reaction = {
 'https://media.tenor.com/KfyGv-4RtGYAAAPo/anime-reality.mp4',
 'https://media.tenor.com/cc1EzfBVr4oAAAPo/yandere-tagged.mp4',
 'https://media.tenor.com/adQHri2oFZ8AAAPo/mitsuha-miyamizu-sayaka-natori.mp4',
-'https://media.tenor.com/5seqBijq-pUAAAPo/kill-la-kill-sakuga.mp4'
+'https://media.tenor.com/5seqBijq-pUAAAPo/kill-la-kill-sakuga.mp4',
+'https://media.tenor.com/q1dKhDQI_18AAAPo/reze-chainsaw-man.mp4',
+'https://media.tenor.com/WU4sP7m_FD8AAAPo/anime.mp4',
+'https://media.tenor.com/7T59M5fYY6UAAAPo/akabane-karma.mp4',
+'https://media.tenor.com/oRXMEy9ur6kAAAPo/fujinvfx-maki.mp4',
+'https://media.tenor.com/NsqNwgcQ4CUAAAPo/anime.mp4',
+'https://media.tenor.com/lflFJfBu9yUAAAPo/la-riqueza-de-miyiki-no-se-compara-con-mi-adorable-shiro.mp4'
 ]
 }
 
