@@ -21,7 +21,7 @@ const comandoPerfil = {
         let datos = await global.User.findOne({ $or: [{ id: quien }, { lid: quien }] }).lean()
 
         if (!datos) {
-            datos = { name: nombreUsuario, exp: 0, col: 10, marry: '', age: 0, gender: '', identity: '', description: '' }
+            datos = { name: nombreUsuario, exp: 0, col: 10, marry: '', age: 0, gender: '', identity: '', description: '', hijos: [], padres: [] }
         }
 
         let pais = 'Desconocido'
@@ -39,6 +39,18 @@ const comandoPerfil = {
         if (datos.marry && datos.marry !== "") {
             infoPareja = `CASADO/A CON: @${datos.marry.split('@')[0]}`
             menciones.push(datos.marry)
+        }
+
+        let infoFamilia = ''
+        
+        if (datos.padres && datos.padres.length > 0) {
+            infoFamilia += `|  PADRES: ${datos.padres.map(p => `@${p.split('@')[0]}`).join(' y ')}\n`
+            datos.padres.forEach(p => menciones.push(p))
+        }
+
+        if (datos.hijos && datos.hijos.length > 0) {
+            infoFamilia += `|  HIJOS: ${datos.hijos.map(h => `@${h.split('@')[0]}`).join(', ')}\n`
+            datos.hijos.forEach(h => menciones.push(h))
         }
 
         const esDueño = global.owner.some(dns => dns[0] + '@s.whatsapp.net' === quien) || quien === conn.user.jid
@@ -65,7 +77,7 @@ const comandoPerfil = {
 |  MONEDAS: ${datos.col ?? 0} Col
 |  EXPERIENCIA: ${datos.exp ?? 0} EXP
 |  ${infoPareja}
-|  RANGO: ${rango}
+${infoFamilia}|  RANGO: ${rango}
 |
 |  DESCRIPCION:
 |  ${datos.description || 'Sin descripcion configurada.'}
@@ -76,7 +88,7 @@ const comandoPerfil = {
             await conn.sendMessage(m.chat, { 
                 image: { url: fotoPerfil }, 
                 caption: textoPerfil,
-                mentions: menciones
+                mentions: [...new Set(menciones)]
             }, { quoted: m })
         } catch (error) {
             conn.reply(m.chat, `> Error: No se pudo generar la carta de perfil.`, m)
