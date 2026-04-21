@@ -144,7 +144,7 @@ const stickerPackSearch = {
                 ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
             ]);
 
-            const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).webp().toBuffer();
+            const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).webp({ quality: 80 }).toBuffer();
             const zipFiles = [{ name: trayIconName, data: trayBuffer }];
             const stickerMeta = [];
 
@@ -156,7 +156,10 @@ const stickerPackSearch = {
                 if (isAnimated) {
                     stickerBuffer = Buffer.from(stickerResps[i].data);
                 } else {
-                    stickerBuffer = await sharp(Buffer.from(stickerResps[i].data)).resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).webp().toBuffer();
+                    stickerBuffer = await sharp(Buffer.from(stickerResps[i].data))
+                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                        .webp({ quality: 75 })
+                        .toBuffer();
                 }
 
                 zipFiles.push({ name: fileName, data: stickerBuffer });
@@ -188,7 +191,7 @@ const stickerPackSearch = {
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
-                stickerPackOrigin: 'THIRD_PARTY',
+                stickerPackOrigin: 'OWNED',
                 mediaKey,
                 fileLength: encBody.length,
                 fileSha256,
