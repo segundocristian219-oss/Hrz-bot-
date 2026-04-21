@@ -114,7 +114,7 @@ async function patchMediaPathMap() {
         defaults.MEDIA_HKDF_KEY_MAPPING['sticker-pack'] = 'Sticker Pack';
         patchedDefaults = true;
     } catch (e) {
-        console.error('[spack] patch failed:', e.message);
+        console.error(e.message);
     }
 }
 
@@ -123,20 +123,20 @@ const stickerPackSearch = {
     alias: ['spack', 'stickerly'],
     category: 'search',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply('Ingresa el nombre del paquete.');
+        if (!text) return m.reply('Ingresa el nombre.');
         try {
             await m.react('🕒');
             await patchMediaPathMap();
 
             const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
-            if (!searchData.status || !searchData.result?.length) return m.reply('No se encontraron resultados.');
+            if (!searchData.status || !searchData.result?.length) return m.reply('Sin resultados.');
 
             const pack = searchData.result[0];
             const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`);
 
             const stickersToProcess = dlData.result.stickers.slice(0, 10); 
             const packId = pack.url.split('/').pop();
-            const trayIconName = 'icon.webp'; 
+            const trayIconName = 'tray_icon.webp'; 
 
             const [coverRes, ...stickerResps] = await Promise.all([
                 axios.get(dlData.result.thumbnailUrl, { responseType: 'arraybuffer' }),
@@ -147,15 +147,12 @@ const stickerPackSearch = {
             const stickerMeta = [];
 
             stickerResps.forEach((r, i) => {
-                const isAnimated = stickersToProcess[i].isAnimated || false;
                 const fileName = `${i}.webp`; 
-
                 zipFiles.push({ name: fileName, data: Buffer.from(r.data) });
                 stickerMeta.push({
                     fileName,
-                    isAnimated,
-                    emojis: ['✨'],
-                    mimetype: 'image/webp'
+                    isAnimated: stickersToProcess[i].isAnimated || false,
+                    emojis: ['✨']
                 });
             });
 
@@ -176,7 +173,7 @@ const stickerPackSearch = {
             const stickerPackMsg = {
                 stickerPackId: packId,
                 name: (dlData.result.name || pack.name).substring(0, 30),
-                publisherName: name(), 
+                publisherName: "Cat Bot", 
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
@@ -188,10 +185,10 @@ const stickerPackSearch = {
                 directPath,
                 thumbnailDirectPath: directPath,
                 thumbnailSha256: thumbSha256,
-                thumbnailHeight: 252,
-                thumbnailWidth: 252,
+                thumbnailHeight: 96,
+                thumbnailWidth: 96,
                 mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                packDescription: name(),
+                packDescription: "Sticker Pack",
                 imageDataHash: thumbSha256.toString('base64')
             };
 
