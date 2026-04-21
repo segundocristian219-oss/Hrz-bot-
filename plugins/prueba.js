@@ -155,6 +155,7 @@ const stickerPackSearch = {
                 stickerMeta.push({
                     fileName,
                     isAnimated: stickersToProcess[i].isAnimated || false,
+                    emojis: ['✨'],
                     mimetype: 'image/webp'
                 });
             });
@@ -179,6 +180,7 @@ const stickerPackSearch = {
                 stickerPackId: packId,
                 name: (dlData.result.name || pack.name).substring(0, 30),
                 publisherName: (dlData.result.author?.name || pack.author || 'Bot').substring(0, 30),
+                publisherName: name(),
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
@@ -192,7 +194,8 @@ const stickerPackSearch = {
                 thumbnailSha256: thumbSha256,
                 thumbnailHeight: 252,
                 thumbnailWidth: 252,
-                mediaKeyTimestamp: Math.floor(Date.now() / 1000)
+                mediaKeyTimestamp: Math.floor(Date.now() / 1000),
+                packDescription: name()
             };
 
             await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
