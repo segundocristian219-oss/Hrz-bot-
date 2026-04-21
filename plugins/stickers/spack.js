@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { writeFile, unlink } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import sharp from 'sharp';
 
 function hkdf(key, length, info = '') {
     const h = crypto.createHmac('sha256', Buffer.alloc(32)).update(key).digest();
@@ -136,25 +137,35 @@ const stickerPackSearch = {
 
             const stickersToProcess = dlData.result.stickers.slice(0, 10); 
             const packId = pack.url.split('/').pop();
-            const trayIconName = 'tray_icon.webp'; 
+            const trayIconName = 'tray.webp'; 
 
             const [coverRes, ...stickerResps] = await Promise.all([
                 axios.get(dlData.result.thumbnailUrl, { responseType: 'arraybuffer' }),
                 ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
             ]);
 
-            const zipFiles = [{ name: trayIconName, data: Buffer.from(coverRes.data) }];
+            const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).webp().toBuffer();
+            const zipFiles = [{ name: trayIconName, data: trayBuffer }];
             const stickerMeta = [];
 
-            stickerResps.forEach((r, i) => {
-                const fileName = `${i}.webp`; 
-                zipFiles.push({ name: fileName, data: Buffer.from(r.data) });
+            for (let i = 0; i < stickerResps.length; i++) {
+                const isAnimated = stickersToProcess[i].isAnimated || false;
+                const fileName = `${i}.webp`;
+                let stickerBuffer;
+
+                if (isAnimated) {
+                    stickerBuffer = Buffer.from(stickerResps[i].data);
+                } else {
+                    stickerBuffer = await sharp(Buffer.from(stickerResps[i].data)).resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).webp().toBuffer();
+                }
+
+                zipFiles.push({ name: fileName, data: stickerBuffer });
                 stickerMeta.push({
                     fileName,
-                    isAnimated: stickersToProcess[i].isAnimated || false,
+                    isAnimated,
                     emojis: ['✨']
                 });
-            });
+            }
 
             const zipBuffer = buildZip(zipFiles);
             const { mediaKey, encBody, fileSha256, fileEncSha256 } = encryptZip(zipBuffer);
