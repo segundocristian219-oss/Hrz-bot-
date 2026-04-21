@@ -2,6 +2,9 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { Readable } from 'stream';
+import { writeFile, unlink } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 function hkdf(key, length, info = '') {
     const h = crypto.createHmac('sha256', Buffer.alloc(32)).update(key).digest();
@@ -181,19 +184,22 @@ const stickerPackSearch = {
 
             let directPath = null;
             let uploadOk = false;
+            const tmpPath = join(tmpdir(), `spack-${msgId}.enc`);
 
             try {
-                const readStream = Readable.from(encBody);
+                await writeFile(tmpPath, encBody);
                 const fileEncSha256B64 = fileEncSha256.toString('base64');
                 const uploadResult = await conn.waUploadToServer(
-                    readStream,
+                    tmpPath,
                     { fileEncSha256B64, mediaType: 'sticker-pack', timeoutMs: 60_000 }
                 );
                 directPath = uploadResult.directPath;
                 uploadOk = true;
-                console.log('[spack] upload ok, directPath:', directPath);
+                console.log('[spack] upload ok:', directPath);
             } catch (uploadErr) {
                 console.error('[spack] upload falló:', uploadErr.message);
+            } finally {
+                unlink(tmpPath).catch(() => {});
             }
 
             const stickerPackMsg = {
