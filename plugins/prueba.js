@@ -166,14 +166,14 @@ const stickerPackSearch = {
             const readStream = Readable.from(encBody);
             const fileEncSha256B64 = fileEncSha256.toString('base64');
 
-            const uploadResult = await conn.waUploadToServer(
-                readStream,
-                {
-                    fileEncSha256B64,
-                    mediaType: 'sticker-pack',
-                    timeoutMs: 60_000
-                }
-            );
+           const uploadResult = await conn.waUploadToServer(
+    readStream,
+    {
+        fileEncSha256B64,
+        mediaType: 'document',
+        timeoutMs: 60_000
+    }
+);
 
             const thumbSha256 = crypto.createHash('sha256').update(coverBuf).digest();
             const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
