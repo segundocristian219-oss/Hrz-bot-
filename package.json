@@ -23,7 +23,6 @@
     "@whiskeysockets/baileys": "github:WhiskeySockets/Baileys",
     "@supabase/supabase-js": "^2.48.0",
     "acrcloud": "^1.4.0",
-    "aptoide-scraper": "github:DIEGO-OFC/dv-aptoide-scraper",
     "awesome-phonenumber": "^6.10.0",
     "axios": "^1.7.9",
     "axios-cookiejar-support": "^5.0.5",
