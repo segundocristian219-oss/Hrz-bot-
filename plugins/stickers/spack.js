@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import crypto from 'crypto';
 import { writeFile, unlink } from 'fs/promises';
@@ -26,32 +25,17 @@ function hkdf(key, length, info = '') {
     return Buffer.concat(output).slice(0, length);
 }
 
-function encryptZip(zipBuffer) {
+function encryptBuffer(buffer, hkdfInfo) {
     const mediaKey = crypto.randomBytes(32);
-    const keys = hkdf(mediaKey, 112, 'WhatsApp Sticker Pack Keys');
+    const keys = hkdf(mediaKey, 112, hkdfInfo);
     const iv = keys.slice(0, 16);
     const cipherKey = keys.slice(16, 48);
     const macKey = keys.slice(48, 80);
     const cipher = crypto.createCipheriv('aes-256-cbc', cipherKey, iv);
-    const encrypted = Buffer.concat([cipher.update(zipBuffer), cipher.final()]);
+    const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
     const mac = crypto.createHmac('sha256', macKey).update(iv).update(encrypted).digest().slice(0, 10);
     const encBody = Buffer.concat([encrypted, mac]);
-    const fileSha256 = crypto.createHash('sha256').update(zipBuffer).digest();
-    const fileEncSha256 = crypto.createHash('sha256').update(encBody).digest();
-    return { mediaKey, encBody, fileSha256, fileEncSha256 };
-}
-
-function encryptSticker(stickerBuffer) {
-    const mediaKey = crypto.randomBytes(32);
-    const keys = hkdf(mediaKey, 112, 'WhatsApp Image Keys');
-    const iv = keys.slice(0, 16);
-    const cipherKey = keys.slice(16, 48);
-    const macKey = keys.slice(48, 80);
-    const cipher = crypto.createCipheriv('aes-256-cbc', cipherKey, iv);
-    const encrypted = Buffer.concat([cipher.update(stickerBuffer), cipher.final()]);
-    const mac = crypto.createHmac('sha256', macKey).update(iv).update(encrypted).digest().slice(0, 10);
-    const encBody = Buffer.concat([encrypted, mac]);
-    const fileSha256 = crypto.createHash('sha256').update(stickerBuffer).digest();
+    const fileSha256 = crypto.createHash('sha256').update(buffer).digest();
     const fileEncSha256 = crypto.createHash('sha256').update(encBody).digest();
     return { mediaKey, encBody, fileSha256, fileEncSha256 };
 }
@@ -135,6 +119,21 @@ async function patchMediaPathMap() {
     }
 }
 
+async function uploadBuffer(conn, buffer, mediaType) {
+    const enc = encryptBuffer(buffer, mediaType === 'sticker' ? 'WhatsApp Image Keys' : 'WhatsApp Sticker Pack Keys');
+    const tmpPath = join(tmpdir(), `wa-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.enc`);
+    await writeFile(tmpPath, enc.encBody);
+    try {
+        const result = await conn.waUploadToServer(tmpPath, {
+            fileEncSha256B64: enc.fileEncSha256.toString('base64'),
+            mediaType
+        });
+        return { ...enc, directPath: result.directPath };
+    } finally {
+        unlink(tmpPath).catch(() => {});
+    }
+}
+
 const stickerPackSearch = {
     name: 'stickerpack',
     alias: ['spack', 'stickerly'],
@@ -166,30 +165,27 @@ const stickerPackSearch = {
             ]);
 
             const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).png().toBuffer();
+
+            const processedStickers = await Promise.all(
+                stickerResps.map(resp =>
+                    sharp(Buffer.from(resp.data))
+                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                        .webp({ quality: 75 })
+                        .toBuffer()
+                )
+            );
+
+            const stickerUploadResults = await Promise.all(
+                processedStickers.map(buf => uploadBuffer(conn, buf, 'sticker'))
+            );
+
             const zipFiles = [];
             const stickerMeta = [];
-            const stickerUploads = [];
 
-            for (let i = 0; i < stickerResps.length; i++) {
-                const processedBuffer = await sharp(Buffer.from(stickerResps[i].data))
-                    .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                    .webp({ quality: 75 })
-                    .toBuffer();
-
-                const enc = encryptSticker(processedBuffer);
-                const tmpStickerPath = join(tmpdir(), `sticker-${i}-${Date.now()}.enc`);
-                await writeFile(tmpStickerPath, enc.encBody);
-
-                const stickerUpload = await conn.waUploadToServer(tmpStickerPath, {
-                    fileEncSha256B64: enc.fileEncSha256.toString('base64'),
-                    mediaType: 'sticker'
-                });
-                await unlink(tmpStickerPath);
-
-                const hash = crypto.createHash('sha256').update(processedBuffer).digest('base64url');
+            for (let i = 0; i < processedStickers.length; i++) {
+                const hash = crypto.createHash('sha256').update(processedStickers[i]).digest('base64url');
                 const fileName = `${String(i).padStart(2, '0')}_${hash}.webp`;
-
-                zipFiles.push({ name: fileName, data: processedBuffer });
+                zipFiles.push({ name: fileName, data: processedStickers[i] });
                 stickerMeta.push({
                     fileName,
                     isAnimated: false,
@@ -197,71 +193,49 @@ const stickerPackSearch = {
                     mimetype: 'image/webp',
                     accessibilityLabel: ''
                 });
-                stickerUploads.push({
-                    ...enc,
-                    directPath: stickerUpload.directPath,
-                    fileName
-                });
             }
 
-            const finalZipFiles = [{ name: `${pack.id}.png`, data: trayBuffer }, ...zipFiles];
-            const zipBuffer = buildZip(finalZipFiles);
-            const { mediaKey, encBody, fileSha256, fileEncSha256 } = encryptZip(zipBuffer);
-            const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
-
-            const packId = fileEncSha256.toString('base64url');
+            const packEncTemp = encryptBuffer(buildZip(zipFiles), 'WhatsApp Sticker Pack Keys');
+            const packId = packEncTemp.fileEncSha256.toString('base64url');
             const trayIconName = `${packId}.png`;
 
-            const finalZipFilesWithCorrectTray = [{ name: trayIconName, data: trayBuffer }, ...zipFiles];
-            const finalZipBuffer = buildZip(finalZipFilesWithCorrectTray);
-            const finalEnc = encryptZip(finalZipBuffer);
+            const finalZipBuffer = buildZip([{ name: trayIconName, data: trayBuffer }, ...zipFiles]);
+            const packUpload = await uploadBuffer(conn, finalZipBuffer, 'sticker-pack');
 
             const thumbSha256 = crypto.createHash('sha256').update(trayBuffer).digest();
-            const thumbKeys = hkdf(finalEnc.mediaKey, 112, 'WhatsApp Sticker Pack Keys');
-            const thumbIv = thumbKeys.slice(0, 16);
-            const thumbCipherKey = thumbKeys.slice(16, 48);
-            const thumbMacKey = thumbKeys.slice(48, 80);
-            const thumbCipher = crypto.createCipheriv('aes-256-cbc', thumbCipherKey, thumbIv);
+            const thumbKeys = hkdf(packUpload.mediaKey, 112, 'WhatsApp Sticker Pack Keys');
+            const thumbCipher = crypto.createCipheriv('aes-256-cbc', thumbKeys.slice(16, 48), thumbKeys.slice(0, 16));
             const thumbEnc = Buffer.concat([thumbCipher.update(trayBuffer), thumbCipher.final()]);
-            const thumbMac = crypto.createHmac('sha256', thumbMacKey).update(thumbIv).update(thumbEnc).digest().slice(0, 10);
-            const thumbEncBody = Buffer.concat([thumbEnc, thumbMac]);
-            const thumbEncSha256 = crypto.createHash('sha256').update(thumbEncBody).digest();
+            const thumbMac = crypto.createHmac('sha256', thumbKeys.slice(48, 80)).update(thumbKeys.slice(0, 16)).update(thumbEnc).digest().slice(0, 10);
+            const thumbEncSha256 = crypto.createHash('sha256').update(Buffer.concat([thumbEnc, thumbMac])).digest();
 
-            const tmpPath = join(tmpdir(), `spack-${msgId}.enc`);
-            await writeFile(tmpPath, finalEnc.encBody);
+            const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
 
-            const { directPath } = await conn.waUploadToServer(tmpPath, {
-                fileEncSha256B64: finalEnc.fileEncSha256.toString('base64'),
-                mediaType: 'sticker-pack'
-            });
-            await unlink(tmpPath);
+            await conn.relayMessage(m.chat, {
+                stickerPackMessage: {
+                    stickerPackId: packUpload.fileEncSha256.toString('base64url'),
+                    name: pack.packname.substring(0, 30),
+                    publisherName: 'Cat Bot',
+                    trayIconFileName: trayIconName,
+                    stickers: stickerMeta,
+                    stickerPackSize: finalZipBuffer.length,
+                    stickerPackOrigin: 'THIRD_PARTY',
+                    mediaKey: packUpload.mediaKey,
+                    fileLength: packUpload.encBody.length,
+                    fileSha256: packUpload.fileSha256,
+                    fileEncSha256: packUpload.fileEncSha256,
+                    directPath: packUpload.directPath,
+                    thumbnailDirectPath: packUpload.directPath,
+                    thumbnailSha256: thumbSha256,
+                    thumbnailEncSha256: thumbEncSha256,
+                    thumbnailHeight: 96,
+                    thumbnailWidth: 96,
+                    mediaKeyTimestamp: Math.floor(Date.now() / 1000),
+                    packDescription: 'Sticker Pack',
+                    imageDataHash: thumbSha256.toString('base64')
+                }
+            }, { messageId: msgId, quoted: m });
 
-            const finalPackId = finalEnc.fileEncSha256.toString('base64url');
-
-            const stickerPackMsg = {
-                stickerPackId: finalPackId,
-                name: pack.packname.substring(0, 30),
-                publisherName: 'Cat Bot',
-                trayIconFileName: `${finalPackId}.png`,
-                stickers: stickerMeta,
-                stickerPackSize: finalZipBuffer.length,
-                stickerPackOrigin: 'THIRD_PARTY',
-                mediaKey: finalEnc.mediaKey,
-                fileLength: finalEnc.encBody.length,
-                fileSha256: finalEnc.fileSha256,
-                fileEncSha256: finalEnc.fileEncSha256,
-                directPath,
-                thumbnailDirectPath: directPath,
-                thumbnailSha256: thumbSha256,
-                thumbnailEncSha256: thumbEncSha256,
-                thumbnailHeight: 96,
-                thumbnailWidth: 96,
-                mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                packDescription: 'Sticker Pack',
-                imageDataHash: thumbSha256.toString('base64')
-            };
-
-            await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
             await m.react('✅');
 
         } catch (e) {
