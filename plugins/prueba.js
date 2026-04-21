@@ -162,46 +162,52 @@ const stickerPackSearch = {
 
             const zipBuffer = buildZip(zipFiles);
             const { mediaKey, encBody, fileSha256, fileEncSha256 } = encryptZip(zipBuffer);
-
-            const readStream = Readable.from(encBody);
-            const fileEncSha256B64 = fileEncSha256.toString('base64');
-
-           const uploadResult = await conn.waUploadToServer(
-    readStream,
-    {
-        fileEncSha256B64,
-        mediaType: 'document',
-        timeoutMs: 60_000
-    }
-);
-
             const thumbSha256 = crypto.createHash('sha256').update(coverBuf).digest();
             const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
 
-            await conn.relayMessage(m.chat, {
-                stickerPackMessage: {
-                    stickerPackId: packId,
-                    name: dlData.result.name || pack.name,
-                    publisherName: dlData.result.author?.name || pack.author,
-                    trayIconFileName: `${packId}.png`,
-                    stickers: stickerMeta,
-                    fileLength: encBody.length,
-                    fileSha256,
-                    fileEncSha256,
-                    mediaKey,
-                    directPath: uploadResult.directPath,
-                    mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                    thumbnailDirectPath: uploadResult.directPath,
-                    thumbnailSha256: thumbSha256,
-                    thumbnailEncSha256: thumbSha256,
-                    thumbnailHeight: 252,
-                    thumbnailWidth: 252,
-                    stickerPackSize: zipBuffer.length,
-                    stickerPackOrigin: 'THIRD_PARTY'
-                }
-            }, { messageId: msgId, quoted: m });
+            let directPath = null;
+            let uploadOk = false;
 
-            await m.react('✅');
+            try {
+                const readStream = Readable.from(encBody);
+                const fileEncSha256B64 = fileEncSha256.toString('base64');
+                const uploadResult = await conn.waUploadToServer(
+                    readStream,
+                    { fileEncSha256B64, mediaType: 'document', timeoutMs: 60_000 }
+                );
+                directPath = uploadResult.directPath;
+                uploadOk = true;
+            } catch (uploadErr) {
+                console.error('[spack] upload falló:', uploadErr.message);
+            }
+
+            const stickerPackMsg = {
+                stickerPackId: packId,
+                name: dlData.result.name || pack.name,
+                publisherName: dlData.result.author?.name || pack.author,
+                trayIconFileName: `${packId}.png`,
+                stickers: stickerMeta,
+                stickerPackSize: zipBuffer.length,
+                stickerPackOrigin: 'THIRD_PARTY',
+                thumbnailHeight: 252,
+                thumbnailWidth: 252,
+                mediaKeyTimestamp: Math.floor(Date.now() / 1000),
+            };
+
+            if (uploadOk && directPath) {
+                stickerPackMsg.fileLength = encBody.length;
+                stickerPackMsg.fileSha256 = fileSha256;
+                stickerPackMsg.fileEncSha256 = fileEncSha256;
+                stickerPackMsg.mediaKey = mediaKey;
+                stickerPackMsg.directPath = directPath;
+                stickerPackMsg.thumbnailDirectPath = directPath;
+                stickerPackMsg.thumbnailSha256 = thumbSha256;
+                stickerPackMsg.thumbnailEncSha256 = thumbSha256;
+            }
+
+            await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
+
+            await m.react(uploadOk ? '✅' : '⚠️');
 
         } catch (e) {
             await m.react('✖️');
