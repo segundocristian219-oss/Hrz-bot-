@@ -121,58 +121,46 @@ async function patchMediaPathMap() {
 
 const stickerPackSearch = {
     name: 'stickerpack',
-    alias: ['spack', 'stickerly'],
+    alias: ['spack'],
     category: 'search',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply('Ingresa el nombre.');
+        if (!text) return m.reply('Ingresa la URL de getstickerpack.');
         try {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-Lg4rAtj`);
-            if (!searchData.status || !searchData.result?.length) return m.reply('Sin resultados.');
+            const { data: resApi } = await axios.post('https://panel.apinexus.fun/api/stickers/descargar', 
+                { url: text }, 
+                { headers: { 'Content-Type': 'application/json', 'x-api-key': key } }
+            );
 
-            const pack = searchData.result[0];
-            const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-Lg4rAtj`);
+            if (!resApi.success) return m.reply('Error en la API.');
 
-            const stickersToProcess = dlData.result.stickers.slice(0, 10); 
-            const packId = pack.url.split('/').pop();
-            const trayIconName = 'tray.webp'; 
+            const stickersUrls = resApi.data.stickers.slice(0, 10);
+            const trayIconName = 'tray.webp';
 
-            const [coverRes, ...stickerResps] = await Promise.all([
-                axios.get(dlData.result.thumbnailUrl, { responseType: 'arraybuffer' }),
-                ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
-            ]);
+            const stickerResps = await Promise.all(
+                stickersUrls.map(url => axios.get(url, { responseType: 'arraybuffer' }))
+            );
 
-            const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).webp({ quality: 80 }).toBuffer();
+            const trayBuffer = await sharp(stickerResps[0].data).resize(96, 96).webp().toBuffer();
             const zipFiles = [{ name: trayIconName, data: trayBuffer }];
             const stickerMeta = [];
 
             for (let i = 0; i < stickerResps.length; i++) {
-                const isAnimated = stickersToProcess[i].isAnimated || false;
                 const fileName = `${i}.webp`;
-                let stickerBuffer;
-
-                if (isAnimated) {
-                    stickerBuffer = Buffer.from(stickerResps[i].data);
-                } else {
-                    stickerBuffer = await sharp(Buffer.from(stickerResps[i].data))
-                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                        .webp({ quality: 75 })
-                        .toBuffer();
-                }
+                const stickerBuffer = await sharp(stickerResps[i].data)
+                    .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                    .webp({ quality: 75 })
+                    .toBuffer();
 
                 zipFiles.push({ name: fileName, data: stickerBuffer });
-                stickerMeta.push({
-                    fileName,
-                    isAnimated,
-                    emojis: ['✨']
-                });
+                stickerMeta.push({ fileName, isAnimated: false, emojis: ['✨'] });
             }
 
             const zipBuffer = buildZip(zipFiles);
             const { mediaKey, encBody, fileSha256, fileEncSha256 } = encryptZip(zipBuffer);
-            const thumbSha256 = crypto.createHash('sha256').update(zipFiles[0].data).digest();
+            const thumbSha256 = crypto.hash('sha256', zipFiles[0].data);
             const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
 
             const tmpPath = join(tmpdir(), `spack-${msgId}.enc`);
@@ -185,9 +173,9 @@ const stickerPackSearch = {
             await unlink(tmpPath);
 
             const stickerPackMsg = {
-                stickerPackId: packId,
-                name: (dlData.result.name || pack.name).substring(0, 30),
-                publisherName: "Cat Bot", 
+                stickerPackId: crypto.randomBytes(10).toString('hex'),
+                name: resApi.data.packname.substring(0, 30),
+                publisherName: "Cat Bot",
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
@@ -201,9 +189,7 @@ const stickerPackSearch = {
                 thumbnailSha256: thumbSha256,
                 thumbnailHeight: 96,
                 thumbnailWidth: 96,
-                mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                packDescription: "Sticker Pack",
-                imageDataHash: thumbSha256.toString('base64')
+                mediaKeyTimestamp: Math.floor(Date.now() / 1000)
             };
 
             await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
