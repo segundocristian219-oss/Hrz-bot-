@@ -42,34 +42,38 @@ const matrimonio = {
             if (cmd === 'aceptar') {
                 clearTimeout(juego.timeout)
 
-                if (juego.tipo === 'divorcio') {
-                    const parejaA = await global.User.findOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] })
-                    const parejaB = await global.User.findOne({ $or: [{ id: juego.receptor }, { lid: juego.receptor }] })
+                const parejaA = await global.User.findOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] })
+                const parejaB = await global.User.findOne({ $or: [{ id: juego.receptor }, { lid: juego.receptor }] })
 
-                    if (parejaA) await global.User.updateOne({ _id: parejaA._id }, { $set: { marry: '', marryDate: 0 } })
-                    if (parejaB) await global.User.updateOne({ _id: parejaB._id }, { $set: { marry: '', marryDate: 0 } })
+                if (!parejaA || !parejaB) {
+                    delete global.weddingGames[idJuego]
+                    return m.reply('*♛ ERROR ✧*\n\n╰❒ Uno de los usuarios no existe en la base de datos.')
+                }
+
+                if (juego.tipo === 'divorcio') {
+                    await global.User.updateOne({ _id: parejaA._id }, { $set: { marry: '', marryDate: 0 } })
+                    await global.User.updateOne({ _id: parejaB._id }, { $set: { marry: '', marryDate: 0 } })
 
                     delete global.weddingGames[idJuego]
                     return m.reply('*♛ DIVORCIO FINALIZADO ✧*\n\n╰❒ Ambos han aceptado la separación. Ahora son libres.')
                 }
 
-                const checkS = await global.User.findOne({ $or: [{ id: juego.solicitante }, { lid: juego.solicitante }] })
-                if (!checkS || (checkS.marry && checkS.marry !== "")) {
+                if ((parejaA.marry && parejaA.marry !== "") || (parejaB.marry && parejaB.marry !== "")) {
                     delete global.weddingGames[idJuego]
-                    return m.reply('*♛ ERROR ✧*\n\n╰❒ La propuesta ya no es válida.')
+                    return m.reply('*♛ ERROR ✧*\n\n╰❒ La propuesta ya no es válida, uno de los dos ya se casó.')
                 }
 
-                const idSol = checkS.lid || checkS.id
-                const miId = user.lid || user.id
+                const idA = parejaA.lid || parejaA.id
+                const idB = parejaB.lid || parejaB.id
 
-                await global.User.updateOne({ _id: user._id }, { $set: { marry: idSol, marryDate: Date.now() } })
-                await global.User.updateOne({ _id: checkS._id }, { $set: { marry: miId, marryDate: Date.now() } })
+                await global.User.updateOne({ _id: parejaA._id }, { $set: { marry: idB, marryDate: Date.now() } })
+                await global.User.updateOne({ _id: parejaB._id }, { $set: { marry: idA, marryDate: Date.now() } })
 
                 delete global.weddingGames[idJuego]
 
                 return conn.sendMessage(m.chat, {
-                    text: `*♛ ¡BODA FINALIZADA! ✧*\n\n╰❒ Esposo: @${idSol.split('@')[0]}\n╰❒ Esposa: @${miId.split('@')[0]}\n\n> ¡Ahora están felizmente casados!`,
-                    contextInfo: { mentionedJid: [idSol, miId] }
+                    text: `*♛ ¡BODA FINALIZADA! ✧*\n\n╰❒ Pareja 1: @${idA.split('@')[0]}\n╰❒ Pareja 2: @${idB.split('@')[0]}\n\n> ¡Ahora están felizmente casados!`,
+                    contextInfo: { mentionedJid: [idA, idB] }
                 }, { quoted: m })
             }
 
@@ -97,7 +101,7 @@ const matrimonio = {
                         delete global.weddingGames[idJuegoDiv]
                         conn.sendMessage(m.chat, { text: `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ @${idPareja.split('@')[0]} no respondió a la solicitud.`, mentions: [idPareja] })
                     }
-                }, 15000)
+                }, 30000)
             }
 
             return conn.sendMessage(m.chat, {
@@ -124,7 +128,7 @@ const matrimonio = {
 
         if (objetivo.marry && objetivo.marry !== "") {
             return conn.sendMessage(m.chat, {
-                text: `*♛ AVISO ✧*\n\n╰❒ @${(objetivo.id || objetivo.lid).split('@')[0]} ya está casado/a.`,
+                text: `*♛ AVISO ✧*\n\n╰❒ @${(objetivo.id || objetivo.lid).split('@')[0]} ya está casado.`,
                 contextInfo: { mentionedJid: [objetivo.id || objetivo.lid] }
             }, { quoted: m })
         }
@@ -143,7 +147,7 @@ const matrimonio = {
                     delete global.weddingGames[idJuegoBoda]
                     conn.sendMessage(m.chat, { text: `*♛ TIEMPO AGOTADO ✧*\n\n╰❒ La propuesta para @${idObjetivo.split('@')[0]} expiró.`, mentions: [idObjetivo] })
                 }
-            }, 15000)
+           }, 30000)
         }
 
         return conn.sendMessage(m.chat, {
