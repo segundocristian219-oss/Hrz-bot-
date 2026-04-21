@@ -7,21 +7,27 @@ const cleanDB = {
         if (!owners.includes(m.sender.split('@')[0])) return
 
         try {
-            const gap = new Date(Date.now() - (3 * 24 * 60 * 60 * 1000))
+            const gapMS = 3 * 24 * 60 * 60 * 1000
+            const gapDate = new Date(Date.now() - gapMS)
+            const gapNumber = Date.now() - gapMS
 
-            const resUsers = await global.User.deleteMany({
-                lastSeen: { $lt: gap }
-            })
+            const query = {
+                $or: [
+                    { lastSeen: { $lt: gapDate } },
+                    { lastSeen: { $lt: gapNumber } },
+                    { lastSeen: { $exists: false } },
+                    { name: 'Sin Nombre', exp: 0 }
+                ]
+            }
 
-            const resChats = await global.Chat.deleteMany({
-                lastSeen: { $lt: gap }
-            })
+            const resUsers = await global.User.deleteMany(query)
+            const resChats = await global.Chat.deleteMany(query)
 
             const total = (resUsers.deletedCount || 0) + (resChats.deletedCount || 0)
 
-            return m.reply(`*♛ PURGA EXITOSA ✧*\n\n╰❒ Usuarios: ${resUsers.deletedCount || 0}\n╰❒ Grupos: ${resChats.deletedCount || 0}\n╰❒ Total: ${total}\n\n> Datos inactivos de 3 días eliminados.`)
+            return m.reply(`*♛ PURGA PROFUNDA ✧*\n\n╰❒ Usuarios eliminados: ${resUsers.deletedCount || 0}\n╰❒ Grupos eliminados: ${resChats.deletedCount || 0}\n╰❒ Total: ${total}\n\n> Se limpiaron registros inactivos, sin fecha o corruptos.`)
         } catch (e) {
-            return m.reply('*♛ ERROR ✧*\n\n╰❒ Error al conectar con MongoDB.')
+            return m.reply('*♛ ERROR ✧*\n\n╰❒ Fallo en la purga de MongoDB.')
         }
     }
 }
