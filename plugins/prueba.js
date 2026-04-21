@@ -120,119 +120,87 @@ async function patchMediaPathMap() {
     }
 }
 
+
 const stickerPackSearch = {
     name: 'stickerpack',
     alias: ['spack', 'stickerly'],
     category: 'search',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply('Ingresa el nombre de un paquete de stickers.');
+        if (!text) return m.reply('Ingresa el nombre.');
         try {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchData } = await axios.get(
-                `https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`
-            );
-            if (!searchData.status || !searchData.result?.length) {
-                await m.react('✖️');
-                return m.reply('No se encontraron resultados.');
-            }
+            const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
+            if (!searchData.status || !searchData.result?.length) return m.reply('No hay resultados.');
 
             const pack = searchData.result[0];
+            const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`);
+            
+            const stickersToProcess = dlData.result.stickers.slice(0, 10); 
             const packId = pack.url.split('/').pop();
-
-            const { data: dlData } = await axios.get(
-                `https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`
-            );
-            if (!dlData.status || !dlData.result?.stickers?.length) {
-                await m.react('✖️');
-                return m.reply('No se pudieron obtener los stickers.');
-            }
-
-            const stickers = dlData.result.stickers.slice(0, 5);
+            const trayIconName = 'icon.png'; 
 
             const [coverRes, ...stickerResps] = await Promise.all([
                 axios.get(dlData.result.thumbnailUrl, { responseType: 'arraybuffer' }),
-                ...stickers.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
+                ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
             ]);
 
-            const coverBuf = Buffer.from(coverRes.data);
-            const stickerBufs = stickerResps.map(r => Buffer.from(r.data));
-
-            const zipFiles = [{ name: `${packId}.png`, data: coverBuf }];
+            const zipFiles = [{ name: trayIconName, data: Buffer.from(coverRes.data) }];
             const stickerMeta = [];
 
-            for (let i = 0; i < stickerBufs.length; i++) {
-                const buf = stickerBufs[i];
-                const hash = crypto.createHash('sha256').update(buf).digest('base64url');
-                const fileName = `${String(i).padStart(2, '0')}_${hash}.webp`;
-                zipFiles.push({ name: fileName, data: buf });
+            stickerResps.forEach((r, i) => {
+                const fileName = `${i}.webp`; 
+                zipFiles.push({ name: fileName, data: Buffer.from(r.data) });
                 stickerMeta.push({
                     fileName,
-                    isAnimated: stickers[i].isAnimated || false,
-                    isLottie: false,
-                    mimetype: 'image/webp',
-                    accessibilityLabel: '',
-                    emojis: []
+                    isAnimated: stickersToProcess[i].isAnimated || false,
+                    mimetype: 'image/webp'
                 });
-            }
+            });
 
             const zipBuffer = buildZip(zipFiles);
             const { mediaKey, encBody, fileSha256, fileEncSha256 } = encryptZip(zipBuffer);
-            const thumbSha256 = crypto.createHash('sha256').update(coverBuf).digest();
+            
+            
+            const thumbSha256 = crypto.createHash('sha256').update(zipFiles[0].data).digest();
             const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
 
-            let directPath = null;
-            let uploadOk = false;
             const tmpPath = join(tmpdir(), `spack-${msgId}.enc`);
-
-            try {
-                await writeFile(tmpPath, encBody);
-                const fileEncSha256B64 = fileEncSha256.toString('base64');
-                const uploadResult = await conn.waUploadToServer(
-                    tmpPath,
-                    { fileEncSha256B64, mediaType: 'sticker-pack', timeoutMs: 60_000 }
-                );
-                directPath = uploadResult.directPath;
-                uploadOk = true;
-                console.log('[spack] upload ok:', directPath);
-            } catch (uploadErr) {
-                console.error('[spack] upload falló:', uploadErr.message);
-            } finally {
-                unlink(tmpPath).catch(() => {});
-            }
+            await writeFile(tmpPath, encBody);
+            
+            const { directPath } = await conn.waUploadToServer(tmpPath, { 
+                fileEncSha256B64: fileEncSha256.toString('base64'), 
+                mediaType: 'sticker-pack' 
+            });
+            await unlink(tmpPath);
 
             const stickerPackMsg = {
                 stickerPackId: packId,
-                name: dlData.result.name || pack.name,
-                publisherName: dlData.result.author?.name || pack.author,
-                trayIconFileName: `${packId}.png`,
+                name: (dlData.result.name || pack.name).substring(0, 30),
+                publisherName: (dlData.result.author?.name || pack.author || 'Bot').substring(0, 30),
+                trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
                 stickerPackOrigin: 'THIRD_PARTY',
+                mediaKey,
+                fileLength: encBody.length,
+                fileSha256,
+                fileEncSha256,
+                directPath,
+                thumbnailDirectPath: directPath,
+                thumbnailSha256: thumbSha256,
                 thumbnailHeight: 252,
                 thumbnailWidth: 252,
-                mediaKeyTimestamp: Math.floor(Date.now() / 1000),
+                mediaKeyTimestamp: Math.floor(Date.now() / 1000)
             };
 
-            if (uploadOk && directPath) {
-                stickerPackMsg.fileLength = encBody.length;
-                stickerPackMsg.fileSha256 = fileSha256;
-                stickerPackMsg.fileEncSha256 = fileEncSha256;
-                stickerPackMsg.mediaKey = mediaKey;
-                stickerPackMsg.directPath = directPath;
-                stickerPackMsg.thumbnailDirectPath = directPath;
-                stickerPackMsg.thumbnailSha256 = thumbSha256;
-                stickerPackMsg.thumbnailEncSha256 = thumbSha256;
-            }
-
             await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
-            await m.react(uploadOk ? '✅' : '⚠️');
+            await m.react('✅');
 
         } catch (e) {
-            await m.react('✖️');
             console.error(e);
-            m.reply('Error: ' + e.message);
+            await m.react('✖️');
         }
     }
 };
