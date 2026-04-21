@@ -1,60 +1,5 @@
 import 'dotenv/config';
-process.removeAllListeners('warning');
-
-const maskLogs = (chunk, encoding, callback, originalWrite) => {
-    const msg = chunk?.toString?.() || '';
-    if (
-        msg.includes('Closing session') || 
-        msg.includes('Removing old closed session') || 
-        msg.includes('Bad MAC') || 
-        msg.includes('Failed to decrypt')
-    ) {
-        if (typeof encoding === 'function') encoding();
-        else if (typeof callback === 'function') callback();
-        return true;
-    }
-    return originalWrite(chunk, encoding, callback);
-};
-
-const _stdout = process.stdout.write.bind(process.stdout);
-process.stdout.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stdout);
-
-const _stderr = process.stderr.write.bind(process.stderr);
-process.stderr.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stderr);
-
-//# Intento de anti duplicado de registro 
-
 import './config.js';
-import mongoose from 'mongoose';
-
-const dbUrl = Buffer.from(process.env.MONGODB_URL, 'base64').toString('utf-8');
-
-async function purge() {
-    await mongoose.connect(dbUrl);
-    console.log("Conectado para purga...");
-    
-    const res1 = await mongoose.connection.db.collection('users').deleteMany({
-        $and: [
-            { id: { $not: /@s\.whatsapp\.net$/ } },
-            { lid: { $not: /@lid$/ } }
-        ]
-    });
-
-    
-    const res2 = await mongoose.connection.db.collection('users').deleteMany({
-        id: "",
-        lid: ""
-    });
-
-    console.log(`Purga finalizada. Registros eliminados: ${res1.deletedCount + res2.deletedCount}`);
-    process.exit();
-}
-
-purge();
-
-
-//----------//
-
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
@@ -66,43 +11,42 @@ import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
 import readline from 'readline';
 import cfonts from 'cfonts';
+import mongoose from 'mongoose';
 import { smsg } from './lib/serializer.js';
 import { EventEmitter } from 'events';
 import { LocalDB } from './lib/localDB.js';
 import { exec } from "child_process";
 
+process.removeAllListeners('warning');
 EventEmitter.defaultMaxListeners = 0;
 
-const sId = (jid) => {
-    if (!jid) return jid;
-    return jid.includes('@') ? jid.split('@')[0].split(':')[0] + '@s.whatsapp.net' : jid.split(':')[0] + '@s.whatsapp.net';
+const maskLogs = (chunk, encoding, callback, originalWrite) => {
+    const msg = chunk?.toString?.() || '';
+    if (msg.includes('Closing session') || msg.includes('Removing old closed session') || msg.includes('Bad MAC') || msg.includes('Failed to decrypt')) {
+        if (typeof encoding === 'function') encoding();
+        else if (typeof callback === 'function') callback();
+        return true;
+    }
+    return originalWrite(chunk, encoding, callback);
 };
+
+const _stdout = process.stdout.write.bind(process.stdout);
+process.stdout.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stdout);
+const _stderr = process.stderr.write.bind(process.stderr);
+process.stderr.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stderr);
+
+const sId = (jid) => jid?.includes('@') ? jid.split('@')[0].split(':')[0] + '@s.whatsapp.net' : jid?.split(':')[0] + '@s.whatsapp.net';
 
 global.subbotConfig = {};
 
 process.on('uncaughtException', (err) => {
-    const msg = err?.message || '';
-    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed') || msg.includes('decrypt')) return;
+    if (err?.message?.match(/rate-overlimit|timed out|Connection Closed|decrypt/)) return;
     console.error('⚠️ ERROR NO CONTROLADO:', err);
 });
 
-process.on('unhandledRejection', (reason) => {
-    const msg = String(reason?.message || reason || '');
-    if (msg.includes('rate-overlimit') || msg.includes('timed out') || msg.includes('Connection Closed') || msg.includes('decrypt')) return;
-    console.error('⚠️ PROMESA NO CONTROLADA:', reason);
-});
-
-const silentLogger = pino({ 
-    level: 'silent',
-    base: null,
-    serializers: { err: () => {}, res: () => {}, req: () => {} }
-});
-
+const silentLogger = pino({ level: 'silent' });
 const originalLog = console.log;
 console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...args]);
-
-const originalError = console.error;
-console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
 
 const dbUrlEncoded = process.env.MONGODB_URL;
 const dbUrlDecoded = Buffer.from(dbUrlEncoded, 'base64').toString('utf-8');
@@ -126,10 +70,7 @@ console.clear();
 cfonts.say('KIRITO', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
 if (dbUrlDecoded && !process.argv.includes('--local')) {
-    mongoose.connect(dbUrlDecoded, {
-        serverSelectionTimeoutMS: 5000,
-        family: 4
-    }).then(() => {
+    mongoose.connect(dbUrlDecoded, { serverSelectionTimeoutMS: 5000, family: 4 }).then(() => {
         logDB('CLOUD', 'CONNECTED');
         global.db = mongoose.connection.db;
     }).catch(() => {
@@ -137,297 +78,130 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
         activateLocalDB();
     });
 
-    const userSchema = new mongoose.Schema({ id: { type: String, unique: true }, lastSeen: { type: Date, default: Date.now } }, { strict: false });
-    global.User = mongoose.model('User', userSchema);
-    const chatSchema = new mongoose.Schema({ id: { type: String, unique: true }, isBanned: { type: Boolean, default: false } }, { strict: false });
-    global.Chat = mongoose.model('Chat', chatSchema);
-    const warnSchema = new mongoose.Schema({ userId: { type: String, required: true }, groupId: { type: String, required: true }, reasons: { type: [String], default: [] }, warnCount: { type: Number, default: 0 }, date: { type: Date, default: Date.now } });
-    warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
-    global.Warns = mongoose.model('Warns', warnSchema);
-    global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
-
-    const subBotSettingsSchema = new mongoose.Schema({
-        botId: { type: String, unique: true },
-        prefix: { type: String, default: '.' },
-        botName: { type: String, default: 'Kirito - SubBot' },
-        botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
-        status: { type: Boolean, default: true }
-    }, { strict: false });
-
-    global.SubBotSettings = mongoose.model('SubBotSettings', subBotSettingsSchema);
-
-    const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
-    global.Stats = mongoose.model('Stats', statsSchema);
+    global.User = mongoose.model('User', new mongoose.Schema({ id: { type: String, unique: true }, lastSeen: { type: Date, default: Date.now } }, { strict: false }));
+    global.Chat = mongoose.model('Chat', new mongoose.Schema({ id: { type: String, unique: true }, isBanned: { type: Boolean, default: false } }, { strict: false }));
+    global.Warns = mongoose.model('Warns', new mongoose.Schema({ userId: String, groupId: String, reasons: [String], warnCount: Number, date: { type: Date, default: Date.now } }).index({ userId: 1, groupId: 1 }, { unique: true }));
+    global.News = mongoose.model('News', new mongoose.Schema({ title: String, description: String, command: String, date: Date }, { strict: false }));
+    global.SubBotSettings = mongoose.model('SubBotSettings', new mongoose.Schema({ botId: { type: String, unique: true }, prefix: String, botName: String, botImage: String, status: Boolean }, { strict: false }));
+    global.Stats = mongoose.model('Stats', new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: Number, groups: Map }, { strict: false }));
 } else {
     activateLocalDB();
 }
 
-const { 
-    makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion, 
-    makeCacheableSignalKeyStore, Browsers
-} = await import('@whiskeysockets/baileys');
+const { makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, Browsers } = await import('@whiskeysockets/baileys');
 
-if (!existsSync('./tmp')) mkdirSync('./tmp');
-
-global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
-  return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
-};
-global.__dirname = function dirname(pathURL) {
-  return path.dirname(global.__filename(pathURL, true));
-};
-
+global.__filename = (pathURL = import.meta.url, rmPrefix = platform !== 'win32') => rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+global.__dirname = (pathURL) => path.dirname(global.__filename(pathURL, true));
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 global.prefix = new RegExp('^[#!./]');
 
 const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 const { version } = await fetchLatestBaileysVersion();
-const msgRetryCounterCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
 global.groupCache = new Map();
 
 const connectionOptions = {
-  version,
-  logger: silentLogger, 
-  printQRInTerminal: false,
-  browser: Browsers.ubuntu("Chrome"),
-  auth: {
-    creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, silentLogger), 
-  },
-  markOnlineOnConnect: true,
-  syncFullHistory: false,
-  msgRetryCounterCache,
-  connectTimeoutMs: 60000,
-  defaultQueryTimeoutMs: 0, 
-  keepAliveIntervalMs: 15000,
-  emitOwnEvents: true,
-  getMessage: async (key) => { return undefined; },
-  patchMessageBeforeSending: (message) => {
-      const requiresPatch = !!(message.interactiveMessage || message.templateMessage || message.listMessage);
-      if (requiresPatch) {
-          message = { viewOnceMessage: { message: { messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 }, ...message } } };
-      }
-      return message;
-  }
+    version, logger: silentLogger, printQRInTerminal: false, browser: Browsers.ubuntu("Chrome"),
+    auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, silentLogger) },
+    markOnlineOnConnect: true, syncFullHistory: false, connectTimeoutMs: 60000, emitOwnEvents: true,
+    patchMessageBeforeSending: (message) => {
+        if (message.interactiveMessage || message.templateMessage || message.listMessage) {
+            return { viewOnceMessage: { message: { messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 }, ...message } } };
+        }
+        return message;
+    }
 };
-
 
 global.conn = makeWASocket(connectionOptions);
 global.conn.isMain = true;
 
 if (!state.creds.registered) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const question = (t) => new Promise((r) => rl.question(t, r));
-    let phoneNumber = await question(chalk.cyan('┃ ') + `Número: `);
-    let addNumber = phoneNumber.replace(/\D/g, '');
+    const phoneNumber = await new Promise(r => rl.question(chalk.cyan('┃ ') + `Número: `, r));
     rl.close();
     setTimeout(async () => {
         try {
-            let codeBot = await conn.requestPairingCode(addNumber);
+            let codeBot = await conn.requestPairingCode(phoneNumber.replace(/\D/g, ''));
             console.log(chalk.cyan('┃ ') + chalk.bgBlack.white.bold(` CÓDIGO: ${codeBot?.match(/.{1,4}/g)?.join("-") || codeBot} `));
         } catch (e) { console.error(e); }
     }, 3000);
 }
 
-const cleanSessions = async () => {
-    try {
-        const rootPath = './sessions';
-        if (!existsSync(rootPath)) return;
-        const removeOldFiles = async (dir) => {
-            const items = await fsP.readdir(dir);
-            for (const item of items) {
-                const fullPath = join(dir, item);
-                const stat = await fsP.stat(fullPath);
-                if (stat.isDirectory()) await removeOldFiles(fullPath);
-                else if (item !== 'creds.json' && (Date.now() - stat.mtimeMs > 2 * 24 * 60 * 60 * 1000)) {
-                    await fsP.unlink(fullPath).catch(() => null);
-                }
-            }
-        };
-        await removeOldFiles(rootPath);
-    } catch (e) {}
-};
-
-let messageHandlerMain;
-let messageHandlerSub;
-
+let messageHandlerMain, messageHandlerSub;
 const loadHandlers = async () => {
     try {
-        const PathMain = path.join(process.cwd(), 'lib/message.js');
-        const PathSub = path.join(process.cwd(), 'lib/messagesub.js');
-        
-        const moduleMain = await import(`file://${PathMain}?update=${Date.now()}`);
-        messageHandlerMain = moduleMain.message || moduleMain.default?.message || moduleMain.default;
-        
-        const moduleSub = await import(`file://${PathSub}?update=${Date.now()}`);
-        messageHandlerSub = moduleSub.message || moduleSub.default?.message || moduleSub.default;
+        const moduleMain = await import(`file://${join(process.cwd(), 'lib/message.js')}?update=${Date.now()}`);
+        messageHandlerMain = moduleMain.message || moduleMain.default;
+        const moduleSub = await import(`file://${join(process.cwd(), 'lib/messagesub.js')}?update=${Date.now()}`);
+        messageHandlerSub = moduleSub.message || moduleSub.default;
     } catch (e) { console.error(e); }
 };
-
 await loadHandlers();
-watch(path.join(process.cwd(), 'lib/message.js'), loadHandlers);
-watch(path.join(process.cwd(), 'lib/messagesub.js'), loadHandlers);
+watch(join(process.cwd(), 'lib/message.js'), loadHandlers);
+watch(join(process.cwd(), 'lib/messagesub.js'), loadHandlers);
 
 global.reload = async function(restatConn) {
-  if (restatConn) {
-    try { global.conn.ws.close(); } catch {}
-    global.conn = makeWASocket(connectionOptions);
-  }
+    if (restatConn) { try { global.conn.ws.close(); } catch {} global.conn = makeWASocket(connectionOptions); }
+    global.conn.ev.removeAllListeners('messages.upsert');
+    global.conn.ev.on('messages.upsert', async ({ messages }) => {
+        const msg = messages[0];
+        if (!msg || (!msg.message && !msg.messageStubType)) return;
+        try {
+            const m = await smsg(conn, msg);
+            if (messageHandlerMain) await messageHandlerMain.call(conn, m, { messages });
+            if (m?.isGroup && !global.groupCache.has(m.chat)) {
+                const metadata = await conn.groupMetadata(m.chat).catch(() => null);
+                if (metadata) global.groupCache.set(m.chat, metadata);
+            }
+        } catch (e) { if (!e.message?.includes('decrypt')) console.error(e); }
+    });
 
-  global.conn.ev.removeAllListeners('messages.upsert');
-  global.conn.ev.on('messages.upsert', async (chatUpdate) => {
-    const msg = chatUpdate.messages[0];
-    if (!msg || (!msg.message && !msg.messageStubType)) return;
-    try {
-        const m = await smsg(conn, msg);
-        if (messageHandlerMain) await messageHandlerMain.call(conn, m, chatUpdate);
-        if (m?.isGroup && !global.groupCache.has(m.chat)) {
-            const metadata = await conn.groupMetadata(m.chat).catch(() => null);
-            if (metadata) global.groupCache.set(m.chat, metadata);
-        }
-    } catch (e) { if (!e.message?.includes('decrypt')) console.error(e); }
-  });
-
-  global.conn.ev.removeAllListeners('connection.update');
-  global.conn.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
+    global.conn.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect } = update;
         if (connection === 'close') {
-        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
-        if (reason === DisconnectReason.loggedOut || reason === 403) { 
-            console.error(chalk.red(`┃ STATUS: SESIÓN INVALIDADA O FORBIDDEN`));
-            exec(`rm -rf ${sessionPath}/*`);
-            process.exit(1);
-        } else if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
-            setTimeout(() => global.reload(true), 10000); 
-        } else {
-            setTimeout(() => global.reload(true), 15000); 
+            const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+            if (reason === DisconnectReason.loggedOut || reason === 403) {
+                exec(`rm -rf ${sessionPath}/*`); process.exit(1);
+            } else { setTimeout(() => global.reload(true), 10000); }
         }
-    }
+        if (connection === 'open') {
+            global.botNumber = sId(conn.user.id);
+            console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
+            console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
+            const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
+            for (const id in groups) global.groupCache.set(id, groups[id]);
+            if (global.SubBotSettings) (await global.SubBotSettings.find({ status: true })).forEach(s => global.subbotConfig[s.botId] = s);
 
-    if (connection === 'open') {
-
-        global.botNumber = sId(conn.user.id);
-
-        console.log(chalk.cyan('┃ ') + chalk.greenBright.bold(`STATUS: ONLINE`));
-        console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
-        await cleanSessions();
-        const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
-        for (const id in groups) global.groupCache.set(id, groups[id]);
-
-
-        if (global.SubBotSettings) {
-            const allSettings = await global.SubBotSettings.find({ status: true });
-            allSettings.forEach(s => {
-                global.subbotConfig[s.botId] = s;
-            });
-        }
-
-        const db = mongoose.connection.db;
-        if (db) {
-            const reportsCollection = db.collection('reports');
-            const devGroupId = '120363424997886266@g.us'; 
-            reportsCollection.watch().on('change', async (change) => {
-                if (change.operationType === 'insert') {
-                    const data = change.fullDocument;
-                    let reportMsg = `┏━━ 「 NUEVO REPORTE RECIBIDO 」 ━━┓\n` +
-                                    `┃ ⊛ Sub-Bot: ${data.subBotName}\n` +
-                                    `┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n` +
-                                    `┃ ⊛ Tipo: ${data.type}\n` +
-                                    `┃ ⊛ Mensaje: ${data.message}\n` +
-                                    `┃ ⌬ Chat ID: ${data.chatId}\n` +
-                                    `┃ ◈ MSG ID: ${data.msgId}\n` +
-                                    `┃ 🤖 Bot JID: ${sId(data.botJid)}\n` +
-                                    `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
-                    const opt = { 
-                        mentions: [data.sender],
-                        contextInfo: {
-                            mentionedJid: [data.sender],
-                            externalAdReply: {
-                                title: `CENTRAL DE REPORTES`,
-                                body: `Remitente: ${data.pushName}`,
-                                mediaType: 1,
-                                thumbnailUrl: 'https://dix.lat/logo.png',
-                                sourceUrl: 'https://dix.lat'
-                            }
-                        }
-                    };
-                    if (data.media) {
-                        const buffer = Buffer.from(data.media, 'base64');
-                        await conn.sendMessage(devGroupId, { [/image/.test(data.mime) ? 'image' : 'video']: buffer, caption: reportMsg, ...opt });
-                    } else {
-                        await conn.sendMessage(devGroupId, { text: reportMsg, ...opt });
+            if (global.db) {
+                global.db.collection('reports').watch().on('change', async (change) => {
+                    if (change.operationType === 'insert') {
+                        const data = change.fullDocument;
+                        const reportMsg = `┏━━ 「 REPORTE 」 ━━┓\n┃ Sub-Bot: ${data.subBotName}\n┃ Usuario: @${data.sender.split('@')[0]}\n┗━━━━━━━━━━━━━━┛`;
+                        await conn.sendMessage('120363424997886266@g.us', { text: reportMsg, mentions: [data.sender] });
+                        await global.db.collection('reports').deleteOne({ _id: data._id });
                     }
-                    await reportsCollection.deleteOne({ _id: data._id });
-                }
-            });
-        }
-
-
-        setTimeout(async () => {
-            try {
-                const { loadSubBots } = await import('./lib/serbot.js');
-                await loadSubBots(global.conn);
-            } catch (e) {}
-        }, 1000);
-        const updateStatus = async () => {
-            try {
-                const time = new Date().toLocaleString('es-HN', { hour12: true });
-                await conn.query({
-                    tag: 'iq',
-                    attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`KIRITO BOT MD | ${time}`, 'utf-8') }]
                 });
-            } catch {}
-        };
-        updateStatus();
-        if (global.keepAlive) clearInterval(global.keepAlive);
-        global.keepAlive = setInterval(updateStatus, 600000);
-    }
-  });
+            }
+            setTimeout(async () => { const { loadSubBots } = await import('./lib/serbot.js'); await loadSubBots(global.conn); }, 1000);
+        }
+    });
 
-  global.conn.ev.on('creds.update', saveCreds);
-
-  global.conn.ev.on('groups.update', async (updates) => {
-    for (const update of updates) {
-        global.groupCache.delete(update.id);
-        const metadata = await conn.groupMetadata(update.id).catch(() => null);
-        if (metadata) global.groupCache.set(update.id, metadata);
-    }
-  });
-
-  global.conn.ev.on('group-participants.update', async (update) => {
-    global.groupCache.delete(update.id);
-    const metadata = await conn.groupMetadata(update.id).catch(() => null);
-    if (metadata) global.groupCache.set(update.id, metadata);
-  });
+    global.conn.ev.on('creds.update', saveCreds);
 };
 
 await global.reload();
-
-import('./lib/event/antiStatus.js').then(module => module.default(global.conn)).catch(() => {});
-
-global.plugins = new Map();
-global.aliases = new Map();
-
+global.plugins = new Map(); global.aliases = new Map();
 async function readRecursive(folder) {
-  const files = await fsP.readdir(folder);
-  for (let filename of files) {
-    const file = join(folder, filename);
-    const st = await fsP.stat(file);
-    if (st.isDirectory()) await readRecursive(file);
-    else if (/\.js$/.test(filename)) {
-      try {
-        const module = await import(`file://${file}`);
-        const plugin = module.default || module;
-        const name = plugin.name || basename(filename, '.js');
-        global.plugins.set(name, plugin);
-        if (plugin.alias) (Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias]).forEach(a => global.aliases.set(a, name));
-      } catch (e) { console.error(e); }
+    for (let filename of await fsP.readdir(folder)) {
+        const file = join(folder, filename);
+        if ((await fsP.stat(file)).isDirectory()) await readRecursive(file);
+        else if (filename.endsWith('.js')) {
+            const plugin = (await import(`file://${file}`)).default;
+            global.plugins.set(plugin.name || basename(filename, '.js'), plugin);
+            if (plugin.alias) (Array.isArray(plugin.alias) ? plugin.alias : [plugin.alias]).forEach(a => global.aliases.set(a, plugin.name || basename(filename, '.js')));
+        }
     }
-  }
 }
 await readRecursive(join(process.cwd(), './plugins'));
 
-global.subHandler = async (...args) => {
-    if (messageHandlerSub) return await messageHandlerSub.call(...args);
-};
+global.subHandler = async (...args) => messageHandlerSub?.call(...args);
