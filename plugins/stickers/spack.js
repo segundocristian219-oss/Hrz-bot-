@@ -129,11 +129,11 @@ const stickerPackSearch = {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
+            const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-Lg4rAtj`);
             if (!searchData.status || !searchData.result?.length) return m.reply('Sin resultados.');
 
             const pack = searchData.result[0];
-            const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`);
+            const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-Lg4rAtj`);
 
             const stickersToProcess = dlData.result.stickers.slice(0, 10); 
             const packId = pack.url.split('/').pop();
