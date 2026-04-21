@@ -129,20 +129,25 @@ const stickerPackSearch = {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
-            if (!searchData.status || !searchData.result?.length) return m.reply('Sin resultados.');
+            const { data: searchRes } = await axios.post('https://panel.apinexus.fun/api/stickers/buscar', { query: text }, {
+                headers: { 'Content-Type': 'application/json', 'x-api-key': key }
+            });
 
-            const pack = searchData.result[0];
-            const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`);
-            if (!dlData.status || !dlData.result) return m.reply('Error al descargar.');
+            if (!searchRes.success || !searchRes.data?.packs?.length) return m.reply('Sin resultados.');
+            const pack = searchRes.data.packs[0];
 
-            const stickersToProcess = dlData.result.stickers.slice(0, 10); 
-            const packId = pack.url.split('/').pop();
-            const trayIconName = 'tray.webp'; 
+            const { data: dlRes } = await axios.post('https://panel.apinexus.fun/api/stickers/descargar', { url: pack.url }, {
+                headers: { 'Content-Type': 'application/json', 'x-api-key': key }
+            });
+
+            if (!dlRes.success || !dlRes.data?.stickers) return m.reply('Error al descargar.');
+
+            const stickersToProcess = dlRes.data.stickers.slice(0, 10);
+            const trayIconName = 'tray.webp';
 
             const [coverRes, ...stickerResps] = await Promise.all([
-                axios.get(dlData.result.thumbnailUrl, { responseType: 'arraybuffer' }),
-                ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
+                axios.get(pack.thumbnail, { responseType: 'arraybuffer' }),
+                ...stickersToProcess.map(url => axios.get(url, { responseType: 'arraybuffer' }))
             ]);
 
             const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).webp({ quality: 80 }).toBuffer();
@@ -150,23 +155,16 @@ const stickerPackSearch = {
             const stickerMeta = [];
 
             for (let i = 0; i < stickerResps.length; i++) {
-                const isAnimated = stickersToProcess[i].isAnimated || false;
                 const fileName = `${i}.webp`;
-                let stickerBuffer;
+                const processedBuffer = await sharp(Buffer.from(stickerResps[i].data))
+                    .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                    .webp({ quality: 75 })
+                    .toBuffer();
 
-                if (isAnimated) {
-                    stickerBuffer = Buffer.from(stickerResps[i].data);
-                } else {
-                    stickerBuffer = await sharp(Buffer.from(stickerResps[i].data))
-                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                        .webp({ quality: 75 })
-                        .toBuffer();
-                }
-
-                zipFiles.push({ name: fileName, data: stickerBuffer });
+                zipFiles.push({ name: fileName, data: processedBuffer });
                 stickerMeta.push({
                     fileName,
-                    isAnimated,
+                    isAnimated: false,
                     emojis: ['✨']
                 });
             }
@@ -186,9 +184,9 @@ const stickerPackSearch = {
             await unlink(tmpPath);
 
             const stickerPackMsg = {
-                stickerPackId: packId,
-                name: (dlData.result.name || pack.name).substring(0, 30),
-                publisherName: "Cat Bot", 
+                stickerPackId: pack.id,
+                name: pack.packname.substring(0, 30),
+                publisherName: "Cat Bot",
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
