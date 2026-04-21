@@ -104,6 +104,19 @@ function buildZip(files) {
     return Buffer.concat([...localParts, central, eocd]);
 }
 
+let patchedDefaults = false;
+async function patchMediaPathMap() {
+    if (patchedDefaults) return;
+    try {
+        const defaults = await import('/home/container/node_modules/@whiskeysockets/baileys/lib/Defaults/index.js');
+        defaults.MEDIA_PATH_MAP['sticker-pack'] = '/mms/sticker-pack';
+        defaults.MEDIA_HKDF_KEY_MAPPING['sticker-pack'] = 'Image';
+        patchedDefaults = true;
+    } catch (e) {
+        console.error('[spack] patch failed:', e.message);
+    }
+}
+
 const stickerPackSearch = {
     name: 'stickerpack',
     alias: ['spack', 'stickerly'],
@@ -112,6 +125,7 @@ const stickerPackSearch = {
         if (!text) return m.reply('Ingresa el nombre de un paquete de stickers.');
         try {
             await m.react('🕒');
+            await patchMediaPathMap();
 
             const { data: searchData } = await axios.get(
                 `https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`
@@ -173,10 +187,11 @@ const stickerPackSearch = {
                 const fileEncSha256B64 = fileEncSha256.toString('base64');
                 const uploadResult = await conn.waUploadToServer(
                     readStream,
-                    { fileEncSha256B64, mediaType: 'document', timeoutMs: 60_000 }
+                    { fileEncSha256B64, mediaType: 'sticker-pack', timeoutMs: 60_000 }
                 );
                 directPath = uploadResult.directPath;
                 uploadOk = true;
+                console.log('[spack] upload ok, directPath:', directPath);
             } catch (uploadErr) {
                 console.error('[spack] upload falló:', uploadErr.message);
             }
@@ -206,7 +221,6 @@ const stickerPackSearch = {
             }
 
             await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
-
             await m.react(uploadOk ? '✅' : '⚠️');
 
         } catch (e) {
