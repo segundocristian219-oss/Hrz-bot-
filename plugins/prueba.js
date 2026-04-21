@@ -1,6 +1,6 @@
 const cleanDB = {
     name: 'cleandb',
-    alias: ['limpiardb', 'purge'],
+    alias: ['limpiardb', 'purgeuser'],
     category: 'admin',
     run: async (m, { conn }) => {
         const owners = [m.sender.split('@')[0], ...global.owner ? global.owner.map(o => o[0]) : []]
@@ -10,7 +10,7 @@ const cleanDB = {
             const gapMS = 3 * 24 * 60 * 60 * 1000
             const gapDate = new Date(Date.now() - gapMS)
 
-            const queryLimpieza = {
+            const queryPurga = {
                 $or: [
                     { id: { $regex: /@lid$/ } },
                     { lastSeen: { $lt: gapDate } },
@@ -18,20 +18,14 @@ const cleanDB = {
                 ]
             }
 
-            const resUsers = await global.User.deleteMany(queryLimpieza)
-            const resChats = await global.Chat.deleteMany({
-                $or: [
-                    { id: { $regex: /@lid$/ } },
-                    { lastSeen: { $lt: gapDate } },
-                    { lastSeen: { $exists: false } }
-                ]
-            })
+            const resUsers = await global.User.deleteMany(queryPurga)
 
-            const total = (resUsers.deletedCount || 0) + (resChats.deletedCount || 0)
-
-            return m.reply(`*♛ PURGA ESTRUCTURAL ✧*\n\n╰❒ Registros eliminados: ${total}\n\n> Se eliminaron duplicados @lid y registros inactivos de 3 días.`)
+            return m.reply(`*♛ PURGA DE USUARIOS FINALIZADA ✧*\n\n` +
+                           `╰❒ Registros eliminados: ${resUsers.deletedCount || 0}\n` +
+                           `╰❒ Estado: Base de datos optimizada\n\n` +
+                           `> Se han conservado únicamente los usuarios activos con JID legítimo (@s.whatsapp.net).`)
         } catch (e) {
-            return m.reply('*♛ ERROR ✧*\n\n╰❒ Error al procesar la limpieza de duplicados.')
+            return m.reply('*♛ ERROR ✧*\n\n╰❒ No se pudo completar la limpieza de la colección de usuarios.')
         }
     }
 }
