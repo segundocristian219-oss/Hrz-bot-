@@ -6,21 +6,25 @@ const cleanDB = {
         if (!global.creadores.some(c => c[0] === m.sender.split('@')[0])) return
 
         try {
-            const gap = Date.now() - (3 * 24 * 60 * 60 * 1000)
+            const tresDiasEnMS = 3 * 24 * 60 * 60 * 1000
+            const gap = new Date(Date.now() - tresDiasEnMS)
 
-            const resSessions = await global.db.sessions.deleteMany({
+            const resUsers = await global.User.deleteMany({
                 lastSeen: { $lt: gap }
             })
 
-            const resGroups = await global.db.groups.deleteMany({
-                lastUpdate: { $lt: gap }
+            const resChats = await global.Chat.deleteMany({
+                $or: [
+                    { lastSeen: { $lt: gap } },
+                    { __v: 0, antiLink: false, nsfw: false, welcome: false, lastSeen: { $exists: false } }
+                ]
             })
 
-            const total = (resSessions.deletedCount || 0) + (resGroups.deletedCount || 0)
+            const total = (resUsers.deletedCount || 0) + (resChats.deletedCount || 0)
 
-            return m.reply(`*♛ PURGA EXITOSA ✧*\n\n╰❒ Sesiones: ${resSessions.deletedCount || 0}\n╰❒ Grupos: ${resGroups.deletedCount || 0}\n╰❒ Total: ${total}\n\n> Registros inactivos de 3 días eliminados.`)
+            return m.reply(`*♛ PURGA DEL SISTEMA ✧*\n\n╰❒ Usuarios/Sesiones: ${resUsers.deletedCount || 0}\n╰❒ Grupos/Chats: ${resChats.deletedCount || 0}\n╰❒ Total: ${total}\n\n> Se eliminaron registros inactivos (3 días o más).`)
         } catch (e) {
-            return m.reply('*♛ ERROR ✧*\n\n╰❒ Fallo en la limpieza de datos.')
+            return m.reply('*♛ ERROR ✧*\n\n╰❒ Fallo al ejecutar la purga en MongoDB.')
         }
     }
 }
