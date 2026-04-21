@@ -167,32 +167,29 @@ const stickerPackSearch = {
             const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).png().toBuffer();
 
             const processedStickers = await Promise.all(
-                stickerResps.map(resp =>
-                    sharp(Buffer.from(resp.data))
-                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                        .webp({ quality: 75 })
-                        .toBuffer()
-                )
-            );
-
-            const stickerUploadResults = await Promise.all(
-                processedStickers.map(buf => uploadBuffer(conn, buf, 'sticker'))
-            );
-
-            const zipFiles = [];
-            const stickerMeta = [];
-
-            for (let i = 0; i < processedStickers.length; i++) {
-                const hash = crypto.createHash('sha256').update(processedStickers[i]).digest('base64url');
-                const fileName = `${String(i).padStart(2, '0')}_${hash}.webp`;
-                zipFiles.push({ name: fileName, data: processedStickers[i] });
-                stickerMeta.push({
-                    fileName,
-                    isAnimated: false,
-                    emojis: ['✨'],
-                    mimetype: 'image/webp',
-                    accessibilityLabel: ''
-                });
+    stickerResps.map(async (resp, i) => {
+        const inputBuf = Buffer.from(resp.data);
+        const isAnimated = stickersToProcess[i].isAnimated || false;
+        if (isAnimated) {
+            return sharp(inputBuf, { animated: true })
+                .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                .webp({ quality: 75, loop: 0 })
+                .toBuffer();
+        }
+        return sharp(inputBuf)
+            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+            .webp({ quality: 75 })
+            .toBuffer();
+    })
+);
+Y en stickerMeta agrega isAnimated real:
+stickerMeta.push({
+    fileName,
+    isAnimated: stickersToProcess[i].isAnimated || false,
+    emojis: ['✨'],
+    mimetype: 'image/webp',
+    accessibilityLabel: ''
+});
             }
 
             const packEncTemp = encryptBuffer(buildZip(zipFiles), 'WhatsApp Sticker Pack Keys');
