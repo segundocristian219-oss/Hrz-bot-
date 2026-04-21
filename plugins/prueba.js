@@ -1,7 +1,5 @@
-
 import axios from 'axios';
 import crypto from 'crypto';
-import { Readable } from 'stream';
 import { writeFile, unlink } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -113,13 +111,12 @@ async function patchMediaPathMap() {
     try {
         const defaults = await import('/home/container/node_modules/@whiskeysockets/baileys/lib/Defaults/index.js');
         defaults.MEDIA_PATH_MAP['sticker-pack'] = '/mms/sticker-pack';
-        defaults.MEDIA_HKDF_KEY_MAPPING['sticker-pack'] = 'Image';
+        defaults.MEDIA_HKDF_KEY_MAPPING['sticker-pack'] = 'Sticker Pack';
         patchedDefaults = true;
     } catch (e) {
         console.error('[spack] patch failed:', e.message);
     }
 }
-
 
 const stickerPackSearch = {
     name: 'stickerpack',
@@ -136,7 +133,7 @@ const stickerPackSearch = {
 
             const pack = searchData.result[0];
             const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`);
-            
+
             const stickersToProcess = dlData.result.stickers.slice(0, 10); 
             const packId = pack.url.split('/').pop();
             const trayIconName = 'icon.png'; 
@@ -150,26 +147,28 @@ const stickerPackSearch = {
             const stickerMeta = [];
 
             stickerResps.forEach((r, i) => {
-                const fileName = `${i}.webp`; 
+                const isAnimated = stickersToProcess[i].isAnimated || false;
+                const mime = isAnimated ? 'image/webp' : 'image/png';
+                const ext = isAnimated ? 'webp' : 'png';
+                const fileName = `${i}.${ext}`; 
+
                 zipFiles.push({ name: fileName, data: Buffer.from(r.data) });
                 stickerMeta.push({
                     fileName,
-                    isAnimated: stickersToProcess[i].isAnimated || false,
+                    isAnimated,
                     emojis: ['✨'],
-                    mimetype: 'image/webp'
+                    mimetype: mime
                 });
             });
 
             const zipBuffer = buildZip(zipFiles);
             const { mediaKey, encBody, fileSha256, fileEncSha256 } = encryptZip(zipBuffer);
-            
-            
             const thumbSha256 = crypto.createHash('sha256').update(zipFiles[0].data).digest();
             const msgId = crypto.randomBytes(8).toString('hex').toUpperCase();
 
             const tmpPath = join(tmpdir(), `spack-${msgId}.enc`);
             await writeFile(tmpPath, encBody);
-            
+
             const { directPath } = await conn.waUploadToServer(tmpPath, { 
                 fileEncSha256B64: fileEncSha256.toString('base64'), 
                 mediaType: 'sticker-pack' 
@@ -179,8 +178,7 @@ const stickerPackSearch = {
             const stickerPackMsg = {
                 stickerPackId: packId,
                 name: (dlData.result.name || pack.name).substring(0, 30),
-                publisherName: (dlData.result.author?.name || pack.author || 'Bot').substring(0, 30),
-                publisherName: name(),
+                publisherName: "Gato Bot", 
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
@@ -195,7 +193,8 @@ const stickerPackSearch = {
                 thumbnailHeight: 252,
                 thumbnailWidth: 252,
                 mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                packDescription: name()
+                packDescription: "Paquete de stickers",
+                imageDataHash: thumbSha256.toString('base64')
             };
 
             await conn.relayMessage(m.chat, { stickerPackMessage: stickerPackMsg }, { messageId: msgId, quoted: m });
