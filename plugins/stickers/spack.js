@@ -123,20 +123,20 @@ const stickerPackSearch = {
     alias: ['spack', 'stickerly'],
     category: 'search',
     run: async (m, { conn, text }) => {
-        if (!text) return m.reply('Ingresa el nombre.');
+        if (!text) return m.reply('Ingresa el nombre del paquete.');
         try {
             await m.react('🕒');
             await patchMediaPathMap();
 
             const { data: searchData } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=sylphy-hz8pNip`);
-            if (!searchData.status || !searchData.result?.length) return m.reply('No hay resultados.');
+            if (!searchData.status || !searchData.result?.length) return m.reply('No se encontraron resultados.');
 
             const pack = searchData.result[0];
             const { data: dlData } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=sylphy-hz8pNip`);
 
             const stickersToProcess = dlData.result.stickers.slice(0, 10); 
             const packId = pack.url.split('/').pop();
-            const trayIconName = 'icon.png'; 
+            const trayIconName = 'icon.webp'; 
 
             const [coverRes, ...stickerResps] = await Promise.all([
                 axios.get(dlData.result.thumbnailUrl, { responseType: 'arraybuffer' }),
@@ -148,16 +148,14 @@ const stickerPackSearch = {
 
             stickerResps.forEach((r, i) => {
                 const isAnimated = stickersToProcess[i].isAnimated || false;
-                const mime = isAnimated ? 'image/webp' : 'image/png';
-                const ext = isAnimated ? 'webp' : 'png';
-                const fileName = `${i}.${ext}`; 
+                const fileName = `${i}.webp`; 
 
                 zipFiles.push({ name: fileName, data: Buffer.from(r.data) });
                 stickerMeta.push({
                     fileName,
                     isAnimated,
                     emojis: ['✨'],
-                    mimetype: mime
+                    mimetype: 'image/webp'
                 });
             });
 
@@ -178,7 +176,7 @@ const stickerPackSearch = {
             const stickerPackMsg = {
                 stickerPackId: packId,
                 name: (dlData.result.name || pack.name).substring(0, 30),
-                publisherName: "Gato Bot", 
+                publisherName: name(), 
                 trayIconFileName: trayIconName,
                 stickers: stickerMeta,
                 stickerPackSize: zipBuffer.length,
@@ -193,7 +191,7 @@ const stickerPackSearch = {
                 thumbnailHeight: 252,
                 thumbnailWidth: 252,
                 mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                packDescription: "Paquete de stickers",
+                packDescription: name(),
                 imageDataHash: thumbSha256.toString('base64')
             };
 
