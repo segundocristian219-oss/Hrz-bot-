@@ -22,7 +22,39 @@ process.stdout.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, 
 const _stderr = process.stderr.write.bind(process.stderr);
 process.stderr.write = (chunk, encoding, callback) => maskLogs(chunk, encoding, callback, _stderr);
 
+//# Intento de anti duplicado de registro 
+
 import './config.js';
+import mongoose from 'mongoose';
+
+const dbUrl = Buffer.from(process.env.MONGODB_URL, 'base64').toString('utf-8');
+
+async function purge() {
+    await mongoose.connect(dbUrl);
+    console.log("Conectado para purga...");
+    
+    const res1 = await mongoose.connection.db.collection('users').deleteMany({
+        $and: [
+            { id: { $not: /@s\.whatsapp\.net$/ } },
+            { lid: { $not: /@lid$/ } }
+        ]
+    });
+
+    
+    const res2 = await mongoose.connection.db.collection('users').deleteMany({
+        id: "",
+        lid: ""
+    });
+
+    console.log(`Purga finalizada. Registros eliminados: ${res1.deletedCount + res2.deletedCount}`);
+    process.exit();
+}
+
+purge();
+
+
+//----------//
+
 import { platform } from 'process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path, { join, basename } from 'path';
@@ -34,7 +66,6 @@ import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
 import readline from 'readline';
 import cfonts from 'cfonts';
-import mongoose from 'mongoose';
 import { smsg } from './lib/serializer.js';
 import { EventEmitter } from 'events';
 import { LocalDB } from './lib/localDB.js';
