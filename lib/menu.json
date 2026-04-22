@@ -7,8 +7,10 @@
     { "cmd": ".reporte/.report/.bug", "desc": "Reporta un error en el sistema." },
     { "cmd": ".idea/.sugerencia", "desc": "Sugiere un nuevo comando o comparte una idea." },
     { "cmd": ".creador", "desc": "Información sobre el creador." },
-    { "cmd": ".uso/.topcmd", "desc": "Lista de comandos más usados." },
-    { "cmd": ".novedades/.news", "desc": "Información sobre nuevas funciones y novedades." },
+    { "cmd": ".uso/.topcmd", "desc": "Lista de comandos más usados." },   
+    { "cmd": ".setnamebot", "desc": "Cambia el nombre del bot del menú." },
+    { "cmd": ".setimgbot", "desc": "Cambia la imagen del menú." },
+    { "cmd": ".setprefix", "desc": "Cambia el prefijo del subbot." },
     { "cmd": ".devs", "desc": "Contactos de los desarrolladores." }
   ],
   "FUN": [
