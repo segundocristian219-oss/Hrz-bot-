@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const geminiCommand = {
     name: 'gemini',
-    alias: ['bot', 'alex'],
+    alias: ['alex'],
     category: 'ai',
     run: async (m, { conn, text }) => {
         let q = m.quoted ? m.quoted : m;
