@@ -264,10 +264,7 @@ global.reload = async function(restatConn) {
     try {
         const m = await smsg(conn, msg);
         if (messageHandlerMain) await messageHandlerMain.call(conn, m, chatUpdate);
-        if (m?.isGroup && !global.groupCache.has(m.chat)) {
-            const metadata = await conn.groupMetadata(m.chat).catch(() => null);
-            if (metadata) global.groupCache.set(m.chat, metadata);
-        }
+        
     } catch (e) { if (!e.message?.includes('decrypt')) console.error(e); }
   });
 
