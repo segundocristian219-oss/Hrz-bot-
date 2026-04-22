@@ -156,7 +156,7 @@ const stickerPackSearch = {
             if (!dlRes.status || !dlRes.result?.stickers) return m.reply('Error al descargar.');
 
             const packData = dlRes.result;
-            const stickersToProcess = packData.stickers.slice(0, 9);
+            const stickersToProcess = packData.stickers.slice(0, 5);
 
             const [coverRes, ...stickerResps] = await Promise.all([
                 axios.get(packData.thumbnailUrl, { responseType: 'arraybuffer' }),
@@ -222,7 +222,7 @@ const stickerPackSearch = {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
                     name: packData.name.substring(0, 30),
-                    publisherName: packData.author.name || 'Cat Bot',
+                    publisherName: packData.author.name || name(),
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
@@ -238,7 +238,7 @@ const stickerPackSearch = {
                     thumbnailHeight: 96,
                     thumbnailWidth: 96,
                     mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                    packDescription: packData.author.bio || 'Sticker Pack',
+                    packDescription: name(),
                     imageDataHash: thumbSha256.toString('base64')
                 }
             }, { messageId: msgId, quoted: m });
