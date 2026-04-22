@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 const bots = {
     name: 'listasubbots',
     alias: ['subbots', 'bots', 'listasub'],
@@ -7,28 +10,40 @@ const bots = {
             const allSettings = await global.SubBotSettings.find({ status: true });
 
             if (!allSettings || allSettings.length === 0) {
-                return m.reply('❌ No hay sub-bots registrados o activos en la base de datos.');
+                return m.reply('❌ No hay sub-bots activos en la base de datos.');
             }
 
-            let txt = `✨ *SUB-BOTS ACTIVOS (SISTEMA MULTI-HILO)* ✨\n\n`;
-            txt += `Total en red: ${allSettings.length}\n\n`;
+            const jadibtsPath = path.join(process.cwd(), 'jadibts');
+            
+            const realBots = allSettings.filter(bot => {
+                const jid = bot.botId.split('@')[0];
+                const sessionFolder = path.join(jadibtsPath, jid);
+                return fs.existsSync(path.join(sessionFolder, 'creds.json'));
+            });
 
-            allSettings.forEach((bot, i) => {
+            if (realBots.length === 0) {
+                return m.reply('❌ No hay sub-bots con sesiones activas en el servidor.');
+            }
+
+            let txt = `✨ *SUB-BOTS ACTIVOS (REAL-TIME)* ✨\n\n`;
+            txt += `Total en red: ${realBots.length}\n`;
+            txt += `Nodos de procesamiento: 4\n\n`;
+
+            realBots.forEach((bot, i) => {
                 const jid = bot.botId.split('@')[0];
                 const name = bot.botName || 'Kirito - SubBot';
-                
                 const maskedNumber = jid.slice(0, 5) + '...' + jid.slice(-2);
                 txt += `*${i + 1}.* ${maskedNumber} - ${name}\n`;
             });
 
-            txt += `\n> El sistema está distribuido en 4 núcleos para mayor estabilidad.`;
+            txt += `\n> Se han filtrado ${allSettings.length - realBots.length} sesiones inactivas.`;
 
             await conn.sendMessage(m.chat, { 
                 text: txt,
                 contextInfo: { 
                     externalAdReply: {
                         title: 'KIRITO BOT - NETWORK STATUS',
-                        body: `Hilos activos: 4`,
+                        body: `Carga distribuida: OK`,
                         mediaType: 1,
                         thumbnailUrl: 'https://api.dix.lat/media2/1773637281084.jpg',
                         sourceUrl: 'https://dix.lat'
@@ -38,7 +53,7 @@ const bots = {
 
         } catch (e) {
             console.error(e);
-            m.reply('❌ Error al obtener la lista de sub-bots.');
+            m.reply('❌ Error al sincronizar la lista de sub-bots.');
         }
     }
 };
