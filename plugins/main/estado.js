@@ -5,6 +5,7 @@ const botControl = {
     alias: ['switch'],
     category: 'main',
     isOwner: true,
+    admin: true,
     run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
         try {
             /*
