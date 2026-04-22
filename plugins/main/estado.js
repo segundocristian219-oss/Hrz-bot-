@@ -2,7 +2,7 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const botControl = {
     name: 'estado',
-    alias: ['switch', 'bot'],
+    alias: ['switch'],
     category: 'main',
     isOwner: true,
     run: async (m, { conn, args, usedPrefix, command, isOwner }) => {
