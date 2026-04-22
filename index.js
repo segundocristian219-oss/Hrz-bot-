@@ -40,8 +40,8 @@ import { EventEmitter } from 'events';
 import { LocalDB } from './lib/localDB.js';
 import { exec } from "child_process";
 import { cacheManager } from './lib/cache.js';
-global.groupCache = cacheManager.cache; 
 
+global.groupCache = cacheManager.cache; 
 
 EventEmitter.defaultMaxListeners = 0;
 
@@ -264,7 +264,6 @@ global.reload = async function(restatConn) {
     try {
         const m = await smsg(conn, msg);
         if (messageHandlerMain) await messageHandlerMain.call(conn, m, chatUpdate);
-        
     } catch (e) { if (!e.message?.includes('decrypt')) console.error(e); }
   });
 
@@ -290,7 +289,10 @@ global.reload = async function(restatConn) {
         console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'));
         await cleanSessions();
         const groups = await conn.groupFetchAllParticipating().catch(() => ({}));
-        for (const id in groups) global.groupCache.set(id, groups[id]);
+        for (const id in groups) {
+            cacheManager.updateParticipants(id, groups[id].participants);
+            global.groupCache.set(id, groups[id]);
+        }
 
         if (global.SubBotSettings) {
             const allSettings = await global.SubBotSettings.find({ status: true });
@@ -363,7 +365,7 @@ global.reload = async function(restatConn) {
 
   global.conn.ev.on('creds.update', saveCreds);
 
-    global.conn.ev.on('groups.update', async (updates) => {
+  global.conn.ev.on('groups.update', async (updates) => {
     for (const update of updates) {
         if (update.id) {
             await cacheManager.get(conn, update.id, true).catch(() => null);
@@ -376,7 +378,7 @@ global.reload = async function(restatConn) {
         await cacheManager.get(conn, update.id, true).catch(() => null);
     }
   });
-
+};
 
 await global.reload();
 
