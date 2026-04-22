@@ -144,7 +144,7 @@ const stickerPackSearch = {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchRes } = await axios.post('https://panel.apinexus.fun/api/stickerly/search', { query: text, limit: 3 }, {
+            const { data: searchRes } = await axios.post('https://panel.apinexus.fun/api/stickerly/search', { query: text, limit: 1 }, {
                 headers: { 'Content-Type': 'application/json', 'x-api-key': key }
             });
 
@@ -168,10 +168,6 @@ const stickerPackSearch = {
                         .webp({ quality: 75 })
                         .toBuffer();
                 })
-            );
-
-            await Promise.all(
-                processedStickers.map(buf => uploadBuffer(conn, buf, 'sticker'))
             );
 
             const zipFiles = [];
@@ -210,7 +206,7 @@ const stickerPackSearch = {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
                     name: pack.packname.substring(0, 30),
-                    publisherName: name(),
+                    publisherName: name()
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
