@@ -153,7 +153,6 @@ const youtubeCommand = {
 
             await m.react("✅");
         } catch (error) {
-            console.error(error);
             conn.reply(m.chat, `*Error:* ${error.message || error}`, m);
             await m.react("❌");
         }
