@@ -122,6 +122,7 @@ async function patchMediaPathMap() {
 }
 
 async function uploadBuffer(conn, buffer, mediaType) {
+    if (!buffer || buffer.length === 0) return null;
     const enc = encryptBuffer(buffer, mediaType === 'sticker' ? 'WhatsApp Image Keys' : 'WhatsApp Sticker Pack Keys');
     const tmpPath = join(tmpdir(), `wa-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.enc`);
     await writeFile(tmpPath, enc.encBody);
@@ -163,28 +164,37 @@ const stickerPackSearch = {
                 ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
             ]);
 
-            const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).png().toBuffer();
+            const trayBuffer = await sharp(Buffer.from(coverRes.data))
+                .resize(96, 96)
+                .png()
+                .toBuffer()
+                .catch(() => null);
 
-            const processedStickers = await Promise.all(
+            if (!trayBuffer) throw new Error('Error al procesar el icono del paquete.');
+
+            const processedStickers = (await Promise.all(
                 stickerResps.map(async (resp, i) => {
-                    const inputBuf = Buffer.from(resp.data);
-                    const isAnimated = stickersToProcess[i].isAnimated || false;
-                    if (isAnimated) {
-                        return sharp(inputBuf, { animated: true })
-                            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                            .webp({ quality: 75, loop: 0 })
-                            .toBuffer();
-                    }
-                    return sharp(inputBuf)
-                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                        .webp({ quality: 75 })
-                        .toBuffer();
-                })
-            );
+                    try {
+                        const inputBuf = Buffer.from(resp.data);
+                        if (inputBuf.length < 100) return null;
 
-            const stickerUploadResults = await Promise.all(
+                        const isAnimated = stickersToProcess[i].isAnimated || false;
+                        
+                        return await sharp(inputBuf, { animated: isAnimated })
+                            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                            .webp({ quality: 75, loop: 0, force: true })
+                            .toBuffer();
+                    } catch (err) {
+                        return null;
+                    }
+                })
+            )).filter(buf => buf !== null);
+
+            if (processedStickers.length === 0) return m.reply('❯❯ 𝗘𝗥𝗥𝗢𝗥: No se pudo procesar ningún sticker del paquete.');
+
+            const stickerUploadResults = (await Promise.all(
                 processedStickers.map(buf => uploadBuffer(conn, buf, 'sticker'))
-            );
+            )).filter(res => res !== null);
 
             const zipFiles = [];
             const stickerMeta = [];
@@ -209,6 +219,8 @@ const stickerPackSearch = {
             const finalZipBuffer = buildZip([{ name: trayIconName, data: trayBuffer }, ...zipFiles]);
             const packUpload = await uploadBuffer(conn, finalZipBuffer, 'sticker-pack');
 
+            if (!packUpload) throw new Error('Error al subir el paquete de stickers.');
+
             const thumbSha256 = crypto.createHash('sha256').update(trayBuffer).digest();
             const thumbKeys = hkdf(packUpload.mediaKey, 112, 'WhatsApp Sticker Pack Keys');
             const thumbCipher = crypto.createCipheriv('aes-256-cbc', thumbKeys.slice(16, 48), thumbKeys.slice(0, 16));
@@ -222,7 +234,7 @@ const stickerPackSearch = {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
                     name: packData.name.substring(0, 30),
-                    publisherName: packData.author.name || name(),
+                    publisherName: packData.author.name || 'KiritoBot',
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
@@ -238,7 +250,7 @@ const stickerPackSearch = {
                     thumbnailHeight: 96,
                     thumbnailWidth: 96,
                     mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                    packDescription: name(),
+                    packDescription: 'Multi-device Sticker Pack',
                     imageDataHash: thumbSha256.toString('base64')
                 }
             }, { messageId: msgId, quoted: m });
@@ -246,8 +258,9 @@ const stickerPackSearch = {
             await m.react('✅');
 
         } catch (e) {
-            console.error(e);
-            await m.react('✖️');
+            console.error('Error en StickerPack:', e);
+            await m.react('❌');
+            m.reply(`❯❯ 𝗘𝗥𝗥𝗢𝗥: ${e.message}`);
         }
     }
 };
