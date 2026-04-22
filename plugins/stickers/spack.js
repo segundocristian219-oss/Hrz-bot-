@@ -206,7 +206,7 @@ const stickerPackSearch = {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
                     name: pack.packname.substring(0, 30),
-                    publisherName: name()
+                    publisherName: name(),
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
