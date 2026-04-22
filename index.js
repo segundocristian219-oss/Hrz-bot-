@@ -39,6 +39,9 @@ import { smsg } from './lib/serializer.js';
 import { EventEmitter } from 'events';
 import { LocalDB } from './lib/localDB.js';
 import { exec } from "child_process";
+import { cacheManager } from './lib/cache.js';
+global.groupCache = cacheManager.cache; 
+
 
 EventEmitter.defaultMaxListeners = 0;
 
@@ -165,7 +168,6 @@ const sessionPath = './sessions';
 const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 const { version } = await fetchLatestBaileysVersion();
 const msgRetryCounterCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
-global.groupCache = new Map();
 
 const connectionOptions = {
   version,
@@ -364,20 +366,20 @@ global.reload = async function(restatConn) {
 
   global.conn.ev.on('creds.update', saveCreds);
 
-  global.conn.ev.on('groups.update', async (updates) => {
+    global.conn.ev.on('groups.update', async (updates) => {
     for (const update of updates) {
-        global.groupCache.delete(update.id);
-        const metadata = await conn.groupMetadata(update.id).catch(() => null);
-        if (metadata) global.groupCache.set(update.id, metadata);
+        if (update.id) {
+            await cacheManager.get(conn, update.id, true).catch(() => null);
+        }
     }
   });
 
   global.conn.ev.on('group-participants.update', async (update) => {
-    global.groupCache.delete(update.id);
-    const metadata = await conn.groupMetadata(update.id).catch(() => null);
-    if (metadata) global.groupCache.set(update.id, metadata);
+    if (update.id) {
+        await cacheManager.get(conn, update.id, true).catch(() => null);
+    }
   });
-};
+
 
 await global.reload();
 
