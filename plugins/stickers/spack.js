@@ -5,6 +5,8 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import sharp from 'sharp';
 
+const API_KEY = 'sylphy-Lg4rAtj';
+
 function hkdf(key, length, info = '') {
     const h = crypto.createHmac('sha256', Buffer.alloc(32)).update(key).digest();
     const infoBuffer = Buffer.from(info);
@@ -139,48 +141,64 @@ const stickerPackSearch = {
     alias: ['spack', 'stickerly'],
     category: 'search',
     run: async (m, { conn, text }) => {
-        const query = text?.trim();
-        if (!query) return m.reply('Ingresa el nombre.');
+        if (!text) return m.reply('Ingresa el nombre.');
         try {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchRes } = await axios.post('https://panel.apinexus.fun/api/stickerly/search', { query, limit: 1 }, {
-                headers: { 'Content-Type': 'application/json', 'x-api-key': key }
-            });
+            const { data: searchRes } = await axios.get(`https://sylphyy.xyz/search/stickerly?q=${encodeURIComponent(text)}&api_key=${API_KEY}`);
 
-            if (!searchRes.success || !searchRes.data?.packs?.length) return m.reply('Sin resultados.');
-            const pack = searchRes.data.packs[0];
-            const stickersToProcess = pack.stickers.slice(0, 10);
+            if (!searchRes.status || !searchRes.result?.length) return m.reply('Sin resultados.');
+            const pack = searchRes.result[0];
+
+            const { data: dlRes } = await axios.get(`https://sylphyy.xyz/download/stickerly?url=${encodeURIComponent(pack.url)}&api_key=${API_KEY}`);
+
+            if (!dlRes.status || !dlRes.result?.stickers) return m.reply('Error al descargar.');
+
+            const packData = dlRes.result;
+            const stickersToProcess = packData.stickers.slice(0, 9);
 
             const [coverRes, ...stickerResps] = await Promise.all([
-                axios.get(stickersToProcess[0], { responseType: 'arraybuffer' }),
-                ...stickersToProcess.map(url => axios.get(url, { responseType: 'arraybuffer' }))
+                axios.get(packData.thumbnailUrl, { responseType: 'arraybuffer' }),
+                ...stickersToProcess.map(s => axios.get(s.imageUrl, { responseType: 'arraybuffer' }))
             ]);
 
             const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).png().toBuffer();
 
-            const stickerMeta = [];
+            const processedStickers = await Promise.all(
+                stickerResps.map(async (resp, i) => {
+                    const inputBuf = Buffer.from(resp.data);
+                    const isAnimated = stickersToProcess[i].isAnimated || false;
+                    if (isAnimated) {
+                        return sharp(inputBuf, { animated: true })
+                            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                            .webp({ quality: 75, loop: 0 })
+                            .toBuffer();
+                    }
+                    return sharp(inputBuf)
+                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                        .webp({ quality: 75 })
+                        .toBuffer();
+                })
+            );
+
+            const stickerUploadResults = await Promise.all(
+                processedStickers.map(buf => uploadBuffer(conn, buf, 'sticker'))
+            );
+
             const zipFiles = [];
+            const stickerMeta = [];
 
-            for (let i = 0; i < stickerResps.length; i++) {
-                const inputBuf = Buffer.from(stickerResps[i].data);
-                const isAnimated = stickersToProcess[i].toLowerCase().includes('animated') || stickersToProcess[i].includes('/2/'); 
-
-                const processedBuffer = await sharp(inputBuf, { animated: isAnimated })
-                    .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                    .webp({ quality: 75, loop: 0 })
-                    .toBuffer();
-
-                const hash = crypto.createHash('sha256').update(processedBuffer).digest('base64url');
+            for (let i = 0; i < processedStickers.length; i++) {
+                const hash = crypto.createHash('sha256').update(processedStickers[i]).digest('base64url');
                 const fileName = `${String(i).padStart(2, '0')}_${hash}.webp`;
-                
-                zipFiles.push({ name: fileName, data: processedBuffer });
+                zipFiles.push({ name: fileName, data: processedStickers[i] });
                 stickerMeta.push({
                     fileName,
-                    isAnimated,
+                    isAnimated: stickersToProcess[i].isAnimated || false,
                     emojis: ['✨'],
-                    mimetype: 'image/webp'
+                    mimetype: 'image/webp',
+                    accessibilityLabel: ''
                 });
             }
 
@@ -203,8 +221,8 @@ const stickerPackSearch = {
             await conn.relayMessage(m.chat, {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
-                    name: (pack.packname || 'Sticker Pack').substring(0, 30),
-                    publisherName: 'Cat Bot',
+                    name: packData.name.substring(0, 30),
+                    publisherName: packData.author.name || 'Cat Bot',
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
@@ -220,7 +238,7 @@ const stickerPackSearch = {
                     thumbnailHeight: 96,
                     thumbnailWidth: 96,
                     mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                    packDescription: 'Sticker Pack',
+                    packDescription: packData.author.bio || 'Sticker Pack',
                     imageDataHash: thumbSha256.toString('base64')
                 }
             }, { messageId: msgId, quoted: m });
@@ -228,10 +246,7 @@ const stickerPackSearch = {
             await m.react('✅');
 
         } catch (e) {
-            const errorMessage = `❌ *Error en comando stickerpack*\n\n` +
-                                `*Mensaje:* ${e.message}\n` +
-                                `*Stack:* \`\`\`${e.stack}\`\`\``;
-            await m.reply(errorMessage);
+            console.error(e);
             await m.react('✖️');
         }
     }
