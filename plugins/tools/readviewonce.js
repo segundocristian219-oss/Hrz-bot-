@@ -57,7 +57,6 @@ const readOnceCommand = {
             await m.react('✅');
 
         } catch (e) {
-            console.error('Error en ReadViewOnce:', e);
             await m.react('❌');
             m.reply('❯❯ 𝗘𝗥𝗥𝗢𝗥: El archivo ha expirado o falló la descarga.');
         }
