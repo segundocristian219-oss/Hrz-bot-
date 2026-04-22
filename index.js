@@ -180,7 +180,7 @@ const connectionOptions = {
   syncFullHistory: false,
   msgRetryCounterCache,
   connectTimeoutMs: 60000,
-  defaultQueryTimeoutMs: 0, 
+  defaultQueryTimeoutMs: 60000, 
   keepAliveIntervalMs: 15000,
   emitOwnEvents: true,
   getMessage: async (key) => { return undefined; },
