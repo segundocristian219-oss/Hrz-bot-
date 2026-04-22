@@ -6,7 +6,7 @@ const serbot = {
     alias: ['code', 'subbot', 'jadibot'],
     category: 'main',
     run: async (m, { conn, args, usedPrefix, command }) => {
-        const MAX_SUBBOTS = 45;
+        const MAX_SUBBOTS = 50;
         const activeCount = (global.conns || []).filter(sock => sock.user && sock.user.id).length;
 
         if (activeCount >= MAX_SUBBOTS) {
