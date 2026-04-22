@@ -12,7 +12,7 @@ const apkCommand = {
         try {
             await m.react('⏳')
 
-            const searchRes = await axios.get(`https://sylphy.xyz/search/fdroid?q=${encodeURIComponent(text)}&api_key=sylphy-jCQvxB8`)
+            const searchRes = await axios.get(`https://sylphy.xyz/search/fdroid?q=${encodeURIComponent(text)}&api_key=sylphy-Lg4rAtj`)
             
             if (!searchRes.data.status || !searchRes.data.result || searchRes.data.result.length === 0) {
                 await m.react('❌')
@@ -20,7 +20,7 @@ const apkCommand = {
             }
 
             const targetUrl = searchRes.data.result[0].url
-            const downloadRes = await axios.get(`https://sylphy.xyz/download/fdroid?url=${encodeURIComponent(targetUrl)}&api_key=sylphy-jCQvxB8`)
+            const downloadRes = await axios.get(`https://sylphy.xyz/download/fdroid?url=${encodeURIComponent(targetUrl)}&api_key=sylphy-Lg4rAtj`)
 
             if (!downloadRes.data.status || !downloadRes.data.result) {
                 await m.react('❌')
