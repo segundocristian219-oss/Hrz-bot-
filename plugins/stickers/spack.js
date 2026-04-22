@@ -144,38 +144,25 @@ const stickerPackSearch = {
             await m.react('🕒');
             await patchMediaPathMap();
 
-            const { data: searchRes } = await axios.post('https://panel.apinexus.fun/api/stickers/buscar', { query: text }, {
+            const { data: searchRes } = await axios.post('https://panel.apinexus.fun/api/stickerly/search', { query: text, limit: 3 }, {
                 headers: { 'Content-Type': 'application/json', 'x-api-key': key }
             });
 
             if (!searchRes.success || !searchRes.data?.packs?.length) return m.reply('Sin resultados.');
             const pack = searchRes.data.packs[0];
 
-            const { data: dlRes } = await axios.post('https://panel.apinexus.fun/api/stickers/descargar', { url: pack.url }, {
-                headers: { 'Content-Type': 'application/json', 'x-api-key': key }
-            });
-
-            if (!dlRes.success || !dlRes.data?.stickers) return m.reply('Error al descargar.');
-
-            const stickersToProcess = dlRes.data.stickers.slice(0, 6);
+            const stickersToProcess = pack.stickers.slice(0, 6);
 
             const [coverRes, ...stickerResps] = await Promise.all([
-                axios.get(pack.thumbnail, { responseType: 'arraybuffer' }),
+                axios.get(stickersToProcess[0], { responseType: 'arraybuffer' }),
                 ...stickersToProcess.map(url => axios.get(url, { responseType: 'arraybuffer' }))
             ]);
 
             const trayBuffer = await sharp(Buffer.from(coverRes.data)).resize(96, 96).png().toBuffer();
 
             const processedStickers = await Promise.all(
-                stickerResps.map(async (resp, i) => {
+                stickerResps.map(async (resp) => {
                     const inputBuf = Buffer.from(resp.data);
-                    const isAnimated = stickersToProcess[i].isAnimated || false;
-                    if (isAnimated) {
-                        return sharp(inputBuf, { animated: true })
-                            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                            .webp({ quality: 75, loop: 0 })
-                            .toBuffer();
-                    }
                     return sharp(inputBuf)
                         .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
                         .webp({ quality: 75 })
@@ -183,7 +170,7 @@ const stickerPackSearch = {
                 })
             );
 
-            const stickerUploadResults = await Promise.all(
+            await Promise.all(
                 processedStickers.map(buf => uploadBuffer(conn, buf, 'sticker'))
             );
 
@@ -196,7 +183,7 @@ const stickerPackSearch = {
                 zipFiles.push({ name: fileName, data: processedStickers[i] });
                 stickerMeta.push({
                     fileName,
-                    isAnimated: stickersToProcess[i].isAnimated || false,
+                    isAnimated: false,
                     emojis: ['✨'],
                     mimetype: 'image/webp',
                     accessibilityLabel: ''
@@ -223,7 +210,7 @@ const stickerPackSearch = {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
                     name: pack.packname.substring(0, 30),
-                    publisherName: 'Cat Bot',
+                    publisherName: name(),
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
@@ -239,7 +226,7 @@ const stickerPackSearch = {
                     thumbnailHeight: 96,
                     thumbnailWidth: 96,
                     mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                    packDescription: 'Sticker Pack',
+                    packDescription: name(),
                     imageDataHash: thumbSha256.toString('base64')
                 }
             }, { messageId: msgId, quoted: m });
