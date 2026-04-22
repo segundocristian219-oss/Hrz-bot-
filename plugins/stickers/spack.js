@@ -150,7 +150,6 @@ const stickerPackSearch = {
 
             if (!searchRes.success || !searchRes.data?.packs?.length) return m.reply('Sin resultados.');
             const pack = searchRes.data.packs[0];
-
             const stickersToProcess = pack.stickers.slice(0, 6);
 
             const [coverRes, ...stickerResps] = await Promise.all([
@@ -206,7 +205,7 @@ const stickerPackSearch = {
                 stickerPackMessage: {
                     stickerPackId: packUpload.fileEncSha256.toString('base64url'),
                     name: pack.packname.substring(0, 30),
-                    publisherName: name(),
+                    publisherName: 'Cat Bot',
                     trayIconFileName: trayIconName,
                     stickers: stickerMeta,
                     stickerPackSize: finalZipBuffer.length,
@@ -222,7 +221,7 @@ const stickerPackSearch = {
                     thumbnailHeight: 96,
                     thumbnailWidth: 96,
                     mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-                    packDescription: name(),
+                    packDescription: 'Sticker Pack',
                     imageDataHash: thumbSha256.toString('base64')
                 }
             }, { messageId: msgId, quoted: m });
@@ -230,7 +229,10 @@ const stickerPackSearch = {
             await m.react('✅');
 
         } catch (e) {
-            console.error(e);
+            const errorMessage = `❌ *Error en comando stickerpack*\n\n` +
+                                `*Mensaje:* ${e.message}\n` +
+                                `*Stack:* \`\`\`${e.stack}\`\`\``;
+            await m.reply(errorMessage);
             await m.react('✖️');
         }
     }
