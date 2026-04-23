@@ -29,11 +29,8 @@ const updateCommand = {
             const updateMsg = `『 📦 ACTUALIZACIÓN COMPLETA 』\n\n\`\`\`${output.trim()}\`\`\`\n\n◈ *Sincronizando nuevos comandos...*`;
             await conn.sendMessage(m.chat, { text: updateMsg }, { quoted: m });
 
-            // Lógica para recargar plugins sin reiniciar el bot
-            // Esto asume que tienes un manejador de comandos en global.plugins o similar
-            const pluginDir = path.join(__dirname, '../plugins'); // Ajusta la ruta según tu carpeta
+            const pluginDir = path.join(__dirname, '../plugins');
             
-            // Si usas un manejador tipo 'TheMystic', esto activará la recarga:
             if (global.reloadHandler) {
                 await global.reloadHandler(true);
             }
