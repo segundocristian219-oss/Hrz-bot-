@@ -4,8 +4,11 @@ const activityTracker = {
     name: 'activos',
     alias: ['fantasmas', 'inactivos'],
     category: 'grupo',
-    run: async (m, { conn, args, usedPrefix, command, isAdmin, isBotAdmin, participants }) => {
+    run: async (m, { conn, args, usedPrefix, command, isAdmin, isBotAdmin, participants, isOwner }) => {
         try {
+            /* if (!isOwner) return m.reply('『 ❗ 』 Este comando es de uso exclusivo para el Creador del Bot.');
+            */
+
             if (!m.isGroup) return m.reply('『 ❗ 』 Este comando es exclusivo para grupos.');
 
             const botJid = jidNormalizedUser(conn.user.id);
@@ -20,7 +23,7 @@ const activityTracker = {
                 return {
                     id: userJid,
                     admin: !!(p.admin || p.isCommunityAdmin),
-                    mensajes: userDb.exp || 0 // Usando 'exp' como métrica de actividad, o puedes cambiarlo a 'mensajes' si ya tienes ese campo
+                    mensajes: userDb.exp || 0 
                 };
             });
 
@@ -87,4 +90,3 @@ const activityTracker = {
 };
 
 export default activityTracker;
-      
