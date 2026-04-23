@@ -44,12 +44,12 @@ const comandoPerfil = {
         let infoFamilia = ''
         
         if (datos.padres && datos.padres.length > 0) {
-            infoFamilia += `|  PADRES: ${datos.padres.map(p => `@${p.split('@')[0]}`).join(' y ')}\n`
+            infoFamilia += `┝PADRES: ${datos.padres.map(p => `@${p.split('@')[0]}`).join(' y ')}\n`
             datos.padres.forEach(p => menciones.push(p))
         }
 
         if (datos.hijos && datos.hijos.length > 0) {
-            infoFamilia += `\n├HIJOS: ${datos.hijos.map(h => `@${h.split('@')[0]}`).join(', ')}\n`
+            infoFamilia += `\n┝HIJOS: ${datos.hijos.map(h => `@${h.split('@')[0]}`).join(', ')}`
             datos.hijos.forEach(h => menciones.push(h))
         }
 
