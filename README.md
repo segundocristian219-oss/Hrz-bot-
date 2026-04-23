@@ -1,8 +1,27 @@
 > [!IMPORTANT]
-> Bienvenido al repositorio oficial de Kirito-Bot MD — un bot multifuncional para WhatsApp impulsado por la librería Baileys.
-Este proyecto se encuentra en desarrollo activo y puede presentar fallos ocasionales durante su funcionamiento.
-Mantente actualizado a través de nuestro canal oficial:
-[Kirito channel](https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29)
+> ### 🗂️ PORTAFOLIO DE EXHIBICIÓN: KIRITO-BOT MD
+> Este repositorio funciona exclusivamente como una **carta de presentación** técnica. El código aquí expuesto es una muestra de la arquitectura y la calidad de desarrollo detrás del proyecto.
+>
+> * **Estado del Repositorio:** Estático / Sin actualizaciones.
+> * **Desarrollo Activo:** El código principal se mantiene en un entorno privado para garantizar la seguridad y exclusividad de las funciones.
+> * **Propósito:** Demostración de estructura, lógica y desarrollo de sistemas de automatización.
+
+---
+
+## 🚀 Sobre el Proyecto
+**Kirito-bot MD** es un sistema diseñado con un enfoque en velocidad, minimalismo y eficiencia. Aunque este repositorio no reciba cambios, representa el estándar de calidad que manejamos en nuestras plataformas.
+
+## 🔗 Enlaces Oficiales
+Para ver el sistema en funcionamiento, recibir noticias sobre actualizaciones y acceder a la comunidad activa, visita nuestro canal oficial:
+
+👉 **[Canal de WhatsApp: Kirito-bot MD](https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29)**
+
+---
+<p align="center">
+  <b>Administrado por Deylin Elíac</b><br>
+  <i>Innovación en Sistemas de Automatización</i>
+</p>
+
 
 ---
 
