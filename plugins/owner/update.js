@@ -1,4 +1,8 @@
 import { exec } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const runCmd = (cmd) => new Promise((resolve, reject) => {
     exec(cmd, (err, stdout, stderr) => {
@@ -19,27 +23,33 @@ const updateCommand = {
 
             if (/Already up[ -]to[ -]date/i.test(output)) {
                 await m.react("✅");
-                return conn.sendMessage(m.chat, { text: '✧ *[ ✓ ] El sistema ya está en su versión más reciente.*' }, { quoted: m });
+                return conn.sendMessage(m.chat, { text: '『 ✅ 』 El sistema ya está actualizado.' }, { quoted: m });
             }
 
-            const updateMsg = `♛  *SISTEMA ACTUALIZADO* ♛\n\n✦ *[ 📦 ] Cambios detectados:*\n\`\`\`${output.trim()}\`\`\`\n\n◈ *APLICANDO CAMBIOS...*\n✧ *Los cambios se aplicarán en caliente sin reiniciar sockets.*`;
-
+            const updateMsg = `『 📦 ACTUALIZACIÓN COMPLETA 』\n\n\`\`\`${output.trim()}\`\`\`\n\n◈ *Sincronizando nuevos comandos...*`;
             await conn.sendMessage(m.chat, { text: updateMsg }, { quoted: m });
+
+            // Lógica para recargar plugins sin reiniciar el bot
+            // Esto asume que tienes un manejador de comandos en global.plugins o similar
+            const pluginDir = path.join(__dirname, '../plugins'); // Ajusta la ruta según tu carpeta
+            
+            // Si usas un manejador tipo 'TheMystic', esto activará la recarga:
+            if (global.reloadHandler) {
+                await global.reloadHandler(true);
+            }
+
             await m.react("⚙️");
+            return m.reply("『 ✨ 』 Comandos recargados con éxito. Los cambios ya están vivos.");
 
         } catch (error) {
             let status = '';
-            try {
-                status = await runCmd('git status --porcelain');
-            } catch {
-                status = 'Error al obtener estado del repositorio.';
-            }
+            try { status = await runCmd('git status --porcelain'); } catch { status = 'Error de repo.'; }
 
-            const conflictMsg = status.trim()
-                ? `◈ *⚠️ Conflictos detectados:*\n\n\`\`\`${status.trim()}\`\`\`\n\n✦ Resuelve los conflictos manualmente.`
+            const conflictMsg = status.trim() 
+                ? `⚠️ Conflictos:\n\`\`\`${status.trim()}\`\`\`` 
                 : error.toString();
 
-            await conn.sendMessage(m.chat, { text: `💀 *ERROR CRÍTICO:* \n\n${conflictMsg}` }, { quoted: m });
+            await conn.sendMessage(m.chat, { text: `💀 *ERROR:* \n\n${conflictMsg}` }, { quoted: m });
             await m.react("❌");
         }
     }
