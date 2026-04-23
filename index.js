@@ -75,8 +75,7 @@ console.log = (...args) => originalLog.apply(console, [chalk.cyan('┃'), ...arg
 const originalError = console.error;
 console.error = (...args) => originalError.apply(console, [chalk.red('┗'), ...args]);
 
-const dbUrlEncoded = process.env.MONGODB_URL;
-const dbUrlDecoded = Buffer.from(dbUrlEncoded, 'base64').toString('utf-8');
+const dbUrl = process.env.MONGODB_URL;
 
 const logDB = (type, status) => {
     console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'));
@@ -104,8 +103,8 @@ const modelSafely = (name, schema) => {
     }
 };
 
-if (dbUrlDecoded && !process.argv.includes('--local')) {
-    mongoose.connect(dbUrlDecoded, {
+if (dbUrl && !process.argv.includes('--local')) {
+    mongoose.connect(dbUrl, {
         serverSelectionTimeoutMS: 5000,
         family: 4
     }).then(async () => {
@@ -119,7 +118,7 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
         });
         const res2 = await global.db.collection('users').deleteMany({ id: "", lid: "" });
         if (res1.deletedCount > 0 || res2.deletedCount > 0) {
-            console.log(chalk.cyan('┃ ') + `Purga realizada: ${res1.deletedCount + res2.deletedCount} registros eliminados.`);
+            console.log(chalk.cyan('┃ ') + `Purga realizada.`);
         }
     }).catch(() => {
         logDB('CLOUD', 'ERROR');
@@ -142,8 +141,8 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     const subBotSettingsSchema = new mongoose.Schema({
         botId: { type: String, unique: true },
         prefix: { type: String, default: '.' },
-        botName: { type: String, default: 'Kirito - SubBot' },
-        botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
+        botName: { type: String, default: 'Bot - SubBot' },
+        botImage: { type: String, default: '' },
         status: { type: Boolean, default: true }
     }, { strict: false });
     global.SubBotSettings = modelSafely('SubBotSettings', subBotSettingsSchema);
@@ -278,7 +277,7 @@ global.reload = async function(restatConn) {
         if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode || 0;
         if (reason === DisconnectReason.loggedOut || reason === 403) { 
-            console.error(chalk.red(`┃ STATUS: SESIÓN INVALIDADA O FORBIDDEN`));
+            console.error(chalk.red(`┃ STATUS: SESIÓN INVALIDADA`));
             exec(`rm -rf ${sessionPath}/*`);
             process.exit(1);
         } else if (reason === DisconnectReason.connectionLost || reason === DisconnectReason.connectionClosed || reason === DisconnectReason.restartRequired || reason === DisconnectReason.timedOut) {
@@ -307,21 +306,21 @@ global.reload = async function(restatConn) {
         const db = mongoose.connection.db;
         if (db) {
             const reportsCollection = db.collection('reports');
-            const devGroupId = '120363424997886266@g.us'; 
+            const devGroupId = 'ID_DEL_GRUPO_DE_SOPORTE'; 
             reportsCollection.watch().on('change', async (change) => {
                 if (change.operationType === 'insert') {
                     const data = change.fullDocument;
-                    let reportMsg = `┏━━ 「 NUEVO REPORTE RECIBIDO 」 ━━┓\n┃ ⊛ Sub-Bot: ${data.subBotName}\n┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n┃ ⊛ Tipo: ${data.type}\n┃ ⊛ Mensaje: ${data.message}\n┃ ⌬ Chat ID: ${data.chatId}\n┃ ◈ MSG ID: ${data.msgId}\n┃ 🤖 Bot JID: ${sId(data.botJid)}\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+                    let reportMsg = `┏━━ 「 NUEVO REPORTE 」 ━━┓\n┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n┃ ⊛ Mensaje: ${data.message}\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
                     const opt = { 
                         mentions: [data.sender],
                         contextInfo: {
                             mentionedJid: [data.sender],
                             externalAdReply: {
-                                title: `CENTRAL DE REPORTES`,
-                                body: `Remitente: ${data.pushName}`,
+                                title: `SOPORTE TÉCNICO`,
+                                body: `Bot System`,
                                 mediaType: 1,
-                                thumbnailUrl: 'https://dix.lat/logo.png',
-                                sourceUrl: 'https://dix.lat'
+                                thumbnailUrl: '',
+                                sourceUrl: ''
                             }
                         }
                     };
@@ -347,7 +346,7 @@ global.reload = async function(restatConn) {
                 await conn.query({
                     tag: 'iq',
                     attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`KIRITO BOT MD | ${time}`, 'utf-8') }]
+                    content: [{ tag: 'status', attrs: {}, content: Buffer.from(`Bot System | ${time}`, 'utf-8') }]
                 });
             } catch {}
         };
