@@ -64,23 +64,23 @@ const comandoPerfil = {
         }
 
         const textoPerfil = `
-\t\t\t\t--- PERFIL DE USUARIO ---
+\t\t\t\t\t\t *PERFIL DE USUARIO*
 
-|  NOMBRE: ${datos.name || nombreUsuario}
-|  EDAD: ${datos.age || '--'} años
-|  PAIS: ${pais}
-|  ID: @${quien.split('@')[0]}
-|
-|  GENERO: ${datos.gender || 'No definido'}
-|  ORIENTACION: ${datos.identity || 'No definido'}
-|
-|  MONEDAS: ${datos.col ?? 0} Col
-|  EXPERIENCIA: ${datos.exp ?? 0} EXP
-|  ${infoPareja}
-${infoFamilia}|  RANGO: ${rango}
-|
-|  DESCRIPCION:
-|  ${datos.description || 'Sin descripcion configurada.'}
+╭NOMBRE: ${datos.name || nombreUsuario}
+├EDAD: ${datos.age || '--'} años
+┝PAIS: ${pais}
+┝ID: @${quien.split('@')[0]}
+╰━━━━━━━━━━
+╭GENERO: ${datos.gender || 'No definido'}
+┝ORIENTACION: ${datos.identity || 'No definido'}
+╰━━━━━━━━
+╭MONEDAS: ${datos.col ?? 0} Col
+┝EXPERIENCIA: ${datos.exp ?? 0} EXP
+┝${infoPareja} ${infoFamilia}
+┝RANGO: ${rango}
+╰━━━━━
+╭DESCRIPCION:
+╰${datos.description || 'Sin descripcion configurada.'}
 
 `
 
