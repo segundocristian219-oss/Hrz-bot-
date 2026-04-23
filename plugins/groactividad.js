@@ -1,14 +1,11 @@
 import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const activityTracker = {
-    name: 'activos',
-    alias: ['fantasmas'],
+    name: 'actividad',
+    alias: ['activos', 'fantasmas', 'inactivos', 'menosactivos', 'vagos'],
     category: 'grupo',
     run: async (m, { conn, args, usedPrefix, command, isAdmin, isBotAdmin, participants, isOwner }) => {
         try {
-            /* if (!isOwner) return m.reply('『 ❗ 』 Este comando es de uso exclusivo para el Creador del Bot.');
-            */
-
             if (!m.isGroup) return m.reply('『 ❗ 』 Este comando es exclusivo para grupos.');
 
             const botJid = jidNormalizedUser(conn.user.id);
@@ -48,6 +45,29 @@ const activityTracker = {
                 }, { quoted: m });
             }
 
+            if (command === 'menosactivos' || command === 'vagos') {
+                let usuariosInactivos = data.filter(u => u.id !== botJid);
+
+                if (usuariosInactivos.length === 0) {
+                    return m.reply('『 📊 』 No hay suficientes datos para armar un ranking.');
+                }
+
+                usuariosInactivos.sort((a, b) => a.mensajes - b.mensajes);
+
+                let txt = `『 💤 RANKING DE INACTIVIDAD 』\n\n`;
+                txt += `> Los usuarios con menor participación en el grupo.\n\n`;
+                
+                usuariosInactivos.slice(0, 50).forEach((u, i) => {
+                    txt += `${i + 1}. @${u.id.split('@')[0]} › *${u.mensajes}* pts\n`;
+                });
+
+                return conn.sendMessage(m.chat, { 
+                    text: txt, 
+                    mentions: usuariosInactivos.slice(0, 50).map(u => u.id),
+                    contextInfo: { ...global.channelInfo }
+                }, { quoted: m });
+            }
+
             if (command === 'fantasmas' || command === 'inactivos') {
                 const fantasmas = data.filter(u => u.mensajes === 0 && !u.admin && u.id !== botJid);
 
@@ -82,6 +102,7 @@ const activityTracker = {
                     contextInfo: { ...global.channelInfo }
                 }, { quoted: m });
             }
+
         } catch (e) {
             console.error("Error en tracker:", e);
             m.reply("『 ❗ 』 Error al procesar la lista.");
@@ -90,3 +111,4 @@ const activityTracker = {
 };
 
 export default activityTracker;
+            
