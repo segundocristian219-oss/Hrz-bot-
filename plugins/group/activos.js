@@ -2,7 +2,7 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys';
 
 const activityTracker = {
     name: 'activos',
-    alias: ['fantasmas', 'inactivos'],
+    alias: ['fantasmas'],
     category: 'grupo',
     run: async (m, { conn, args, usedPrefix, command, isAdmin, isBotAdmin, participants, isOwner }) => {
         try {
