@@ -10,6 +10,11 @@ const groupConfig = {
             if (!m.isGroup) return m.reply("『 ❗ 』 Este comando solo puede usarse en grupos.");
 
             const groupMetadata = await conn.groupMetadata(m.chat);
+            
+            if (global.groupCache) {
+                global.groupCache.set(m.chat, groupMetadata);
+            }
+
             const { subject, description, creation, owner, participants } = groupMetadata;
             
             const admins = participants.filter(p => p.admin || p.isCommunityAdmin);
@@ -41,15 +46,25 @@ const groupConfig = {
             return conn.sendMessage(m.chat, { 
                 text: configMsg,
                 mentions: [owner].filter(i => i),
-                contextInfo: { ...global.channelInfo }
+                contextInfo: { 
+                    ...global.channelInfo,
+                    externalAdReply: {
+                        title: 'Gestión de Grupo',
+                        body: subject,
+                        mediaType: 1,
+                        previewType: 0,
+                        renderLargerThumbnail: false,
+                        thumbnailUrl: await conn.profilePictureUrl(m.chat, 'image').catch(_ => 'https://api.dix.lat/media2/1773637281084.jpg'),
+                        sourceUrl: 'https://dix.lat'
+                    }
+                }
             }, { quoted: m });
 
         } catch (e) {
             console.error("Error en comando config:", e);
-            m.reply("『 ❗ 』 Hubo un error al obtener la configuración.");
+            m.reply("『 ❗ 』 Hubo un error al obtener la configuración actualizada.");
         }
     }
 };
 
 export default groupConfig;
-          
