@@ -42,7 +42,6 @@ import { exec } from "child_process";
 import { cacheManager } from './lib/cache.js';
 
 global.groupCache = cacheManager.cache; 
-
 EventEmitter.defaultMaxListeners = 0;
 
 const sId = (jid) => {
@@ -104,7 +103,6 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     }).then(async () => {
         logDB('CLOUD', 'CONNECTED');
         global.db = mongoose.connection.db;
-
         const res1 = await global.db.collection('users').deleteMany({
             $and: [
                 { id: { $not: /@s\.whatsapp\.net$/ } },
@@ -112,11 +110,9 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
             ]
         });
         const res2 = await global.db.collection('users').deleteMany({ id: "", lid: "" });
-
         if (res1.deletedCount > 0 || res2.deletedCount > 0) {
             console.log(chalk.cyan('┃ ') + `Purga realizada: ${res1.deletedCount + res2.deletedCount} registros eliminados.`);
         }
-
     }).catch(() => {
         logDB('CLOUD', 'ERROR');
         activateLocalDB();
@@ -130,7 +126,6 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
     global.Warns = mongoose.model('Warns', warnSchema);
     global.News = mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
-
     const subBotSettingsSchema = new mongoose.Schema({
         botId: { type: String, unique: true },
         prefix: { type: String, default: '.' },
@@ -138,9 +133,7 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
         botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
         status: { type: Boolean, default: true }
     }, { strict: false });
-
     global.SubBotSettings = mongoose.model('SubBotSettings', subBotSettingsSchema);
-
     const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
     global.Stats = mongoose.model('Stats', statsSchema);
 } else {
@@ -238,10 +231,8 @@ const loadHandlers = async () => {
     try {
         const PathMain = path.join(process.cwd(), 'lib/message.js');
         const PathSub = path.join(process.cwd(), 'lib/messagesub.js');
-
         const moduleMain = await import(`file://${PathMain}?update=${Date.now()}`);
         messageHandlerMain = moduleMain.message || moduleMain.default?.message || moduleMain.default;
-
         const moduleSub = await import(`file://${PathSub}?update=${Date.now()}`);
         messageHandlerSub = moduleSub.message || moduleSub.default?.message || moduleSub.default;
     } catch (e) { console.error(e); }
@@ -293,14 +284,12 @@ global.reload = async function(restatConn) {
             cacheManager.updateParticipants(id, groups[id].participants);
             global.groupCache.set(id, groups[id]);
         }
-
         if (global.SubBotSettings) {
             const allSettings = await global.SubBotSettings.find({ status: true });
             allSettings.forEach(s => {
                 global.subbotConfig[s.botId] = s;
             });
         }
-
         const db = mongoose.connection.db;
         if (db) {
             const reportsCollection = db.collection('reports');
@@ -308,15 +297,7 @@ global.reload = async function(restatConn) {
             reportsCollection.watch().on('change', async (change) => {
                 if (change.operationType === 'insert') {
                     const data = change.fullDocument;
-                    let reportMsg = `┏━━ 「 NUEVO REPORTE RECIBIDO 」 ━━┓\n` +
-                                    `┃ ⊛ Sub-Bot: ${data.subBotName}\n` +
-                                    `┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n` +
-                                    `┃ ⊛ Tipo: ${data.type}\n` +
-                                    `┃ ⊛ Mensaje: ${data.message}\n` +
-                                    `┃ ⌬ Chat ID: ${data.chatId}\n` +
-                                    `┃ ◈ MSG ID: ${data.msgId}\n` +
-                                    `┃ 🤖 Bot JID: ${sId(data.botJid)}\n` +
-                                    `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+                    let reportMsg = `┏━━ 「 NUEVO REPORTE RECIBIDO 」 ━━┓\n┃ ⊛ Sub-Bot: ${data.subBotName}\n┃ ⊛ Usuario: @${data.sender.split('@')[0]}\n┃ ⊛ Tipo: ${data.type}\n┃ ⊛ Mensaje: ${data.message}\n┃ ⌬ Chat ID: ${data.chatId}\n┃ ◈ MSG ID: ${data.msgId}\n┃ 🤖 Bot JID: ${sId(data.botJid)}\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
                     const opt = { 
                         mentions: [data.sender],
                         contextInfo: {
@@ -340,7 +321,6 @@ global.reload = async function(restatConn) {
                 }
             });
         }
-
         setTimeout(async () => {
             try {
                 const { loadSubBots } = await import('./lib/serbot.js');
@@ -364,7 +344,6 @@ global.reload = async function(restatConn) {
   });
 
   global.conn.ev.on('creds.update', saveCreds);
-
   global.conn.ev.on('groups.update', async (updates) => {
     for (const update of updates) {
         if (update.id) {
@@ -372,7 +351,6 @@ global.reload = async function(restatConn) {
         }
     }
   });
-
   global.conn.ev.on('group-participants.update', async (update) => {
     if (update.id) {
         await cacheManager.get(conn, update.id, true).catch(() => null);
@@ -395,7 +373,7 @@ async function readRecursive(folder) {
     if (st.isDirectory()) await readRecursive(file);
     else if (/\.js$/.test(filename)) {
       try {
-        const module = await import(`file://${file}`);
+        const module = await import(`file://${file}?update=${Date.now()}`);
         const plugin = module.default || module;
         const name = plugin.name || basename(filename, '.js');
         global.plugins.set(name, plugin);
@@ -404,6 +382,14 @@ async function readRecursive(folder) {
     }
   }
 }
+
+global.reloadHandler = async function (check) {
+    global.plugins.clear();
+    global.aliases.clear();
+    await readRecursive(join(process.cwd(), './plugins'));
+    if (check) return true;
+};
+
 await readRecursive(join(process.cwd(), './plugins'));
 
 global.subHandler = async (...args) => {
