@@ -49,7 +49,7 @@ const comandoPerfil = {
         }
 
         if (datos.hijos && datos.hijos.length > 0) {
-            infoFamilia += `|  HIJOS: ${datos.hijos.map(h => `@${h.split('@')[0]}`).join(', ')}\n`
+            infoFamilia += `\n├HIJOS: ${datos.hijos.map(h => `@${h.split('@')[0]}`).join(', ')}\n`
             datos.hijos.forEach(h => menciones.push(h))
         }
 
@@ -80,7 +80,7 @@ const comandoPerfil = {
 ┝RANGO: ${rango}
 ╰━━━━━
 ╭DESCRIPCION:
-╰${datos.description || 'Sin descripcion configurada.'}
+╰➠ ${datos.description || 'Sin descripcion configurada.'}
 
 `
 
