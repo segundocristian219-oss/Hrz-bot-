@@ -96,6 +96,14 @@ function activateLocalDB() {
 console.clear();
 cfonts.say('KIRITO', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
+const modelSafely = (name, schema) => {
+    try {
+        return mongoose.models[name] || mongoose.model(name, schema);
+    } catch (e) {
+        return mongoose.model(name);
+    }
+};
+
 if (dbUrlDecoded && !process.argv.includes('--local')) {
     mongoose.connect(dbUrlDecoded, {
         serverSelectionTimeoutMS: 5000,
@@ -119,16 +127,17 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
     });
 
     const userSchema = new mongoose.Schema({ id: { type: String, unique: true }, lastSeen: { type: Date, default: Date.now } }, { strict: false });
-    global.User = mongoose.models.User || mongoose.model('User', userSchema);
+    global.User = modelSafely('User', userSchema);
 
     const chatSchema = new mongoose.Schema({ id: { type: String, unique: true }, isBanned: { type: Boolean, default: false } }, { strict: false });
-    global.Chat = mongoose.models.Chat || mongoose.model('Chat', chatSchema);
+    global.Chat = modelSafely('Chat', chatSchema);
 
     const warnSchema = new mongoose.Schema({ userId: { type: String, required: true }, groupId: { type: String, required: true }, reasons: { type: [String], default: [] }, warnCount: { type: Number, default: 0 }, date: { type: Date, default: Date.now } });
     warnSchema.index({ userId: 1, groupId: 1 }, { unique: true });
-    global.Warns = mongoose.models.Warns || mongoose.model('Warns', warnSchema);
+    global.Warns = modelSafely('Warns', warnSchema);
 
-    global.News = mongoose.models.News || mongoose.model('News', new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false }));
+    const newsSchema = new mongoose.Schema({ title: { type: String, required: true }, description: { type: String, required: true }, command: { type: String, default: null }, date: { type: Date, default: Date.now } }, { strict: false });
+    global.News = modelSafely('News', newsSchema);
 
     const subBotSettingsSchema = new mongoose.Schema({
         botId: { type: String, unique: true },
@@ -137,10 +146,10 @@ if (dbUrlDecoded && !process.argv.includes('--local')) {
         botImage: { type: String, default: 'https://api.dix.lat/media2/1773637281084.jpg' },
         status: { type: Boolean, default: true }
     }, { strict: false });
-    global.SubBotSettings = mongoose.models.SubBotSettings || mongoose.model('SubBotSettings', subBotSettingsSchema);
+    global.SubBotSettings = modelSafely('SubBotSettings', subBotSettingsSchema);
 
     const statsSchema = new mongoose.Schema({ command: { type: String, unique: true }, globalUsage: { type: Number, default: 0 }, groups: { type: Map, of: Number, default: {} } }, { strict: false });
-    global.Stats = mongoose.models.Stats || mongoose.model('Stats', statsSchema);
+    global.Stats = modelSafely('Stats', statsSchema);
 } else {
     activateLocalDB();
 }
@@ -400,4 +409,4 @@ await readRecursive(join(process.cwd(), './plugins'));
 global.subHandler = async (...args) => {
     if (messageHandlerSub) return await messageHandlerSub.call(...args);
 };
-                
+    
