@@ -3,7 +3,7 @@ import { jidNormalizedUser } from '@whiskeysockets/baileys';
 const groupConfig = {
     name: 'config',
     alias: ['configuracion', 'settings', 'groupinfo'],
-    category: 'main',
+    category: 'group',
     admin: true, 
     run: async (m, { conn, usedPrefix, command }) => {
         try {
