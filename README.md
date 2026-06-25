@@ -7,7 +7,7 @@ Mantente actualizado a través de nuestro canal oficial:
 ---
 
 <p align="center">
-  <img src='https://cdn.dix.lat/me/6b74fd28-ff3a-44bb-9392-f1de5d0d4e10.jpg' width="100%" />
+  <img src='https://cdn.dix.lat/me/f97e746b-46cc-4a00-a896-e2a9d26f30bd.jpg' width="100%" />
 </p>
 
 <h1 align="center">
