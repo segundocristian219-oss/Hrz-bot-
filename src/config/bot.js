@@ -1,0 +1,2 @@
+global.botNames = ['❖ 𝑲𝑰𝑹𝑰𝑻𝑶 - 𝑩𝑶𝑻 𝑴𝑫 ❖', '⧫ Kɪʀɪᴛᴏ-Bᴏᴛ MD ⧫', '𖦹 𝘒𝘪𝘳𝘪𝘵𝘰𝘉𝘰𝘵 𝘔𝘋 𖦹', '⌠ 𝙆𝙞𝙧𝙞𝙩𝙤-𝘽𝙤𝙩 𝙈𝘿 ⌡'];
+global.botImages = ['https://cdn.dix.lat/me/b7f2e139-8235-44cc-9ebd-9bc7fc97c0a8.jpg', 'https://cdn.dix.lat/me/6b74fd28-ff3a-44bb-9392-f1de5d0d4e10.jpg'];
