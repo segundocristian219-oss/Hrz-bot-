@@ -16,7 +16,7 @@ Mantente actualizado a través de nuestro canal oficial:
 
 <p align="center">
   <a href="https://github.com/eliac-d/kirito-Bot-MD">
-    <img src="https://kirito.dix.lat/api/stats?user=Eliac-d%20&repo=Kirito-Bot-md&style=hologram&theme=monochrome&width=450&align=left&animate=false&show_owner=false&hide_border=false&bg=000000&border=333333&title=ffffff&text=ffffff&accent=ffffff&sub=666666" width="100%" max-width="450" />
+    <img src="https://kirito.dix.lat/api/stats?user=Eliac-d%20&repo=kirito-Bot-MD-v3&style=hologram&theme=monochrome&width=450&align=left&animate=false&show_owner=false&hide_border=false&bg=000000&border=333333&title=ffffff&text=ffffff&accent=ffffff&sub=666666" width="100%" max-width="450" />
   </a>
 </p>
 
