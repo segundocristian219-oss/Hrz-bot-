@@ -132,7 +132,7 @@ console.error = (...args) => {
 };
 
 console.clear();
-cfonts.say('KIRITO', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
+cfonts.say('HRZ', { font: 'slick', align: 'center', colors: ['cyan', 'white'], letterSpacing: 2 });
 
 if (!existsSync('./database')) mkdirSync('./database', { recursive: true });
 
