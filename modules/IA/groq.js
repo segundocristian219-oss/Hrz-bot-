@@ -5,7 +5,7 @@ export const chatgptCommand = {
     commands: {
         groq: {
             name: 'groq',
-            alias: ['kirito'],
+            alias: ['Hrz'],
             run: async (m, { conn, text }) => {
                 if (!text) return conn.sendMessage(m.chat, { text: '¡Hola! ¿En qué puedo ayudarte hoy?' }, { quoted: m });
 
