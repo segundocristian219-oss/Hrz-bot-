@@ -39,7 +39,7 @@ export const broadcastModule = {
                                 text: content, 
                                 contextInfo: {
                                     externalAdReply: {
-                                        title: 'KIRITO ♕',
+                                        title: 'Hrz ♕',
                                         body: 'Comunicado Global',
                                         mediaType: 1,
                                         thumbnailUrl: thumb,
