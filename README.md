@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> Bienvenido al repositorio oficial de Kirito-Bot MD — un bot multifuncional para WhatsApp impulsado por la librería Baileys.
+> Bienvenido al repositorio oficial de Hrz — un bot multifuncional para WhatsApp impulsado por la librería Baileys.
 Este proyecto se encuentra en desarrollo activo y puede presentar fallos ocasionales durante su funcionamiento.
 Mantente actualizado a través de nuestro canal oficial:
 [Kirito channel](https://whatsapp.com/channel/0029VbC195k9xVJWUtGQ2m29)
