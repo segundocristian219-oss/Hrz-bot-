@@ -37,7 +37,7 @@ export const serbotCommand = {
                     const code = await startSubBot(m, conn, targetNum, { isCode: false });
 
                     if (code && typeof code === 'string') {
-                        const instructions = `亗  *KIRITO SERBOT* 亗\n\n༂ꦽ  ① DISPOSITIVOS VINCULADOS\n༂ꦽ  ② VINCULAR CON NÚMERO\n༂ꦽ  ③ INGRESAR EL CÓDIGO\n\n✰ *SOLICITUD:* @${targetNum}\n✰ *CAPACIDAD:* ${activeCount}/${MAX_SUBBOTS}\n\n『───┈┈┈┈┄┄╌╌╌╌┄┄┈┈┈┈───』\n\n⚠ *NOTA:* El código vence en 8 segundos y es único para @${targetNum}\nᰔᩚ *INFO:* Usa \`#reglas-subbot\` para los términos.\n\n『───┈┈┈┈┄┄╌╌╌╌┄┄┈┈┈┈───』\n\nTu código de vinculación es: *${code}*`;
+                        const instructions = `亗  *Hrz SERBOT* 亗\n\n༂ꦽ  ① DISPOSITIVOS VINCULADOS\n༂ꦽ  ② VINCULAR CON NÚMERO\n༂ꦽ  ③ INGRESAR EL CÓDIGO\n\n✰ *SOLICITUD:* @${targetNum}\n✰ *CAPACIDAD:* ${activeCount}/${MAX_SUBBOTS}\n\n『───┈┈┈┈┄┄╌╌╌╌┄┄┈┈┈┈───』\n\n⚠ *NOTA:* El código vence en 8 segundos y es único para @${targetNum}\nᰔᩚ *INFO:* Usa \`#reglas-subbot\` para los términos.\n\n『───┈┈┈┈┄┄╌╌╌╌┄┄┈┈┈┈───』\n\nTu código de vinculación es: *${code}*`;
 
                         const botonesUnificados = [
                             { text: '📋 Copiar Código', copy: code },
