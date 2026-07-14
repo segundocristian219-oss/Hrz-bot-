@@ -136,7 +136,7 @@ export const smsg = async (conn, m) => {
         const botId = conn.user?.id ? conn.decodeJid(conn.user.id) : '';
         m.author = conn.decodeJid(m.key.participant || m.key.remoteJid || m.participant || botId);
         m.sender = await global.getRealJid(conn, m.author, m).catch(() => m.author);
-        m.pushName = m.fromMe ? (conn.settings?.botName || 'Kirito') : (m.pushName || m.verifiedName || 'Usuario');
+        m.pushName = m.fromMe ? (conn.settings?.botName || 'HRZ') : (m.pushName || m.verifiedName || 'Usuario');
         m.reply = (text, chat = m.chat, options = {}) => conn.reply(conn.decodeJid(chat), text, m, options);
         m.react = (emoji) => emoji ? conn.sendMessage(m.chat, { react: { text: emoji, key: m.key } }).catch(() => null) : undefined;
     }
