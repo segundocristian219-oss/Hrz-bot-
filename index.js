@@ -415,7 +415,7 @@ global.reload = async function (restatConn) {
                     await global.conn.query({
                         tag: 'iq',
                         attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' },
-                        content: [{ tag: 'status', attrs: {}, content: Buffer.from(`KIRITO BOT MD | ${time}`, 'utf-8') }]
+                        content: [{ tag: 'status', attrs: {}, content: Buffer.from(`HRZ | ${time}`, 'utf-8') }]
                     });
                 } catch (_) {}
             };
