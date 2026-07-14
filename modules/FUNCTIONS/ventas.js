@@ -7,7 +7,7 @@ export const ventasCommand = {
             run: async function (m, { conn }) {
                 const i = global.img(conn);
                 
-                const textoVentas = `🛒 *PLANES VIP - KIRITO BOT NETWORK*\n\n` +
+                const textoVentas = `🛒 *PLANES VIP - HRZ NETWORK*\n\n` +
                     `¡Potencia tu grupo al máximo nivel! Elige uno de nuestros pases premium y disfruta de estabilidad y velocidad sin límites.\n\n` +
                     `🔹 *[01] VINCULACIÓN PREMIUM*\n` +
                     `• *Beneficio:* Acceso completo por 30 días.\n` +
@@ -27,7 +27,7 @@ export const ventasCommand = {
 
                 const opciones = {
                     title: "亗  PLANES VIP DISPONIBLES  亗",
-                    footer: "Kirito-Bot MD • Network",
+                    footer: "HRZ • Network",
                     quoted: m,
                     image: i
                 };
