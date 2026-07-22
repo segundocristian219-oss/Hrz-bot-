@@ -9,7 +9,7 @@ export const downloadsModule = {
             name: 'youtube_play',
             alias: ['play', 'audio', 'mp3', 'video', 'mp4', 'playaudio', 'playvideo'],
             run: async (m, { conn, text, command, usedPrefix }) => {
-                if (!text?.trim()) return conn.reply(m.chat, `♕   *HRZ DOWNLOAD* ➥\n\n*Uso:* ${usedPrefix + command} <búsqueda o enlace>`, m);
+                if (!text?.trim()) return conn.reply(m.chat, `♕   *KIRITO DOWNLOAD* ➥\n\n*Uso:* ${usedPrefix + command} <búsqueda o enlace>`, m);
 
                 const isAudio = /play$|audio$|mp3|ytmp3|playaudio/i.test(command);
                 const isDocument = /mp3$|mp4$/i.test(command);
